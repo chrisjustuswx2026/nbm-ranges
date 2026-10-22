@@ -286,16 +286,61 @@ def main():
             if slot not in jobs or "qmd" in key:          # prefer qmd percentiles when both exist
                 jobs[slot] = job
     # each day = the 24 h total ending closest to 12Z (7-8 AM Eastern) the next morning
+    def best(byend, d):
+        target = dt.datetime.combine(d + dt.timedelta(days=1), dt.time(12), tzinfo=dt.timezone.utc)
+        for off in (0, -6, 6, -12, 12):
+            t = target + dt.timedelta(hours=off)
+            if t in byend:
+                return t
+        return None
+
+    def gaps():
+        g = []
+        for f in DAILY24:
+            for pi in ((0, 1, 2) if f in RANGE_FIELDS else (None,)):
+                for di, d in enumerate(dates):
+                    if not best(cands.get((f, pi), {}), d):
+                        g.append((f, di, pi))
+        return g
+
+    # some totals (24 h snow / ice, late-period rain) only come out on certain runs of the day:
+    # fill missing days from the newest earlier run that has them
+    missing_slots = gaps()
+    if missing_slots:
+        log(f"{len(missing_slots)} day-slots missing from the main run; checking earlier runs")
+        for back in range(1, 14):
+            t2 = run - dt.timedelta(hours=back)
+            base = f"blend.{t2:%Y%m%d}/{t2:%H}"
+            try:
+                k2 = [k for k in list_keys(NBM, base + "/core/") + list_keys(NBM, base + "/qmd/") if k.endswith(".co.grib2.idx")]
+            except Exception:
+                continue
+            if not k2:
+                continue
+            with cf.ThreadPoolExecutor(12) as ex:
+                idx2 = dict(zip(k2, ex.map(lambda k: read_idx(f"{NBM}/{k}"), k2)))
+            added = 0
+            for key, rows in idx2.items():
+                for r in rows:
+                    c = classify(r, t2)
+                    if not c or c[0] not in DAILY24:
+                        continue
+                    field, pi, t = c
+                    byend = cands.setdefault((field, pi), {})
+                    if t not in byend:
+                        byend[t] = (f"{NBM}/{key[:-4]}", r["off"], r["end"]); added += 1
+            before = len(missing_slots)
+            missing_slots = gaps()
+            log(f"  run {t2:%d %HZ}: +{added} totals, {before - len(missing_slots)} slots filled, {len(missing_slots)} left")
+            if not missing_slots:
+                break
     used = {}
     for (field, pi), byend in cands.items():
         for di, d in enumerate(dates):
-            target = dt.datetime.combine(d + dt.timedelta(days=1), dt.time(12), tzinfo=dt.timezone.utc)
-            for off in (0, -6, 6, -12, 12):
-                t = target + dt.timedelta(hours=off)
-                if t in byend:
-                    jobs[(field, di, pi)] = byend[t]
-                    used.setdefault(field, set()).add(t.strftime("%HZ"))
-                    break
+            t = best(byend, d)
+            if t:
+                jobs[(field, di, pi)] = byend[t]
+                used.setdefault(field, set()).add(t.strftime("%HZ"))
     log("24 h windows used (end times):", {k: sorted(v) for k, v in used.items()})
     got = sorted({s[0] for s in jobs})
     log("fields found:", got)

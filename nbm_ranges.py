@@ -40,6 +40,7 @@ NDAYS = 10
 MISSING = -999
 
 RANGE_FIELDS = ("rain", "snow", "ice")
+DAILY24 = ("rain", "snow", "ice", "snowP", "iceP")
 SCALAR_FIELDS = ("snowP", "iceP", "popD", "popN", "tmax", "tmin", "tmaxsd", "wind", "wdir", "gust", "dpt", "rh", "soil")
 
 
@@ -158,16 +159,16 @@ def classify(r, run):
     # 24 h ranges ending 12Z
     if v in ("APCP", "ASNOW", "FICEAC") and "surface" in lvl and pm and int(pm.group(1)) in PCTS:
         w = win(fc, "acc")
-        if w and w[1] - w[0] == 24 and endt(w[1]).hour == 12:
+        if w and w[1] - w[0] == 24:
             return ({"APCP": "rain", "ASNOW": "snow", "FICEAC": "ice"}[v], PCTS.index(int(pm.group(1))), endt(w[1]))
     # chances of snow / ice in 24 h ending 12Z
     if v == "ASNOW" and ex.startswith("prob >0.00254"):
         w = win(fc, "acc")
-        if w and w[1] - w[0] == 24 and endt(w[1]).hour == 12:
+        if w and w[1] - w[0] == 24:
             return ("snowP", None, endt(w[1]))
     if v == "FICEAC" and ex.startswith("prob >0.254"):
         w = win(fc, "acc")
-        if w and w[1] - w[0] == 24 and endt(w[1]).hour == 12:
+        if w and w[1] - w[0] == 24:
             return ("iceP", None, endt(w[1]))
     # 12 h chance of rain: day (ends 00Z) and night (ends 12Z)
     if v == "APCP" and ex.startswith("prob >0.254"):
@@ -261,29 +262,53 @@ def main():
 
     # pick messages from every index file (in parallel)
     jobs = {}
+    cands = {}
     found = set()
     with cf.ThreadPoolExecutor(12) as ex:
         idxs = dict(zip(keys, ex.map(lambda k: read_idx(f"{NBM}/{k}"), keys)))
     for key, rows in idxs.items():
         for r in rows:
-            found.add(f"{r['var']}:{r['level']}:{r['extra']}"[:80])
+            found.add(f"{r['var']}:{r['level']}:{r['fc']}:{r['extra']}"[:90])
             c = classify(r, run)
             if not c:
                 continue
             field, pi, t = c
+            job = (f"{NBM}/{key[:-4]}", r["off"], r["end"])
+            if field in DAILY24:
+                cands.setdefault((field, pi), {})
+                if t not in cands[(field, pi)] or "qmd" in key:
+                    cands[(field, pi)][t] = job
+                continue
             d = day_of(field, t)
             if d not in dates:
                 continue
             slot = (field, dates.index(d), pi)
             if slot not in jobs or "qmd" in key:          # prefer qmd percentiles when both exist
-                jobs[slot] = (f"{NBM}/{key[:-4]}", r["off"], r["end"])
+                jobs[slot] = job
+    # each day = the 24 h total ending closest to 12Z (7-8 AM Eastern) the next morning
+    used = {}
+    for (field, pi), byend in cands.items():
+        for di, d in enumerate(dates):
+            target = dt.datetime.combine(d + dt.timedelta(days=1), dt.time(12), tzinfo=dt.timezone.utc)
+            for off in (0, -6, 6, -12, 12):
+                t = target + dt.timedelta(hours=off)
+                if t in byend:
+                    jobs[(field, di, pi)] = byend[t]
+                    used.setdefault(field, set()).add(t.strftime("%HZ"))
+                    break
+    log("24 h windows used (end times):", {k: sorted(v) for k, v in used.items()})
     got = sorted({s[0] for s in jobs})
     log("fields found:", got)
     missing = [f for f in RANGE_FIELDS + SCALAR_FIELDS if f not in got and f != "soil"]
     if missing:
         log("not found (check names):", missing)
-        for s in sorted(x for x in found if any(v in x for v in ("ASNOW", "FICEAC", "TMAX", "TMIN", "APCP", "WIND", "GUST", "DPT", "RH")))[:60]:
-            log("   ", s)
+        for v in ("ASNOW", "FICEAC", "APCP", "TMAX", "TMIN"):
+            for x in sorted(x for x in found if x.startswith(v + ":"))[:6]:
+                log("   ", x)
+        for f in missing:
+            for (field, pi), byend in cands.items():
+                if field == f:
+                    log(f"    {f} windows end at:", sorted({t.strftime('%a %HZ') for t in byend})[:12])
 
     # GFS soil temperature (daily mean of 06, 12, 18, 00Z)
     g = find_gfs_run()

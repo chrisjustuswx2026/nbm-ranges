@@ -1,10 +1,10 @@
-# Builds the National Blend ranges every 3 hours and publishes them on GitHub Pages.
+# Builds the National Blend ranges every 3 hours and publishes them on GitHub Pages (free, readable by any dashboard).
 name: NBM ranges
 
 on:
   schedule:
-    - cron: "25 */3 * * *"
-  workflow_dispatch:
+    - cron: "25 */3 * * *"     # every 3 hours, 25 past (UTC)
+  workflow_dispatch:            # the "Run workflow" button
 
 permissions:
   contents: read
@@ -28,6 +28,29 @@ jobs:
         run: pip install pygrib numpy scipy
       - name: Build ranges
         run: python nbm_ranges.py public
+      - name: Keep the national place list (built once from the Census, then reused)
+        uses: actions/cache@v4
+        with:
+          path: places-cache
+          key: places-v1
+      - name: National place list for the search box
+        run: python places.py public
+      - name: Keep the crisp county lines (built once from the Census, then reused)
+        uses: actions/cache@v4
+        with:
+          path: counties-cache
+          key: counties-v2
+      - name: Crisp county lines for the dashboard maps
+        run: python counties.py public
+      - name: Keep the zoomed-in map detail (highways, lakes, rivers; built once)
+        uses: actions/cache@v4
+        with:
+          path: basemap-cache
+          key: basemap-v3
+      - name: Zoomed-in map detail (highways, route shields, lakes, rivers)
+        run: python basemap.py public
+      - name: Dashboards (the site folder becomes /clemson/ and /bay/ on the same website)
+        run: if [ -d site ]; then cp -r site/. public/; fi
       - uses: actions/upload-pages-artifact@v3
         with:
           path: public

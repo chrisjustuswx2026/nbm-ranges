@@ -3,8 +3,8 @@ name: NBM ranges
 
 on:
   schedule:
-    - cron: "25 */3 * * *"     # every 3 hours, 25 past (UTC)
-  workflow_dispatch:            # the "Run workflow" button
+    - cron: "25 */3 * * *"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -18,7 +18,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -49,6 +49,13 @@ jobs:
           key: basemap-v3
       - name: Zoomed-in map detail (highways, route shields, lakes, rivers)
         run: python basemap.py public
+      - name: Keep the detailed lakes (built once from the Census, then reused)
+        uses: actions/cache@v4
+        with:
+          path: water-cache
+          key: water-v1
+      - name: Detailed lakes and wide rivers (zoomed in)
+        run: python water.py public
       - name: Dashboards (the site folder becomes /clemson/ and /bay/ on the same website)
         run: if [ -d site ]; then cp -r site/. public/; fi
       - uses: actions/upload-pages-artifact@v3

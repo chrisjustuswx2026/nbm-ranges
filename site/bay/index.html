@@ -7,7 +7,7 @@ window.goPlace=function(la,lo,name,st){ const u=new URL(location.href); u.search
 window.goHome=function(){ const u=new URL(location.href); u.searchParams.delete("place"); location.href=u.toString(); };
 </script>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Bay County · SDR Weather Intelligence (Live · v88)</title>
+<title>Bay County · SDR Weather Intelligence (Live · v89)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap">
 <style>
@@ -436,8 +436,9 @@ main{padding-block:14px 110px;display:grid;gap:14px}
 .mcard .mlab em{font-style:normal;font-size:13px;font-weight:600}
 .mcard.flag .mlab em{color:var(--heads)}
 .mrt{font-family:var(--display);font-weight:800;font-size:11px;fill:#fff;stroke:#000;stroke-width:2.5px;paint-order:stroke}
-.mfull{display:grid;gap:12px;padding:12px;grid-template-columns:1fr}
-@media (min-width:900px){.mfull{grid-template-columns:1fr 1fr}}
+.mfull{display:grid;gap:12px;padding:12px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:900px){.mfull{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.mcard{min-width:0}.mcard .mimg{display:block;min-width:0;overflow:hidden}
 .mload{padding:20px;color:var(--muted)}
 /* briefings library */
 .blist{display:grid;max-height:300px;overflow-y:auto}
@@ -2977,7 +2978,7 @@ window.MAPDATA = async function(){
   const MS="https://mapservices.weather.noaa.gov";
   const findLayer = async (svc, re) => { const j=await get(svc+"?f=json"); const L=(j.layers||[]).find(l=>re.test(l.name)); return L?L.id:null; };
   const q = (svc,id) => get(`${svc}/${id}/query?where=1%3D1&outFields=*&returnGeometry=true&geometryPrecision=3&f=geojson`);
-  const out = { radarImg:`${MS}/eventdriven/rest/services/radar/radar_base_reflectivity/MapServer/export?bbox=${SDR_FPBOX(0.5).join(",")}&bboxSR=4326&imageSR=4326&size=600,240&format=png32&transparent=true&f=image&_=${Date.now()}` };
+  const out = { radarImg:`${MS}/eventdriven/rest/services/radar/radar_base_reflectivity/MapServer/export?bbox=-125,24,-66.5,49.8&bboxSR=4326&imageSR=4326&size=1000,440&format=png32&transparent=true&f=image&_=${Date.now()}` };
   await Promise.all([
     (async()=>{ try{
         let ok=0; const spcSvc=`${MS}/vector/rest/services/outlooks/SPC_wx_outlks/MapServer`; let svcLayers=null;
@@ -3120,7 +3121,7 @@ window.MAPROOM = (function(){
     if((PR.tropWarn||[]).length) C.push({ id:"tropics", title:"TROPICAL WATCHES & WARNINGS", sub:"National Hurricane Center", line:"Coastal watches or warnings in effect", flag:true, prio:true, box:[-100,7,-45,38], opts:{points:[{lo:site.lo,la:site.la,fill:"#F28C28",r:4.5}]}, overlays:[{features:PR.tropWarn,style:()=>({stroke:"#FF2D2D",w:3,fill:"none"})}] });
     const pt=[...cityPts(SE),{lo:site.lo,la:site.la,fill:"#F28C28",r:4.5}];
     const USB=[-125,24,-66.5,49.8], ptU=[...cityPts(USB),{lo:site.lo,la:site.la,fill:"#F28C28",r:4.5}];   // v87: outlooks on the whole country
-    C.push({ id:"radar", title:"LIVE RADAR", sub:"Your region", line:"Latest scan · tap to zoom in", box:SE, opts:{image:data.radarImg, points:pt}, overlays:[] });
+    C.push({ id:"radar", title:"LIVE RADAR", sub:"Lower 48", line:"Latest scan · tap to zoom in", box:USB, opts:{image:data.radarImg, points:ptU}, overlays:[] });
     [0,1,2].forEach(d=>{ const f=(data.spc&&data.spc[d])||[]; const rank=["TSTM","MRGL","SLGT","ENH","MDT","HIGH"];
       let top=null, sts=new Set(); f.forEach(x=>{ const L=x.properties.LABEL; if(L==="TSTM") return; const t=statesTouched(x.geometry); if(t.length){ t.forEach(s=>sts.add(s)); if(!top||rank.indexOf(L)>rank.indexOf(top)) top=L; } });
       C.push({ id:"spc"+(d+1), title:"SEVERE OUTLOOK · "+dayName(d).split(" · ")[0], sub:dayName(d).split(" · ")[1].replace(/\b(\w)(\w*)/g,(m,a,b)=>a+b.toLowerCase())+" · SPC", line: data.spc==null?"Outlook didn't load": top?`${SPCN[top]} risk: ${[...sts].join(", ")}`:"No severe concerns at the moment",
@@ -3476,7 +3477,7 @@ window.MAPVIEW = (function(){
       leg.innerHTML='<span><i style="background:#FFFF00"></i>Low</span><span><i style="background:#FF9900"></i>Medium</span><span><i style="background:#FF0000"></i>High</span><span><i style="background:#fff"></i>Forecast cone</span>'; }
     priority(data);
     const pr=data.priority||{}; if((pr.mds||[]).length) leg.innerHTML+='<span><i style="background:transparent;border:2px dashed #FF8C1A"></i>Storms organizing</span>'; if((pr.watches||[]).length) leg.innerHTML+='<span><i style="background:#FFFF00"></i>Tornado watch</span><span><i style="background:#DB7093"></i>Severe T-storm watch</span>';
-    const bx=SDR_FPBOX(); BOX=card.focus||[[bx[1],bx[0]],[bx[3],bx[2]]]; const wide=!card.focus&&card.id!=="radar";
+    const bx=SDR_FPBOX(); BOX=card.focus||[[bx[1],bx[0]],[bx[3],bx[2]]]; const wide=!card.focus;
     setTimeout(()=>{ zoomTo(wide?"us":"r"); placeTowns(); },50);
   }
   function close(){ box.hidden=true; document.body.style.overflow=""; }

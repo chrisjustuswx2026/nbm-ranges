@@ -57,7 +57,7 @@ def traveliq(st, host, key, attr):
         name = c.get("Location") or c.get("Name") or "Camera"
         road = " ".join(x for x in [c.get("Roadway"), c.get("Direction")] if x)
         out.append({"id": "%s-%s" % (st, c.get("Id")), "la": round(float(c["Latitude"]), 5), "lo": round(float(c["Longitude"]), 5), "name": name, "road": road,
-                    "st": st, "img": v["Url"], "refresh": 60, "src": host.split(".")[0], "attr": attr, "vid": v.get("VideoUrl") or None})
+                    "st": st, "img": v["Url"], "refresh": 60, "src": host.split(".")[0], "attr": attr})   # 511 streams sit behind logins (NC does); stills only
     return out
 
 def south_carolina():
@@ -73,8 +73,7 @@ def south_carolina():
         name = p.get("description") or p.get("name") or "Camera"
         road = " ".join(x for x in [p.get("route"), p.get("direction")] if x)
         out.append({"id": "SC-%s" % (p.get("id") or p.get("guid")), "la": round(float(la), 5), "lo": round(float(lo), 5), "name": name, "road": road,
-                    "st": "SC", "img": img, "refresh": 120, "src": "sc511", "attr": "Camera: SCDOT 511",
-                    "vid": (p.get("https_url") if str(p.get("https_url") or "").endswith(".m3u8") else None)})
+                    "st": "SC", "img": img, "refresh": 120, "src": "sc511", "attr": "Camera: SCDOT 511"})
     return out
 
 def tennessee():

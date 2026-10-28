@@ -6,7 +6,7 @@ window.goPlace=function(la,lo,name,st){ const u=new URL(location.href); u.search
 window.goHome=function(){ const u=new URL(location.href); u.searchParams.delete("place"); location.href=u.toString(); };
 </script>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Clemson · SDR Weather Intelligence (Live · v106)</title>
+<title>Clemson · SDR Weather Intelligence (Live · v108)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap">
 <style>
@@ -3011,7 +3011,7 @@ window.STRIPS = (function(){
   // v102: the amount is one line (most likely, then the range in words), no slider
   const amount = (lab,r,snow) => { if(!r) return ""; const unit=snow?10:1; const f=h=>rIn(h,snow);
     if(r[2]<unit) return `<div class="amtl"><small>${lab} AMOUNT</small><b>None expected</b></div>`;
-    const same=f(r[0])===f(r[2]), lo=r[0]<unit?"a trace":f(r[0])+'"'; return `<div class="amtl"><small>${lab} AMOUNT</small><b>${f(r[1])}"</b><span>${same?"":`as little as ${lo} · as much as ${f(r[2])}"`}</span></div>`; };
+    const same=f(r[0])===f(r[2]), lo=r[0]<unit?"a trace":f(r[0])+'"', mid=r[1]<unit?"Little or none":f(r[1])+'"'; return `<div class="amtl"><small>${lab} AMOUNT</small><b>${mid}</b><span>${same?"":`as little as ${lo} · as much as ${f(r[2])}"`}</span></div>`; };
   const amountOld = (lab,r,snow) => { if(!r) return "";
     const unit=snow?10:1; if(r[2]<unit) return `<div class="amt6"><span class="al">${lab}</span><div class="none">None expected</div></div>`;
     const v=r.map(x=>x/100), NICE=snow?[1,2,3,4,6,8,10,12,18,24,36]:[0.1,0.2,0.25,0.5,0.75,1,1.5,2,3,4,5,6,8,10];
@@ -3037,11 +3037,12 @@ window.STRIPS = (function(){
   function rainWhen(x){ const H=hoursOf(x); if(H.length<12) return ""; const mp=Math.max(...H.map(h=>h.pop||0)), mt=Math.max(...H.map(h=>h.thunder||0)); if(mp<10) return "";
     const thr=mp>=50?40:Math.max(10,mp-15), wet=H.filter(h=>(h.pop||0)>=thr), s0=hrOf(wet[0].t), e0=hrOf(wet[wet.length-1].t)+1, storm=mt>=30;
     const pk=H.filter(h=>(h.pop||0)>=mp-10), ps=hrOf(pk[0].t), pe=hrOf(pk[pk.length-1].t)+1;
-    let t= wet.length>=16?`on and off all day`: s0>=12&&e0>=23?`mainly after ${hlab(s0)}`: s0<=6&&e0<=13?`early, dry by ${hlab(e0)}`: `most likely ${hrng2(s0,e0)}`;
-    const best=(pe-ps<e0-s0&&pe-ps<=6)?` · best chance ${hrng2(ps,pe)}`:""; return `<div class="when">${storm?"Storms":"Rain"} <b>${t}</b>${best}</div>`; }
+    let t= wet.length>=16?(mp>=60?`on and off all day`:`possible any time of day`): s0>=12&&e0>=23?`mainly after ${hlab(s0)}`: s0<=6&&e0<=13?`early, dry by ${hlab(e0)}`: `most likely ${hrng2(s0,e0)}`;
+    const lead=mp>=60?(storm?"Storms":"Rain"):mp>=40?(storm?"A chance of storms":"A chance of rain"):(storm?"A few storms":"Spotty showers");
+    const best=(pe-ps<e0-s0&&pe-ps<=6)?` · best chance ${hrng2(ps,pe)}`:""; return `<div class="when">${lead} <b>${t}</b>${best}</div>`; }
   function chartsOf(x){ const H=hoursOf(x); if(H.length<3) return ""; const mt=Math.max(...H.map(h=>h.thunder||0)), G=H.map(h=>h.gust||hrWind(h)||0), gm=Math.max(...G), T=H.map(h=>h.temp);
     const k0=hrOf(H[0].t), today=k0>0&&new Date(H[0].t).toDateString()===new Date().toDateString(), K0=today?k0:0, SPAN=Math.max(1,23-K0);
-    const W=720,Hh=150,L=30,R=W-12,top=22,bot=Hh-24, X=k=>L+(R-L)*(k-K0)/SPAN, at=k=>H.find(h=>hrOf(h.t)===k), bw=Math.min(20,Math.max(8,(R-L)/(SPAN+1)*0.7));
+    const W=720,Hh=200,L=30,R=W-12,top=24,bot=Hh-24, X=k=>L+(R-L)*(k-K0)/SPAN, at=k=>H.find(h=>hrOf(h.t)===k), bw=Math.min(20,Math.max(8,(R-L)/(SPAN+1)*0.7));
     const AXL={0:"12 AM",3:"3 AM",6:"6 AM",9:"9 AM",12:"NOON",15:"3 PM",18:"6 PM",21:"9 PM"}; const ticks=today?[k0,...[...Array(24).keys()].filter(k=>k>k0&&k<23&&(SPAN<=8?true:k%3===0))]:[0,3,6,9,12,15,18,21];
     const tl=k=>today&&k===k0?"NOW":AXL[k]||(k===0?"12 AM":k===12?"NOON":(k%12)+(k<12?" AM":" PM"));
     const axis=ticks.map(k=>`<line x1="${X(k)}" x2="${X(k)}" y1="${top}" y2="${bot}" stroke="rgba(255,255,255,.07)"/><text x="${X(k)}" y="${Hh-5}" font-size="12.5" font-weight="700" fill="${today&&k===k0?"#FFC857":"#DCE6F5"}" text-anchor="${k===K0?"start":"middle"}">${tl(k)}</text>`).join("")+`<line x1="${L}" x2="${R}" y1="${bot}" y2="${bot}" stroke="rgba(255,255,255,.2)"/>`;
@@ -3051,7 +3052,8 @@ window.STRIPS = (function(){
         return `<rect x="${X(k)-bw/2}" y="${bot-bh}" width="${bw}" height="${bh}" rx="3" fill="${col(v,at(k))}"/>${t?peakTag(X(k),bot-bh-6,v+unit):""}`; }).join(""); };
     const rainCol=(v,h)=>(h.thunder||0)>=30?(v>=50?"#F5A524":"#F5D76E"):v>=60?"#2F7BFF":v>=40?"#4FA3FF":v>=20?"#8CC8FF":"#C9E6FF";
     const C={};
-    C.rain=`<svg viewBox="0 0 ${W} ${Hh}">${barsOf(h=>h.pop||0,rainCol,"%",100)}${axis}</svg><div class="ck"><span><i style="background:#8CC8FF"></i>Slight</span><span><i style="background:#4FA3FF"></i>Chance</span><span><i style="background:#2F7BFF"></i>Likely</span>${mt>=30?`<span><i style="background:#F5A524"></i>Storms</span>`:""}</div>`;
+    { const Y=v=>bot-(bot-top)*v/100, band=(v,t)=>`<line x1="${L}" x2="${R}" y1="${Y(v)}" y2="${Y(v)}" stroke="rgba(255,255,255,.18)" stroke-dasharray="3 4"/><text x="${L+2}" y="${Y(v)-3}" font-family="var(--display),Arial,sans-serif" font-size="10.5" font-weight="800" letter-spacing=".1em" fill="#8FA3C2">${t}</text>`;
+      C.rain=`<svg viewBox="0 0 ${W} ${Hh}">${band(20,"SLIGHT")}${band(40,"CHANCE")}${band(60,"LIKELY")}${barsOf(h=>h.pop||0,rainCol,"%",100)}${axis}</svg>`; }
     { const tl=Math.min(...T), th=Math.max(...T), ty=v=>bot-12-(bot-top-26)*((v-tl)/Math.max(1,th-tl)); const P=H.map(h=>[X(hrOf(h.t)),ty(h.temp),h.temp,hrOf(h.t)]); const hp=P.find(q=>q[2]===th), lp=P.find(q=>q[2]===tl);
       const pts=P.map(q=>q[0]+","+q[1]).join(" "), area=`${P[0][0]},${bot} ${pts} ${P[P.length-1][0]},${bot}`;
       const step=SPAN<=8?2:3; const labs=P.filter(q=>(q[3]-K0)%step===0||(today&&q[3]===k0)).map(q=>peakTag(q[0],q[1]-9,q[2]+"°")).join("");
@@ -3097,6 +3099,7 @@ window.STRIPS = (function(){
                 if(!r&&!(x.snowP>=10)&&!(x.iceP>=10)) return `<div class="chl">Rain <b>dry</b> day and night</div>`;
                 return `<div class="sts pch">${stat("RAIN", r+"%")}${(x.thunder||0)>=20?stat("THUNDER", x.thunder+"%", "", x.thunder>=30?"warn":""):""}${(x.snowP||0)>=10?stat("SNOW", x.snowP+"%"):""}${(x.iceP||0)>=10?stat("ICE", x.iceP+"%", "", "warn"):""}</div>${rainWhen(x)}`; })()}
             ${x.rr && x.rr[2]<1 && !anySnow && !anyIce ? `<div class="chl dim">No measurable rain expected</div>` : amount("RAIN", x.rr, false)}${anySnow?amount("SNOW", x.sr, true):""}${anyIce?amount("ICE", x.ir, false):""}
+            ${c!=null?`<div class="agreeline">MODEL AGREEMENT ${seg(c)} <b class="${lv(c)}">${c} of 5</b></div>${c<=2?`<div class="confwhy">Models disagree on ${confWhy(x)}. Expect changes; we will update as it comes into focus.</div>`:""}`:""}
           </section>
           ${chartsOf(x)}
           ${(()=>{ const sw=sprayWin(x), so=soilT(i), wa=waterT(i), gd=gduT(i); if(!sw&&!so&&!wa&&!gd) return "";
@@ -3107,7 +3110,6 @@ window.STRIPS = (function(){
             const t=(lab,o,cls)=>o?`<div class="ft ${cls||""}" role="button" tabindex="0" onclick="this.classList.toggle('open')"><small>${cls?"<i></i>":""}${lab}<em>ⓘ</em></small><b>${o.big}</b>${o.sub?`<span>${o.sub}</span>`:""}${o.hrs&&o.hrs.length>3?`<div class="hb">${o.hrs.map(c=>`<i class="${c}"></i>`).join("")}</div><div class="hl"><span>${o.hl[0]}</span><span>${o.hl[1]}</span></div>`:""}<p class="fx">${FX[lab]||""}</p></div>`:"";
             return `<section class="farm"><h4>FARM &amp; AG</h4><div class="ftg">${t("SPRAY WINDOW",sw,sw&&sw.lvl)}${t("SOIL TEMP",so)}${t("CROP WATER",wa,wa&&wa.lvl)}${t("HEAT UNITS",gd)}</div></section>`; })()}
         </div>
-        ${c!=null?`<div class="agreeline" style="margin-top:10px">MODEL AGREEMENT ${seg(c)} <b class="${lv(c)}">${c} of 5</b></div>${c<=2?`<div class="confwhy">Models disagree on ${confWhy(x)}. Expect changes; we will update as it comes into focus.</div>`:""}`:""}
         ${x.dayTxt&&x.nightTxt?`<p class="dx-n"><b>Night.</b> ${x.nightTxt}</p>`:""}
       </div>`;
     }).join("");
@@ -4847,10 +4849,14 @@ window.SDR_CAMS = (function(){
   const icon=L.divIcon({className:"sdr-cam",html:'<svg viewBox="0 0 20 20" width="18" height="18"><rect x="2" y="6" width="11" height="9" rx="2" fill="#0E1A33" stroke="#9FD8C9" stroke-width="1.6"/><path d="M13 9l5-2.5v7L13 11z" fill="#9FD8C9"/></svg>',iconSize:[18,18],iconAnchor:[9,9]});
   const idx=()=>IDX||(IDX=fetch(`${BASE()}/cameras/index.json`).then(r=>r.ok?r.json():[]).catch(()=>[]).then(j=>{ IDX=new Set(Array.isArray(j)?j:[]); return IDX; }));
   const cell=k=>cells[k]||loading[k]||(loading[k]=fetch(`${BASE()}/cameras/${k}.json`).then(r=>r.ok?r.json():null).catch(()=>null).then(j=>{ cells[k]=j||{cams:[]}; return cells[k]; }));
-  function card(c){ const u=()=>c.img+(c.img.includes("?")?"&":"?")+"_="+Date.now();
+  // v107: nearest town on the card; no video attempt on streams that sit behind a login (NCDOT's do)
+  const PUBLIC_VIDEO=/skyvdn\.com|tnsnapshots|tdot/i; const vidOk=c=>!!c.vid&&PUBLIC_VIDEO.test(c.vid);
+  function nearTown(c){ const P=window.GEO_PLACES||[]; let b=null,bd=1e9; for(const [n,st,pop,la,lo] of P){ const d=Math.hypot((lo-c.lo)*Math.cos(c.la*Math.PI/180),la-c.la)*69; const sc=d-(pop>=25000?4:pop>=5000?2:0); if(d<=15&&sc<bd){ bd=sc; b=n; } } return b; }
+  function card(c){ const u=()=>c.img+(c.img.includes("?")?"&":"?")+"_="+Date.now(); const town=nearTown(c);
     const pic=`<img src="${u()}" alt="${c.name}" referrerpolicy="no-referrer" onerror="this.alt='Camera picture not available right now'">`;
-    const foot=c.vid?`<span class="live"></span>Live video · ${c.attr||c.src||"State DOT"}`:`Live picture · refreshes every ${c.refresh||60} s · ${c.attr||c.src||"State DOT"}`;
-    return `<div class="camcard">${c.vid?`<video muted autoplay playsinline poster="${u()}"></video>`:pic}<div class="cn"><b>${c.name}</b>${c.road?`<span>${c.road}</span>`:""}</div><div class="cs" id="camfoot">${foot}</div></div>`; }
+    const v=vidOk(c); const foot=v?`<span class="live"></span>Live video · ${c.attr||c.src||"State DOT"}`:`Live picture · refreshes every ${c.refresh||60} s · ${c.attr||c.src||"State DOT"}`;
+    const sub=[c.road,town?"near "+town:""].filter(Boolean).join(" · ");
+    return `<div class="camcard">${v?`<video muted autoplay playsinline poster="${u()}"></video>`:pic}<div class="cn"><b>${c.name}</b>${sub?`<span>${sub}</span>`:""}</div><div class="cs" id="camfoot">${foot}</div></div>`; }
   // v98 live video (HLS): Safari plays it natively; everything else gets the hls.js player, loaded only when a video camera is opened.
   let hlsLib=null, hlsObj=null;
   const loadHls=()=>hlsLib||(hlsLib=new Promise(res=>{ if(window.Hls) return res(window.Hls); const sc=document.createElement("script"); sc.src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.15/hls.min.js"; sc.onload=()=>res(window.Hls); sc.onerror=()=>res(null); document.head.appendChild(sc); }));
@@ -4865,9 +4871,9 @@ window.SDR_CAMS = (function(){
   async function draw(){ if(!on||m.getZoom()<9){ G.clearLayers(); for(const k in MK) delete MK[k]; return; } const I=await idx(); if(!I||!I.size) return; const b=m.getBounds().pad(.1), keep=new Set();
     for(let x=Math.floor(b.getWest());x<=Math.floor(b.getEast());x++) for(let y=Math.floor(b.getSouth());y<=Math.floor(b.getNorth());y++){ const k=x+"_"+y; if(!I.has(k)) continue; const J=await cell(k); if(!on||m.getZoom()<9) return;
       (J.cams||[]).forEach(c=>{ if(!b.contains([c.la,c.lo])) return; keep.add(c.id); if(MK[c.id]) return; const mk=L.marker([c.la,c.lo],{icon,pane:"cams",keyboard:false}).addTo(G); MK[c.id]=mk;
-        mk.bindPopup(()=>{ openId=c; clearInterval(timer); timer=c.vid?null:setInterval(tick,(c.refresh||60)*1000); return card(c); },{maxWidth:360,className:"campop"});
+        mk.bindPopup(()=>{ openId=c; clearInterval(timer); timer=vidOk(c)?null:setInterval(tick,(c.refresh||60)*1000); return card(c); },{maxWidth:360,className:"campop"});
         mk.on("click",e=>{ L.DomEvent.stop(e); mk.openPopup(); });
-        mk.on("popupopen",()=>{ stopVideo(); if(c.vid) playVideo(c); });
+        mk.on("popupopen",()=>{ stopVideo(); if(vidOk(c)) playVideo(c); });
         mk.on("popupclose",()=>{ openId=null; clearInterval(timer); timer=null; stopVideo(); }); }); }
     for(const id in MK){ if(!keep.has(id)&&!(openId&&openId.id===id)){ G.removeLayer(MK[id]); delete MK[id]; } } }
   let t=null; const sched=()=>{ clearTimeout(t); t=setTimeout(draw,200); };

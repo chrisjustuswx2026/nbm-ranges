@@ -7,7 +7,7 @@ window.goPlace=function(la,lo,name,st){ const u=new URL(location.href); u.search
 window.goHome=function(){ const u=new URL(location.href); u.searchParams.delete("place"); location.href=u.toString(); };
 </script>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Bay County · SDR Weather Intelligence (Live · v92)</title>
+<title>Bay County · SDR Weather Intelligence (Live · v94)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap">
 <style>
@@ -895,6 +895,15 @@ body.rfull-on{overflow:hidden}
 .dflow .fr b{font-size:15px;font-weight:600;color:var(--fg)}.dflow .fr.rain small{color:#6FC3FF}.dflow .fr.storm small{color:#F5C518}.dflow .fr.wind small{color:#9FD8C9}.dflow .fr.temp small{color:#FFB15C}
 .dflow .rb{grid-column:2;display:grid;grid-template-columns:repeat(24,1fr);gap:2px;margin-top:5px;cursor:pointer}.dflow .rb i{height:8px;border-radius:2px;background:rgba(255,255,255,.1)}
 .dflow .rl{grid-column:2;display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:1px}
+
+/* v93 "See the day" chart (closed until tapped) */
+.dsee{background:none;border:0;padding:0;color:#8FC3FF;font:600 13px var(--body);cursor:pointer;justify-self:start}
+.dchart{display:none;max-width:640px}.dchart.open{display:block}.dchart svg{display:block;width:100%;height:auto}
+.dchart .ck{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:4px}.dchart .ck i{display:inline-block;width:12px;height:3px;border-radius:2px;margin-right:5px;vertical-align:middle}
+.dflow .rk{grid-column:2;display:flex;gap:12px;font-size:10.5px;color:var(--muted);margin-top:3px}.dflow .rk i{display:inline-block;width:10px;height:6px;border-radius:2px;margin-right:4px}
+.dtabs{display:flex;align-items:center;gap:6px;margin-top:2px}.dtabs button{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:999px;padding:4px 11px;font:700 11px var(--display);letter-spacing:.1em;cursor:pointer}
+.dtabs button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}.dtabs small{margin-left:auto;font:700 10.5px var(--display);letter-spacing:.12em;color:var(--muted)}
+.drow .drain,.drow .dwind,.drow .dt{cursor:pointer}
 </style>
 <style>/* Leaflet 1.9.4 (inlined) */
 /* required styles */
@@ -2955,19 +2964,38 @@ window.STRIPS = (function(){
   const flowOf = (x) => { const day=new Date(x.date||Date.now()).toDateString(); const H=(HOURS||[]).filter(h=>new Date(h.t).toDateString()===day); if(H.length<12) return "";
     const hr=t=>new Date(t).getHours(), lab=h=>{ h=((h%24)+24)%24; return h===0?"midnight":h===12?"noon":(h%12)+(h<12?" AM":" PM"); }, rng=(a,b)=>{ const A=lab(a),B=lab(b); return A.slice(-2)===B.slice(-2)&&!/noon|midnight/.test(A+B)?A.replace(/ (AM|PM)/,"")+"–"+B:A+"–"+B; };
     const rows=[]; const mp=Math.max(...H.map(h=>h.pop||0)), mt=Math.max(...H.map(h=>h.thunder||0));
-    if(mp>=30){ const thr=mp>=50?40:30, wet=H.filter(h=>(h.pop||0)>=thr), s0=hr(wet[0].t), e0=hr(wet[wet.length-1].t)+1, storm=mt>=30;
+    const dp=Math.max(x.pp||0,x.ppN||0);
+    if(mp>=10||dp>=10){ const thr=mp>=50?40:Math.max(10,mp-15), wet=H.filter(h=>(h.pop||0)>=thr), s0=hr(wet[0].t), e0=hr(wet[wet.length-1].t)+1, storm=mt>=30;
       const pk=H.filter(h=>(h.pop||0)>=mp-10), ps=hr(pk[0].t), pe=hr(pk[pk.length-1].t)+1, W=storm?"storms":"rain";
       let t= wet.length>=16?`On and off all day`: s0>=12&&e0>=23?`Mainly after ${lab(s0)}`: s0<=6&&e0<=13?`${storm?"Storms":"Showers"} early, dry by ${lab(e0)}`: `Most likely ${rng(s0,e0)}`;
-      if(pe-ps<e0-s0&&pe-ps<=6) t+=` · ${storm?"strongest":"heaviest"} ${rng(ps,pe)}`; if(mp<50) t=`Chance of ${W}: `+t.charAt(0).toLowerCase()+t.slice(1);
-      const cells=[...Array(24)].map((_,k)=>{ const h=H.find(q=>hr(q.t)===k); const v=h?(h.pop||0):0, th=h&&(h.thunder||0)>=30; return `<i style="background:${v<20?"rgba(255,255,255,.1)":th?`rgba(245,197,24,${.35+v/160})`:`rgba(91,192,255,${.25+v/130})`}"></i>`; }).join("");
-      rows.push(`<div class="fr ${storm?"storm":"rain"}"><small>${storm?"STORM TIMING":"RAIN TIMING"}</small><b>${t}</b><div class="rb" title="Open the hourly" onclick="window.SDR_HOURJUMP&&SDR_HOURJUMP('${day}')">${cells}</div><div class="rl"><span>12 AM</span><span>noon</span><span>12 AM</span></div></div>`); }
+      if(pe-ps<e0-s0&&pe-ps<=6) t+=` · ${storm?"strongest":"heaviest"} ${rng(ps,pe)}`; const pkH=H.find(h=>(h.pop||0)===mp); if(mp<40) t=`${storm?"A few storms":"Spotty showers"} possible · `+t.charAt(0).toLowerCase()+t.slice(1); t+=` · peak ${mp}%${pkH?" around "+lab(hr(pkH.t)):""}`;
+      const cells=[...Array(24)].map((_,k)=>{ const h=H.find(q=>hr(q.t)===k); const v=h?(h.pop||0):0, th=h&&(h.thunder||0)>=30; return `<i style="background:${v<10?"rgba(255,255,255,.08)":th?(v>=50?"#F5A524":"#F5D76E"):v>=60?"#2F7BFF":v>=40?"#4FA3FF":v>=20?"#8CC8FF":"#C9E6FF55"}"></i>`; }).join("");
+      rows.push(`<div class="fr ${storm?"storm":"rain"}"><small>${storm?"STORM TIMING":"RAIN TIMING"}</small><b>${t}</b></div>`); }
     const G=H.map(h=>h.gust||hrWind(h)||0), early=Math.max(...G.slice(0,Math.min(G.length,10))), gm=Math.max(...G), gi=G.indexOf(gm);
     if(gm>=25&&gm-early>=12){ const st=G.findIndex(g=>g>=early+10); rows.push(`<div class="fr wind"><small>WIND</small><b>Picks up after ${lab(hr(H[Math.max(0,st)].t))} · gusts to ${Math.ceil(gm/5)*5} mph${gi<H.length-2&&G[G.length-1]<gm-12?`, easing by ${lab(hr(H[H.length-1].t)+1)}`:""}</b></div>`); }
     const T=H.map(h=>h.temp), hi=Math.max(...T.slice(0,18)), hiI=T.indexOf(hi);
     const late=H.findIndex((h,k)=>k>hiI&&hr(h.t)<=19&&h.temp<=hi-10);
     if(hiI>=0&&hr(H[hiI].t)<=15&&late>0){ rows.push(`<div class="fr temp"><small>TEMPS</small><b>Falling fast: ${hi}° at ${lab(hr(H[hiI].t))}, ${T[late]}° by ${lab(hr(H[late].t))}</b></div>`); }
     else { const ev=H.find(h=>hr(h.t)===18), nt=H.filter(h=>hr(h.t)>=21); if(ev&&nt.length){ const mx=Math.max(...nt.map(h=>h.temp)); if(mx>=ev.temp+5) rows.push(`<div class="fr temp"><small>TEMPS</small><b>Rising overnight: ${ev.temp}° at 6 PM, near ${mx}° by ${lab(hr(nt.find(h=>h.temp===mx).t))}</b></div>`); } }
-    return rows.length?`<section class="dflow">${rows.join("")}</section>`:""; };
+    // v94 hour-by-hour chart for the day, open by default. Tabs: Rain · Temp · Wind (+ Storms when thunder is in play).
+    // Tapping rain / temp / wind in the day row opens the day on that tab.
+    const W=720,Hh=150,L=30,R=W-12,top=22,bot=Hh-24, X=k=>L+(R-L)*k/23, at=k=>H.find(h=>hr(h.t)===k);
+    const axis=[0,6,12,18].map(k=>`<text x="${X(k)}" y="${Hh-6}" font-size="12" fill="#8FA3C2" text-anchor="middle">${k===0?"12 AM":k===12?"noon":lab(k)}</text>`).join("")+`<text x="${X(23)}" y="${Hh-6}" font-size="12" fill="#8FA3C2" text-anchor="end">11 PM</text><line x1="${L}" x2="${R}" y1="${bot}" y2="${bot}" stroke="rgba(255,255,255,.15)"/>`;
+    const peakTag=(xx,yy,t)=>`<text x="${xx}" y="${yy}" font-size="13" font-weight="700" fill="#fff" text-anchor="middle" stroke="#0E1A33" stroke-width="3" paint-order="stroke">${t}</text>`;
+    const barsOf=(val,col,unit,max)=>{ const vs=[...Array(24)].map((_,k)=>{ const h=at(k); return h?val(h):null; }); const pk=Math.max(0,...vs.filter(v=>v!=null)); let tagged=false;
+      return vs.map((v,k)=>{ if(v==null||v<=0) return ""; const bh=Math.max(3,(bot-top)*Math.min(1,v/max)); const t=!tagged&&v===pk&&pk>0; if(t) tagged=true;
+        return `<rect x="${X(k)-10}" y="${bot-bh}" width="20" height="${bh}" rx="3" fill="${col(v,at(k))}"/>${t?peakTag(X(k),bot-bh-6,v+unit):""}`; }).join(""); };
+    const rainCol=(v,h)=>(h.thunder||0)>=30?(v>=50?"#F5A524":"#F5D76E"):v>=60?"#2F7BFF":v>=40?"#4FA3FF":v>=20?"#8CC8FF":"#C9E6FF";
+    const C={};
+    C.rain=`<svg viewBox="0 0 ${W} ${Hh}">${barsOf(h=>h.pop||0,rainCol,"%",100)}${axis}</svg><div class="ck"><span><i style="background:#8CC8FF"></i>Slight</span><span><i style="background:#4FA3FF"></i>Chance</span><span><i style="background:#2F7BFF"></i>Likely</span>${mt>=30?`<span><i style="background:#F5A524"></i>Storms</span>`:""}</div>`;
+    { const tl=Math.min(...T), th=Math.max(...T), ty=v=>bot-10-(bot-top-22)*((v-tl)/Math.max(1,th-tl)); const P=H.map(h=>[X(hr(h.t)),ty(h.temp),h.temp]); const hp=P.find(q=>q[2]===th), lp=P.find(q=>q[2]===tl);
+      C.temp=`<svg viewBox="0 0 ${W} ${Hh}"><polyline points="${P.map(q=>q[0]+","+q[1]).join(" ")}" fill="none" stroke="#FFB15C" stroke-width="3" stroke-linejoin="round"/>${peakTag(hp[0],hp[1]-8,th+"°")}${tl!==th?peakTag(lp[0],lp[1]+18,tl+"°"):""}${axis}</svg><div class="ck"><span><i style="background:#FFB15C"></i>Temperature</span></div>`; }
+    C.wind=`<svg viewBox="0 0 ${W} ${Hh}">${barsOf(h=>{ const g=h.gust||hrWind(h)||0; return g>=15?Math.ceil(g/5)*5:Math.round(g); },v=>v>=45?"#FF6B6F":v>=35?"#F5A524":v>=25?"#F5D76E":v>=15?"#7FD6C2":"#4E6E8E"," mph",Math.max(40,gm))}${axis}</svg><div class="ck"><span><i style="background:#7FD6C2"></i>Breezy 15+</span><span><i style="background:#F5D76E"></i>Windy 25+</span><span><i style="background:#F5A524"></i>Strong 35+</span></div>`;
+    if(mt>=20) C.storm=`<svg viewBox="0 0 ${W} ${Hh}">${barsOf(h=>h.thunder||0,v=>v>=50?"#F5A524":"#F5D76E","%",100)}${axis}</svg><div class="ck"><span><i style="background:#F5A524"></i>Chance of thunder</span></div>`;
+    const TABS=[["rain","RAIN"],["temp","TEMP"],["wind","WIND"],...(C.storm?[["storm","STORMS"]]:[])];
+    let def=window._dtab&&C[window._dtab]?window._dtab:(mp>=10?"rain":"temp");
+    const see=`<div class="dtabs" onclick="event.stopPropagation();const b=event.target.closest('button');if(!b)return;const w=this.parentElement;w.querySelectorAll('.dtabs button').forEach(x=>x.setAttribute('aria-pressed',x===b));w.querySelectorAll('.dchart').forEach(c=>c.classList.toggle('open',c.dataset.k===b.dataset.k));window._dtab=b.dataset.k;">${TABS.map(([k,l])=>`<button type="button" data-k="${k}" aria-pressed="${k===def}">${l}</button>`).join("")}<small>HOUR BY HOUR</small></div>${TABS.map(([k])=>`<div class="dchart${k===def?" open":""}" data-k="${k}">${C[k]}</div>`).join("")}`;
+    return `<section class="dflow">${rows.join("")}${see}</section>`; };
   window.SDR_HOURJUMP = (day) => { const i=(HOURS||[]).findIndex(h=>new Date(h.t).toDateString()===day); const box=document.getElementById("hours"); if(!box) return;
     const p=box.closest(".panel")||box; window.scrollTo({top:p.getBoundingClientRect().top+scrollY-70,behavior:"smooth"}); const el=box.querySelector(`.hr[data-i="${i}"]`); if(el) setTimeout(()=>el.scrollIntoView({behavior:"smooth",inline:"start",block:"nearest"}),400); };
   function renderDays(){
@@ -3023,7 +3051,7 @@ window.STRIPS = (function(){
   function wire(){
     const hs=$("hours"); if(hs && !hs._w){ hs.addEventListener("scroll", ()=>{ const r=hs.getBoundingClientRect(); const first=[...hs.querySelectorAll(".hr")].find(x=>x.getBoundingClientRect().right>r.left+20); if(first&&$("hdaylbl")) $("hdaylbl").textContent=first.dataset.day; },{passive:true}); }
     if(hs && !hs._w){ hs._w=1; hs.addEventListener("click", e=>{ const r=e.target.closest(".hr"); if(!r) return; selH = selH===+r.dataset.i ? -1 : +r.dataset.i; renderHours(); }); }
-    const ds=$("days"); if(ds && !ds._w){ ds._w=1; ds.addEventListener("click", e=>{ const r=e.target.closest(".drow"); if(!r) return; selD = selD===+r.dataset.i ? -1 : +r.dataset.i; renderDays(); }); }
+    const ds=$("days"); if(ds && !ds._w){ ds._w=1; ds.addEventListener("click", e=>{ const r=e.target.closest(".drow"); if(!r) return; const pr=e.target.closest(".drain")?"rain":e.target.closest(".dwind")?"wind":e.target.closest(".dt")?"temp":null; window._dtab=pr; selD = (selD===+r.dataset.i && !pr) ? -1 : +r.dataset.i; renderDays(); }); }
     const sg=$("hspan"); if(sg && !sg._w){ sg._w=1; sg.addEventListener("click", e=>{ const b=e.target.closest("button"); if(!b) return; span=+b.dataset.h; sg.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed", x===b)); selH=-1; renderHours(); }); }
   }
   // rounding the way a forecaster says it: precip/thunder to 10% (under 10% = nothing), humidity to 5%, clouds to 10%

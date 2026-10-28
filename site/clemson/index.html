@@ -7,7 +7,7 @@ window.goPlace=function(la,lo,name,st){ const u=new URL(location.href); u.search
 window.goHome=function(){ const u=new URL(location.href); u.searchParams.delete("place"); location.href=u.toString(); };
 </script>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Clemson · SDR Weather Intelligence (Live · v89)</title>
+<title>Clemson · SDR Weather Intelligence (Live · v91)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap">
 <style>
@@ -606,6 +606,29 @@ main{padding-block:14px 110px;display:grid;gap:14px}
 .radar.rfull{position:fixed;inset:0;z-index:3000;border-radius:0;height:100dvh!important;max-height:none;overflow:auto;margin:0}
 .radar.rfull .map{min-height:60vh}
 body.rfull-on{overflow:hidden}
+/* v90 phones */
+.leaflet-touch .leaflet-bar a{width:40px;height:40px;line-height:40px;font-size:22px}
+.radar.rfull{display:flex;flex-direction:column}.radar.rfull .map{flex:1 1 auto;min-height:0!important;height:auto}
+@media (max-width:760px){
+  .radar>.ph{flex-wrap:wrap;row-gap:8px}.radar>.ph #rmode{margin-left:0!important}
+  .radar .map{min-height:62vh!important}
+  .acard{left:8px!important;right:8px!important;top:auto!important;bottom:8px!important;width:auto!important;max-height:42%;display:flex;flex-direction:column}
+  .acard .bd{max-height:110px}
+}
+/* v90 map overlay is one pull-down, not a wall of buttons */
+.ovsel{display:flex;align-items:center;gap:10px}.ovsel .k{font-family:var(--display);font-weight:700;letter-spacing:.12em;font-size:11px;color:var(--muted)}
+.ovsel select{background:var(--panel2);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:8px 30px 8px 12px;font:600 14px var(--body);appearance:none;-webkit-appearance:none;
+  background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 16px) 50%,calc(100% - 11px) 50%;background-size:5px 5px;background-repeat:no-repeat}
+/* v90 our logo + what the map is, on every Map Room map */
+.mcard .mimg .tvc,.mvwrap .tvc{position:absolute;left:10px;top:10px;z-index:2;display:flex;align-items:center;gap:10px;padding:7px 12px 7px 7px;border-radius:14px;background:rgba(11,23,51,.62);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:0 4px 18px rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.12);pointer-events:none;max-width:calc(100% - 20px)}
+.mcard .mimg .tvc img,.mvwrap .tvc img{width:auto;background:#fff}.mvwrap .tvc img{height:30px;padding:3px 6px;border-radius:8px}
+.mcard .mimg .tvc b,.mvwrap .tvc b{font-family:var(--body);font-weight:700;color:#fff;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}.mvwrap .tvc b{font-size:16px}
+.mcard .mimg .tvc span span,.mvwrap .tvc span{color:rgba(244,247,251,.75);font-weight:500;white-space:nowrap;font-size:12px}
+.mvwrap .tvc div{display:grid;gap:1px;min-width:0}
+@media (max-width:760px){.mv-top{flex-wrap:wrap;row-gap:8px}.mvz{margin-left:0}}
+.mcard .mimg{position:relative}.mcard .mimg .tvc{left:6px;top:6px;gap:6px;padding:4px 8px 4px 4px;border-radius:10px}.mcard .mimg .tvc img{height:18px;padding:2px 4px;border-radius:5px}
+.mcard .mimg .tvc b{font-size:11.5px}.mcard .mimg .tvc span{font-size:9.5px}
+.mvwrap{position:relative;min-height:0}.mvwrap .mv-map{position:absolute;inset:0}.mvwrap .tvc{z-index:1000;pointer-events:none}
 .rfs{margin-left:6px;background:transparent;border:1px solid var(--line);color:var(--fg);border-radius:8px;width:32px;height:28px;cursor:pointer;font-size:15px}
 .rbrand{display:flex;align-items:center;gap:10px}
 .rbrand img{height:28px;width:auto;background:#fff;border-radius:6px;padding:3px 7px}
@@ -853,6 +876,17 @@ body.rfull-on{overflow:hidden}
 .pv button{font-family:var(--display);font-weight:700;letter-spacing:.1em;font-size:11px;border:1px solid var(--line);border-radius:5px;padding:5px 9px;color:var(--muted)}
 .pv button[aria-pressed="true"]{color:var(--fg);border-color:var(--accent)}
 .pv .k{margin-right:4px}
+
+/* v91 TV-style map label: big bold top line, smaller second line, bigger logo (same on briefings, Map Room cards and full-screen maps) */
+.tvc b,.mcard .mimg .tvc b,.mvwrap .tvc b{font-family:var(--display)!important;font-weight:800!important;text-transform:uppercase;letter-spacing:.02em!important;font-size:24px!important;line-height:1!important}
+.tvc span,.mcard .mimg .tvc span span,.mvwrap .tvc span{font-family:var(--display);font-weight:600!important;text-transform:uppercase;letter-spacing:.06em;font-size:13px!important}
+.tvc img{height:42px!important;padding:4px 8px!important;border-radius:9px!important}
+.mcard .mimg .tvc{gap:9px!important;padding:6px 12px 6px 6px!important;border-radius:12px!important;left:8px!important;top:8px!important}
+.mcard .mimg .tvc img{height:32px!important;padding:3px 6px!important}
+.mcard .mimg .tvc b{font-size:18px!important}.mcard .mimg .tvc span span{font-size:11px!important}
+.mvwrap .tvc img{height:48px!important}.mvwrap .tvc b{font-size:28px!important}.mvwrap .tvc span{font-size:14px!important}
+@media (max-width:640px){.tvc img{height:32px!important}.tvc b{font-size:19px!important}.tvc span{font-size:11px!important}
+  .mcard .mimg .tvc img{height:26px!important}.mcard .mimg .tvc b{font-size:15px!important}.mvwrap .tvc img{height:36px!important}.mvwrap .tvc b{font-size:21px!important}}
 </style>
 <style>/* Leaflet 1.9.4 (inlined) */
 /* required styles */
@@ -3201,9 +3235,11 @@ window.MAPROOM = (function(){
     const R=c=>c.prio?0:c.id==="radar"?1:/^wpc/.test(c.id)?2:/^spc/.test(c.id)?3:/^ero/.test(c.id)?3.5:c.id==="qpf"?4:c.id==="winter"?5:/^cpc/.test(c.id)?6:c.id==="drought"?7:8;
     return C.map((c,i)=>[c,i]).sort((a,b)=>R(a[0])-R(b[0])||a[1]-b[1]).map(x=>x[0]);
   }
+  const LOGO=()=>(document.querySelector('img[alt="SDR Weather Intelligence"]')||{}).src||"";
+  const nice=t=>{ const [a,...r]=String(t||"").split(" · "); const f=x=>x.toLowerCase().replace(/^(.)/,m=>m.toUpperCase()); return f(a)+(r.length?" · "+r.map(f).join(" · "):""); };
   function render(el, list, big){
     const W=big?720:300, H=big?420:175;
-    el.innerHTML = list.map((c,i)=>`<button class="mcard${c.flag?" flag":""}${c.prio?" prio":""}" data-i="${i}" data-id="${c.id}"><span class="mimg">${svg(c.box,W,H,c.overlays,c.opts)}</span><span class="mlab"><b>${c.title}</b><small>${c.sub}</small><em>${c.line}</em></span></button>`).join("");
+    el.innerHTML = list.map((c,i)=>`<button class="mcard${c.flag?" flag":""}${c.prio?" prio":""}" data-i="${i}" data-id="${c.id}"><span class="mimg">${svg(c.box,W,H,c.overlays,c.opts)}<span class="tvc">${LOGO()?`<img src="${LOGO()}" alt="SDR Weather Intelligence">`:""}<span style="display:grid;gap:1px;min-width:0"><b>${nice(c.title)}</b><span>${c.sub.replace(/ · (SPC|WPC|CPC|NHC)$/,"")}</span></span></span></span><span class="mlab"><b>${c.title}</b><small>${c.sub}</small><em>${c.line}</em></span></button>`).join("");
   }
   let LAST=null, CARDS=[];
   async function load(){
@@ -3411,7 +3447,7 @@ window.MAPVIEW = (function(){
   if(!window.L) return null;
   const box=document.createElement("div"); box.id="mrView"; box.hidden=true;
   box.innerHTML=`<div class="mv-top"><div><span class="k" id="mvK">MAP ROOM</span><b id="mvT"></b></div><div class="mvz" id="mvZ"><button data-z="r" aria-pressed="true">REGION</button><button data-z="us" aria-pressed="false">U.S.</button></div><button class="btn ghost" id="mvX">CLOSE</button></div>
-    <div class="mv-map" id="mvMap"></div><div class="mv-info" id="mvInfo">Tap any color on the map to see what it means there.</div><div class="rleg" id="mvLeg"></div>`;
+    <div class="mvwrap"><div class="mv-map" id="mvMap"></div><div class="tvc" id="mvBrand"></div></div><div class="mv-info" id="mvInfo">Tap any color on the map to see what it means there.</div><div class="rleg" id="mvLeg"></div>`;
   document.body.appendChild(box);
   let m=null, over=null, towns=null;
   const SPCN={TSTM:["General thunder","Thunderstorms possible, not expected to be severe."],MRGL:["Marginal risk · level 1 of 5","Isolated severe storms possible."],SLGT:["Slight risk · level 2 of 5","Scattered severe storms possible."],ENH:["Enhanced risk · level 3 of 5","Numerous severe storms possible."],MDT:["Moderate risk · level 4 of 5","Widespread severe storms likely."],HIGH:["High risk · level 5 of 5","Widespread, long-lived, intense severe storms expected."]};
@@ -3420,7 +3456,7 @@ window.MAPVIEW = (function(){
   let PL=[], PLn=-1; const mkPL=()=>{ const G=window.GEO_PLACES||[]; PLn=G.length; PL=G.map(([n,st,pop,la,lo])=>({n,st,pop,la,lo,metro:METROS.includes(n)&&pop>=50000})).sort((a,b)=>(b.metro-a.metro)||(b.pop-a.pop)); };
   let CUR=null, tip=null, BOX=null;
   function init(){
-    if(m) return; m=L.map("mvMap",{zoomControl:true,minZoom:3,maxZoom:11,attributionControl:false,zoomSnap:.5}).setView([SDR_HOME().la,SDR_HOME().lo],6); m.zoomControl.setPosition("topright");
+    if(m) return; m=L.map("mvMap",{zoomControl:true,minZoom:2,maxZoom:11,attributionControl:false,zoomSnap:.5}).setView([SDR_HOME().la,SDR_HOME().lo],6); m.zoomControl.setPosition("topright");
     document.getElementById("mvMap").style.background="#405170";
     m.createPane("land").style.zIndex=150; const ln=m.createPane("lines"); ln.style.zIndex=450; ln.style.pointerEvents="none";
     if(window.GEO_WORLD) L.geoJSON(window.GEO_WORLD,{pane:"land",interactive:false,style:{stroke:false,fillColor:"#878787",fillOpacity:1}}).addTo(m);
@@ -3483,7 +3519,9 @@ window.MAPVIEW = (function(){
   }
   function open(card, data){
     box.hidden=false; document.body.style.overflow="hidden"; init(); over.clearLayers(); CUR=card; if(tip){ m.removeLayer(tip); tip=null; }
-    document.getElementById("mvT").textContent=card.title; document.getElementById("mvK").textContent=card.sub.toUpperCase();
+    document.getElementById("mvT").textContent=card.title; document.getElementById("mvK").textContent=card.sub.replace(/ · (SPC|WPC|CPC|NHC)$/,"").toUpperCase();
+    { const lg=(document.querySelector('img[alt="SDR Weather Intelligence"]')||{}).src||"", nc=t=>{ const [a,...r]=String(t||"").split(" · "); const f=x=>x.toLowerCase().replace(/^(.)/,q=>q.toUpperCase()); return f(a)+(r.length?" · "+r.map(f).join(" · "):""); };
+      document.getElementById("mvBrand").innerHTML=`${lg?`<img src="${lg}" alt="SDR Weather Intelligence">`:""}<div><b>${nc(card.title)}</b><span>${card.sub.replace(/ · (SPC|WPC|CPC|NHC)$/,"")}</span></div>`; }
     info("Tap any color on the map to see what it means there.");
     const leg=document.getElementById("mvLeg"); leg.innerHTML="";
     if(card.id==="radar"){ L.tileLayer("https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png",{opacity:.9,maxNativeZoom:8}).addTo(over); }
@@ -3501,7 +3539,7 @@ window.MAPVIEW = (function(){
       leg.innerHTML='<span><i style="background:#FFFF00"></i>Low</span><span><i style="background:#FF9900"></i>Medium</span><span><i style="background:#FF0000"></i>High</span><span><i style="background:#fff"></i>Forecast cone</span>'; }
     priority(data);
     const pr=data.priority||{}; if((pr.mds||[]).length) leg.innerHTML+='<span><i style="background:transparent;border:2px dashed #FF8C1A"></i>Storms organizing</span>'; if((pr.watches||[]).length) leg.innerHTML+='<span><i style="background:#FFFF00"></i>Tornado watch</span><span><i style="background:#DB7093"></i>Severe T-storm watch</span>';
-    const bx=SDR_FPBOX(); BOX=card.focus||[[bx[1],bx[0]],[bx[3],bx[2]]]; const wide=!card.focus;
+    const bx=SDR_FPBOX(); BOX=card.focus||[[bx[1],bx[0]],[bx[3],bx[2]]]; const wide=!card.focus&&innerWidth>=700;   // phones open on the region (the whole U.S. is too small to read there)
     setTimeout(()=>{ zoomTo(wide?"us":"r"); placeTowns(); },50);
   }
   function close(){ box.hidden=true; document.body.style.overflow=""; }
@@ -3627,7 +3665,7 @@ window.SITE_LL = window.__LOC?{lat:__LOC.la,lon:__LOC.lo}:(window.SITE_LL || { l
   const GROUPS=[
     {k:"swarn", lab:"STORMS", on:true,   t:/^(Tornado|Severe Thunderstorm|Flash Flood|Extreme Wind) Warning$/},
     {k:"swatch",lab:"SEVERE WATCHES", on:true, t:/^(Tornado|Severe Thunderstorm) Watch$/},
-    {k:"md",    lab:"SPC DISCUSSIONS",on:true, t:null},
+    {k:"md",    lab:"STORMS ORGANIZING",on:true, t:null},
     {k:"owarn", lab:"OTHER WARNINGS", on:false,  t:/Warning$/},
     {k:"owatch",lab:"OTHER WATCHES",  on:false,  t:/Watch$/},
     {k:"adv",   lab:"ADVISORIES",     on:false,  t:/Advisory$/},
@@ -3819,12 +3857,12 @@ window.SITE_LL = window.__LOC?{lat:__LOC.la,lon:__LOC.lo}:(window.SITE_LL || { l
   const SPCC={TSTM:"#C1E9C1",MRGL:"#7FC57F",SLGT:"#F6F67F",ENH:"#E6C27F",MDT:"#E67F7F",HIGH:"#FF7FFF"};
   let lay=null, cur="none";
   const bar=document.createElement("div"); bar.className="ovbar";
-  bar.innerHTML=`<button data-o="none" aria-pressed="true">NO OVERLAY</button>
-    <span class="og"><span class="k">SEVERE</span><button data-o="spc1">DAY 1</button><button data-o="spc2">DAY 2</button><button data-o="spc3">DAY 3</button><button data-o="spc48">DAYS 4–8</button></span>
-    <span class="og"><span class="k">RAIN</span><button data-o="d1">DAY 1</button><button data-o="d2">DAY 2</button><button data-o="d3">DAY 3</button><button data-o="d13">1–3</button><button data-o="d15">1–5</button><button data-o="d17">1–7</button></span>
-    <button data-o="trop">TROPICS</button><span class="ovnote" id="ovnote"></span>`;
+  bar.innerHTML=`<label class="ovsel"><span class="k">MAP OVERLAY</span><select id="ovsel" aria-label="Map overlay"><option value="none">None</option>
+    <optgroup label="Severe storms"><option value="spc1">Today</option><option value="spc2">Tomorrow</option><option value="spc3">Day 3</option><option value="spc48">Days 4–8</option></optgroup>
+    <optgroup label="Rainfall"><option value="d1">Today</option><option value="d2">Tomorrow</option><option value="d3">Day 3</option><option value="d13">Next 3 days</option><option value="d15">Next 5 days</option><option value="d17">Next 7 days</option></optgroup>
+    <option value="trop">Tropics</option></select></label><span class="ovnote" id="ovnote"></span>`;
   const box=document.getElementById("rmap").closest(".radar"); const foot=box&&box.querySelector(".foot"); if(box) box.insertBefore(bar, foot||null);
-  const LAB={spc1:"SPC severe outlook · Day 1",spc2:"SPC severe outlook · Day 2",spc3:"SPC severe outlook · Day 3",spc48:"SPC Days 4–8 · yellow 15%, orange 30%",d1:"WPC rainfall · Day 1",d2:"WPC rainfall · Day 2",d3:"WPC rainfall · Day 3",d13:"WPC rainfall · Days 1–3",d15:"WPC rainfall · Days 1–5",d17:"WPC rainfall · Days 1–7",trop:"NHC 7-day tropical outlook"};
+  const LAB={spc1:"Severe outlook · today",spc2:"Severe outlook · tomorrow",spc3:"Severe outlook · day 3",spc48:"Severe outlook · days 4–8 · yellow 15%, orange 30%",d1:"Rainfall · today",d2:"Rainfall · tomorrow",d3:"Rainfall · day 3",d13:"Rainfall · next 3 days",d15:"Rainfall · next 5 days",d17:"Rainfall · next 7 days",trop:"Tropics · 7-day outlook"};
   async function show(k){ cur=k; bar.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.o===k)); if(lay){ m.removeLayer(lay); lay=null; }
     const note=document.getElementById("ovnote"); note.textContent=""; if(k==="none") return; note.textContent="Loading…";
     let D; try{ D=await window.MAPDATA(); }catch(e){ note.textContent="Didn't load"; return; } if(cur!==k) return;
@@ -3837,7 +3875,7 @@ window.SITE_LL = window.__LOC?{lat:__LOC.la,lon:__LOC.lo}:(window.SITE_LL || { l
     lay=L.geoJSON({type:"FeatureCollection",features:feats},{pane:"ovl",interactive:false,style}).addTo(m);
     if(feats.length){ if(k==="trop") m.setView([24,-72],4); else if(m.getZoom()>6) m.setZoom(6); }
   }
-  bar.addEventListener("click",e=>{ const b=e.target.closest("button[data-o]"); if(b) show(b.dataset.o); });
+  bar.addEventListener("change",e=>{ if(e.target.id==="ovsel") show(e.target.value); });
   setInterval(()=>{ if(cur!=="none") show(cur); }, 10*60000);
 })();
 </script>
@@ -4600,7 +4638,7 @@ function SDR_STORY(H, D, spc, nowMs){
 window.SDR_BASE = (function(){
   if(!window.L) return null;
   const TERR="https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png";
-  const R=Math.min(2,Math.round(window.devicePixelRatio||1));
+  const R=(window.matchMedia&&matchMedia("(pointer:coarse)").matches)||innerWidth<800?1:Math.min(2,Math.round(window.devicePixelRatio||1));   // v90: phones get standard terrain detail (smooth); computers keep the sharp 2x
   const Hill = L.GridLayer.extend({
     createTile(c, done){
       const k=(R>1&&c.z<13)?2:1, N=256*k, t=document.createElement("canvas"); t.width=t.height=N; t.style.width=t.style.height="256px";

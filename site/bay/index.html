@@ -6,7 +6,7 @@ window.goPlace=function(la,lo,name,st){ const u=new URL(location.href); u.search
 window.goHome=function(){ const u=new URL(location.href); u.searchParams.delete("place"); location.href=u.toString(); };
 </script>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Bay County · SDR Weather Intelligence (Live · v99)</title>
+<title>Bay County · SDR Weather Intelligence (Live · v106)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap">
 <style>
@@ -638,7 +638,7 @@ body.rfull-on{overflow:hidden}
 .rwm{position:absolute;left:10px;bottom:22px;z-index:700;background:#fff;border-radius:6px;padding:3px 7px;opacity:.85;pointer-events:none}.rwm img{height:20px;display:block}
 .etaban{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);z-index:800;background:rgba(229,57,53,.95);color:#fff;border-radius:8px;padding:7px 12px;font-size:14px;box-shadow:0 6px 20px rgba(0,0,0,.4);max-width:calc(100% - 140px);text-align:center}
 .etaban b{font-family:var(--display);letter-spacing:.04em}
-.rtoast{position:absolute;left:10px;top:10px;z-index:850;display:grid;gap:6px;max-width:60%}
+.rtoast{position:absolute;left:10px;top:10px;z-index:850;display:grid;gap:6px;max-width:60%;pointer-events:none}
 .tmsg{background:rgba(10,20,40,.94);border:1px solid var(--line);border-left:5px solid #fff;color:var(--fg);border-radius:6px;padding:6px 10px;font-size:13px;font-family:var(--display);letter-spacing:.05em;animation:tin .3s ease-out}
 @keyframes tin{from{transform:translateX(-12px);opacity:0}}
 .tarrow{display:block;color:#fff;font-size:13px;line-height:14px;text-align:center;text-shadow:0 0 3px #000}
@@ -649,7 +649,7 @@ body.rfull-on{overflow:hidden}
 .tline{cursor:pointer}
 .tarrow{font-size:15px!important;line-height:16px!important}
 .acard{right:auto;bottom:auto}
-.rlayer{filter:blur(var(--rblur,0px))}
+.rlayer{filter:blur(var(--rblur,0px))}.rlayer[style*="opacity: 0;"]{visibility:hidden;filter:none}   /* v100: frames you can't see aren't painted */
 .rpause{display:inline-flex;align-items:center;gap:6px;margin-left:8px;padding:0 10px;height:28px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--fg);font-family:var(--display);font-weight:800;letter-spacing:.1em;font-size:12px;cursor:pointer}
 .rpause[aria-pressed="true"]{background:var(--heads);color:#0A1428;border-color:var(--heads)}
 .amt4{display:grid;grid-template-columns:3.4em 1fr;gap:4px 10px;align-items:center;margin-top:12px}
@@ -677,6 +677,7 @@ body.rfull-on{overflow:hidden}
 .amt5 .bar5 .cap.l{left:-7px}.amt5 .bar5 .cap.r{right:-7px;background:#3D9BFF}
 .amt5 .bar5 .lkm{top:-6px;width:5px;height:20px;margin-left:-2.5px;background:#fff;box-shadow:0 0 0 2px #0E1A33}
 .amt5 .bar5 .rng{display:none}
+.amtl{margin:4px 0 10px}.amtl small{display:block;font-family:var(--display);font-weight:700;letter-spacing:.1em;font-size:10.5px;color:var(--muted)}.amtl b{font-family:var(--display);font-weight:800;font-size:26px}.amtl span{display:block;font-size:13.5px;color:var(--fg)}
 .amt6{display:grid;grid-template-columns:4.6em 1fr;gap:6px 10px;margin-top:10px}
 .amt6 .al{font-family:var(--display);font-weight:700;letter-spacing:.1em;font-size:11px;color:var(--muted);padding-top:22px}
 .amt6 .none{font-size:14px;color:var(--muted);padding-top:2px}
@@ -887,6 +888,13 @@ body.rfull-on{overflow:hidden}
 @media (max-width:640px){.tvc img{height:32px!important}.tvc b{font-size:19px!important}.tvc span{font-size:11px!important}
   .mcard .mimg .tvc img{height:26px!important}.mcard .mimg .tvc b{font-size:15px!important}.mvwrap .tvc img{height:36px!important}.mvwrap .tvc b{font-size:21px!important}}
 .sts.pch{margin-bottom:6px}
+/* v101 day detail: bigger numbers, tap a number for its hour-by-hour chart (closed until tapped) */
+.dexp .sts{grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px 8px}.dexp .st b{font-size:26px;font-weight:800;letter-spacing:.01em;white-space:nowrap}.dexp .st small{font-size:10.5px;font-weight:700}
+.dexp .st.wide b{font-size:22px}.dexp .st[data-chart]{cursor:pointer}.dexp .st[data-chart] small::after{content:" ▸";color:#6FB7FF}.dexp .st[data-chart]:hover b{color:#CFE4FF}
+.dexp .when{font-size:13.5px;color:var(--fg);margin:-2px 0 8px}.dexp .when b{color:#8FC3FF;font-weight:700}
+.dcharts{display:grid;gap:8px;grid-column:1/-1}.dcharts:empty{display:none}.dchart{display:none;max-width:680px;padding:8px 10px 6px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.03)}.dchart.open{display:block}.dchart svg{display:block;width:100%;height:auto}
+.dchart .ck{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:4px}.dchart .ck i{display:inline-block;width:12px;height:3px;border-radius:2px;margin-right:5px;vertical-align:middle}
+.dchart .dch{display:flex;align-items:center;justify-content:space-between;margin:0 0 4px}.dchart .dch b{font:700 11px var(--display);letter-spacing:.12em;color:var(--muted)}.dchart .dch button{background:none;border:0;color:var(--muted);font-size:15px;cursor:pointer}
 
 /* v97 DOT cameras */
 .camtog{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:999px;padding:6px 12px;font:700 11px var(--display);letter-spacing:.1em;cursor:pointer}
@@ -2502,7 +2510,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
   const RADAR = { smooth: 2, frameMs: 450, holdMs: 1600, refreshMs: 120000 };
   const capZ = ({0:undefined,1:9,2:8,3:7})[RADAR.smooth];   // native radar tiles up to this zoom, stretched (bilinear) beyond it
   const mrmsPx = RADAR.smooth>=2 ? 256 : 512;
-  const mosaicSteps=["m55m","m50m","m45m","m40m","m35m","m30m","m25m","m20m","m15m","m10m","m05m","MRMS"];
+  const mosaicSteps=["m45m","m40m","m35m","m30m","m25m","m20m","m15m","m10m","m05m","MRMS"];
   // NOAA MRMS 1-km base reflectivity, newest frame only (the map service is latest-only). bbox in EPSG:3857 per tile.
   const MRMS = L.TileLayer.extend({ getTileUrl(c){ const E=20037508.342789244, size=2*E/Math.pow(2,c.z);
       const x0=-E+c.x*size, x1=x0+size, y1=E-c.y*size, y0=y1-size;
@@ -2549,7 +2557,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
     clear(); buildFrames(); refresh=setInterval(buildFrames, RADAR.refreshMs);
     let i=0; window._radarPaused=false;
     const step=()=>{ if(window._radarBusy){ timer=setTimeout(step,250); return; } if(!window._radarPaused){ layers.forEach((f,j)=>f.setOpacity(j===i?.92:0));
-        const mins=(mosaicSteps.length-1-i)*5; const fb=Math.floor(Date.now()/300000)*300000, tfmt=d=>new Date(d).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"}); src.textContent = mins? tfmt(fb-mins*60000) : "NOW · "+tfmt(Date.now()); }
+        const mins=(mosaicSteps.length-1-i)*5; const fb=Math.floor(Date.now()/300000)*300000, tfmt=d=>new Date(d).toLocaleDateString("en-US",{weekday:"short"}).toUpperCase()+" "+new Date(d).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"}); src.textContent = mins? tfmt(fb-mins*60000) : "NOW · "+tfmt(Date.now()); }
       const last = i===layers.length-1; if(!window._radarPaused) i=(i+1)%layers.length;
       timer=setTimeout(step, last ? RADAR.holdMs : RADAR.frameMs); };
     step();
@@ -2581,6 +2589,14 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
     }catch(e){ console.warn("SPC MD", e); }
   }
   pollMD(); setInterval(pollMD, 120000);
+  window._MDINFO={}; window._mdInfo=async num=>{ if(!num) return null; if(window._MDINFO[num]) return window._MDINFO[num]; const o={};
+    try{ const n=String(num).padStart(4,"0"); const tx=await (await fetch(`https://www.spc.noaa.gov/products/md/md${n}.html`)).text(); const T=tx.replace(/<[^>]+>/g," ");
+      const pr=T.match(/Probability of Watch Issuance\.\.\.\s*(\d+)\s*percent/i); if(pr) o.prob=+pr[1];
+      const cn=(T.match(/Concerning\.\.\.([^\n]+)/i)||[])[1]||"", sm=(T.match(/SUMMARY\.\.\.([\s\S]{0,600})/i)||[])[1]||""; const z=(cn+" "+sm).toLowerCase();
+      o.haz=[/tornado/.test(z)?"tor":null,/wind|gust/.test(z)||/severe/.test(cn.toLowerCase())?"wind":null,/hail/.test(z)?"hail":null,/flash flood|heavy rain/.test(z)?"flood":null,/snow|freezing|ice|blizzard/.test(z)?"winter":null].filter(Boolean);
+      const vd=T.match(/Valid\s+(\d{2})(\d{2})(\d{2})Z\s*-\s*(\d{2})(\d{2})(\d{2})Z/i);
+      if(vd){ const now=new Date(), mk=(d,h,mi)=>{ const x=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),+d,+h,+mi)); if(x-now>20*864e5) x.setUTCMonth(x.getUTCMonth()-1); return +x; }; o.from=mk(vd[1],vd[2],vd[3]); o.to=mk(vd[4],vd[5],vd[6]); }
+    }catch(e){} window._MDINFO[num]=o; return o; };
   function setMode(k){ mode=k; setTimeout(()=>rblur&&rblur(),0); document.querySelectorAll("#rmode button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.m===k));
     if(k==="mosaic") mosaic(); else if(k==="ptype") ptype(); else if(k==="hires") single("N0B","LOCAL RADAR"); else single("N0G","VELOCITY"); const lg=document.getElementById("ptleg"); if(lg) lg.hidden=k!=="ptype"; }
   // v97 RAIN · SNOW · ICE: the government's live precipitation-type mosaic (same source as radar.weather.gov, updates every 2 min).
@@ -2608,7 +2624,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
     const mk=t=>L.tileLayer.wms(PT_WMS,{layers:"conus_pcpn_typ",format:"image/png",transparent:true,version:"1.3.0",crs:L.CRS.EPSG3857,opacity:0,className:"rlayer",updateWhenZooming:false,updateWhenIdle:true,keepBuffer:1,uppercase:true,time:new Date(t).toISOString()});
     layers=pick.map(t=>{ const l=mk(t); l._t=t; l.on("tileload",()=>window._noteRadarImg&&window._noteRadarImg()); return l.addTo(m); });
     const lg=document.getElementById("ptleg"); if(lg) lg.innerHTML=`<span><i style="background:#2FA84F"></i>Rain</span><span><i style="background:#E8D44D"></i>Heavy rain / storms</span><span><i style="background:#4D8CFF"></i>Snow</span><span><i style="background:#E05AE0"></i>Hail</span><span class="dim">Source: NOAA MRMS precipitation type</span>`;
-    let i=0; window._radarPaused=false; const tfmt=d=>new Date(d).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
+    let i=0; window._radarPaused=false; const tfmt=d=>new Date(d).toLocaleDateString("en-US",{weekday:"short"}).toUpperCase()+" "+new Date(d).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
     const step=()=>{ if(mode!=="ptype") return; if(window._radarBusy){ timer=setTimeout(step,250); return; }
       if(!window._radarPaused){ layers.forEach((f,j)=>f.setOpacity(j===i?.9:0)); src.textContent=(i===layers.length-1?"NOW · ":"RAIN · SNOW · ICE · ")+tfmt(layers[i]._t); }
       const last=i===layers.length-1; if(!window._radarPaused) i=(i+1)%layers.length; timer=setTimeout(step,last?RADAR.holdMs:RADAR.frameMs); };
@@ -2968,7 +2984,11 @@ window.STRIPS = (function(){
   const QC=[[0.01,"#7FFF00"],[0.1,"#00CD00"],[0.25,"#008B00"],[0.5,"#104E8B"],[1,"#1E90FF"],[1.5,"#00B2EE"],[2,"#00EEEE"],[2.5,"#8968CD"],[3,"#912CEE"],[4,"#8B008B"],[5,"#8B0000"],[7,"#FF0000"]];
   const qc = v => { let c="#7FFF00"; for(const [t,col] of QC) if(v>=t) c=col; return c; };
   // precip amount on a real inch scale: the colored segment is the range of outcomes, numbers sit right on the ends, EXPECT sits over its tick
-  const amount = (lab,r,snow) => { if(!r) return "";
+  // v102: the amount is one line (most likely, then the range in words), no slider
+  const amount = (lab,r,snow) => { if(!r) return ""; const unit=snow?10:1; const f=h=>rIn(h,snow);
+    if(r[2]<unit) return `<div class="amtl"><small>${lab} AMOUNT</small><b>None expected</b></div>`;
+    const same=f(r[0])===f(r[2]), lo=r[0]<unit?"a trace":f(r[0])+'"'; return `<div class="amtl"><small>${lab} AMOUNT</small><b>${f(r[1])}"</b><span>${same?"":`as little as ${lo} · as much as ${f(r[2])}"`}</span></div>`; };
+  const amountOld = (lab,r,snow) => { if(!r) return "";
     const unit=snow?10:1; if(r[2]<unit) return `<div class="amt6"><span class="al">${lab}</span><div class="none">None expected</div></div>`;
     const v=r.map(x=>x/100), NICE=snow?[1,2,3,4,6,8,10,12,18,24,36]:[0.1,0.2,0.25,0.5,0.75,1,1.5,2,3,4,5,6,8,10];
     const top=NICE.find(s=>s>=v[2]*1.15)||Math.ceil(v[2]*1.2), P=x=>Math.max(0,Math.min(100,x/top*100));
@@ -2985,7 +3005,42 @@ window.STRIPS = (function(){
       </div></div>`; };
   const lv = c => c>=3?"g":c===2?"o":"r";
   const seg = c => `<span class="agree ${lv(c)}">${[1,2,3,4,5].map(i=>`<i class="${i<=c?"on":""}"></i>`).join("")}</span>`;
-  const stat = (lab,val,unit,cls) => val==null||val===""?"":`<div class="st ${cls||""}"><small>${lab}</small><b>${val}${unit?`<em>${unit}</em>`:""}</b></div>`;
+  const stat = (lab,val,unit,cls) => val==null||val===""?"":`<div class="st ${cls||""}${lab==="WIND"?" wide":""}"${({WIND:' data-chart="wind"',GUSTS:' data-chart="wind"',HIGH:' data-chart="temp"',LOW:' data-chart="temp"',RAIN:' data-chart="rain"',THUNDER:' data-chart="storm"'})[lab]||""}><small>${lab}</small><b>${val}${unit?`<em>${unit}</em>`:""}</b></div>`;
+  // v101 hour-by-hour for an opened day: a one-line "when" for rain, and charts (rain / temperature / wind / thunder) that open only when a number is tapped.
+  const hoursOf=x=>{ const day=new Date(x.date||Date.now()).toDateString(); return (HOURS||[]).filter(h=>new Date(h.t).toDateString()===day); };
+  const hrOf=t=>new Date(t).getHours(), hlab=h=>{ h=((h%24)+24)%24; return h===0?"midnight":h===12?"noon":(h%12)+(h<12?" AM":" PM"); };
+  const hrng2=(a,b)=>{ const A=hlab(a),B=hlab(b); return A.slice(-2)===B.slice(-2)&&!/noon|midnight/.test(A+B)?A.replace(/ (AM|PM)/,"")+"–"+B:A+"–"+B; };
+  function rainWhen(x){ const H=hoursOf(x); if(H.length<12) return ""; const mp=Math.max(...H.map(h=>h.pop||0)), mt=Math.max(...H.map(h=>h.thunder||0)); if(mp<10) return "";
+    const thr=mp>=50?40:Math.max(10,mp-15), wet=H.filter(h=>(h.pop||0)>=thr), s0=hrOf(wet[0].t), e0=hrOf(wet[wet.length-1].t)+1, storm=mt>=30;
+    const pk=H.filter(h=>(h.pop||0)>=mp-10), ps=hrOf(pk[0].t), pe=hrOf(pk[pk.length-1].t)+1;
+    let t= wet.length>=16?`on and off all day`: s0>=12&&e0>=23?`mainly after ${hlab(s0)}`: s0<=6&&e0<=13?`early, dry by ${hlab(e0)}`: `most likely ${hrng2(s0,e0)}`;
+    const best=(pe-ps<e0-s0&&pe-ps<=6)?` · best chance ${hrng2(ps,pe)}`:""; return `<div class="when">${storm?"Storms":"Rain"} <b>${t}</b>${best}</div>`; }
+  function chartsOf(x){ const H=hoursOf(x); if(H.length<3) return ""; const mt=Math.max(...H.map(h=>h.thunder||0)), G=H.map(h=>h.gust||hrWind(h)||0), gm=Math.max(...G), T=H.map(h=>h.temp);
+    const k0=hrOf(H[0].t), today=k0>0&&new Date(H[0].t).toDateString()===new Date().toDateString(), K0=today?k0:0, SPAN=Math.max(1,23-K0);
+    const W=720,Hh=150,L=30,R=W-12,top=22,bot=Hh-24, X=k=>L+(R-L)*(k-K0)/SPAN, at=k=>H.find(h=>hrOf(h.t)===k), bw=Math.min(20,Math.max(8,(R-L)/(SPAN+1)*0.7));
+    const AXL={0:"12 AM",3:"3 AM",6:"6 AM",9:"9 AM",12:"NOON",15:"3 PM",18:"6 PM",21:"9 PM"}; const ticks=today?[k0,...[...Array(24).keys()].filter(k=>k>k0&&k<23&&(SPAN<=8?true:k%3===0))]:[0,3,6,9,12,15,18,21];
+    const tl=k=>today&&k===k0?"NOW":AXL[k]||(k===0?"12 AM":k===12?"NOON":(k%12)+(k<12?" AM":" PM"));
+    const axis=ticks.map(k=>`<line x1="${X(k)}" x2="${X(k)}" y1="${top}" y2="${bot}" stroke="rgba(255,255,255,.07)"/><text x="${X(k)}" y="${Hh-5}" font-size="12.5" font-weight="700" fill="${today&&k===k0?"#FFC857":"#DCE6F5"}" text-anchor="${k===K0?"start":"middle"}">${tl(k)}</text>`).join("")+`<line x1="${L}" x2="${R}" y1="${bot}" y2="${bot}" stroke="rgba(255,255,255,.2)"/>`;
+    const peakTag=(xx,yy,t,big)=>`<text x="${xx}" y="${yy}" font-family="var(--display),Arial,sans-serif" font-size="${big?15:13.5}" font-weight="800" letter-spacing=".04em" fill="#fff" text-anchor="middle" stroke="#0E1A33" stroke-width="3.5" paint-order="stroke">${t}</text>`;
+    const barsOf=(val,col,unit,max)=>{ const vs=[...Array(24)].map((_,k)=>{ const h=at(k); return h?val(h):null; }); const pk=Math.max(0,...vs.filter(v=>v!=null)); let tagged=false;
+      return vs.map((v,k)=>{ if(v==null||v<=0) return ""; const bh=Math.max(3,(bot-top)*Math.min(1,v/max)); const t=!tagged&&v===pk&&pk>0; if(t) tagged=true;
+        return `<rect x="${X(k)-bw/2}" y="${bot-bh}" width="${bw}" height="${bh}" rx="3" fill="${col(v,at(k))}"/>${t?peakTag(X(k),bot-bh-6,v+unit):""}`; }).join(""); };
+    const rainCol=(v,h)=>(h.thunder||0)>=30?(v>=50?"#F5A524":"#F5D76E"):v>=60?"#2F7BFF":v>=40?"#4FA3FF":v>=20?"#8CC8FF":"#C9E6FF";
+    const C={};
+    C.rain=`<svg viewBox="0 0 ${W} ${Hh}">${barsOf(h=>h.pop||0,rainCol,"%",100)}${axis}</svg><div class="ck"><span><i style="background:#8CC8FF"></i>Slight</span><span><i style="background:#4FA3FF"></i>Chance</span><span><i style="background:#2F7BFF"></i>Likely</span>${mt>=30?`<span><i style="background:#F5A524"></i>Storms</span>`:""}</div>`;
+    { const tl=Math.min(...T), th=Math.max(...T), ty=v=>bot-12-(bot-top-26)*((v-tl)/Math.max(1,th-tl)); const P=H.map(h=>[X(hrOf(h.t)),ty(h.temp),h.temp,hrOf(h.t)]); const hp=P.find(q=>q[2]===th), lp=P.find(q=>q[2]===tl);
+      const pts=P.map(q=>q[0]+","+q[1]).join(" "), area=`${P[0][0]},${bot} ${pts} ${P[P.length-1][0]},${bot}`;
+      const step=SPAN<=8?2:3; const labs=P.filter(q=>(q[3]-K0)%step===0||(today&&q[3]===k0)).map(q=>peakTag(q[0],q[1]-9,q[2]+"°")).join("");
+      const hiTag=((hp[3]-K0)%step&&!P.some(q=>(q[3]-K0)%step===0&&q[2]===th))?`<circle cx="${hp[0]}" cy="${hp[1]}" r="5" fill="#FFC857" stroke="#0E1A33" stroke-width="2"/>${peakTag(hp[0],hp[1]-11,th+"°",true)}`:`<circle cx="${hp[0]}" cy="${hp[1]}" r="5" fill="#FFC857" stroke="#0E1A33" stroke-width="2"/>`;
+      C.temp=`<svg viewBox="0 0 ${W} ${Hh}"><polygon points="${area}" fill="#FFC857" opacity=".12"/><polyline points="${pts}" fill="none" stroke="#FFC857" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round"/>${labs}${hiTag}${axis}</svg>`; }
+    { const wcol=v=>v>=45?"#FF6B6F":v>=35?"#F5A524":v>=25?"#F5D76E":v>=15?"#7FD6C2":"#4E6E8E", wmax=Math.max(40,gm), sc=v=>(bot-top)*Math.min(1,v/wmax); let tagged=false;
+      const bars=[...Array(24)].map((_,k)=>{ const h=at(k); if(!h) return ""; const w=hrWind(h)||0, g=Math.max(w,h.gust||0); if(g<=0) return ""; const gh=Math.max(3,sc(g)), wh=Math.max(0,sc(w)); const t=!tagged&&g===gm; if(t) tagged=true;
+        const tx=Math.min(R-60,Math.max(L+60,X(k)));
+        return `<rect x="${X(k)-bw/2}" y="${bot-gh}" width="${bw}" height="${gh}" rx="3" fill="${wcol(g)}" opacity=".38"/>${wh>0?`<rect x="${X(k)-bw/2}" y="${bot-wh}" width="${bw}" height="${wh}" rx="3" fill="${wcol(w)}"/>`:""}${t?peakTag(tx,bot-gh-7,`GUSTS ${g} MPH`,true)+(w>0&&gh-wh>22?peakTag(tx,bot-wh-7,`WIND ${w}`):""):""}`; }).join("");
+      C.wind=`<svg viewBox="0 0 ${W} ${Hh}">${bars}${axis}</svg>`; }
+    if(mt>=20) C.storm=`<svg viewBox="0 0 ${W} ${Hh}">${barsOf(h=>h.thunder||0,v=>v>=50?"#F5A524":"#F5D76E","%",100)}${axis}</svg><div class="ck"><span><i style="background:#F5A524"></i>Chance of thunder</span></div>`;
+    const def=window._dtab&&C[window._dtab]?window._dtab:"";
+    return `<div class="dcharts">${Object.keys(C).map(k=>`<div class="dchart${k===def?" open":""}" data-k="${k}"><div class="dch"><b>${({rain:"RAIN CHANCE",temp:"TEMPERATURE",wind:"WIND & GUSTS",storm:"THUNDER"})[k]} · HOUR BY HOUR</b><button type="button" data-chart="${k}" aria-label="Close">✕</button></div>${C[k]}</div>`).join("")}</div>`; }
   function renderDays(){
     const el=$("days"); if(!el) return; el.className="dlist sdr";
     const head=$("days-conf"); if(head){ const c3=DAYS.slice(0,3).map(confOf).filter(v=>v!=null); const c=c3.length?Math.min(...c3):null; window.SDR_CONF=DAYS.map(x=>({date:x.date,conf:confOf(x),why:confOf(x)!=null&&confOf(x)<=2?confWhy(x):""}));
@@ -3009,17 +3064,17 @@ window.STRIPS = (function(){
       return row + `<div class="dexp ${cls}">
         <p class="dx-txt">${x.dayTxt || x.short || x.nightTxt || ""}</p>
         <div class="dx-grid">
-          <section><h4>PRECIPITATION</h4>
-            ${(()=>{ const d=x.pp||0, n=x.ppN||0;   // v96: labeled like the conditions, so day vs night reads at a glance
-                if(!d&&!n&&!(x.snowP>=10)&&!(x.iceP>=10)) return `<div class="chl">Rain <b>dry</b> day and night</div>`;
-                return `<div class="sts pch">${stat("RAIN · DAY", d+"%")}${stat("RAIN · NIGHT", n+"%")}${(x.thunder||0)>=20?stat("THUNDER", x.thunder+"%", "", x.thunder>=30?"warn":""):""}${(x.snowP||0)>=10?stat("SNOW", x.snowP+"%"):""}${(x.iceP||0)>=10?stat("ICE", x.iceP+"%", "", "warn"):""}</div>`; })()}
-            ${x.rr && x.rr[2]<1 && !anySnow && !anyIce ? `<div class="chl dim">No measurable rain expected</div>` : amount("AMOUNT", x.rr, false)}${anySnow?amount("SNOW", x.sr, true):""}${anyIce?amount("ICE", x.ir, false):""}
-            ${c!=null?`<div class="agreeline">MODEL AGREEMENT ${seg(c)} <b class="${lv(c)}">${c} of 5</b></div>${c<=2?`<div class="confwhy">Models disagree on ${confWhy(x)}. Expect changes; we will update as it comes into focus.</div>`:""}`:""}
-          </section>
           <section><h4>CONDITIONS</h4>
-            <div class="sts">${stat("HIGH", x.hi!=null?x.hi+"°":null)}${stat("LOW", x.lo!=null?x.lo+"°":null)}${x.uv!=null?stat("UV", Math.round(x.uv), uvLab(x.uv), uvCls(x.uv)):""}
-            ${stat("WIND", wfmt(x.wind)||null, "mph")}${stat("GUSTS", x.gust!=null?g5(x.gust):null, "mph", x.gust>=35?"bad":x.gust>=25?"warn":"")}${stat("DEW POINT", x.dew!=null?x.dew+"°":null)}${x.wbgt?stat("WBGT", x.wbgt+"°","est",x.wbgt>=87?"bad":x.wbgt>=82?"warn":""):""}</div>
+            <div class="sts">${stat("HIGH", x.hi!=null?x.hi+"°":null)}${stat("LOW", x.lo!=null?x.lo+"°":null)}
+            ${stat("WIND", wfmt(x.wind)||null, "mph")}${stat("GUSTS", x.gust!=null?g5(x.gust):null, "mph", x.gust>=35?"bad":x.gust>=25?"warn":"")}${stat("DEW POINT", x.dew!=null?x.dew+"°":null)}${x.wbgt?stat("WBGT", x.wbgt+"°","est",x.wbgt>=87?"bad":x.wbgt>=82?"warn":""):""}${x.uv!=null?stat("UV", Math.round(x.uv), uvLab(x.uv), uvCls(x.uv)):""}</div>
           </section>
+          <section><h4>PRECIPITATION</h4>
+            ${(()=>{ const r=Math.max(x.pp||0,x.ppN||0);   // v101: one rain number, then WHEN (from the hourly forecast)
+                if(!r&&!(x.snowP>=10)&&!(x.iceP>=10)) return `<div class="chl">Rain <b>dry</b> day and night</div>`;
+                return `<div class="sts pch">${stat("RAIN", r+"%")}${(x.thunder||0)>=20?stat("THUNDER", x.thunder+"%", "", x.thunder>=30?"warn":""):""}${(x.snowP||0)>=10?stat("SNOW", x.snowP+"%"):""}${(x.iceP||0)>=10?stat("ICE", x.iceP+"%", "", "warn"):""}</div>${rainWhen(x)}`; })()}
+            ${x.rr && x.rr[2]<1 && !anySnow && !anyIce ? `<div class="chl dim">No measurable rain expected</div>` : amount("RAIN", x.rr, false)}${anySnow?amount("SNOW", x.sr, true):""}${anyIce?amount("ICE", x.ir, false):""}
+          </section>
+          ${chartsOf(x)}
           ${(()=>{ const sw=sprayWin(x), so=soilT(i), wa=waterT(i), gd=gduT(i); if(!sw&&!so&&!wa&&!gd) return "";
             const FX={"SPRAY WINDOW":"Good spraying hours today: wind 2–10 mph, gusts under 15 and rain chance under 30%. Too windy blows it off target, dead-calm air lets it drift, and rain washes it off. Green bars are good hours, yellow borderline, red no.",
               "SOIL TEMP":"Average temperature of the top 4 inches of ground. Key marks: about 50° to plant corn, 55° for crabgrass pre-emergent, 65° to seed warm-season grass.",
@@ -3028,6 +3083,7 @@ window.STRIPS = (function(){
             const t=(lab,o,cls)=>o?`<div class="ft ${cls||""}" role="button" tabindex="0" onclick="this.classList.toggle('open')"><small>${cls?"<i></i>":""}${lab}<em>ⓘ</em></small><b>${o.big}</b>${o.sub?`<span>${o.sub}</span>`:""}${o.hrs&&o.hrs.length>3?`<div class="hb">${o.hrs.map(c=>`<i class="${c}"></i>`).join("")}</div><div class="hl"><span>${o.hl[0]}</span><span>${o.hl[1]}</span></div>`:""}<p class="fx">${FX[lab]||""}</p></div>`:"";
             return `<section class="farm"><h4>FARM &amp; AG</h4><div class="ftg">${t("SPRAY WINDOW",sw,sw&&sw.lvl)}${t("SOIL TEMP",so)}${t("CROP WATER",wa,wa&&wa.lvl)}${t("HEAT UNITS",gd)}</div></section>`; })()}
         </div>
+        ${c!=null?`<div class="agreeline" style="margin-top:10px">MODEL AGREEMENT ${seg(c)} <b class="${lv(c)}">${c} of 5</b></div>${c<=2?`<div class="confwhy">Models disagree on ${confWhy(x)}. Expect changes; we will update as it comes into focus.</div>`:""}`:""}
         ${x.dayTxt&&x.nightTxt?`<p class="dx-n"><b>Night.</b> ${x.nightTxt}</p>`:""}
       </div>`;
     }).join("");
@@ -3036,7 +3092,9 @@ window.STRIPS = (function(){
   function wire(){
     const hs=$("hours"); if(hs && !hs._w){ hs.addEventListener("scroll", ()=>{ const r=hs.getBoundingClientRect(); const first=[...hs.querySelectorAll(".hr")].find(x=>x.getBoundingClientRect().right>r.left+20); if(first&&$("hdaylbl")) $("hdaylbl").textContent=first.dataset.day; },{passive:true}); }
     if(hs && !hs._w){ hs._w=1; hs.addEventListener("click", e=>{ const r=e.target.closest(".hr"); if(!r) return; selH = selH===+r.dataset.i ? -1 : +r.dataset.i; renderHours(); }); }
-    const ds=$("days"); if(ds && !ds._w){ ds._w=1; ds.addEventListener("click", e=>{ const r=e.target.closest(".drow"); if(!r) return; selD = selD===+r.dataset.i ? -1 : +r.dataset.i; renderDays(); }); }
+    const ds=$("days"); if(ds && !ds._w){ ds._w=1; ds.addEventListener("click", e=>{ const dc=e.target.closest(".dexp [data-chart]"); if(dc){ const box=dc.closest(".dexp"), k=dc.dataset.chart, c=box.querySelector(`.dchart[data-k="${k}"]`); const was=c&&c.classList.contains("open");
+      box.querySelectorAll(".dchart").forEach(x=>x.classList.remove("open")); if(c&&!was){ c.classList.add("open"); setTimeout(()=>c.scrollIntoView({behavior:"smooth",block:"center"}),50); } window._dtab=c&&!was?k:null; return; }
+      const r=e.target.closest(".drow"); if(!r) return; const pr=e.target.closest(".drain")?"rain":e.target.closest(".dwind")?"wind":e.target.closest(".dt")?"temp":null; window._dtab=pr; selD = (selD===+r.dataset.i && !pr) ? -1 : +r.dataset.i; renderDays(); }); }
     const sg=$("hspan"); if(sg && !sg._w){ sg._w=1; sg.addEventListener("click", e=>{ const b=e.target.closest("button"); if(!b) return; span=+b.dataset.h; sg.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed", x===b)); selH=-1; renderHours(); }); }
   }
   // rounding the way a forecaster says it: precip/thunder to 10% (under 10% = nothing), humidity to 5%, clouds to 10%
@@ -3768,18 +3826,29 @@ window.SITE_LL = window.__LOC?{lat:__LOC.la,lon:__LOC.lo}:(window.SITE_LL || { l
   function pop(txt,col){ const el=document.createElement("div"); el.className="tmsg"; el.style.borderLeftColor=col; el.innerHTML=txt; toast.appendChild(el); setTimeout(()=>el.remove(),45000); }
   function toastNew(first){ const st=a=>{ const s=new Set(); (a.nws&&a.nws.properties.areaDesc||"").replace(/,\s*([A-Z]{2})/g,(x,y)=>s.add(y)); return [...s].slice(0,3).join("/"); };
     ITEMS.filter(i=>/Watch$|^Tornado Warning$/.test(i.ev)&&visible(i)).forEach(i=>{ const id=(i.nws&&i.nws.id)||(i.wwa&&i.wwa.cap_id)||i.ev+i.ends; if(SEEN.has(id)) return; SEEN.add(id);
-      if(!first) pop(`NEW <b>${i.ev.toUpperCase()}</b>${st(i)?" · "+st(i):""}`, COLORS[i.ev]||"#fff"); });
-    (window._MDS_ALL||[]).forEach(f=>{ const id="md"+f._num; if(SEEN.has(id)) return; SEEN.add(id); if(!first&&ON.md) pop(`NEW <b>SPC DISCUSSION #${f._num}</b>${f._towns&&f._towns[0]?" · near "+f._towns[0]:""}`,"#FF8C1A"); }); }
+      if(!first&&near(i.bbox)) pop(`NEW <b>${i.ev.toUpperCase()}</b>${st(i)?" · "+st(i):""}`, COLORS[i.ev]||"#fff"); });
+    (window._MDS_ALL||[]).forEach(f=>{ const id="md"+f._num; if(SEEN.has(id)) return; SEEN.add(id); if(!first&&ON.md&&near(bboxOf(f.geometry))) pop(`NEW <b>STORMS ORGANIZING</b>${f._towns&&f._towns[0]?" · near "+f._towns[0]:""}`,"#FF8C1A"); }); }
+  // v100: "NEW …" pop-ups only for the client's part of the country (within ~300 miles); the rest still draws on the map
+  const near=bb=>{ if(!bb) return false; const v=(window.DASH&&DASH.venue&&DASH.venue())||{la:site[0],lo:site[1]}; const cx=(bb[0]+bb[2])/2, cy=(bb[1]+bb[3])/2; return Math.hypot((cx-v.lo)*Math.cos(v.la*Math.PI/180),cy-v.la)*69<=300; };
   window.addEventListener("md-ready",()=>toastNew(!ITEMS.length));
-  function draw(){ Object.values(groups).forEach(g=>g.clearLayers());
+  // v100: a watch is one box when zoomed out (TV style), its counties when zoomed in
+  const hull=g=>{ const P=[]; (g.type==="Polygon"?[g.coordinates]:g.type==="MultiPolygon"?g.coordinates:[]).forEach(p=>p[0].forEach(q=>P.push(q))); if(P.length<4) return null;
+    P.sort((a,b)=>a[0]-b[0]||a[1]-b[1]); const cr=(o,a,b)=>(a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]); const lo=[],up=[];
+    for(const p of P){ while(lo.length>=2&&cr(lo[lo.length-2],lo[lo.length-1],p)<=0) lo.pop(); lo.push(p); }
+    for(const p of P.slice().reverse()){ while(up.length>=2&&cr(up[up.length-2],up[up.length-1],p)<=0) up.pop(); up.push(p); }
+    const h=lo.slice(0,-1).concat(up.slice(0,-1)); return {type:"Polygon",coordinates:[h.concat([h[0]])]}; };
+  let boxMode=null;
+  function draw(){ Object.values(groups).forEach(g=>g.clearLayers()); boxMode=m.getZoom()<8;
     ITEMS.filter(visible).sort((a,b)=>rank(a.ev)-rank(b.ev)).forEach(i=>{ const k=kind(i.ev), col=COLORS[i.ev]||"#8A9BB8", big=BIG.test(i.ev);
-      L.geoJSON(i.geom,{pane:"f"+k,interactive:false,renderer:FREND[k],style:{stroke:false,fillColor:col,fillOpacity:big?.45:k==="watch"?.22:.25}}).addTo(groups[k]);
-      L.geoJSON(i.geom,{pane:"a"+k,interactive:false,renderer:REND[k],style:{color:col,weight:big?3.5:k==="watch"?2.2:1.5,fill:false,className:big?"wpoly":""}}).addTo(groups[k]); }); }
+      let g=i.geom; if(k==="watch"&&boxMode){ if(i._hull===undefined) i._hull=hull(i.geom); if(i._hull) g=i._hull; }
+      L.geoJSON(g,{pane:"f"+k,interactive:false,renderer:FREND[k],style:{stroke:false,fillColor:col,fillOpacity:big?.45:k==="watch"?.22:.25}}).addTo(groups[k]);
+      L.geoJSON(g,{pane:"a"+k,interactive:false,renderer:REND[k],style:{color:col,weight:big?3.5:k==="watch"?2.6:1.5,fill:false,className:big?"wpoly":""}}).addTo(groups[k]); }); }
+  m.on("zoomend",()=>{ if(boxMode!==null&&boxMode!==(m.getZoom()<8)) draw(); });
   // legend: what's on screen right now
   const leg=document.createElement("div"); leg.className="rleg"; const box=document.getElementById("rmap").closest(".radar"); const foot=box&&box.querySelector(".foot"); if(box) box.insertBefore(leg, foot||null);
   function legend(){ const b=m.getBounds(); const seen=new Map();
     ITEMS.filter(visible).forEach(i=>{ if(i.bbox[2]<b.getWest()||i.bbox[0]>b.getEast()||i.bbox[3]<b.getSouth()||i.bbox[1]>b.getNorth()) return; seen.set(i.ev,rank(i.ev)); });
-    const md=ON.md&&(window._MDS_ALL||[]).length?`<span><i style="background:transparent;border:2px dashed #FF8C1A"></i>SPC discussion</span>`:"";
+    const md=ON.md&&(window._MDS_ALL||[]).length?`<span><i style="background:transparent;border:2px dashed #FF8C1A"></i>Storms organizing</span>`:"";
     const list=[...seen.entries()].sort((a,b)=>b[1]-a[1]).slice(0,6).map(([t])=>`<span><i style="background:${COLORS[t]||"#8A9BB8"}"></i>${t}</span>`).join("");
     leg.innerHTML=list+md; leg.hidden=!list&&!md; }
   m.on("moveend",legend); window.addEventListener("md-ready",()=>{ legend(); autoOn(); });
@@ -3824,8 +3893,7 @@ window.SITE_LL = window.__LOC?{lat:__LOC.la,lon:__LOC.lo}:(window.SITE_LL || { l
     const L0=Math.min(...pts.map(p=>p.x))-16, R0=Math.max(...pts.map(p=>p.x))+16, T0=Math.min(...pts.map(p=>p.y))-16, B0=Math.max(...pts.map(p=>p.y))+16;
     const fits=(x,y)=>x>=8&&y>=8&&x+cw<=W.x-8&&y+ch<=W.y-24;
     const midY=Math.min(Math.max(8,(T0+B0)/2-ch/2),W.y-ch-24), midX=Math.min(Math.max(8,(L0+R0)/2-cw/2),W.x-cw-8);
-    const cand=[[R0,midY],[L0-cw,midY],[midX,T0-ch],[midX,B0]].find(([x,y])=>fits(x,y));
-    let x,y; if(cand){ [x,y]=cand; } else { const cx=(L0+R0)/2, cy=(T0+B0)/2; x=cx>W.x/2?8:W.x-cw-8; y=cy>W.y/2?8:W.y-ch-24; }
+    let x,y; { const cx=(L0+R0)/2, cy=(T0+B0)/2; x=cx>W.x/2?8:W.x-cw-8; y=cy>W.y/2?8:W.y-ch-24; }   // v100: corner away from the storm, never on top of it
     card.style.left=Math.max(8,x)+"px"; card.style.top=Math.max(8,y)+"px"; }
   // drag the card by its colored header if it's still in the way
   (function(){ let sx,sy,ox,oy,on=false; const down=e=>{ const h=e.target.closest(".hd"); if(!h||e.target.closest("button")) return; const p=e.touches?e.touches[0]:e; on=true; dragged=true; sx=p.clientX; sy=p.clientY; ox=card.offsetLeft; oy=card.offsetTop; e.preventDefault(); };
@@ -3834,8 +3902,13 @@ window.SITE_LL = window.__LOC?{lat:__LOC.la,lon:__LOC.lo}:(window.SITE_LL || { l
     card.addEventListener("mousedown",down); card.addEventListener("touchstart",down,{passive:false}); window.addEventListener("mousemove",move); window.addEventListener("touchmove",move,{passive:true}); window.addEventListener("mouseup",up); window.addEventListener("touchend",up); })();
   m.on("moveend zoomend",()=>{ if(!card.hidden) placeCard(); });
   function render(){ if(!hits.length){ card.hidden=true; dragged=false; if(SEL){ SEL=null; tracks(); } return; } const i=hits[hi];
-    if(i.md){ card.innerHTML=`<div class="hd" style="background:#FF8C1A;color:#0A1428"><span>SPC Mesoscale Discussion #${i.md._num||""}</span><button data-x aria-label="Close">×</button></div>
-      <div class="bd"><div class="ln">SPC is watching this area. A <b>watch may follow</b>, or it explains one already out.</div>${i.md._towns&&i.md._towns.length?`<div class="ln">Towns inside: ${i.md._towns.slice(0,8).join(", ")}</div>`:""}${i.md._url?`<a class="more" href="${i.md._url}" target="_blank" rel="noopener">Read the discussion</a>`:""}</div>`; }
+    if(i.md){ const f=i.md, inf=window._MDINFO&&window._MDINFO[f._num];
+      const HZ={tor:"Tornadoes",wind:"Damaging wind",hail:"Large hail",flood:"Flash flooding",winter:"Snow / ice"}; const tf=t=>new Date(t).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
+      const likely=inf&&inf.prob!=null?(inf.prob>=80?"<b>A watch is likely soon.</b>":inf.prob>=40?"<b>A watch is possible.</b>":"<b>A watch is not expected right now</b>, but these storms can still be strong."):"";
+      const body=inf?`${inf.haz&&inf.haz.length?`<div class="ln">Threats: <b>${inf.haz.map(h=>HZ[h]||h).join(" · ")}</b></div>`:""}${inf.to?`<div class="ln">Timing: <b>${inf.from?tf(inf.from)+" to ":"through "}${tf(inf.to)}</b></div>`:""}<div class="ln">${likely}</div>`:`<div class="ln">Storms are organizing here. Getting the details…</div>`;
+      card.innerHTML=`<div class="hd" style="background:#FF8C1A;color:#0A1428"><span>STORMS ORGANIZING</span><button data-x aria-label="Close">×</button></div>
+      <div class="bd">${body}${f._towns&&f._towns.length?`<div class="ln">Towns inside: ${f._towns.slice(0,8).join(", ")}</div>`:""}${f._url?`<a class="more" href="${f._url}" target="_blank" rel="noopener">Full text</a>`:""}</div>`;
+      if(!inf&&window._mdInfo) window._mdInfo(f._num).then(()=>{ if(!card.hidden&&hits[hi]&&hits[hi].md===f) render(); }); }
     else { const col=COLORS[i.ev]||"#8A9BB8", d=details(i);
       card.innerHTML=`<div class="hd" style="background:${col};color:${ink(col)}"><span>${i.ev}</span><button data-x aria-label="Close">×</button></div>
       <div class="bd">
@@ -4599,7 +4672,7 @@ function SDR_STORY(H, D, spc, nowMs){
 window.SDR_BASE = (function(){
   if(!window.L) return null;
   const TERR="https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png";
-  const R=(window.matchMedia&&matchMedia("(pointer:coarse)").matches)||innerWidth<800?1:Math.min(2,Math.round(window.devicePixelRatio||1));   // v90: phones get standard terrain detail (smooth); computers keep the sharp 2x
+  const R=1;   // v100: standard terrain detail everywhere (the sharp 2x was making the loop chug)   // v90: phones get standard terrain detail (smooth); computers keep the sharp 2x
   const Hill = L.GridLayer.extend({
     createTile(c, done){
       const k=(R>1&&c.z<13)?2:1, N=256*k, t=document.createElement("canvas"); t.width=t.height=N; t.style.width=t.style.height="256px";
@@ -4689,7 +4762,7 @@ window.SDR_CAMS = (function(){
   const BASE=()=>(window.NBM_BASE||"https://chrisjustuswx2026.github.io/nbm-ranges");
   let on=false; try{ on=localStorage.getItem("sdr-cams")==="1"; }catch(e){}
   let IDX=null, cells={}, loading={}, timer=null, openId=null;
-  const G=L.layerGroup(); m.createPane("cams").style.zIndex=408;
+  const G=L.layerGroup(); m.createPane("cams").style.zIndex=640; m.getPane("cams").style.pointerEvents="auto";
   const icon=L.divIcon({className:"sdr-cam",html:'<svg viewBox="0 0 20 20" width="18" height="18"><rect x="2" y="6" width="11" height="9" rx="2" fill="#0E1A33" stroke="#9FD8C9" stroke-width="1.6"/><path d="M13 9l5-2.5v7L13 11z" fill="#9FD8C9"/></svg>',iconSize:[18,18],iconAnchor:[9,9]});
   const idx=()=>IDX||(IDX=fetch(`${BASE()}/cameras/index.json`).then(r=>r.ok?r.json():[]).catch(()=>[]).then(j=>{ IDX=new Set(Array.isArray(j)?j:[]); return IDX; }));
   const cell=k=>cells[k]||loading[k]||(loading[k]=fetch(`${BASE()}/cameras/${k}.json`).then(r=>r.ok?r.json():null).catch(()=>null).then(j=>{ cells[k]=j||{cams:[]}; return cells[k]; }));
@@ -4712,6 +4785,7 @@ window.SDR_CAMS = (function(){
     for(let x=Math.floor(b.getWest());x<=Math.floor(b.getEast());x++) for(let y=Math.floor(b.getSouth());y<=Math.floor(b.getNorth());y++){ const k=x+"_"+y; if(!I.has(k)) continue; const J=await cell(k); if(!on||m.getZoom()<9) return;
       (J.cams||[]).forEach(c=>{ if(!b.contains([c.la,c.lo])) return; keep.add(c.id); if(MK[c.id]) return; const mk=L.marker([c.la,c.lo],{icon,pane:"cams",keyboard:false}).addTo(G); MK[c.id]=mk;
         mk.bindPopup(()=>{ openId=c; clearInterval(timer); timer=c.vid?null:setInterval(tick,(c.refresh||60)*1000); return card(c); },{maxWidth:360,className:"campop"});
+        mk.on("click",e=>{ L.DomEvent.stop(e); mk.openPopup(); });
         mk.on("popupopen",()=>{ stopVideo(); if(c.vid) playVideo(c); });
         mk.on("popupclose",()=>{ openId=null; clearInterval(timer); timer=null; stopVideo(); }); }); }
     for(const id in MK){ if(!keep.has(id)&&!(openId&&openId.id===id)){ G.removeLayer(MK[id]); delete MK[id]; } } }

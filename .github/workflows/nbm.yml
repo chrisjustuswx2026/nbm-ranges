@@ -3,8 +3,8 @@ name: NBM ranges
 
 on:
   schedule:
-    - cron: "25 */3 * * *"
-  workflow_dispatch:
+    - cron: "25 */3 * * *"     # every 3 hours, 25 past (UTC)
+  workflow_dispatch:            # the "Run workflow" button
 
 permissions:
   contents: read
@@ -56,6 +56,20 @@ jobs:
           key: water-v1
       - name: Detailed lakes and wide rivers (zoomed in)
         run: python water.py public
+      - name: Keep the DOT camera list (rebuilt once a day)
+        uses: actions/cache@v4
+        with:
+          path: cameras-cache
+          key: cameras-${{ github.run_number }}
+          restore-keys: cameras-
+      - name: DOT traffic cameras (KY, SC, TN free; NC, GA, FL, LA with keys in Secrets)
+        env:
+          DRIVENC_KEY: ${{ secrets.DRIVENC_KEY }}
+          GA511_KEY: ${{ secrets.GA511_KEY }}
+          FL511_KEY: ${{ secrets.FL511_KEY }}
+          TDOT_KEY: ${{ secrets.TDOT_KEY }}
+          LA511_KEY: ${{ secrets.LA511_KEY }}
+        run: python cameras.py public
       - name: Dashboards (the site folder becomes /clemson/ and /bay/ on the same website)
         run: if [ -d site ]; then cp -r site/. public/; fi
       - uses: actions/upload-pages-artifact@v3

@@ -6,7 +6,7 @@ window.goPlace=function(la,lo,name,st){ const u=new URL(location.href); u.search
 window.goHome=function(){ const u=new URL(location.href); u.searchParams.delete("place"); location.href=u.toString(); };
 </script>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Clemson · SDR Weather Intelligence (Live · v115)</title>
+<title>Clemson · SDR Weather Intelligence (Live · v117)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap">
 <style>
@@ -639,6 +639,7 @@ body.rfull-on{overflow:hidden}
 .etaban{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);z-index:800;background:rgba(229,57,53,.95);color:#fff;border-radius:8px;padding:7px 12px;font-size:14px;box-shadow:0 6px 20px rgba(0,0,0,.4);max-width:calc(100% - 140px);text-align:center}
 .etaban b{font-family:var(--display);letter-spacing:.04em}
 .rtoast{position:absolute;left:10px;top:10px;z-index:850;display:grid;gap:6px;max-width:60%;pointer-events:none}
+.rhint{position:absolute;right:10px;bottom:28px;z-index:860;pointer-events:none;background:rgba(10,20,40,.85);border:1px solid var(--line);border-radius:8px;padding:5px 9px;font:700 10.5px var(--display);letter-spacing:.1em;color:var(--muted)}
 .rzv{margin-left:6px}@media (max-width:760px){.rzv{order:5;flex-basis:100%}}
 .rstamp{position:absolute;left:10px;bottom:28px;z-index:860;pointer-events:none;background:rgba(10,20,40,.88);border:1px solid var(--line);border-radius:10px;padding:6px 12px;font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:.03em;color:#fff;line-height:1}
 .rstamp b{color:#F28C28;margin-right:6px}.rstamp small{display:block;margin-top:3px;font-size:10px;letter-spacing:.14em;color:var(--muted)}
@@ -681,6 +682,7 @@ body.rfull-on{overflow:hidden}
 .amt5 .bar5 .cap.l{left:-7px}.amt5 .bar5 .cap.r{right:-7px;background:#3D9BFF}
 .amt5 .bar5 .lkm{top:-6px;width:5px;height:20px;margin-left:-2.5px;background:#fff;box-shadow:0 0 0 2px #0E1A33}
 .amt5 .bar5 .rng{display:none}
+.amtx{margin:4px 0 10px}.amtx>small{display:block;font-family:var(--display);font-weight:700;letter-spacing:.1em;font-size:10.5px;color:var(--muted);margin-bottom:4px}.amtx .sts{grid-template-columns:repeat(3,1fr)}.amtx .st b{font-size:22px}
 .amtl{margin:4px 0 10px}.amtl small{display:block;font-family:var(--display);font-weight:700;letter-spacing:.1em;font-size:10.5px;color:var(--muted)}.amtl b{font-family:var(--display);font-weight:800;font-size:26px}.amtl span{display:block;font-size:13.5px;color:var(--fg)}
 .amt6{display:grid;grid-template-columns:4.6em 1fr;gap:6px 10px;margin-top:10px}
 .amt6 .al{font-family:var(--display);font-weight:700;letter-spacing:.1em;font-size:11px;color:var(--muted);padding-top:22px}
@@ -2507,8 +2509,8 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
     try{   // radar cache tiles (zoom 7), re-projected onto a 120-mile square around the site
       const Z=7, n=1<<Z, tx=(lo+180)/360*n, ty=(1-Math.log(Math.tan(la*Math.PI/180)+1/Math.cos(la*Math.PI/180))/Math.PI)/2*n, st=Math.floor(Date.now()/120000);
       const X0=Math.floor(tx-1), Y0=Math.floor(ty-1), big=document.createElement("canvas"); big.width=big.height=768; const bc=big.getContext("2d");
-      const tiles=[]; for(let i=0;i<3;i++) for(let j=0;j<3;j++) tiles.push(load(`https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/${Z}/${X0+i}/${Y0+j}.png?_=${st}`).then(im=>bc.drawImage(im,i*256,j*256)).catch(()=>{}));
-      await Promise.all(tiles);
+      const tiles=[]; let got=0; for(let i=0;i<3;i++) for(let j=0;j<3;j++) tiles.push(load(`https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/${Z}/${X0+i}/${Y0+j}.png?_=${st}`).then(im=>{ bc.drawImage(im,i*256,j*256); got++; }).catch(()=>{}));
+      await Promise.all(tiles); if(got<9) throw new Error("radar tiles unavailable");
       // sample the 120-mile square: for each output pixel, find its lat/lon, then the source pixel
       const out=cx.createImageData(N,N), src=bc.getImageData(0,0,768,768).data;
       for(let y=0;y<N;y++) for(let x=0;x<N;x++){ const plon=lo-dLon+(x/N)*2*dLon, plat=la+dLat-(y/N)*2*dLat;
@@ -2518,15 +2520,20 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
     }catch(e){ const url=`https://mapservices.weather.noaa.gov/eventdriven/rest/services/radar/radar_base_reflectivity/MapServer/export?bbox=${mx(lo-dLon)},${my(la-dLat)},${mx(lo+dLon)},${my(la+dLat)}&bboxSR=3857&imageSR=3857&size=${N},${N}&format=png32&transparent=true&f=image&_=${Math.floor(Date.now()/120000)}`;
       const img=await load(url); cx.drawImage(img,0,0); }
     const d=cx.getImageData(0,0,N,N).data;
-    let best=null, heavy30=0, any30=0; const pxMi=2*MI/N;
+    // v116: only real rain counts. Pixel must be green or stronger (about 20 dBZ+; the pale blues are drizzle, virga and clutter),
+    //   and it must sit in a cluster: at least 10 such pixels in its 2-mile block. Stray speckle never trips the card.
+    const pxMi=2*MI/N, B=5, NB=N/B, blk=new Int16Array(NB*NB), blkH=new Int16Array(NB*NB);
     for(let y=0;y<N;y++) for(let x=0;x<N;x++){ const k=(y*N+x)*4; if(d[k+3]<80) continue; const r=d[k],g=d[k+1],b=d[k+2];
-      const lvl=(r>180&&g<120)||(r>150&&b>150&&g<120)?3:(r>170&&g>150&&b<120)?2:1;   // 3 = red/purple (storms, hail), 2 = yellow/orange (heavy), 1 = green/blue (light to moderate)
-      const dx=(x-N/2)*pxMi, dy=(N/2-y)*pxMi, dist=Math.hypot(dx,dy); if(dist>MI) continue;
-      if(dist<=30){ any30++; if(lvl>=2) heavy30++; }
-      if(!best||dist<best.d) best={d:dist,dx,dy,lvl}; }
+      const lvl=(r>180&&g<120)||(r>150&&b>150&&g<120)?3:(r>170&&g>150&&b<120)?2:(g>120&&g>r+20&&g>b+20)?1:0;   // 0 = pale blue drizzle/noise (ignored)
+      if(!lvl) continue; const bi=Math.floor(y/B)*NB+Math.floor(x/B); blk[bi]++; if(lvl>=2) blkH[bi]++; }
+    let best=null, heavy30=0;
+    for(let by=0;by<NB;by++) for(let bx=0;bx<NB;bx++){ const bi=by*NB+bx; if(blk[bi]<10) continue;
+      const dx=((bx+.5)*B-N/2)*pxMi, dy=(N/2-(by+.5)*B)*pxMi, dist=Math.hypot(dx,dy); if(dist>MI) continue;
+      if(dist<=30&&blkH[bi]>=4) heavy30++;
+      if(!best||dist<best.d) best={d:dist,dx,dy,lvl:blkH[bi]>=4?2:1}; }
     if(!best){ window.RADAR_NEAR={none:true}; }
     else { const ang=(Math.atan2(best.dx,best.dy)*180/Math.PI+360)%360, DIRS=["north","northeast","east","southeast","south","southwest","west","northwest"];
-      const sw=heavy30>=6?"storms":best.lvl>=2?"heavy rain":"rain"; window.RADAR_NEAR={d:best.d,dir:DIRS[Math.round(ang/45)%8],kind:sw,heavy:heavy30>=6,at:Date.now()}; }
+      const sw=heavy30>=3?"storms":best.lvl>=2?"heavy rain":"rain"; window.RADAR_NEAR={d:best.d,dir:DIRS[Math.round(ang/45)%8],kind:sw,heavy:heavy30>=3,at:Date.now()}; }
     const rl=document.getElementById("rd-line"); const R=window.RADAR_NEAR;
     if(rl){ rl.textContent = R.none ? "Radar quiet within 45 miles" : R.d<3 ? `${cap(R.kind)} at ${SITE.name}` : `${cap(R.kind)} ${Math.round(R.d)} miles ${R.dir}`; }
   }catch(e){ console.warn("radarNear",e); } }
@@ -2715,10 +2722,13 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
   const zv=document.createElement("div"); zv.className="sseg rzv"; zv.innerHTML='<button data-v="site" aria-pressed="true">SITE</button><button data-v="state">STATE</button><button data-v="region">REGION</button><button data-v="us">U.S.</button>'; fs.insertAdjacentElement("beforebegin", zv);
   window.RADAR_VIEW=k=>{ zv.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===k)); m.invalidateSize();
     if(k==="us") m.fitBounds([[24.5,-125],[49.5,-66.5]]); else if(k==="region"){ const B=(window.SDR_FPBOX&&SDR_FPBOX(0))||null; if(B) m.fitBounds([[B[1],B[0]],[B[3],B[2]]]); else m.fitBounds([[site[0]-5,site[1]-7],[site[0]+5,site[1]+7]]); }
-    else if(k==="state") m.fitBounds([[site[0]-1.7,site[1]-2.4],[site[0]+1.7,site[1]+2.4]]); else fitRing(); };
+    else if(k==="state") m.fitBounds([[site[0]-1.7,site[1]-2.4],[site[0]+1.7,site[1]+2.4]]); else { const dy=32/69, dx=32/(69*Math.cos(site[0]*Math.PI/180)); m.fitBounds([[site[0]-dy,site[1]-dx],[site[0]+dy,site[1]+dx]],{padding:[18,18]}); } };
   zv.addEventListener("click",e=>{ const b=e.target.closest("button"); if(b) window.RADAR_VIEW(b.dataset.v); });
   const rbox=document.getElementById("rmap").closest(".radar");
-  const setFull=on=>{ rbox.classList.toggle("rfull",on); document.body.classList.toggle("rfull-on",on); fs.textContent=on?"✕":"⛶"; fs.title=on?"Exit full screen":"Full screen"; setTimeout(()=>m.invalidateSize(),60); };
+  const COARSE=window.matchMedia&&matchMedia("(pointer:coarse)").matches;
+  const setFull=on=>{ rbox.classList.toggle("rfull",on); document.body.classList.toggle("rfull-on",on); fs.textContent=on?"✕":"⛶"; fs.title=on?"Exit full screen":"Full screen"; setTimeout(()=>m.invalidateSize(),60);
+    if(COARSE){ if(on) m.dragging.enable(); else m.dragging.disable(); const h=document.getElementById("rhint"); if(h) h.hidden=on; } };
+  if(COARSE){ m.dragging.disable(); document.getElementById("rmap").insertAdjacentHTML("beforeend",'<div class="rhint" id="rhint">Tap ⛶ to pan the map</div>'); }
   fs.onclick=()=>setFull(!rbox.classList.contains("rfull")); document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&rbox.classList.contains("rfull")) setFull(false); });
   setMode("mosaic");
   const ring30 = window._ring30 = L.circle(site,{radius:30*1609.34,color:"#F4F7FB",weight:1.4,dashArray:"5 4",fill:false,opacity:.75}).addTo(m);
@@ -2831,7 +2841,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
   const TIGER="https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/tigerWMS_Census2020/MapServer";
   let tIds=null; const SMALL=new Map(); let smallT=null;
   const getIds=async()=>{ if(tIds) return tIds; try{ const j=await (await fetch(TIGER+"?f=json")).json(); tIds=(j.layers||[]).filter(l=>/^(Incorporated Places|Census Designated Places)$/i.test(l.name)).map(l=>l.id); }catch(e){ tIds=[]; } return tIds; };
-  async function loadSmall(){ if(m.getZoom()<9) return; const ids=await getIds(); if(!ids.length) return; const b=m.getBounds();
+  async function loadSmall(){ if(m.getZoom()<8) return; const ids=await getIds(); if(!ids.length) return; const b=m.getBounds();
     const env=[b.getWest(),b.getSouth(),b.getEast(),b.getNorth()].map(x=>x.toFixed(3)).join(",");
     await Promise.all(ids.map(async id=>{ try{ const j=await (await fetch(`${TIGER}/${id}/query?geometry=${env}&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=*&returnGeometry=false&resultRecordCount=3000&f=json`)).json();
       (j.features||[]).forEach(f=>{ const a=f.attributes||{}; const la=parseFloat(a.INTPTLAT||a.CENTLAT), lo=parseFloat(a.INTPTLON||a.CENTLON); if(!isFinite(la)||!isFinite(lo)) return;
@@ -2845,8 +2855,8 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
     towns.clearLayers(); const z=m.getZoom(), b=m.getBounds().pad(0.05), placed=[];
     const sp=m.latLngToContainerPoint([v.la,v.lo]); placed.push({x:sp.x-8,y:sp.y,w:150});   // keep the site label clear
     const seen=new Set(PLACES.map(t=>t.n.toLowerCase()+"|"+t.la.toFixed(1)+"|"+t.lo.toFixed(1)));
-    const extra=z>=9?[...SMALL.values()].filter(t=>!seen.has(t.n.toLowerCase()+"|"+t.la.toFixed(1)+"|"+t.lo.toFixed(1))):[];
-    PLACES.concat(extra).filter(t=>(t.pop>=minPop(z) || (z<=7 && isMetro(t))) && b.contains([t.la,t.lo]) && !(Math.abs(t.la-v.la)<.01&&Math.abs(t.lo-v.lo)<.01)).sort((a,b)=>(isMetro(b)-isMetro(a))||(b.pop-a.pop)).forEach(t=>{
+    const extra=z>=8?[...SMALL.values()].filter(t=>!seen.has(t.n.toLowerCase()+"|"+t.la.toFixed(1)+"|"+t.lo.toFixed(1))):[];
+    PLACES.concat(extra).filter(t=>(z>=5 || t.pop>=minPop(z) || isMetro(t)) && b.contains([t.la,t.lo]) && !(Math.abs(t.la-v.la)<.01&&Math.abs(t.lo-v.lo)<.01)).sort((a,b)=>(isMetro(b)-isMetro(a))||(b.pop-a.pop)).forEach(t=>{
       const pt=m.latLngToContainerPoint([t.la,t.lo]); const metro=isMetro(t)||t.pop>=250000, big=!metro&&t.pop>=60000; const fs=metro?19:big?16:13.5; const w=t.n.length*fs*0.6+10;
       const x0=pt.x-w/2; if(placed.some(q=>Math.abs(q.y-pt.y)<fs+6 && x0+w>q.x-6 && x0<q.x+q.w+6)) return;
       placed.push({x:x0,y:pt.y,w});
@@ -3061,7 +3071,9 @@ window.STRIPS = (function(){
   // v102: the amount is one line (most likely, then the range in words), no slider
   const amount = (lab,r,snow) => { if(!r) return ""; const unit=snow?10:1; const f=h=>rIn(h,snow);
     if(r[2]<unit) return `<div class="amtl"><small>${lab} AMOUNT</small><b>None expected</b></div>`;
-    const same=f(r[0])===f(r[2]), lo=r[0]<unit?"a trace":f(r[0])+'"', mid=r[1]<unit?"Little or none":f(r[1])+'"'; return `<div class="amtl"><small>${lab} AMOUNT</small><b>${mid}</b><span>${same?"":`Most models land between ${lo} and ${f(r[2])}"`}</span></div>`; };
+    // v117: three labeled numbers (the middle half of the models: low end = 25th percentile, most likely = median, high end = 75th)
+    const v=h=>h<unit?"Trace":f(h)+'"';
+    return `<div class="amtx"><small>${lab} AMOUNT</small><div class="sts">${stat("LOW END", v(r[0]))}${stat("MOST LIKELY", v(r[1]))}${stat("HIGH END", v(r[2]))}</div></div>`; };
   const amountOld = (lab,r,snow) => { if(!r) return "";
     const unit=snow?10:1; if(r[2]<unit) return `<div class="amt6"><span class="al">${lab}</span><div class="none">None expected</div></div>`;
     const v=r.map(x=>x/100), NICE=snow?[1,2,3,4,6,8,10,12,18,24,36]:[0.1,0.2,0.25,0.5,0.75,1,1.5,2,3,4,5,6,8,10];
@@ -3094,7 +3106,7 @@ window.STRIPS = (function(){
     let t= wet.length>=16?(mp>=60?`on and off all day`:`possible any time of day`): s0>=12&&e0>=23?`mainly after ${hlab(s0)}`: s0<=6&&e0<=13?`early, dry by ${hlab(e0)}`: `most likely ${hrng2(s0,e0)}`;
     const lead=mp>=60?(storm?"Storms":"Rain"):mp>=40?(storm?"A chance of storms":"A chance of rain"):(storm?"A few storms":"Spotty showers");
     const best=(pe-ps<e0-s0&&pe-ps<=6)?` · best chance ${hrng2(ps,pe)}`:""; return `<div class="when">${lead} <b>${t}</b>${best}</div>`; }
-  function chartsOf(x){ const H=hoursOf(x); if(H.length<3) return ""; const mt=Math.max(...H.map(h=>h.thunder||0)), G=H.map(h=>h.gust||hrWind(h)||0), gm=Math.max(...G), T=H.map(h=>h.temp);
+  function chartsOf(x,which){ const H=hoursOf(x); if(H.length<3) return ""; const mt=Math.max(...H.map(h=>h.thunder||0)), G=H.map(h=>h.gust||hrWind(h)||0), gm=Math.max(...G), T=H.map(h=>h.temp);
     const k0=hrOf(H[0].t), today=k0>0&&new Date(H[0].t).toDateString()===new Date().toDateString(), K0=today?k0:0, SPAN=Math.max(1,23-K0);
     const W=innerWidth<760?440:720,Hh=innerWidth<760?170:200,L=30,R=W-12,top=24,bot=Hh-24, X=k=>L+(R-L)*(k-K0)/SPAN, at=k=>H.find(h=>hrOf(h.t)===k), bw=Math.min(20,Math.max(8,(R-L)/(SPAN+1)*0.7));
     const AXL={0:"12 AM",3:"3 AM",6:"6 AM",9:"9 AM",12:"NOON",15:"3 PM",18:"6 PM",21:"9 PM"}; const ticks=today?[k0,...[...Array(24).keys()].filter(k=>k>k0&&k<23&&(SPAN<=8?true:k%3===0))]:[0,3,6,9,12,15,18,21];
@@ -3129,7 +3141,8 @@ window.STRIPS = (function(){
       C.wind=`<svg viewBox="0 0 ${W} ${Hh}">${bars}${axis}</svg>`; }
     if(mt>=20) C.storm=`<svg viewBox="0 0 ${W} ${Hh}">${barsOf(h=>h.thunder||0,v=>v>=50?"#F5A524":"#F5D76E","%",100)}${axis}</svg><div class="ck"><span><i style="background:#F5A524"></i>Chance of thunder</span></div>`;
     const def=window._dtab&&C[window._dtab]?window._dtab:"";
-    return `<div class="dcharts">${Object.keys(C).map(k=>`<div class="dchart${k===def?" open":""}" data-k="${k}"><div class="dch"><b>${({rain:"RAIN CHANCE",temp:"TEMPERATURE & FEELS LIKE",wind:"WIND & GUSTS",storm:"THUNDER",sky:"SKY COVER",snow:"SNOW",ice:"ICE"})[k]}<em>HOUR BY HOUR</em></b><button type="button" data-chart="${k}" aria-label="Close">✕</button></div>${C[k]}</div>`).join("")}</div>`; }
+    const KEEP=which==="cond"?["temp","wind","sky"]:["rain","storm","snow","ice"];
+    return `<div class="dcharts">${Object.keys(C).filter(k=>KEEP.includes(k)).map(k=>`<div class="dchart${k===def?" open":""}" data-k="${k}"><div class="dch"><b>${({rain:"RAIN CHANCE",temp:"TEMPERATURE & FEELS LIKE",wind:"WIND & GUSTS",storm:"THUNDER",sky:"SKY COVER",snow:"SNOW",ice:"ICE"})[k]}<em>HOUR BY HOUR</em></b><button type="button" data-chart="${k}" aria-label="Close">✕</button></div>${C[k]}</div>`).join("")}</div>`; }
   function renderDays(){
     const el=$("days"); if(!el) return; el.className="dlist sdr";
     const head=$("days-conf"); if(head){ const c3=DAYS.slice(0,3).map(confOf).filter(v=>v!=null); const c=c3.length?Math.min(...c3):null; window.SDR_CONF=DAYS.map(x=>({date:x.date,conf:confOf(x),why:confOf(x)!=null&&confOf(x)<=2?confWhy(x):""}));
@@ -3157,6 +3170,7 @@ window.STRIPS = (function(){
             <div class="sts">${stat("HIGH", x.hi!=null?x.hi+"°":null)}${stat("LOW", x.lo!=null?x.lo+"°":null)}${(()=>{ const fl=feelOf(x); return fl!=null&&x.hi!=null&&Math.abs(fl-x.hi)>=3?stat("FEELS LIKE", fl+"°", "", fl>=100?"bad":fl>=90?"warn":""):""; })()}${(()=>{ const sk=skyOf(x); return sk!=null?stat("SKY", sk.lab, sk.pct+"%"):""; })()}
             ${stat("WIND", wfmt(x.wind)||null, "mph")}${stat("GUSTS", x.gust!=null?g5(x.gust):null, "mph", x.gust>=35?"bad":x.gust>=25?"warn":"")}${stat("DEW POINT", x.dew!=null?x.dew+"°":null)}${x.wbgt?stat("WBGT", x.wbgt+"°","est",x.wbgt>=87?"bad":x.wbgt>=82?"warn":""):""}${x.uv!=null?stat("UV", Math.round(x.uv), uvLab(x.uv), uvCls(x.uv)):""}</div>
           </section>
+          ${chartsOf(x,"cond")}
           <section><h4>PRECIPITATION</h4>
             ${(()=>{ const r=Math.max(x.pp||0,x.ppN||0);   // v101: one rain number, then WHEN (from the hourly forecast)
                 if(!r&&!(x.snowP>=10)&&!(x.iceP>=10)) return `<div class="chl">Rain <b>dry</b> day and night</div>`;
@@ -3164,7 +3178,7 @@ window.STRIPS = (function(){
             ${x.rr && x.rr[2]<1 && !anySnow && !anyIce ? `<div class="chl dim">No measurable rain expected</div>` : amount("RAIN", x.rr, false)}${anySnow?amount("SNOW", x.sr, true):""}${anyIce?amount("ICE", x.ir, false):""}
             ${c!=null?`<div class="agreeline">MODEL AGREEMENT ${seg(c)} <b class="${lv(c)}">${c} of 5</b></div>${c<=2?`<div class="confwhy">Models disagree on ${confWhy(x)}. Expect changes; we will update as it comes into focus.</div>`:""}`:""}
           </section>
-          ${chartsOf(x)}
+          ${chartsOf(x,"precip")}
           ${(()=>{ const sw=sprayWin(x), so=soilT(i), wa=waterT(i), gd=gduT(i); if(!sw&&!so&&!wa&&!gd) return "";
             const FX={"SPRAY WINDOW":"Good spraying hours: wind 2–10 mph, gusts under 15 and rain chance under 30%. Too windy blows it off target, dead-calm air lets it drift, and rain washes it off.",
               "SOIL TEMP":"Average temperature of the top 4 inches of ground. Key marks: about 50° to plant corn, 55° for crabgrass pre-emergent, 65° to seed warm-season grass.",

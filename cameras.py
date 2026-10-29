@@ -50,14 +50,32 @@ def traveliq(st, host, key, attr):
     out = []
     if not key: print("cameras: no key for", st, "(skipped)"); return out
     j = get("https://%s/api/v2/get/cameras?key=%s&format=json" % (host, key))
-    for c in (j if isinstance(j, list) else j.get("Cameras", j.get("cameras", []))):
-        views = [v for v in (c.get("Views") or []) if v.get("Url")]
-        if not views or c.get("Latitude") is None: continue
-        v = views[0]
-        name = c.get("Location") or c.get("Name") or "Camera"
-        road = " ".join(x for x in [c.get("Roadway"), c.get("Direction")] if x)
-        out.append({"id": "%s-%s" % (st, c.get("Id")), "la": round(float(c["Latitude"]), 5), "lo": round(float(c["Longitude"]), 5), "name": name, "road": road,
-                    "st": st, "img": v["Url"], "refresh": 60, "src": host.split(".")[0], "attr": attr})   # 511 streams sit behind logins (NC does); stills only
+    # v118f: the 511 sites run the same software but not the same field names; read keys case-insensitively and accept
+    #        the common variants (Views/Url, views/url, ImageUrl, Latitude/latitude/lat ...). When nothing parses, print
+    #        what the site sent so the Actions log says why.
+    lk = lambda d, *names: next((d[k] for n in names for k in d if isinstance(d, dict) and k.lower() == n.lower()), None)
+    rows = j if isinstance(j, list) else (lk(j, "Cameras", "cameras", "data", "results", "items") or [])
+    if not isinstance(rows, list): rows = []
+    for c in rows:
+        if not isinstance(c, dict): continue
+        views = lk(c, "Views", "views", "Images", "images") or []
+        img = None
+        for v in views:
+            if isinstance(v, dict): img = lk(v, "Url", "url", "ImageUrl", "imageUrl", "Image", "image"); 
+            elif isinstance(v, str): img = v
+            if img: break
+        if not img: img = lk(c, "ImageUrl", "imageUrl", "Image", "image", "Url", "url", "SnapshotUrl", "snapshot")
+        la, lo = lk(c, "Latitude", "latitude", "lat", "Lat"), lk(c, "Longitude", "longitude", "lon", "lng", "Lon", "Lng")
+        if not img or la is None or lo is None: continue
+        try: la, lo = float(la), float(lo)
+        except (TypeError, ValueError): continue
+        name = lk(c, "Location", "location", "Name", "name", "Description", "description") or "Camera"
+        road = " ".join(str(x) for x in [lk(c, "Roadway", "roadway", "Route", "route"), lk(c, "Direction", "direction")] if x)
+        out.append({"id": "%s-%s" % (st, lk(c, "Id", "id", "ID") or len(out)), "la": round(la, 5), "lo": round(lo, 5), "name": name, "road": road,
+                    "st": st, "img": img, "refresh": 60, "src": host.split(".")[0], "attr": attr})   # 511 streams sit behind logins (NC does); stills only
+    if not out:
+        sample = json.dumps(j)[:600] if not isinstance(j, str) else str(j)[:600]
+        print("cameras: %s answered but nothing parsed. rows=%d first keys=%s sample=%s" % (st, len(rows), (list(rows[0].keys())[:15] if rows and isinstance(rows[0], dict) else "-"), sample), flush=True)
     return out
 
 def south_carolina():

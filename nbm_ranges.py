@@ -3,7 +3,7 @@ SDR Weather Intelligence: 10-day guidance for the whole U.S. from NOAA's Nationa
 plus soil temperature from NOAA's GFS. Free, public data; no keys.
 
 Per point (every 0.1 degree, about 6-7 miles) and per day (10 days), it keeps:
-  rain, snow, ice      Min / Likely / Max (10th / 50th / 90th percentile), 24 h, 7 AM-7 AM Eastern-ish (12Z-12Z)
+  rain, snow, ice      Low / Likely / High (25th / 50th / 75th percentile; 10th/90th fallback), 24 h, 7 AM-7 AM Eastern-ish (12Z-12Z)
   snowP, iceP          chance of measurable snow / ice (%)
   popD, popN           chance of rain, daytime (12Z-00Z) and overnight (00Z-12Z)
   tmax, tmin           high (afternoon) and the low that follows it (next morning), deg F       <- used by the dashboard for days 8-10
@@ -35,7 +35,9 @@ OUT = sys.argv[1] if len(sys.argv) > 1 else "public"
 
 STEP = 0.1
 LAT0, LAT1, LON0, LON1 = 24.0, 50.0, -125.0, -66.0
-PCTS = (10, 50, 90)
+PCTS = (10, 50, 90)                      # fallback percentiles
+PCTS2 = (25, 50, 75)                     # preferred (v115): the middle half of the models, no outliers; falls back to 10/90 when 25/75 are missing
+PCT_SLOT = {10: 0, 50: 1, 90: 2, 25: 3, 75: 5}   # slot codes: 0-2 = fallback low/likely/high, 3 and 5 = preferred low/high (25th/75th)
 NDAYS = 10
 MISSING = -999
 
@@ -157,10 +159,10 @@ def classify(r, run):
     endt = lambda h: run + dt.timedelta(hours=h)
     pm = re.match(r"^(\d+)% level$", ex)
     # 24 h ranges ending 12Z
-    if v in ("APCP", "ASNOW", "FICEAC") and "surface" in lvl and pm and int(pm.group(1)) in PCTS:
+    if v in ("APCP", "ASNOW", "FICEAC") and "surface" in lvl and pm and int(pm.group(1)) in PCT_SLOT:
         w = win(fc, "acc")
         if w and w[1] - w[0] == 24:
-            return ({"APCP": "rain", "ASNOW": "snow", "FICEAC": "ice"}[v], PCTS.index(int(pm.group(1))), endt(w[1]))
+            return ({"APCP": "rain", "ASNOW": "snow", "FICEAC": "ice"}[v], PCT_SLOT[int(pm.group(1))], endt(w[1]))
     # chances of snow / ice in 24 h ending 12Z
     if v == "ASNOW" and ex.startswith("prob >0.00254"):
         w = win(fc, "acc")
@@ -299,7 +301,7 @@ def main():
         for f in DAILY24:
             for pi in ((0, 1, 2) if f in RANGE_FIELDS else (None,)):
                 for di, d in enumerate(dates):
-                    if not best(cands.get((f, pi), {}), d):
+                    if not best(cands.get((f, pi), {}), d) and not (pi in (0, 2) and best(cands.get((f, pi + 3), {}), d)):
                         g.append((f, di, pi))
         return g
 
@@ -384,6 +386,7 @@ def main():
     log(f"downloading {len(jobs)} fields")
     shape = None
     out_r = {f: None for f in RANGE_FIELDS}
+    got_pref = {f: [[False, False, False] for _ in range(NDAYS)] for f in RANGE_FIELDS}
     out_s = {f: None for f in SCALAR_FIELDS}
     soil_acc = {}
 
@@ -405,7 +408,10 @@ def main():
             v = convert(field, vals.ravel(), msg)
             s = np.where(idx >= 0, v[np.clip(idx, 0, None)], np.nan)
             if field in RANGE_FIELDS:
-                out_r[field][:, :, di, pi] = np.where(np.isfinite(s), np.round(np.clip(s, 0, None)), -1)
+                col, pref = pi % 3, pi >= 3          # preferred (25/50/75) always wins over the fallback (10/50/90)
+                if pref or not got_pref[field][di][col]:
+                    out_r[field][:, :, di, col] = np.where(np.isfinite(s), np.round(np.clip(s, 0, None)), -1)
+                    if pref: got_pref[field][di][col] = True
             elif field == "soil":
                 acc = soil_acc.setdefault(di, [np.zeros(shape), np.zeros(shape)])
                 ok = np.isfinite(s)
@@ -448,7 +454,7 @@ def main():
             n_files += 1
 
     meta = {
-        "source": "NOAA National Blend of Models (ranges = 10th/50th/90th percentile); soil temperature NOAA GFS",
+        "source": "NOAA National Blend of Models (ranges = 25th/50th/75th percentile, the middle half of the models; 10th/90th if those are missing); soil temperature NOAA GFS",
         "run": run.strftime("%Y-%m-%dT%H:00Z"), "gfs": g.strftime("%Y-%m-%dT%H:00Z") if g else None,
         "made": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%MZ"),
         "dates": [d.isoformat() for d in dates], "ranges": fields_r, "fields": fields_s,

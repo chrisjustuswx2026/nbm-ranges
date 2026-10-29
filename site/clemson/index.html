@@ -1211,6 +1211,15 @@ body.rfull-on{overflow:hidden}
 /* v118g: phone top bar: room for the site name */
 @media (max-width:480px){.brand.logo img{height:26px}.brand.logo{padding:4px 7px}.livepill{padding:0 7px;font-size:10.5px;height:26px;gap:5px}.venue{padding:5px 9px;gap:6px}.venue span{max-width:36vw}.bolt{width:26px;height:26px;font-size:13px}.top{gap:8px}}
 .rctl .rplaybtn{font-size:14px}
+
+/* slim live bar under the hero */
+.livebar{display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;border:1px solid rgba(229,72,77,.45);border-radius:10px;background:linear-gradient(90deg,rgba(229,72,77,.14),var(--panel) 60%);color:var(--fg);text-align:left;cursor:pointer}
+.livebar i{width:9px;height:9px;border-radius:50%;background:#FF4D4D;flex:none;animation:livepulse 1.6s ease-in-out infinite}
+.livebar b{font-family:var(--display);font-weight:800;font-size:13px;letter-spacing:.14em;white-space:nowrap}
+.livebar span{flex:1;min-width:0;font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.livebar em{font-style:normal;font-family:var(--display);font-weight:800;font-size:12px;letter-spacing:.1em;color:#FF6B6F;white-space:nowrap}
+@media (min-width:960px){.livebar{display:none}}
+@media (min-width:761px){.acard{width:min(300px,calc(100% - 20px))}}
 </style>
 <style>/* Leaflet 1.9.4 (inlined) */
 /* required styles */
@@ -3161,6 +3170,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
   function placeTowns(){
     towns.clearLayers(); const z=m.getZoom(), b=m.getBounds().pad(0.05), placed=[];
     const sp=m.latLngToContainerPoint([v.la,v.lo]); placed.push({x:sp.x-8,y:sp.y,w:150});   // keep the site label clear
+    if(z>=8.5) [10,30].forEach(mi=>{ const q=m.latLngToContainerPoint([v.la+mi/69.05,v.lo]); placed.push({x:q.x-90,y:q.y-12,w:180}); placed.push({x:q.x-90,y:q.y+4,w:180}); });   // v118h: and the ring plaques
     const seen=new Set(PLACES.map(t=>t.n.toLowerCase()+"|"+t.la.toFixed(1)+"|"+t.lo.toFixed(1)));
     const extra=z>=8?[...SMALL.values()].filter(t=>!seen.has(t.n.toLowerCase()+"|"+t.la.toFixed(1)+"|"+t.lo.toFixed(1))):[];
     PLACES.concat(extra).filter(t=>(z>=5 || t.pop>=minPop(z) || isMetro(t)) && b.contains([t.la,t.lo]) && !(Math.abs(t.la-v.la)<.01&&Math.abs(t.lo-v.lo)<.01)).sort((a,b)=>(isMetro(b)-isMetro(a))||(b.pop-a.pop)).forEach(t=>{
@@ -4405,7 +4415,7 @@ window.SITE_LL = window.__LOC?{lat:__LOC.la,lon:__LOC.lo}:(window.SITE_LL || { l
   let hits=[], hi=0, tapLL=null;
   let dragged=false;
   function placeCard(){ if(dragged) return; const i=hits[hi], W=m.getSize(); card.style.left=card.style.top=card.style.right=card.style.bottom="";
-    const cw=card.offsetWidth||330, ch=card.offsetHeight||240; let bb=i&&(i.bbox||(i.md&&bboxOf(i.md.geometry)));
+    const cw=card.offsetWidth||330, ch=card.offsetHeight||240; let bb=i&&(i.bbox||(i.md&&bboxOf(i.md.geometry))||(i.ov&&i.ov.geometry&&bboxOf(i.ov.geometry)));
     if(!bb&&tapLL) bb=[tapLL.lng,tapLL.lat,tapLL.lng,tapLL.lat];
     if(!bb){ card.style.right="10px"; card.style.top="10px"; return; }
     let pts=[m.latLngToContainerPoint([bb[3],bb[2]]), m.latLngToContainerPoint([bb[1],bb[0]])];
@@ -4413,7 +4423,13 @@ window.SITE_LL = window.__LOC?{lat:__LOC.la,lon:__LOC.lo}:(window.SITE_LL || { l
     const L0=Math.min(...pts.map(p=>p.x))-16, R0=Math.max(...pts.map(p=>p.x))+16, T0=Math.min(...pts.map(p=>p.y))-16, B0=Math.max(...pts.map(p=>p.y))+16;
     const fits=(x,y)=>x>=8&&y>=8&&x+cw<=W.x-8&&y+ch<=W.y-24;
     const midY=Math.min(Math.max(8,(T0+B0)/2-ch/2),W.y-ch-24), midX=Math.min(Math.max(8,(L0+R0)/2-cw/2),W.x-cw-8);
-    let x=W.x-cw-10, y=10;   // v115: top right, always (a new tap replaces the card)
+    // v118h: the card sits just beside the shape (or the spot) you tapped, never on top of it: right, then left, below, above, then next to the tap
+    const tp=tapLL?m.latLngToContainerPoint(tapLL):{x:(L0+R0)/2,y:(T0+B0)/2};
+    const cands=[[R0+8,midY],[L0-cw-8,midY],[midX,B0+8],[midX,T0-ch-8],[tp.x+18,tp.y-ch/2],[tp.x-cw-18,tp.y-ch/2]];
+    const clamp=([cx,cy])=>[Math.min(Math.max(8,cx),Math.max(8,W.x-cw-8)), Math.min(Math.max(8,cy),Math.max(8,W.y-ch-24))];
+    const overlap=([cx,cy])=>Math.max(0,Math.min(cx+cw,R0)-Math.max(cx,L0))*Math.max(0,Math.min(cy+ch,B0)-Math.max(cy,T0));
+    const pick=cands.map(clamp).sort((a,b)=>overlap(a)-overlap(b)||Math.hypot(a[0]-tp.x,a[1]-tp.y)-Math.hypot(b[0]-tp.x,b[1]-tp.y))[0];
+    let x=pick[0], y=pick[1];
     card.style.left=Math.max(8,x)+"px"; card.style.top=Math.max(8,y)+"px"; }
   // drag the card by its colored header if it's still in the way
   (function(){ let sx,sy,ox,oy,on=false; const down=e=>{ const h=e.target.closest(".hd"); if(!h||e.target.closest("button")) return; const p=e.touches?e.touches[0]:e; on=true; dragged=true; sx=p.clientX; sy=p.clientY; ox=card.offsetLeft; oy=card.offsetTop; e.preventDefault(); };
@@ -4422,7 +4438,14 @@ window.SITE_LL = window.__LOC?{lat:__LOC.la,lon:__LOC.lo}:(window.SITE_LL || { l
     card.addEventListener("mousedown",down); card.addEventListener("touchstart",down,{passive:false}); window.addEventListener("mousemove",move); window.addEventListener("touchmove",move,{passive:true}); window.addEventListener("mouseup",up); window.addEventListener("touchend",up); })();
   m.on("moveend zoomend",()=>{ if(!card.hidden) placeCard(); });
   function render(){ if(!hits.length){ card.hidden=true; dragged=false; if(SEL){ SEL=null; tracks(); } return; } const i=hits[hi];
-    if(i.md){ const f=i.md, inf=window._MDINFO&&window._MDINFO[f._num];
+    if(i.ov){ const f=i.ov, p=f.properties||{}, k=i.kind; let title="", body="", col="#8A9BB8";
+      if(/^spc[123]$/.test(k)){ const L=p.LABEL||""; const LV={TSTM:["Thunderstorms possible","Level 0 of 5. General storms, severe weather not expected.","#C1E9C1"],MRGL:["Level 1 of 5 · Marginal","Isolated severe storms possible: a stray strong gust or small hail.","#7FC57F"],SLGT:["Level 2 of 5 · Slight","Scattered severe storms possible: damaging wind, hail, maybe a tornado. Not everyone sees one.","#F6F67F"],ENH:["Level 3 of 5 · Enhanced","Numerous severe storms likely, some strong. Plan the day around it.","#E6C27F"],MDT:["Level 4 of 5 · Moderate","Widespread severe storms, some intense and long-lived.","#E67F7F"],HIGH:["Level 5 of 5 · High","A severe weather outbreak is expected.","#FF7FFF"]}[L]||["Outlook area","",""]; const day={spc1:"today",spc2:"tomorrow",spc3:"day 3"}[k];
+        title=`SEVERE OUTLOOK · ${day.toUpperCase()}`; col=LV[2]||col; body=`<div class="ln"><b>${LV[0]}</b></div><div class="ln">${LV[1]}</div><div class="ln" style="margin-top:6px;color:var(--dim)">Our rule: level 2 and up is HEADS UP for the day. TAKE ACTION only comes with a warning or lightning.</div>`; }
+      else if(k==="spc48"){ const pc=f._p||15; title="SEVERE OUTLOOK · DAYS 4–8"; col=pc>=30?"#F28C28":"#F6D55C"; body=`<div class="ln"><b>${pc}% chance of a severe storm within 25 miles</b> of any spot in this area on that day.</div><div class="ln">${pc>=30?"That's a strong signal this far out; a level 2–3 day is likely once the details fill in.":"That's a heads-up this far out; details come into focus about three days ahead."}</div>`; }
+      else if(k==="trop"){ title="TROPICS"; const r=f._risk; col=r?{Low:"#FFFF00",Medium:"#FF9900",High:"#FF0000"}[r]:"#fff"; body=r?`<div class="ln"><b>${r} chance</b> of a tropical system forming here in the next 7 days ${({Low:"(under 40%)",Medium:"(40–60%)",High:"(over 60%)"})[r]||""}.</div>`:`<div class="ln"><b>Forecast cone.</b> The center of the storm is expected to stay inside this area about two-thirds of the time; effects reach well outside it.</div>`; }
+      else { const v=f._v||0; title=(i.label||"RAINFALL").toUpperCase(); col="#4FA3FF"; body=`<div class="ln"><b>About ${v>=1?v.toFixed(1):v.toFixed(2)}" of rain</b> expected over this period in this band (the most likely total; heavier spots inside storms).</div>`; }
+      card.innerHTML=`<div class="hd" style="background:${col};color:${ink(col)}"><span>${title}</span><button data-x aria-label="Close">×</button></div><div class="bd">${body}</div>`; }
+    else if(i.md){ const f=i.md, inf=window._MDINFO&&window._MDINFO[f._num];
       const HZ={tor:"Tornadoes",wind:"Damaging wind",hail:"Large hail",flood:"Flash flooding",winter:"Snow / ice"}; const tf=t=>new Date(t).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
       const likely=inf&&inf.prob!=null?(inf.prob>=80?"<b>A watch is likely soon.</b>":inf.prob>=40?"<b>A watch is possible.</b>":"<b>A watch is not expected right now</b>, but these storms can still be strong."):"";
       const body=inf?`${inf.haz&&inf.haz.length?`<div class="ln">Threats: <b>${inf.haz.map(h=>HZ[h]||h).join(" · ")}</b></div>`:""}${inf.to?`<div class="ln">Timing: <b>${inf.from?tf(inf.from)+" to ":"through "}${tf(inf.to)}</b></div>`:""}<div class="ln">${likely}</div>`:`<div class="ln">Storms are organizing here. Getting the details…</div>`;
@@ -4446,7 +4469,12 @@ window.SITE_LL = window.__LOC?{lat:__LOC.la,lon:__LOC.lo}:(window.SITE_LL || { l
   card.addEventListener("click",e=>{ const t=e.target; if(t.closest("[data-x]")){hits=[];render();} else if(t.closest("[data-n]")){hi=(hi+1)%hits.length;render();} else if(t.closest("[data-p]")){hi=(hi-1+hits.length)%hits.length;render();} else if(t.closest("[data-more]")){ const x=card.querySelector(".txt"); x.hidden=!x.hidden; t.textContent=x.hidden?"More":"Less"; } });
   m.on("click",e=>{ const x=e.latlng.lng, y=e.latlng.lat, seen=new Set(); tapLL=e.latlng;
     hits=ITEMS.filter(visible).filter(i=>x>=i.bbox[0]&&x<=i.bbox[2]&&y>=i.bbox[1]&&y<=i.bbox[3]&&inGeom(x,y,i.geom)).filter(i=>{ const id=i.nws?i.nws.id:(i.wwa&&i.wwa.cap_id)||i.ev+i.ends; if(seen.has(id)) return false; seen.add(id); return true; }).sort((a,b)=>rank(b.ev)-rank(a.ev));
-    if(ON.md) (window._MDS_ALL||[]).filter(f=>inGeom(x,y,f.geometry)).forEach(f=>hits.push({md:f})); hi=0; render(); });
+    if(ON.md) (window._MDS_ALL||[]).filter(f=>inGeom(x,y,f.geometry)).forEach(f=>hits.push({md:f}));
+    // v118h: an outlook / rainfall / tropics overlay under the tap gets its own card (the strongest band wins)
+    const OV=window.RADAR_OVL; if(OV&&OV.feats&&OV.feats.length){ const RK={TSTM:0,MRGL:1,SLGT:2,ENH:3,MDT:4,HIGH:5}; const under=OV.feats.filter(f=>f.geometry&&inGeom(x,y,f.geometry));
+      if(under.length){ let best=under[0]; if(/^spc[123]$/.test(OV.kind)) best=under.reduce((a,b)=>(RK[(b.properties||{}).LABEL]||0)>(RK[(a.properties||{}).LABEL]||0)?b:a,under[0]); else if(OV.kind==="spc48") best=under.reduce((a,b)=>(b._p||0)>(a._p||0)?b:a,under[0]); else if(/^d/.test(OV.kind)) best=under.reduce((a,b)=>(b._v||0)>(a._v||0)?b:a,under[0]);
+        hits.push({ov:best,kind:OV.kind,label:OV.label}); } }
+    hi=0; render(); });
   // ---- alert chips: three on by default, "+ MORE" opens the rest ----
   abar=document.createElement("div"); abar.className="ovbar abar";
   const chip=g=>`<button data-g="${g.k}" aria-pressed="${ON[g.k]}">${g.lab}</button>`;
@@ -4474,7 +4502,7 @@ window.SITE_LL = window.__LOC?{lat:__LOC.la,lon:__LOC.lo}:(window.SITE_LL || { l
     <option value="trop">Tropics</option></select></label><span class="ovnote" id="ovnote"></span>`;
   const box=document.getElementById("rmap").closest(".radar"); const foot=box&&box.querySelector(".foot"); if(box) box.insertBefore(bar, foot||null);
   const LAB={spc1:"Severe outlook · today",spc2:"Severe outlook · tomorrow",spc3:"Severe outlook · day 3",spc48:"Severe outlook · days 4–8 · yellow 15%, orange 30%",d1:"Rainfall · today",d2:"Rainfall · tomorrow",d3:"Rainfall · day 3",d13:"Rainfall · next 3 days",d15:"Rainfall · next 5 days",d17:"Rainfall · next 7 days",trop:"Tropics · 7-day outlook"};
-  async function show(k){ cur=k; bar.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.o===k)); if(lay){ m.removeLayer(lay); lay=null; }
+  async function show(k){ cur=k; bar.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.o===k)); if(lay){ m.removeLayer(lay); lay=null; } window.RADAR_OVL=null;
     const note=document.getElementById("ovnote"); note.textContent=""; if(k==="none") return; note.textContent="Loading…";
     let D; try{ D=await window.MAPDATA(); }catch(e){ note.textContent="Didn't load"; return; } if(cur!==k) return;
     let feats=[], style, none="";
@@ -4483,7 +4511,7 @@ window.SITE_LL = window.__LOC?{lat:__LOC.la,lon:__LOC.lo}:(window.SITE_LL || { l
     else if(k==="trop"){ const t=D.tropics||{areas:[],cones:[]}; feats=[...(t.areas||[]),...(t.cones||[])]; style=f=>f._risk?({color:"#000",weight:1,fillColor:{Low:"#FFFF00",Medium:"#FF9900",High:"#FF0000"}[f._risk],fillOpacity:.4}):({color:"#fff",weight:1.2,fillColor:"#fff",fillOpacity:.3}); none="Nothing expected in the tropics"; }
     else { feats=(D.qpfP&&D.qpfP[k])||(k==="d17"?D.qpf:null)||[]; style=f=>({stroke:false,fillColor:window.MAPROOM?MAPROOM.qcol(f._v||0):"#1E90FF",fillOpacity:.5}); none="No rain concerns"; }
     note.textContent = feats.length ? LAB[k] : none+" at the moment";
-    lay=L.geoJSON({type:"FeatureCollection",features:feats},{pane:"ovl",interactive:false,style}).addTo(m);
+    lay=L.geoJSON({type:"FeatureCollection",features:feats},{pane:"ovl",interactive:false,style}).addTo(m); window.RADAR_OVL={kind:k,feats,label:LAB[k]||""};
     if(feats.length){ if(k==="trop") m.setView([24,-72],4); else if(m.getZoom()>6) m.setZoom(6); }
   }
   bar.addEventListener("change",e=>{ if(e.target.id!=="ovsel") return; const v=e.target.value; if(window.SDR_CAMS) SDR_CAMS.set(v==="cams"); show(v==="cams"?"none":v); });
@@ -5474,6 +5502,12 @@ window.SDR_CAMS = (function(){
   const rb=document.querySelector(".radar"); if(rb){ const tryMerge=()=>{ const ab=rb.querySelector(".ovbar.abar"), ov2=rb.querySelector("#ovsel"); const ob=ov2&&ov2.closest(".ovbar"); if(!ab||!ob||ab.parentNode.classList.contains("rtools")) return;
       const w=document.createElement("div"); w.className="rtools"; ab.parentNode.insertBefore(w,ab); w.appendChild(ab); w.appendChild(ob); };
     setTimeout(tryMerge,1500); setTimeout(tryMerge,4000); }
+})();
+
+// ===================== v118g: slim live-channel bar right under the hero (phones; computers keep the panel beside the radar) =====================
+(function(){ const st=document.getElementById("status"); if(!st) return;
+  const b=document.createElement("button"); b.type="button"; b.className="livebar span"; b.innerHTML=`<i></i><b>24/7 CHANNEL</b><span>Live radar, alerts and the team's calls, around the clock</span><em>WATCH ▸</em>`;
+  st.insertAdjacentElement("afterend",b); b.onclick=()=>{ const t=document.querySelector('.tabs button[data-pane="live"]'); if(t) t.click(); };
 })();
 </script>
 <script>

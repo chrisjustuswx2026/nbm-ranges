@@ -6,7 +6,7 @@ window.goPlace=function(la,lo,name,st){ const u=new URL(location.href); u.search
 window.goHome=function(){ const u=new URL(location.href); u.searchParams.delete("place"); location.href=u.toString(); };
 </script>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Bay County · SDR Weather Intelligence (Live · v109)</title>
+<title>Bay County · SDR Weather Intelligence (Live · v113)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap">
 <style>
@@ -377,7 +377,7 @@ main{padding-block:14px 110px;display:grid;gap:14px}
 .leaflet-tooltip.lbl3.big{font-size:16px!important;color:#fff!important}.leaflet-tooltip.lbl3.metro{font-size:19px!important;font-weight:800;color:#fff!important}
 .leaflet-tooltip.lbl2{background:rgba(10,20,40,.88)!important;border:1px solid #2B3F6B!important;color:#F4F7FB!important;box-shadow:none!important;font-family:var(--display);font-weight:700;letter-spacing:.08em;font-size:12px}
 .leaflet-tooltip.lbl2::before{display:none}
-.rleg{display:flex;flex-wrap:wrap;gap:4px 12px;padding:8px 14px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+.rleg{display:none}
 .rleg span{display:inline-flex;align-items:center;gap:6px}.rleg i{width:12px;height:12px;border-radius:2px;display:inline-block;border:1px solid rgba(0,0,0,.4)}
 .leaflet-tooltip.mdlbl{background:rgba(0,0,0,.55)!important;border:1px solid #FF8C1A!important;color:#FF8C1A!important;box-shadow:none!important;font-family:var(--display);font-weight:800;letter-spacing:.08em;font-size:11px;padding:2px 6px!important}
 .leaflet-tooltip.mdlbl::before{display:none}
@@ -893,7 +893,7 @@ body.rfull-on{overflow:hidden}
 .sts.pch{margin-bottom:6px}
 /* v101 day detail: bigger numbers, tap a number for its hour-by-hour chart (closed until tapped) */
 .dexp .sts{grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px 8px}.dexp .st b{font-size:26px;font-weight:800;letter-spacing:.01em;white-space:nowrap}.dexp .st small{font-size:10.5px;font-weight:700}
-.dexp .st.wide b{font-size:22px}.dexp .st[data-chart]{cursor:pointer}.dexp .st[data-chart] small::after{content:" ▸";color:#6FB7FF}.dexp .st[data-chart]:hover b{color:#CFE4FF}
+.dexp .st.wide b{font-size:22px}.dexp .st.sky b{font-size:19px;white-space:normal;line-height:1.1}.dexp .st.sky b em{display:block;margin:2px 0 0}.dexp .st[data-chart]{cursor:pointer}.dexp .st[data-chart] small::after{content:" ▸";color:#6FB7FF}.dexp .st[data-chart]:hover b{color:#CFE4FF}
 .dexp .when{font-size:13.5px;color:var(--fg);margin:-2px 0 8px}.dexp .when b{color:#8FC3FF;font-weight:700}
 .dcharts{display:grid;gap:8px;grid-column:1/-1}.dcharts:empty{display:none}.dchart{display:none;max-width:680px;padding:8px 10px 6px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.03)}.dchart.open{display:block}.dchart svg{display:block;width:100%;height:auto}
 .dchart .ck{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:4px}.dchart .ck i{display:inline-block;width:12px;height:3px;border-radius:2px;margin-right:5px;vertical-align:middle}
@@ -1742,7 +1742,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
       <div class="ph"><span class="k">BUILD NOTES · FOR ANDREW</span><span class="sample">PROTOTYPE · REMOVE IN PRODUCTION</span></div>
       <div class="brief">
         <h3>Briefing playbook (full version: BRIEFING-PLAYBOOK.md)</h3>
-        <p><b>Who writes what:</b> the dashboard writes the routine briefings (new SPC risk, storms organizing, watch, new outlook) in the team's voice: "The SDR Weather Intelligence Division is monitoring… We favor…". Never name the agencies to clients. The team writes the judgment briefings: model trends, hurricane and snow signals, seasonal. Push: open the briefing → Copy link → paste in the Baron push; each person opens their own dashboard.</p>
+        <p><b>Who writes what:</b> the dashboard writes the routine briefings (new SPC risk, storms organizing, watch, new outlook) in the team's voice: "The SDR Weather Intelligence Division is tracking… We're leaning toward… / A good chance of… / Expect… / Plan on…" (firmer as the odds climb). Never name the agencies to clients. The team writes the judgment briefings: model trends, hurricane and snow signals, seasonal. Push: open the briefing → Copy link → paste in the Baron push; each person opens their own dashboard.</p>
         <ul class="bul">
           <li><b>Six parts, always in this order:</b> headline (the story, ~8 words) → intro paragraph (what, where, when, how sure; name the client's place) → one map with the site dot, a key and a source caption → 3–5 detail bullets with bold labels → outro paragraph (what it does and doesn't mean, when we update) → bottom line (what to do, in operations language).</li>
           <li><b>Severe:</b> main threat with numbers · timing at the site · rain range · lightning · model agreement x/5. Timing strip ("STORM WINDOW · SAT 3–7 PM"). Outro: not every spot sees a severe storm on a level 2 day; updates by noon and when a watch is issued.</li>
@@ -2510,10 +2510,10 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
   // ---- radar rules, same as the 24/7 channel ----
   // SMOOTH: 0 raw · 1 light (native tiles to z7) · 2 medium, default (z6) · 3 heavy (z5). Tiles are stretched past that
   // zoom with the browser's bilinear blending, which gives the soft Baron-like edge. MRMS asks for 256 px on a 512 tile when ≥ 2.
-  const RADAR = { smooth: 2, frameMs: 450, holdMs: 1600, refreshMs: 120000 };
+  const RADAR = { smooth: 2, frameMs: 420, holdMs: 2000, refreshMs: 120000 };
   const capZ = ({0:undefined,1:9,2:8,3:7})[RADAR.smooth];   // native radar tiles up to this zoom, stretched (bilinear) beyond it
   const mrmsPx = RADAR.smooth>=2 ? 256 : 512;
-  const mosaicSteps=["m45m","m40m","m35m","m30m","m25m","m20m","m15m","m10m","m05m","MRMS"];
+  const mosaicSteps=["m55m","m50m","m45m","m40m","m35m","m30m","m25m","m20m","m15m","m10m","m05m","MRMS"];
   // NOAA MRMS 1-km base reflectivity, newest frame only (the map service is latest-only). bbox in EPSG:3857 per tile.
   const MRMS = L.TileLayer.extend({ getTileUrl(c){ const E=20037508.342789244, size=2*E/Math.pow(2,c.z);
       const x0=-E+c.x*size, x1=x0+size, y1=E-c.y*size, y0=y1-size;
@@ -2523,7 +2523,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
   window._radarLoop=false; try{ window._radarLoop=localStorage.getItem("sdr-radar-loop")==="1"; }catch(e){}
   // on-map time stamp: day + time, big, on every mode
   const stampEl=document.createElement("div"); stampEl.className="rstamp"; document.getElementById("rmap").appendChild(stampEl);
-  const stamp=(t,tag)=>{ const d=new Date(t); stampEl.innerHTML=`<b>${d.toLocaleDateString("en-US",{weekday:"short"}).toUpperCase()}</b> ${d.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"})}${tag?`<small>${tag}</small>`:""}`; };
+  const stamp=(t,tag)=>{ const d=new Date(t); stampEl.innerHTML=`<b>${d.toLocaleDateString("en-US",{weekday:"short"}).toUpperCase()}</b> ${d.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"})}`; };
   const src = document.getElementById("rd-src");
   function clear(){ clearTimeout(timer); clearInterval(refresh); layers.forEach(l=>m.removeLayer(l)); layers=[]; }
   // LOCAL: the NEXRAD site nearest the middle of the map (station list from the NWS), re-picked when you pan far.
@@ -2554,8 +2554,11 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
     const next = (window._radarLoop?mosaicSteps:["MRMS"]).map(t=> t==="MRMS"
       ? (()=>{ const l=new MRMS("",{tileSize:512,zoomOffset:-1,opacity:0,className:"rlayer",updateWhenZooming:false,updateWhenIdle:true,keepBuffer:1}); l._stamp=stamp; return l; })()
       : iem(t, stamp)).map(l=>{ l.on("tileload", window._noteRadarImg); return l.addTo(m); });
-    const mr = next[next.length-1]; mr.on("tileerror",()=>{ if(!mr._fb){ mr._fb=1; m.removeLayer(mr); const fb=iem("",stamp).addTo(m); const k=layers.indexOf(mr); if(k>=0) layers[k]=fb; } });
-    const old=layers; layers=next; setTimeout(()=>old.forEach(l=>m.removeLayer(l)),1500);
+    const mr = next[next.length-1]; mr.on("tileerror",()=>{ if(!mr._fb){ mr._fb=1; m.removeLayer(mr); const fb=iem("",stamp).addTo(m); const k=next.indexOf(mr); if(k>=0) next[k]=fb; } });
+    // v113 smooth loop: the new set replaces the old one only when every frame has its tiles (or after 8 s), so the loop never steps through a half-loaded picture
+    const old=layers; let pending=next.length; const done=()=>{ if(--pending>0) return; if(mode!=="mosaic"){ next.forEach(l=>m.removeLayer(l)); return; } layers=next; window._radarReady=true; old.forEach(l=>setTimeout(()=>m.removeLayer(l),300)); };
+    next.forEach(l=>{ let fired=false; const f=()=>{ if(fired) return; fired=true; done(); }; l.once("load",f); setTimeout(f,8000); });
+    if(!old.length){ layers=next; window._radarReady=false; }
   }
   const rblur=()=>{ const z=m.getZoom(), local=mode!=="mosaic"; const v=local?Math.max(0,(z-8)*0.5):Math.max(0,(z-(capZ||8))*0.6); m.getContainer().style.setProperty("--rblur",Math.min(v,2.4).toFixed(2)+"px"); };
   m.on("zoomend",rblur); setTimeout(rblur,0);
@@ -2563,7 +2566,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
   function mosaic(){
     clear(); buildFrames(); refresh=setInterval(buildFrames, RADAR.refreshMs);
     let i=0; window._radarPaused=false;
-    const step=()=>{ if(window._radarBusy){ timer=setTimeout(step,250); return; } if(!window._radarPaused){ layers.forEach((f,j)=>f.setOpacity(j===i?.92:0));
+    const step=()=>{ if(window._radarBusy||(!window._radarReady&&layers.length>1)){ if(layers.length){ const L=layers[layers.length-1]; L.setOpacity(.92); } timer=setTimeout(step,250); return; } if(!window._radarPaused){ i=Math.min(i,layers.length-1); layers.forEach((f,j)=>f.setOpacity(j===i?.92:0));
         const mins=(layers.length-1-i)*5; const fb=Math.floor(Date.now()/300000)*300000, tfmt=d=>new Date(d).toLocaleDateString("en-US",{weekday:"short"}).toUpperCase()+" "+new Date(d).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"}); src.textContent = mins? tfmt(fb-mins*60000) : "NOW · "+tfmt(Date.now()); stamp(mins?fb-mins*60000:Date.now(), mins?"":"LATEST"); }
       const last = i===layers.length-1; if(!window._radarPaused) i=(i+1)%layers.length;
       timer=setTimeout(step, last ? RADAR.holdMs : RADAR.frameMs); };
@@ -3010,7 +3013,7 @@ window.STRIPS = (function(){
       </div></div>`; };
   const lv = c => c>=3?"g":c===2?"o":"r";
   const seg = c => `<span class="agree ${lv(c)}">${[1,2,3,4,5].map(i=>`<i class="${i<=c?"on":""}"></i>`).join("")}</span>`;
-  const stat = (lab,val,unit,cls) => val==null||val===""?"":`<div class="st ${cls||""}${lab==="WIND"?" wide":""}"${({WIND:' data-chart="wind"',GUSTS:' data-chart="wind"',HIGH:' data-chart="temp"',LOW:' data-chart="temp"',"FEELS LIKE":' data-chart="temp"',SKY:' data-chart="sky"',RAIN:' data-chart="rain"',THUNDER:' data-chart="storm"',SNOW:' data-chart="snow"',ICE:' data-chart="ice"'})[lab]||""}><small>${lab}</small><b>${val}${unit?`<em>${unit}</em>`:""}</b></div>`;
+  const stat = (lab,val,unit,cls) => val==null||val===""?"":`<div class="st ${cls||""}${lab==="WIND"?" wide":""}${lab==="SKY"?" sky":""}"${({WIND:' data-chart="wind"',GUSTS:' data-chart="wind"',HIGH:' data-chart="temp"',LOW:' data-chart="temp"',"FEELS LIKE":' data-chart="temp"',SKY:' data-chart="sky"',RAIN:' data-chart="rain"',THUNDER:' data-chart="storm"',SNOW:' data-chart="snow"',ICE:' data-chart="ice"'})[lab]||""}><small>${lab}</small><b>${val}${unit?`<em>${unit}</em>`:""}</b></div>`;
   // v101 hour-by-hour for an opened day: a one-line "when" for rain, and charts (rain / temperature / wind / thunder) that open only when a number is tapped.
   const hoursOf=x=>{ const day=new Date(x.date||Date.now()).toDateString(); return (HOURS||[]).filter(h=>new Date(h.t).toDateString()===day); };
   // v109: feels-like (daytime extreme) and sky cover (daytime average) for the opened day, from the hourly forecast
@@ -3027,10 +3030,10 @@ window.STRIPS = (function(){
     const best=(pe-ps<e0-s0&&pe-ps<=6)?` · best chance ${hrng2(ps,pe)}`:""; return `<div class="when">${lead} <b>${t}</b>${best}</div>`; }
   function chartsOf(x){ const H=hoursOf(x); if(H.length<3) return ""; const mt=Math.max(...H.map(h=>h.thunder||0)), G=H.map(h=>h.gust||hrWind(h)||0), gm=Math.max(...G), T=H.map(h=>h.temp);
     const k0=hrOf(H[0].t), today=k0>0&&new Date(H[0].t).toDateString()===new Date().toDateString(), K0=today?k0:0, SPAN=Math.max(1,23-K0);
-    const W=720,Hh=200,L=30,R=W-12,top=24,bot=Hh-24, X=k=>L+(R-L)*(k-K0)/SPAN, at=k=>H.find(h=>hrOf(h.t)===k), bw=Math.min(20,Math.max(8,(R-L)/(SPAN+1)*0.7));
+    const W=innerWidth<760?440:720,Hh=innerWidth<760?170:200,L=30,R=W-12,top=24,bot=Hh-24, X=k=>L+(R-L)*(k-K0)/SPAN, at=k=>H.find(h=>hrOf(h.t)===k), bw=Math.min(20,Math.max(8,(R-L)/(SPAN+1)*0.7));
     const AXL={0:"12 AM",3:"3 AM",6:"6 AM",9:"9 AM",12:"NOON",15:"3 PM",18:"6 PM",21:"9 PM"}; const ticks=today?[k0,...[...Array(24).keys()].filter(k=>k>k0&&k<23&&(SPAN<=8?true:k%3===0))]:[0,3,6,9,12,15,18,21];
     const tl=k=>today&&k===k0?"NOW":AXL[k]||(k===0?"12 AM":k===12?"NOON":(k%12)+(k<12?" AM":" PM"));
-    const axis=ticks.map(k=>`<line x1="${X(k)}" x2="${X(k)}" y1="${top}" y2="${bot}" stroke="rgba(255,255,255,.07)"/><text x="${X(k)}" y="${Hh-5}" font-size="12.5" font-weight="700" fill="${today&&k===k0?"#FFC857":"#DCE6F5"}" text-anchor="${k===K0?"start":"middle"}">${tl(k)}</text>`).join("")+`<line x1="${L}" x2="${R}" y1="${bot}" y2="${bot}" stroke="rgba(255,255,255,.2)"/>`;
+    const narrow=W<600; const axis=ticks.map(k=>`<line x1="${X(k)}" x2="${X(k)}" y1="${top}" y2="${bot}" stroke="rgba(255,255,255,.07)"/>${(narrow&&k%6&&!(today&&k===k0))?"":`<text x="${X(k)}" y="${Hh-5}" font-size="12.5" font-weight="700" fill="${today&&k===k0?"#FFC857":"#DCE6F5"}" text-anchor="${k===K0?"start":"middle"}">${tl(k)}</text>`}`).join("")+`<line x1="${L}" x2="${R}" y1="${bot}" y2="${bot}" stroke="rgba(255,255,255,.2)"/>`;
     const peakTag=(xx,yy,t,big)=>`<text x="${xx}" y="${yy}" font-family="var(--display),Arial,sans-serif" font-size="${big?15:13.5}" font-weight="800" letter-spacing=".04em" fill="#fff" text-anchor="middle" stroke="#0E1A33" stroke-width="3.5" paint-order="stroke">${t}</text>`;
     const barsOf=(val,col,unit,max)=>{ const vs=[...Array(24)].map((_,k)=>{ const h=at(k); return h?val(h):null; }); const pk=Math.max(0,...vs.filter(v=>v!=null)); let tagged=false;
       return vs.map((v,k)=>{ if(v==null||v<=0) return ""; const bh=Math.max(3,(bot-top)*Math.min(1,v/max)); const t=!tagged&&v===pk&&pk>0; if(t) tagged=true;
@@ -3968,7 +3971,7 @@ window.SITE_LL = window.__LOC?{lat:__LOC.la,lon:__LOC.lo}:(window.SITE_LL || { l
   const SPCC={TSTM:"#C1E9C1",MRGL:"#7FC57F",SLGT:"#F6F67F",ENH:"#E6C27F",MDT:"#E67F7F",HIGH:"#FF7FFF"};
   let lay=null, cur="none";
   const bar=document.createElement("div"); bar.className="ovbar";
-  bar.innerHTML=`<label class="ovsel"><span class="k">MAP OVERLAY</span><select id="ovsel" aria-label="Map overlay"><option value="none">None</option>
+  bar.innerHTML=`<label class="ovsel"><span class="k">MAP OVERLAY</span><select id="ovsel" aria-label="Map overlay"><option value="none">None</option><option value="cams">DOT cameras</option>
     <optgroup label="Severe storms"><option value="spc1">Today</option><option value="spc2">Tomorrow</option><option value="spc3">Day 3</option><option value="spc48">Days 4–8</option></optgroup>
     <optgroup label="Rainfall"><option value="d1">Today</option><option value="d2">Tomorrow</option><option value="d3">Day 3</option><option value="d13">Next 3 days</option><option value="d15">Next 5 days</option><option value="d17">Next 7 days</option></optgroup>
     <option value="trop">Tropics</option></select></label><span class="ovnote" id="ovnote"></span>`;
@@ -3986,7 +3989,7 @@ window.SITE_LL = window.__LOC?{lat:__LOC.la,lon:__LOC.lo}:(window.SITE_LL || { l
     lay=L.geoJSON({type:"FeatureCollection",features:feats},{pane:"ovl",interactive:false,style}).addTo(m);
     if(feats.length){ if(k==="trop") m.setView([24,-72],4); else if(m.getZoom()>6) m.setZoom(6); }
   }
-  bar.addEventListener("change",e=>{ if(e.target.id==="ovsel") show(e.target.value); });
+  bar.addEventListener("change",e=>{ if(e.target.id!=="ovsel") return; const v=e.target.value; if(window.SDR_CAMS) SDR_CAMS.set(v==="cams"); show(v==="cams"?"none":v); });
   setInterval(()=>{ if(cur!=="none") show(cur); }, 10*60000);
 })();
 </script>
@@ -4236,7 +4239,10 @@ window.SITE_LL = window.__LOC?{lat:__LOC.la,lon:__LOC.lo}:(window.SITE_LL || { l
       const fm=x=>new Date(x).toLocaleDateString("en-US",{month:"short",day:"numeric",timeZone:"UTC"});
       const st=all2.map(x=>+new Date(x.start)).filter(isFinite), en=all2.map(x=>+new Date(x.end)).filter(isFinite);
       const range=st.length&&en.length?`${fm(Math.min(...st))}–${fm(Math.max(...en))}`:"the next two weeks";
-      const odds=(p,w)=>p>=60?`Strong odds of ${w}`:p>=50?`Good odds of ${w}`:p>=40?`Leaning ${w}`:`A slight lean toward ${w}`;
+      const odds=(p,w)=>p>=60?`Plan on ${w}`:p>=50?`Expect ${w}`:p>=40?`A good chance of ${w}`:`We're leaning toward ${w}`;
+      // v111 the wording firms up as the odds climb (never "we favor"): lean → good chance → expect → plan on
+      const pMax=Math.max(0,...[...(T||[]),...(P||[])].map(x=>+x.prob||0));
+      const lead=vary("cpclead", pMax>=60?["Plan on","Count on","Expect"]:pMax>=50?["Expect","Most likely,","Look for"]:pMax>=40?["A good chance of","Pretty good chance of","A better-than-even chance of"]:["We're leaning toward","Better chance of","The odds tilt toward"]);
       const per=a=>a.map(x=>`${Math.round(x.prob)}% for ${fm(x.start)}–${fm(x.end)}`).join(", ");
       // v88 what changed since the last outlook: higher odds, lower odds, or a flip (said plainly, up front)
       const WD={t:{above:"warmer",below:"cooler"},p:{above:"wetter",below:"drier"}}, NM={t:{above:"above-normal temperatures",below:"below-normal temperatures"},p:{above:"above-normal rain",below:"below-normal rain"}};
@@ -4259,19 +4265,19 @@ window.SITE_LL = window.__LOC?{lat:__LOC.la,lon:__LOC.lo}:(window.SITE_LL || { l
       if(chgTitle) title=title||chgTitle; changedLines.forEach(l=>L.push(l));
       const both=tw&&pw; title=title||(both?vary("cpc2",[`Pattern change ahead: turning ${tw} and ${pw}`,`A ${tw}, ${pw} stretch is on the way`,`Next week leans ${tw} and ${pw}`,`${cap(tw)} and ${pw} days ahead`])
           :vary("cpc1",[`${cap(tw||pw)} pattern ahead`,`A ${tw||pw} stretch is on the way`,`Leaning ${tw||pw} into next week`,`${cap(tw||pw)} than normal days ahead`]));
-      sub=sub||`We favor ${[tw,pw].filter(Boolean).join(" and ")} than normal conditions from ${range.replace("–"," through ")}.`;
+      sub=sub||`${lead} ${[tw,pw].filter(Boolean).join(" and ")} than normal from ${range.replace("–"," through ")}.`;
       const city=(N&&N.city)||s;
       if(tw){ const tt=T.filter(x=>(tl==="above")===/above/i.test(x.cat)); L.push(`<b>Temperatures:</b> ${odds(Math.max(...tt.map(x=>x.prob)),tw)} than normal (${per(tt)}).`);
         if(N&&N.hi!=null) L.push(`<b>What's normal:</b> highs near ${N.hi}° and lows near ${N.lo}° in ${city} this time of year. ${tw==="warmer"?"Warmer than normal means days, nights or both running above that.":"Cooler than normal means days, nights or both running below that."}`); }
       if(pw){ const pp=P.filter(x=>(pl==="above")===/above/i.test(x.cat)); L.push(`<b>Rain:</b> ${odds(Math.max(...pp.map(x=>x.prob)),pw)} than normal (${per(pp)}).`);
-        if(N&&N.pcpn!=null) L.push(`<b>Normal rain</b> for ${range} is about ${N.pcpn.toFixed(1)}". ${pw==="wetter"?"Odds favor more than that.":"Odds favor less than that."}`); }
+        if(N&&N.pcpn!=null) L.push(`<b>Normal rain</b> for ${range} is about ${N.pcpn.toFixed(1)}". ${pw==="wetter"?(pMax>=50?"Expect more than that.":"Better chance of more than that."):(pMax>=50?"Expect less than that.":"Better chance of less than that.")}`); }
       tail=tail||`Watching a ${[tw,pw].filter(Boolean).join(", ")} pattern ${st.length?"starting "+fm(Math.min(...st)):"next week"}.`;
       // v61 intro + outro paragraphs in our voice
       const lean2=[tw,pw].filter(Boolean).join(" and ");
       const rng=a=>{ const s1=a.map(x=>+new Date(x.start)).filter(isFinite), e1=a.map(x=>+new Date(x.end)).filter(isFinite); return s1.length&&e1.length?`${fm(Math.min(...s1))} through ${fm(Math.max(...e1))}`:"the next two weeks"; };
       const tR=tw?rng(T):"", pR=pw?rng(P):"", tN=tl==="above"?"above":"below", pN=pl==="above"?"above":"below";
       const favor= tw&&pw ? (tR===pR&&tN===pN ? `${tN} normal temperatures and rainfall from ${tR}` : `${tN} normal temperatures from ${tR} and ${pN} normal rainfall from ${pR}`) : tw ? `${tN} normal temperatures from ${tR}` : `${pN} normal rainfall from ${pR}`;
-      intro=`${chgIntro}${both&&!chgIntro?"A pattern change is on the way. ":""}The SDR Weather Intelligence Division is monitoring a ${lean2} pattern for ${city}. We favor ${favor}.`;
+      intro=`${chgIntro}${both&&!chgIntro?"A pattern change is on the way. ":""}The SDR Weather Intelligence Division is tracking a ${lean2} pattern for ${city}. ${lead.replace(/,$/,"")} ${favor}.`;
       const O=[];
       if(tw==="warmer") O.push("Warmer than normal doesn't mean every day is warm. A pattern like this can still bring a cool day or two, especially behind a passing front.");
       if(tw==="cooler") O.push("Cooler than normal doesn't rule out a mild afternoon or two; it means the chilly days should outnumber the mild ones.");
@@ -4783,7 +4789,9 @@ window.SDR_CAMS = (function(){
   let on=false; try{ on=localStorage.getItem("sdr-cams")==="1"; }catch(e){}
   let IDX=null, cells={}, loading={}, timer=null, openId=null;
   const G=L.layerGroup(); m.createPane("cams").style.zIndex=640; m.getPane("cams").style.pointerEvents="auto";
-  const icon=L.divIcon({className:"sdr-cam",html:'<svg viewBox="0 0 20 20" width="18" height="18"><rect x="2" y="6" width="11" height="9" rx="2" fill="#0E1A33" stroke="#9FD8C9" stroke-width="1.6"/><path d="M13 9l5-2.5v7L13 11z" fill="#9FD8C9"/></svg>',iconSize:[18,18],iconAnchor:[9,9]});
+  // v112: dots are thumb-sized and grow with the zoom (20px at zoom 8 → 36px at zoom 12+); shown from zoom 8
+  const CAMZ=8; const px=()=>{ const z=m.getZoom(), base=(window.matchMedia&&matchMedia("(pointer:coarse)").matches)?24:18; return Math.round(Math.min(base*2,base+(z-CAMZ)*4)); };
+  const icon=()=>{ const n=px(); return L.divIcon({className:"sdr-cam",html:`<svg viewBox="0 0 20 20" width="${n}" height="${n}"><rect x="2" y="6" width="11" height="9" rx="2" fill="#0E1A33" stroke="#9FD8C9" stroke-width="1.6"/><path d="M13 9l5-2.5v7L13 11z" fill="#9FD8C9"/></svg>`,iconSize:[n,n],iconAnchor:[n/2,n/2]}); };
   const idx=()=>IDX||(IDX=fetch(`${BASE()}/cameras/index.json`).then(r=>r.ok?r.json():[]).catch(()=>[]).then(j=>{ IDX=new Set(Array.isArray(j)?j:[]); return IDX; }));
   const cell=k=>cells[k]||loading[k]||(loading[k]=fetch(`${BASE()}/cameras/${k}.json`).then(r=>r.ok?r.json():null).catch(()=>null).then(j=>{ cells[k]=j||{cams:[]}; return cells[k]; }));
   // v107: nearest town on the card; no video attempt on streams that sit behind a login (NCDOT's do)
@@ -4805,22 +4813,21 @@ window.SDR_CAMS = (function(){
   function stopVideo(){ if(hlsObj){ try{ hlsObj.destroy(); }catch(e){} hlsObj=null; } }
   function tick(){ const img=document.querySelector(".camcard img"); if(!img||openId==null){ clearInterval(timer); timer=null; return; } const c=openId; img.src=c.img+(c.img.includes("?")?"&":"?")+"_="+Date.now(); }
   const MK={};   // id -> marker, kept between redraws so an open picture never closes while you pan
-  async function draw(){ if(!on||m.getZoom()<9){ G.clearLayers(); for(const k in MK) delete MK[k]; return; } const I=await idx(); if(!I||!I.size) return; const b=m.getBounds().pad(.1), keep=new Set();
-    for(let x=Math.floor(b.getWest());x<=Math.floor(b.getEast());x++) for(let y=Math.floor(b.getSouth());y<=Math.floor(b.getNorth());y++){ const k=x+"_"+y; if(!I.has(k)) continue; const J=await cell(k); if(!on||m.getZoom()<9) return;
-      (J.cams||[]).forEach(c=>{ if(!b.contains([c.la,c.lo])) return; keep.add(c.id); if(MK[c.id]) return; const mk=L.marker([c.la,c.lo],{icon,pane:"cams",keyboard:false}).addTo(G); MK[c.id]=mk;
+  async function draw(){ if(!on||m.getZoom()<CAMZ){ G.clearLayers(); for(const k in MK) delete MK[k]; return; } const I=await idx(); if(!I||!I.size) return; const b=m.getBounds().pad(.1), keep=new Set();
+    for(let x=Math.floor(b.getWest());x<=Math.floor(b.getEast());x++) for(let y=Math.floor(b.getSouth());y<=Math.floor(b.getNorth());y++){ const k=x+"_"+y; if(!I.has(k)) continue; const J=await cell(k); if(!on||m.getZoom()<CAMZ) return;
+      (J.cams||[]).forEach(c=>{ if(!b.contains([c.la,c.lo])) return; keep.add(c.id); if(MK[c.id]) return; const mk=L.marker([c.la,c.lo],{icon:icon(),pane:"cams",keyboard:false}).addTo(G); MK[c.id]=mk;
         mk.bindPopup(()=>{ openId=c; clearInterval(timer); timer=vidOk(c)?null:setInterval(tick,(c.refresh||60)*1000); return card(c); },{maxWidth:360,className:"campop"});
         mk.on("click",e=>{ L.DomEvent.stop(e); mk.openPopup(); });
         mk.on("popupopen",()=>{ stopVideo(); if(vidOk(c)) playVideo(c); });
         mk.on("popupclose",()=>{ openId=null; clearInterval(timer); timer=null; stopVideo(); }); }); }
     for(const id in MK){ if(!keep.has(id)&&!(openId&&openId.id===id)){ G.removeLayer(MK[id]); delete MK[id]; } } }
   let t=null; const sched=()=>{ clearTimeout(t); t=setTimeout(draw,200); };
-  m.on("moveend zoomend",sched); G.addTo(m);
+  m.on("moveend zoomend",sched); m.on("zoomend",()=>{ const ic=icon(); for(const id in MK) MK[id].setIcon(ic); }); G.addTo(m);
   function set(v){ on=!!v; try{ localStorage.setItem("sdr-cams",on?"1":"0"); }catch(e){} const b=document.getElementById("camtog"); if(b) b.setAttribute("aria-pressed",on);
-    const n=document.getElementById("camnote"); if(n) n.textContent=on?(m.getZoom()<9?"Zoom in to see cameras":""):""; draw(); }
+    const n=document.getElementById("camnote"); if(n) n.textContent=on?(m.getZoom()<CAMZ?"Zoom in to see cameras":""):""; draw(); }
   // button in the overlay row
-  const sel=document.getElementById("ovsel"), bar=sel&&sel.closest(".ovbar"); if(bar){ bar.insertAdjacentHTML("beforeend",`<button id="camtog" class="camtog" type="button" aria-pressed="${on}">DOT CAMERAS</button><span class="ovnote" id="camnote"></span>`);
-    document.getElementById("camtog").addEventListener("click",()=>set(!on)); }
-  m.on("zoomend",()=>{ const n=document.getElementById("camnote"); if(n) n.textContent=on&&m.getZoom()<9?"Zoom in to see cameras":""; });
+  const sel=document.getElementById("ovsel"), bar=sel&&sel.closest(".ovbar"); if(bar){ bar.insertAdjacentHTML("beforeend",`<span class="ovnote" id="camnote"></span>`); if(on&&sel.value==="none") sel.value="cams"; }
+  m.on("zoomend",()=>{ const n=document.getElementById("camnote"); if(n) n.textContent=on&&m.getZoom()<CAMZ?"Zoom in to see cameras":""; });
   if(on) sched();
   return { set, draw };
 })();

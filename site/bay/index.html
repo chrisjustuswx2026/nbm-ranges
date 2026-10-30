@@ -6,7 +6,7 @@ window.goPlace=function(la,lo,name,st){ const u=new URL(location.href); u.search
 window.goHome=function(){ const u=new URL(location.href); u.searchParams.delete("place"); location.href=u.toString(); };
 </script>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="./manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="SDR"><link rel="apple-touch-icon" href="./icons/icon-180.png"><meta name="theme-color" content="#0A1428">
-<title>Bay County · SDR Weather Intelligence (Live · v122)</title>
+<title>Bay County · SDR Weather Intelligence (Live · v123)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap">
 <style>
@@ -1363,7 +1363,8 @@ section.panel{overflow-x:clip}
 @media (max-width:760px){.now{display:grid;grid-template-columns:auto repeat(3,minmax(0,auto));justify-content:start;column-gap:12px;align-items:center}.now .v dd{font-size:18px;white-space:nowrap}.now .v.hot{grid-column:2/-1}.now .r30,.now .lline{grid-column:1/-1}.now .v dt{white-space:nowrap}.now .v dd em{font-size:10.5px}}
 @media (max-width:760px){.now .v dt{font-size:9.5px;letter-spacing:.1em}.now .temp b{font-size:40px}}
 /* radar: home shows the map only; full screen gets the outlook-style bar */
-.radar:not(.rfull)>.ph,.radar:not(.rfull) .rtools{display:none!important}
+@media (max-width:760px){.radar:not(.rfull)>.ph,.radar:not(.rfull) .rtools{display:none!important}}
+@media (min-width:761px){.radar:not(.rfull)>.ph .rtitle,.radar:not(.rfull)>.ph .rclose{display:none}.radar>.ph .rfs{display:inline-grid!important;place-items:center}}
 .radar.rfull>.ph{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 12px;background:var(--panel2);border-bottom:1px solid var(--line)}
 .radar.rfull>.ph .rtitle{font-family:var(--display);font-weight:800;font-size:18px;letter-spacing:.1em;color:#fff;margin-right:4px}
 .radar.rfull>.ph .rclose{position:static;display:inline-flex;margin-left:auto;background:#fff;color:#0A1428;border:0;border-radius:8px;padding:8px 14px;font-family:var(--display);font-weight:800;font-size:13px;letter-spacing:.1em}
@@ -1371,7 +1372,7 @@ section.panel{overflow-x:clip}
 .radar.rfull .rtools{display:flex!important;flex-wrap:wrap;gap:8px;padding:8px 12px;background:var(--panel2);border-bottom:1px solid var(--line)}
 .radar.rfull .leaflet-top.leaflet-right .leaflet-control{margin-top:10px!important}
 .radar.rfull .rplq{top:10px}
-.radar:not(.rfull) #rmap{cursor:pointer}
+@media (max-width:760px){.radar:not(.rfull) #rmap{cursor:pointer}}
 .rtile{image-rendering:auto}
 @media (max-width:760px){.radar.rfull>.ph #rmode,.radar.rfull>.ph .rzv{flex-basis:100%}}
 /* map viewer: the tap card sits above every town label */
@@ -1394,6 +1395,13 @@ section.panel{overflow-x:clip}
 .fab{display:none!important}
 .tabs button[data-pane="chat"]{position:relative}.tabs button[data-pane="chat"].hasnew::after{content:"";position:absolute;top:6px;right:calc(50% - 18px);width:9px;height:9px;border-radius:50%;background:#2ECC71;box-shadow:0 0 0 2px var(--bg,#0B1733)}
 .p-chat{display:none}
+
+/* ===================== v123: Blend time steps in the hourly strip ===================== */
+.hs .hc.est .hv b{color:#DCE6F5}
+.p-hours .ph .k .hblend{font-family:var(--display);font-weight:700;font-size:10px;letter-spacing:.12em;color:var(--accent);margin-left:8px;display:none}
+.p-hours .ph .k .hblend.on{display:inline}
+.radar .foot{flex-wrap:wrap}
+.radar .foot .osm{flex-basis:100%;font-size:10px;color:var(--dim);letter-spacing:.02em;margin-top:2px}
 </style>
 <style>/* Leaflet 1.9.4 (inlined) */
 /* required styles */
@@ -2146,7 +2154,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
           <canvas id="rc" width="640" height="360" aria-hidden="true" hidden></canvas><div id="rmap" style="position:absolute;inset:0"></div>
           
         </div>
-        <div class="foot"><span class="arrow">→</span><b id="rd-line">Nothing on radar within 60 miles</b><span class="sample" style="margin-left:auto" id="rd-src">NEXRAD MOSAIC · 5 MIN</span></div>
+        <div class="foot"><span class="arrow">→</span><b id="rd-line">Nothing on radar within 60 miles</b><span class="sample" style="margin-left:auto" id="rd-src">NEXRAD MOSAIC · 5 MIN</span><small class="osm">Map © OpenStreetMap contributors · OpenFreeMap · Radar: NEXRAD/IEM</small></div>
       </section>
       <section class="panel deskchan">
         <div class="ph"><span class="k">CHANNEL · ROLLING</span><span class="live">MUTED</span></div>
@@ -3501,7 +3509,9 @@ window.STRIPS = (function(){
   const wsplit=w=>{ const s=wfmt(w)||""; const m=s.match(/^([A-Z]*)\s*(.*)$/); return m?[m[1],(m[2]||s).trim()]:["",s]; };
   const hdlab=t=>{ const a=new Date(); a.setHours(0,0,0,0); const b=new Date(t); b.setHours(0,0,0,0); const n=Math.round((b-a)/864e5); return n===0?"TODAY":n===1?"TOMORROW":b.toLocaleDateString("en-US",{weekday:"long"}).toUpperCase(); };
   function hsDayLabel(){ const hs=$("hours"), lb=$("hdaylbl"); if(!hs||!lb) return; const r=hs.getBoundingClientRect(), lab=innerWidth<=640?44:50;
-    const first=[...hs.querySelectorAll(".hr-row.t .hc")].find(x=>x.getBoundingClientRect().right>r.left+lab+6); if(first) lb.textContent=first.dataset.day; }
+    const first=[...hs.querySelectorAll(".hr-row.t .hc")].find(x=>x.getBoundingClientRect().right>r.left+lab+6); if(first) lb.textContent=first.dataset.day;
+    let tg=document.getElementById("hblend"); if(!tg&&lb){ tg=document.createElement("small"); tg.id="hblend"; tg.className="hblend"; lb.insertAdjacentElement("afterend",tg); }
+    if(tg){ const st=first&&first.dataset.step; tg.textContent=st?`BLEND · ${st}-HR`:""; tg.classList.toggle("on",!!st); } }
   const hsTag=(xx,yy,t,big,small)=>`<text x="${xx}" y="${yy}" font-family="var(--display),Arial,sans-serif" font-size="${big?15:small?12:13.5}" font-weight="800" letter-spacing=".03em" fill="${small?"#DCE6F5":"#fff"}" text-anchor="middle" stroke="#0E1A33" stroke-width="3.5" paint-order="stroke">${t}</text>`;
   function hsChart(kind,H){ const N=H.length, col=hcolW, W=N*col, Hh=innerWidth<=640?150:170, top=26, bot=Hh-22, X=i=>i*col+col/2, bw=Math.min(22,Math.max(8,col*0.62));
     const hrOfT=t=>new Date(t).getHours();
@@ -3530,7 +3540,7 @@ window.STRIPS = (function(){
     const list=HOURS; if(!list.length){ el.innerHTML=""; return; }
     const keep=el.scrollLeft; hcolW=hsColW(); el.style.setProperty("--hcol",hcolW+"px");
     const dshort=t=>t.toLocaleDateString("en-US",{weekday:"short"}).toUpperCase();
-    const cell=(i,h,inner,cls)=>`<div class="hc${i===selH?" sel":""}${cls||""}" data-i="${i}" data-day="${hdlab(h.t)}">${inner}</div>`;
+    const cell=(i,h,inner,cls)=>`<div class="hc${i===selH?" sel":""}${cls||""}${h.step?" stp":""}${h.est?" est":""}" data-i="${i}" data-day="${hdlab(h.t)}" data-step="${h.step||""}">${inner}</div>`;
     const tRow=list.map((h,i)=>cell(i,h,`${i===0||h.t.getHours()===0?`<em>${i===0?"NOW":dshort(h.t)}</em>`:""}<small>${i===0?hh(h.t):hh(h.t)}</small>`, i===0?" nowc":"")).join("");
     const iRow=list.map((h,i)=>cell(i,h,`<span class="hi">${svg(h.ico)}</span>`)).join("");
     const tempRow=list.map((h,i)=>cell(i,h,`<span class="hv"><b>${h.temp}°</b></span>`)).join("");
@@ -3723,7 +3733,7 @@ window.STRIPS = (function(){
     let t= wet.length>=16?(mp>=60?`on and off all day`:`possible any time of day`): s0>=12&&e0>=23?`mainly after ${hlab(s0)}`: s0<=6&&e0<=13?`early, dry by ${hlab(e0)}`: `most likely ${hrng2(s0,e0)}`;
     const lead=mp>=60?(storm?"Storms":"Rain"):mp>=40?(storm?"A chance of storms":"A chance of rain"):(storm?"A few storms":"Spotty showers");
     const best=(pe-ps<e0-s0&&pe-ps<=6)?` · best chance ${hrng2(ps,pe)}`:""; return `<div class="when">${lead} <b>${t}</b>${best}</div>`; }
-  const hasHours=x=>{ const H=hoursOf(x); if(!H.length) return false; const today=new Date(H[0].t).toDateString()===new Date().toDateString(); return today?H.length>=3:H.length>=12; };
+  const hasHours=x=>{ const H=hoursOf(x); if(!H.length) return false; const today=new Date(H[0].t).toDateString()===new Date().toDateString(); return today?H.length>=3:(H.length>=12||H.filter(h=>h.step).length>=6); };
   function chartsOf(x,which){ const H=hoursOf(x); if(!hasHours(x)) return ""; const mt=Math.max(...H.map(h=>h.thunder||0)), G=H.map(h=>h.gust||hrWind(h)||0), gm=Math.max(...G), T=H.map(h=>h.temp);
     const k0=hrOf(H[0].t), today=k0>0&&new Date(H[0].t).toDateString()===new Date().toDateString(), K0=today?k0:0, SPAN=Math.max(1,23-K0);
     const narrowP=innerWidth<760, colW=narrowP?Math.max(56,Math.floor(((document.querySelector("#days")||{clientWidth:380}).clientWidth-44)/6)):0, W=narrowP?colW*(SPAN+1)+24:720,Hh=narrowP?190:200,L=narrowP?12:30,R=W-12,top=24,bot=Hh-24, X=k=>narrowP?L+colW*(k-K0)+colW/2:L+(R-L)*(k-K0)/SPAN, at=k=>H.find(h=>hrOf(h.t)===k), bw=Math.min(20,Math.max(8,(R-L)/(SPAN+1)*0.7));
@@ -3840,7 +3850,9 @@ window.STRIPS = (function(){
   const P10=v=>v==null?null:(v<10?0:Math.round(v/10)*10), R5=v=>v==null?null:Math.round(v/5)*5, R10=v=>v==null?null:Math.round(v/10)*10;
   const tidyH=h=>Object.assign(h,{pop:P10(h.pop),thunder:P10(h.thunder),rh:R5(h.rh),sky:R10(h.sky)});
   const tidyD=x=>Object.assign(x,{pp:P10(x.pp),ppN:P10(x.ppN),thunder:P10(x.thunder),rh:R5(x.rh),sky:R10(x.sky)});
-  return { ICOF, setHours(h){ HOURS=h.map(tidyH); wire(); renderHours(); }, setDays(d){ DAYS=d.map(tidyD); wire(); renderDays(); }, days(){ return DAYS; }, hours(){ return HOURS; } };
+  function extendHours(list){ const have=new Set(HOURS.map(x=>+new Date(x.t))); const last=HOURS.length?Math.max(...HOURS.map(x=>+new Date(x.t))):0;
+    const add=list.filter(x=>+new Date(x.t)>last&&!have.has(+new Date(x.t))).map(tidyH); if(!add.length) return; HOURS=HOURS.concat(add).sort((a,b)=>new Date(a.t)-new Date(b.t)); renderHours(); renderDays(); }
+  return { ICOF, setHours(h){ HOURS=h.map(tidyH); wire(); renderHours(); }, extendHours, setDays(d){ DAYS=d.map(tidyD); wire(); renderDays(); }, days(){ return DAYS; }, hours(){ return HOURS; } };
 })();
 </script>
 
@@ -4456,9 +4468,22 @@ window.SITE_LL = window.__LOC?{lat:__LOC.la,lon:__LOC.lo}:(window.SITE_LL || { l
       while(out.length<10){ const d=new Date(last); d.setDate(d.getDate()+1); d.setHours(12,0,0,0); last=d; const i=T.dates.indexOf(ymd(d)); if(i<0 || S("tmax",i)==null) break; out.push(blendDay(d,i)); } }
     orig.call(STRIPS, out); }
   STRIPS.setDays = d => { nws=d; merge(); };
+  // v123: hourly strip past the NWS feed from the Blend's time steps. Straight-line fill between steps; every filled hour carries step:3 (or 6) and est:true.
+  function stepHours(t){ const h=t.h; if(!h||!h.t||!h.t.length||!STRIPS.extendHours) return;
+    const g=(f,k)=>{ const a=h[f]; if(!a) return null; const v=a[r]&&a[r][c]&&a[r][c][k]; return (v==null||v===-999)?null:v; };
+    const pts=h.t.map((sec,k)=>({ms:sec*1000,temp:g("temp",k),dew:g("dew",k),wind:g("wind",k),wdir:g("wdir",k),gust:g("gust",k),sky:g("sky",k),pop:g("pop",k),thunder:g("thunder",k)})).filter(p=>p.temp!=null);
+    if(pts.length<2) return; const out=[];
+    const lerp=(a,b,f)=>a==null||b==null?(a!=null?a:b):a+(b-a)*f; const ang=(a,b,f)=>{ if(a==null||b==null) return a!=null?a:b; let d=((b-a+540)%360)-180; return (a+d*f+360)%360; };
+    for(let i=0;i<pts.length-1;i++){ const A=pts[i],B=pts[i+1]; const stepH=Math.round((B.ms-A.ms)/3600000); if(stepH<1||stepH>6) continue;
+      for(let k=0;k<stepH;k++){ const f=k/stepH, ms=A.ms+k*3600000, d=new Date(ms); const temp=Math.round(lerp(A.temp,B.temp,f)), pop=Math.round(lerp(A.pop,B.pop,f)/10)*10||0, th=Math.round(lerp(A.thunder,B.thunder,f)||0), sky=Math.round(lerp(A.sky,B.sky,f)), wd=ang(A.wdir,B.wdir,f), ws=Math.round(lerp(A.wind,B.wind,f)||0), gu=Math.round(lerp(A.gust,B.gust,f)||0);
+        const hr=d.getHours(), isDay=hr>=7&&hr<19; const sh= th>=30?"Chance of storms": pop>=50?"Rain likely": pop>=30?"Chance of rain": sky>=80?"Cloudy": sky>=50?"Partly cloudy": isDay?"Sunny":"Clear";
+        out.push({ t:d, temp, pop, thunder:th, sky, short:sh, isDay, ico:STRIPS.ICOF(sh,isDay), wind:(wd!=null?DIRS[Math.round(wd/22.5)%16]:"")+" "+ws, gust:gu>=10?gu:null, feel:temp, dew:A.dew!=null?Math.round(lerp(A.dew,B.dew,f)):null, rh:null, qpf:null, snow:null, ice:null, vis:null, hazard:"", step:stepH, est:k!==0 }); } }
+    const L=pts[pts.length-1]; out.push({ t:new Date(L.ms), temp:L.temp, pop:L.pop||0, thunder:L.thunder||0, sky:L.sky, short:"", isDay:true, ico:STRIPS.ICOF("",true), wind:(L.wdir!=null?DIRS[Math.round(L.wdir/22.5)%16]:"")+" "+(L.wind||0), gust:L.gust>=10?L.gust:null, feel:L.temp, dew:L.dew, step:6, est:false });
+    STRIPS.extendHours(out); }
   async function load(){ if(!NBM_BASE) return; try{
       const t=await (await fetch(`${NBM_BASE.replace(/\/$/,"")}/t/${Math.floor(LAT)}_${Math.floor(LON)}.json`,{cache:"no-store"})).json();
       r=Math.min(t.n-1,Math.max(0,Math.round((LAT-t.lat0)/t.step))); c=Math.min(t.n-1,Math.max(0,Math.round((LON-t.lon0)/t.step))); T=t; merge();
+      try{ stepHours(t); }catch(e){ console.warn("Blend steps", e); }
     }catch(e){ console.warn("Blend 10-day", e); } }
   load(); setInterval(load, 3600000);
 })();

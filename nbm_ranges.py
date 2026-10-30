@@ -44,6 +44,11 @@ MISSING = -999
 RANGE_FIELDS = ("rain", "snow", "ice")
 DAILY24 = ("rain", "snow", "ice", "snowP", "iceP")
 SCALAR_FIELDS = ("snowP", "iceP", "popD", "popN", "tmax", "tmin", "tmaxsd", "wind", "wdir", "gust", "dpt", "rh", "soil")
+# v123: time steps for the hourly strip beyond the NWS hourly feed (days 7-10). Instantaneous fields at every Blend step
+# (3-hourly to 192 h, 6-hourly after), plus the shortest rain / thunder probability window that covers each step.
+STEP_FIELDS = ("htmp", "hdpt", "hwind", "hwdir", "hgust", "hsky")
+WIN_FIELDS = ("hpop", "htstm")
+STEP_FROM_DAY = 6                        # first day index (0-based) that gets steps: day 7, where the NWS hourly runs out
 
 
 def log(*a):
@@ -188,8 +193,26 @@ def classify(r, run):
                     return ("tmaxsd", None, endt(w[1]))
             if v == "TMIN" and endt(w[1]).hour == 12 and ex == "":
                 return ("tmin", None, endt(w[1]))
-    # afternoon snapshot, 18Z
+    # v123: every instantaneous step (temp, dew point, wind, gust, sky) and the rain / thunder probability windows
     h = inst(fc)
+    if h is not None and ex == "":
+        if v == "TMP" and lvl == "2 m above ground":
+            return ("htmp", None, endt(h))
+        if v == "DPT" and lvl == "2 m above ground":
+            return ("hdpt", None, endt(h))
+        if v in ("WIND", "WDIR", "GUST") and lvl == "10 m above ground":
+            return ("h" + v.lower(), None, endt(h))
+        if v == "TCDC" and lvl.startswith("entire atmosphere"):
+            return ("hsky", None, endt(h))
+    if v == "APCP" and ex.startswith("prob >0.254"):
+        w = win(fc, "acc")
+        if w and w[1] - w[0] in (1, 3, 6):
+            return ("hpop", (w[0], w[1]), endt(w[1]))
+    if v == "TSTM" and ex.startswith("prob"):
+        w = win(fc, "acc") or win(fc, "ave") or win(fc, "fcst")
+        if w and w[1] - w[0] in (1, 3, 6, 12):
+            return ("htstm", (w[0], w[1]), endt(w[1]))
+    # afternoon snapshot, 18Z
     if h is not None and ex == "" and endt(h).hour == 18:
         if v in ("WIND", "WDIR", "GUST") and lvl == "10 m above ground":
             return (v.lower(), None, endt(h))
@@ -245,11 +268,11 @@ def convert(field, vals, msg):
         return vals / 25.4 * 100                              # kg m-2 (mm) -> hundredths of an inch
     if field == "snow":
         return vals * 39.3701 * 100 if u.startswith("m") and "kg" not in u else vals / 25.4 * 100
-    if field in ("tmax", "tmin", "dpt", "soil"):
+    if field in ("tmax", "tmin", "dpt", "soil", "htmp", "hdpt"):
         return (vals - 273.15) * 9 / 5 + 32
     if field == "tmaxsd":
         return vals * 9 / 5 * 10                              # tenths of a deg F
-    if field in ("wind", "gust"):
+    if field in ("wind", "gust", "hwind", "hgust"):
         return vals * 2.23694
     return vals                                               # %, degrees
 
@@ -266,6 +289,7 @@ def main():
     jobs = {}
     cands = {}
     found = set()
+    steps_set, stepjobs, winjobs = set(), {}, {}
     with cf.ThreadPoolExecutor(12) as ex:
         idxs = dict(zip(keys, ex.map(lambda k: read_idx(f"{NBM}/{k}"), keys)))
     for key, rows in idxs.items():
@@ -276,6 +300,22 @@ def main():
                 continue
             field, pi, t = c
             job = (f"{NBM}/{key[:-4]}", r["off"], r["end"])
+            if field in STEP_FIELDS or field in WIN_FIELDS:
+                # the 18Z step is also the afternoon snapshot the 10-day rows use (wind, wdir, gust, dpt), every day
+                daily = {"hwind": "wind", "hwdir": "wdir", "hgust": "gust", "hdpt": "dpt"}.get(field)
+                if daily and t.hour == 18 and t.date() in dates:
+                    slot = (daily, dates.index(t.date()), None)
+                    if slot not in jobs:
+                        jobs[slot] = job
+                # keep only steps that fall on the days the NWS hourly does not reach (Eastern day = UTC-5)
+                dloc = (t - dt.timedelta(hours=5)).date()
+                if dloc not in dates or dates.index(dloc) < STEP_FROM_DAY:
+                    continue
+                if field in STEP_FIELDS:
+                    steps_set.add(t); stepjobs[(field, t)] = job
+                else:
+                    winjobs.setdefault(field, {})[pi] = job     # pi = (start h, end h)
+                continue
             if field in DAILY24:
                 cands.setdefault((field, pi), {})
                 if t not in cands[(field, pi)] or "qmd" in key:
@@ -383,12 +423,23 @@ def main():
             log("soil skipped", url[-30:], e)
             jobs.pop(slot)
 
+    # v123: the step list (sorted valid times) and their download slots
+    steps = sorted(steps_set)
+    for (field, t), job in stepjobs.items():
+        jobs[(field, steps.index(t), None)] = job
+    wins = {f: sorted(d.keys()) for f, d in winjobs.items()}
+    for f, d in winjobs.items():
+        for wi, w in enumerate(wins[f]):
+            jobs[(f, wi, None)] = d[w]
+    log(f"steps: {len(steps)} ({steps[0] if steps else '-'} -> {steps[-1] if steps else '-'}); windows: " + ", ".join(f"{f}:{len(w)}" for f, w in wins.items()))
     log(f"downloading {len(jobs)} fields")
     shape = None
     out_r = {f: None for f in RANGE_FIELDS}
     got_pref = {f: [[False, False, False] for _ in range(NDAYS)] for f in RANGE_FIELDS}
     out_s = {f: None for f in SCALAR_FIELDS}
     soil_acc = {}
+    out_h = {f: None for f in STEP_FIELDS}
+    out_w = {f: None for f in WIN_FIELDS}
 
     def fetch(item):
         slot, (url, a, b) = item
@@ -405,6 +456,10 @@ def main():
                     out_r[f] = np.full(shape + (NDAYS, 3), -1, dtype=np.int32)
                 for f in SCALAR_FIELDS:
                     out_s[f] = np.full(shape + (NDAYS,), MISSING, dtype=np.int32)
+                for f in STEP_FIELDS:
+                    out_h[f] = np.full(shape + (max(1, len(steps)),), MISSING, dtype=np.int32)
+                for f in WIN_FIELDS:
+                    out_w[f] = np.full(shape + (max(1, len(wins.get(f, []))),), MISSING, dtype=np.int32)
             v = convert(field, vals.ravel(), msg)
             s = np.where(idx >= 0, v[np.clip(idx, 0, None)], np.nan)
             if field in RANGE_FIELDS:
@@ -412,6 +467,10 @@ def main():
                 if pref or not got_pref[field][di][col]:
                     out_r[field][:, :, di, col] = np.where(np.isfinite(s), np.round(np.clip(s, 0, None)), -1)
                     if pref: got_pref[field][di][col] = True
+            elif field in STEP_FIELDS:
+                out_h[field][:, :, di] = np.where(np.isfinite(s), np.round(s), MISSING)
+            elif field in WIN_FIELDS:
+                out_w[field][:, :, di] = np.where(np.isfinite(s), np.round(np.clip(s, 0, 100)), MISSING)
             elif field == "soil":
                 acc = soil_acc.setdefault(di, [np.zeros(shape), np.zeros(shape)])
                 ok = np.isfinite(s)
@@ -420,6 +479,26 @@ def main():
                 if field in ("snowP", "iceP", "popD", "popN", "rh"):
                     s = np.clip(s, 0, 100)
                 out_s[field][:, :, di] = np.where(np.isfinite(s), np.round(s), MISSING)
+    # v123: the 18Z afternoon snapshot fields (wind, wdir, gust, dpt) for days that have steps come from the 18Z step
+    for di, d in enumerate(dates):
+        t18 = dt.datetime.combine(d, dt.time(18), tzinfo=dt.timezone.utc)
+        if t18 in steps and shape is not None:
+            si = steps.index(t18)
+            for sf, df in (("hwind", "wind"), ("hwdir", "wdir"), ("hgust", "gust"), ("hdpt", "dpt")):
+                cur = out_s[df][:, :, di]
+                out_s[df][:, :, di] = np.where(cur == MISSING, out_h[sf][:, :, si], cur)
+    # each step's rain / thunder chance = the shortest window that covers it
+    step_pop = {}
+    for f in WIN_FIELDS:
+        pick = []
+        for t in steps:
+            best_w, best_len = None, 99
+            for wi, (a, b) in enumerate(wins.get(f, [])):
+                ta, tb = run + dt.timedelta(hours=a), run + dt.timedelta(hours=b)
+                if ta < t <= tb and (b - a) < best_len:
+                    best_w, best_len = wi, b - a
+            pick.append(best_w)
+        step_pop[f] = pick
     for di, (sm, n) in soil_acc.items():
         out_s["soil"][:, :, di] = np.where(n > 0, np.round(sm / np.maximum(n, 1)), MISSING)
 
@@ -449,15 +528,31 @@ def main():
                 doc[f] = None if f != "rain" and (s <= 0).all() else s.tolist()   # all-zero snow/ice squares stay small
             for f in fields_s:
                 doc[f] = out_s[f][r0:r0 + per, c0:c0 + per].tolist()
+            if steps and shape is not None:
+                hdoc = {"t": [int(t.timestamp()) for t in steps]}
+                for f, name in (("htmp", "temp"), ("hdpt", "dew"), ("hwind", "wind"), ("hwdir", "wdir"), ("hgust", "gust"), ("hsky", "sky")):
+                    if (out_h[f] != MISSING).any():
+                        hdoc[name] = out_h[f][r0:r0 + per, c0:c0 + per].tolist()
+                for f, name in (("hpop", "pop"), ("htstm", "thunder")):
+                    pk = step_pop.get(f) or []
+                    if out_w[f] is not None and (out_w[f] != MISSING).any() and any(w is not None for w in pk):
+                        sub = out_w[f][r0:r0 + per, c0:c0 + per]
+                        hdoc[name] = [[[int(sub[i, j, w]) if w is not None else MISSING for w in pk] for j in range(sub.shape[1])] for i in range(sub.shape[0])]
+                doc["h"] = hdoc
             with open(os.path.join(OUT, "t", f"{la}_{lo}.json"), "w") as fh:
                 json.dump(doc, fh, separators=(",", ":"))
             n_files += 1
 
     meta = {
         "source": "NOAA National Blend of Models (ranges = 25th/50th/75th percentile, the middle half of the models; 10th/90th if those are missing); soil temperature NOAA GFS",
+        # v118i: the spread this run really used, per range field: "25-75" when the Blend's 25th/75th files were there, else "10-90"
+        "spread": ("25-75" if all(all(got_pref[f][d][c] for d in range(NDAYS) for c in (0, 2)) for f in fields_r if f in got_pref) else "10-90") if fields_r else None,
+        "spread_by_field": {f: ("25-75" if all(got_pref[f][d][c] for d in range(NDAYS) for c in (0, 2)) else "10-90") for f in fields_r if f in got_pref},
         "run": run.strftime("%Y-%m-%dT%H:00Z"), "gfs": g.strftime("%Y-%m-%dT%H:00Z") if g else None,
         "made": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%MZ"),
         "dates": [d.isoformat() for d in dates], "ranges": fields_r, "fields": fields_s,
+        "steps": {"count": len(steps), "from": steps[0].strftime("%Y-%m-%dT%H:00Z") if steps else None, "to": steps[-1].strftime("%Y-%m-%dT%H:00Z") if steps else None,
+                  "fields": ["temp", "dew", "wind", "wdir", "gust", "sky", "pop", "thunder"], "note": "tile.h: t = unix seconds per step; arrays [row][col][step]; 3-hourly to 192 h, 6-hourly after"},
         "units": {"rain/snow/ice": "hundredths of an inch [min, likely, max]", "temps": "deg F", "tmaxsd": "tenths deg F",
                   "wind/gust": "mph", "wdir": "deg from", "pops/rh": "%", "missing": MISSING},
         "step": STEP, "tile": "t/{lat}_{lon}.json  (lat, lon = floor of the point; arrays [row S->N][col W->E][day](...))",

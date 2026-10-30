@@ -3710,8 +3710,11 @@ window.STRIPS = (function(){
     else if(pp>=rainT){ r.push(`Rain ${pp}%`); lvl = (pp>=80 && x.rr && x.rr[1]>=100) ? "action" : "headsup"; }
     if((x.iceP||0)>=20){ r.unshift(`Ice ${x.iceP}%`); lvl="action"; } else if((x.snowP||0)>=30){ r.unshift(`Snow ${x.snowP}%`); if(lvl==="clear") lvl="headsup"; }
     if((x.gust||0)>=45){ r.push(`Gusts ${g5(x.gust)}`); lvl="action"; } else if((x.gust||0)>=30){ r.push(`Gusts ${g5(x.gust)}`); if(lvl==="clear") lvl="headsup"; }
-    if(x.lo!=null&&x.lo<=32){ r.push(x.lo<=28?"Hard freeze":"Freeze"); if(lvl==="clear") lvl="headsup"; } else if(x.lo!=null&&x.lo<=36){ r.push("Frost possible"); if(lvl==="clear") lvl="headsup"; }
-    if(x.hi!=null&&x.hi>=100){ r.push(`Heat ${x.hi}°`); lvl="action"; } else if(x.hi!=null&&x.hi>=95){ r.push(`Heat ${x.hi}°`); if(lvl==="clear") lvl="headsup"; }
+    {      const _H=(()=>{ try{ return hoursOf(x)||[]; }catch(e){ return []; } })(); const _fl=_H.map(h=>h.feel).filter(v=>v!=null);
+      const _wc=_fl.length?Math.min(..._fl):null, _hx=_fl.length?Math.max(..._fl):null;
+      if(x.lo!=null&&x.lo<=25){ r.push(`Hard freeze ${x.lo}°`); if(lvl==="clear") lvl="headsup"; } else if(x.lo!=null&&x.lo<=32){ r.push("Freeze"); } else if(x.lo!=null&&x.lo<=36){ r.push("Frost"); }
+      if(_wc!=null&&_wc<=9&&!(x.lo!=null&&x.lo<=25)){ r.push(`Wind chill ${_wc}°`); if(lvl==="clear") lvl="headsup"; }
+      if(x.hi!=null&&x.hi>=95){ r.push(`Heat ${x.hi}°`); if(lvl==="clear") lvl="headsup"; } else if(_hx!=null&&_hx>=105){ r.push(`Heat index ${_hx}°`); if(lvl==="clear") lvl="headsup"; } }
     if(/fog/i.test(x.short||"")){ r.push("Fog"); if(lvl==="clear") lvl="headsup"; }
     return [lvl, {clear:"ALL CLEAR",headsup:"HEADS UP",action:"TAKE ACTION"}[lvl], r.slice(0,2).join(" · ")]; };
   const rIn = (h,snow) => h==null||h<0?"—": snow ? (h<10?"0":(h/100).toFixed(1)) : (h<1?"0":(h/100).toFixed(2));
@@ -4264,7 +4267,7 @@ window.CITY_OUTLOOK = (function(){
     const g=(t.match(/gusts? as high as (\d+)/i)||[])[1]; if(g && +g>=35) why.push(`Gusts ${Math.ceil(g/5)*5} mph`);
     if(/frost|freez/i.test(t)) why.push(/freez/i.test(t)?"Freeze":"Frost");
     if(/snow|sleet|ice\b|freezing rain/i.test(t) && !why.some(w=>/Snow/.test(w))) why.push("Wintry mix");
-    const hi=(t.match(/high near (\d+)/i)||[])[1]; if(hi && +hi>=97) why.push(`Heat ${hi}°`);
+    const hi=(t.match(/high near (\d+)/i)||[])[1]; if(hi && +hi>=95) why.push(`Heat ${hi}°`);
     return why;
   }
   async function build(c){
@@ -5300,20 +5303,25 @@ function SDR_STORY(H, D, spc, nowMs){
     else if(pp>=rainT){ const heavy=x.rr&&x.rr[1]>=100; add(heavy?"heavy rain":"rain","rn",(heavy?55:30)+pp/3,heavy?`Around ${(x.rr[1]/100).toFixed(1)}" for most.`:`${pp}% chance${x.rr&&x.rr[1]>=10?`, around ${(x.rr[1]/100).toFixed(2)}"`:""}.`,heavy?4:2); }
     if((x.iceP||0)>=20) add("ice","frost",95+x.iceP/2,`${x.iceP}% chance of icing.`,6);
     else if((x.snowP||0)>=30) add("snow","frost",85+x.snowP/2,`${x.snowP}% chance of snow.`,6);
-    const freezeT=(mo>=11||mo<=1)?20:32;
-    if(x.lo!=null&&x.lo<=freezeT) add(x.lo<=24?"hard freeze":"freeze","frost",45+(freezeT-x.lo)*2,`Low near ${x.lo}°.`,3);
-    if(x.hi!=null&&x.hi>=97) add("heat","sun",50+(x.hi-97)*4,`High near ${x.hi}°.`,3);
+    if(x.lo!=null&&x.lo<=25) add("hard freeze","frost",45+(25-x.lo)*2,`Low near ${x.lo}°.`,3);
+    { const fl=(H||[]).filter(h=>idxOf(h.t)===i&&h.feel!=null).map(h=>h.feel);
+      if(fl.length&&Math.min(...fl)<=9&&!(x.lo!=null&&x.lo<=25)) add("bitter cold","frost",48+(9-Math.min(...fl))*2,`Wind chill near ${Math.min(...fl)}°.`,3);
+      if(x.hi!=null&&x.hi>=95) add("heat","sun",50+(x.hi-95)*4,`High near ${x.hi}°.`,3);
+      else if(fl.length&&Math.max(...fl)>=105) add("heat","sun",50+(Math.max(...fl)-105)*4,`Heat index near ${Math.max(...fl)}°.`,3); }
     if((x.gust||0)>=35&&!(x.storm||(x.thunder||0)>=30)) add("wind","wind",40+(x.gust-35),`Gusts to ${Math.ceil(x.gust/5)*5} mph.`,2);
-    const prev=days[k-1]; if(prev&&prev.hi!=null&&x.hi!=null&&prev.hi-x.hi>=15) add("much colder","wind",35+(prev.hi-x.hi),`Highs drop from ${prev.hi}° to ${x.hi}°.`,1);
+    const prev=days[k-1]; if(prev&&prev.hi!=null&&x.hi!=null&&Math.abs(prev.hi-x.hi)>=15) add(prev.hi>x.hi?"much colder":"much warmer",prev.hi>x.hi?"wind":"sun",35+Math.abs(prev.hi-x.hi),`${prev.hi}° to ${x.hi}°.`,1);
   });
   // merge back-to-back days of the same kind into stretches
   ev.sort((a,b)=>a.i-b.i);
+  { const sw=e=>/^much (colder|warmer)$/.test(e.type); const other=ev.some(e=>!sw(e)&&e.i<=6);
+    for(let k=ev.length-1;k>=0;k--){ const e=ev[k]; if(!sw(e)) continue; const back=ev.find(f=>sw(f)&&f.i===e.i-1&&f.type!==e.type); const haz=ev.some(f=>!sw(f)&&Math.abs(f.i-e.i)<=1);
+      if(other||back||haz) ev.splice(k,1); } }
   const merged=[]; ev.forEach(e=>{ const last=merged.find(m=>m.type===e.type&&m.end===e.i-1) || merged.find(m=>m.wet&&e.wet&&m.end===e.i-1);
     if(last){ last.end=e.i; last.endDate=e.date; if(e.score>last.score){ last.score=e.score; last.fact=e.fact; last.type=e.rank>last.rank?e.type:last.type; last.ico=e.rank>last.rank?e.ico:last.ico; last.rank=Math.max(e.rank,last.rank); } }
     else merged.push(Object.assign({end:e.i,endDate:e.date},e)); });
   const when=m=>{ if(m.end>m.i) return `${dns(m.date)}–${dns(m.endDate)}`;
     const hrs=(H||[]).filter(h=>idxOf(h.t)===m.i&&(h.pop||0)>=rainT); return hrs.length&&m.wet&&m.i<=2 ? `${dn(m.date)} ${part(hrs[0].t)}`.replace("today evening","this evening").replace("today afternoon","this afternoon").replace("today morning","this morning").replace("today night","tonight") : dn(m.date); };
-  const label=m=>({severe:"Severe storms",storms:"Storms",rain:"Rain","heavy rain":"Heavy rain",snow:"Snow",ice:"Ice","hard freeze":"Hard freeze",freeze:"Freeze",heat:"Heat",wind:"Windy","much colder":"Much colder"})[m.type];
+  const label=m=>({severe:"Severe storms",storms:"Storms",rain:"Rain","heavy rain":"Heavy rain",snow:"Snow",ice:"Ice","hard freeze":"Hard freeze",freeze:"Freeze",heat:"Heat",wind:"Windy","much colder":"Much colder","much warmer":"Much warmer","bitter cold":"Bitter cold"})[m.type];
   const phrase=m=>`${label(m)} ${when(m)}`;
 
   // ---------- 3. tell the story ----------
@@ -5356,11 +5364,11 @@ function SDR_STORY(H, D, spc, nowMs){
     // 48-hour notes: short stacked lines under the sub-sentence, grouped by day so the day is said once. Up to 3. Never the headline's subject.
     try{ const D=(window.STRIPS&&STRIPS.days&&STRIPS.days())||[]; const hl=(r.h+" "+r.p).toLowerCase(); const by={};
       const d0=D[0], d1=D[1], d2=D[2]; const add=(day,txt,lvl)=>{ (by[day]=by[day]||[]).push({txt,lvl}); };
-      if(d0&&d0.lo!=null){ if(d0.lo<=32&&!/freez|frost/.test(hl)) add("Tonight",(d0.lo<=28?"hard freeze ":"freeze ")+d0.lo+"°",d0.lo<=28?"action":"headsup"); else if(d0.lo<=36&&!/frost|freez/.test(hl)) add("Tonight","frost","headsup"); }
-      if(d1){ if(d0&&d0.hi!=null&&d1.hi!=null&&Math.abs(d1.hi-d0.hi)>=10&&!/cool|warm|cold|heat/.test(hl)) add("Tomorrow",(d1.hi<d0.hi?"cool-down ":"warm-up ")+d0.hi+"° → "+d1.hi+"°","");
+      if(d0&&d0.lo!=null){ if(d0.lo<=32&&!/freez|frost/.test(hl)) add("Tonight",(d0.lo<=25?"hard freeze ":"freeze ")+d0.lo+"°",d0.lo<=25?"headsup":""); else if(d0.lo<=36&&!/frost|freez/.test(hl)) add("Tonight","frost",""); }
+      if(d1){ if(d0&&d0.hi!=null&&d1.hi!=null&&Math.abs(d1.hi-d0.hi)>=10&&!/cool|warm|cold|heat|colder|warmer/.test(hl)) add("Tomorrow",(d1.hi<d0.hi?"cool-down ":"warm-up ")+d0.hi+"° → "+d1.hi+"°","");
         if((d1.gust||0)>=30&&!/gust|wind/.test(hl)) add("Tomorrow","gusts to "+d1.gust,d1.gust>=45?"action":"headsup");
         const pp=Math.max(d1.pp||0,d1.ppN||0); if(pp>=40&&!/rain|storm|shower/.test(hl)) add("Tomorrow",((d1.thunder||0)>=30?"storms ":"rain ")+pp+"%",(d1.thunder||0)>=30?"headsup":"");
-        if(d1.lo!=null){ if(d1.lo<=32&&!/freez|frost/.test(hl)) add("Tomorrow night",(d1.lo<=28?"hard freeze ":"freeze ")+d1.lo+"°",d1.lo<=28?"action":"headsup"); else if(d1.lo<=36&&!/frost|freez/.test(hl)) add("Tomorrow night","frost","headsup"); } }
+        if(d1.lo!=null){ if(d1.lo<=32&&!/freez|frost/.test(hl)) add("Tomorrow night",(d1.lo<=25?"hard freeze ":"freeze ")+d1.lo+"°",d1.lo<=25?"headsup":""); else if(d1.lo<=36&&!/frost|freez/.test(hl)) add("Tomorrow night","frost",""); } }
       if(d1&&d2&&d1.hi!=null&&d2.hi!=null&&Math.abs(d2.hi-d1.hi)>=10&&!by["Tomorrow"]&&!/cool|warm|cold|heat/.test(hl)) add(d2.long||d2.d,(d2.hi<d1.hi?"cool-down ":"warm-up ")+d1.hi+"° → "+d2.hi+"°","");
       const order=["Tonight","Tomorrow","Tomorrow night"]; const keys=Object.keys(by).sort((x,y)=>(order.indexOf(x)<0?9:order.indexOf(x))-(order.indexOf(y)<0?9:order.indexOf(y)));
       const lines=keys.slice(0,3).map(k=>{ const it=by[k]; const worst=it.some(x=>x.lvl==="action")?"action":it.some(x=>x.lvl==="headsup")?"headsup":""; return `<li class="${worst}"><b>${k}</b>${it.map(x=>x.txt).join(" · ")}</li>`; });
@@ -5374,7 +5382,7 @@ function SDR_STORY(H, D, spc, nowMs){
     const O=window.STORY_OVERRIDE; if(O&&O.h){ set({level:O.level||"headsup",ico:O.ico||"pc",h:O.h,p:O.p||""}); return; }
     if(!document.getElementById("rmap") && !/\bclear\b/.test(($("call")||{}).className||"")) return;
     if(!window.STRIPS||!STRIPS.days) return; const D=STRIPS.days()||[], H=(STRIPS.hours&&STRIPS.hours())||[]; if(!D.length&&!H.length) return;
-    set(SDR_STORY(H.map(h=>({t:h.t,pop:h.pop,thunder:h.thunder,short:h.short})), D, SPC, Date.now()));
+    set(SDR_STORY(H.map(h=>({t:h.t,pop:h.pop,thunder:h.thunder,short:h.short,feel:h.feel})), D, SPC, Date.now()));
   }
   window.STORY={ run:story };
   setTimeout(async()=>{ await spc(); story(); },2600); setInterval(async()=>{ await spc(); story(); },120000);
@@ -5707,8 +5715,8 @@ window.SDR_CAMS = (function(){
     if(th>=30) r.push(["Storms "+Math.max(pp,th)+"%", pp>=70?"action":"headsup"]); else if(pp>=rainT) r.push(["Rain "+pp+"%","headsup"]);
     if((x.iceP||0)>=20) r.unshift(["Ice "+x.iceP+"%","action"]); else if((x.snowP||0)>=30) r.unshift(["Snow "+x.snowP+"%","headsup"]);
     if(g>=45) r.push(["Gusts "+g,"action"]); else if(g>=30) r.push(["Gusts "+g,"headsup"]);
-    if(x.lo!=null&&x.lo<=32) r.push([x.lo<=28?"Hard freeze":"Freeze","headsup"]); else if(x.lo!=null&&x.lo<=36) r.push(["Frost possible","headsup"]);
-    if(x.hi!=null&&x.hi>=100) r.push(["Heat "+x.hi+"°","action"]); else if(x.hi!=null&&x.hi>=95) r.push(["Heat "+x.hi+"°","headsup"]);
+    if(x.lo!=null&&x.lo<=25) r.push(["Hard freeze "+x.lo+"°","headsup"]);
+    if(x.hi!=null&&x.hi>=95) r.push(["Heat "+x.hi+"°","headsup"]);
     return r; };
   let last="";
   const paint=()=>{ const S=window.STRIPS; const D=S&&S.days?S.days():[]; if(!D.length) return;

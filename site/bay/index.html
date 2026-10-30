@@ -6,7 +6,7 @@ window.goPlace=function(la,lo,name,st){ const u=new URL(location.href); u.search
 window.goHome=function(){ const u=new URL(location.href); u.searchParams.delete("place"); location.href=u.toString(); };
 </script>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="./manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="SDR"><link rel="apple-touch-icon" href="./icons/icon-180.png"><meta name="theme-color" content="#0A1428">
-<title>Bay County · SDR Weather Intelligence (Live · v120)</title>
+<title>Bay County · SDR Weather Intelligence (Live · v121)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap">
 <style>
@@ -1286,6 +1286,63 @@ main,main>*,.pane{min-width:0;max-width:100%}
 .ntfbar button{flex:none;background:#fff;color:#0A1428;border:0;border-radius:999px;padding:8px 12px;font-family:var(--display);font-weight:800;font-size:12px;letter-spacing:.1em;cursor:pointer}
 .ntfbar button:disabled{opacity:.6}
 @media (display-mode: standalone){body{padding-top:env(safe-area-inset-top,0px)}}
+
+/* ===================== v121: clean boxes, clean lines, fewer words ===================== */
+/* top bar: alerts bell */
+.ntfbell{font-size:14px;position:relative}.ntfbell.on::after{content:"";position:absolute;right:3px;top:3px;width:7px;height:7px;border-radius:50%;background:#2ECC71;border:1.5px solid var(--bg)}
+.ntfbell.ask::after{content:"";position:absolute;right:3px;top:3px;width:7px;height:7px;border-radius:50%;background:#F5A524;border:1.5px solid var(--bg)}
+.ntfsheet{position:absolute;right:max(12px,env(safe-area-inset-right,0px));left:max(12px,env(safe-area-inset-left,0px));top:calc(100% + 6px);z-index:20;box-shadow:0 12px 30px rgba(0,0,0,.5);background:var(--panel2)}
+@media (min-width:640px){.ntfsheet{left:auto;width:420px}}
+.ntfsheet[hidden]{display:none}
+
+/* radar: the foot keeps one line; the time lives on the plaque, the vector flag was for debugging */
+.radar .foot #rd-src,.radar .foot .glflag{display:none!important}
+.radar .foot{padding:9px 14px}
+
+/* map room: thumbnails in a row, one caption each */
+.mrrow .mcard{flex:0 0 150px}
+.mcard .mlab{padding:7px 9px}.mcard .mlab small,.mcard .mlab em{display:none}.mcard .mlab b{font-size:11.5px;letter-spacing:.06em;line-height:1.15}
+.mcard .mimg .tvc{display:none}
+.p-maproom .mrall{margin-left:auto;padding:5px 10px;font-size:11px}
+.p-alerts .secsub{display:none}
+.secsub{font-size:13px}
+
+/* day detail: boxes, one label each, less prose */
+.dexp{gap:10px}
+.dexp .dx-txt{font-size:15px;line-height:1.4;margin:0 0 2px}
+.dx-grid h4{font-size:11.5px;letter-spacing:.16em;padding-bottom:4px;margin-bottom:6px;border-bottom:1px solid rgba(255,255,255,.08)}
+.dexp .sts{gap:8px}
+.dexp .st{background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:8px 10px 7px;gap:2px}
+.dexp .st small{font-size:10.5px;letter-spacing:.1em}
+.dexp .st b{font-size:24px}
+@media (max-width:760px){.dexp .sts{grid-template-columns:repeat(3,minmax(0,1fr))}.dexp .st.wide{grid-column:span 2}.dexp .st b{font-size:22px}}
+.dexp .when{font-size:13.5px;margin:2px 0 0}
+.amtx>small{font-size:11px;letter-spacing:.14em;margin-top:6px}
+.amt3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:4px}
+.amt3 .a,.amtx .a{background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:7px 10px}
+.agreeline{margin-top:6px;font-size:11px}
+.confwhy{font-size:13px;line-height:1.3}
+.dxclose{margin-top:2px}
+
+/* hourly strip: one clean highlight column behind the tapped hour; the midnight line sits in the gap */
+.hs .hs-in{position:relative}
+.hs .hc.sel{background:none!important;border-radius:0}
+.hs .hs-in[style*="--seli"]::after{content:"";position:absolute;top:2px;bottom:2px;left:calc(var(--hlab) + var(--seli)*var(--hcol));width:var(--hcol);background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:9px;pointer-events:none;z-index:0}
+.hs .hr-row{position:relative;z-index:1}
+.hs .hdl{margin-left:-1px}
+@media (max-width:640px){.hs .hv b{font-size:22px}}
+
+/* full screen (radar, around you): nothing under the phone's status bar, nothing behind the zoom buttons */
+.radar.rfull>.ph,.p-area.afull>.ph{padding-top:calc(10px + env(safe-area-inset-top,0px))}
+.rclose{z-index:1200;right:max(10px,env(safe-area-inset-right,0px))}
+.radar.rfull .leaflet-top.leaflet-right .leaflet-control{margin-top:calc(66px + env(safe-area-inset-top,0px))!important}
+.radar.rfull .rplq{top:calc(10px + env(safe-area-inset-top,0px))}
+.p-area.afull #areacard{position:fixed;left:max(8px,env(safe-area-inset-left,0px));right:max(8px,env(safe-area-inset-right,0px));bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:3100;max-height:46vh;overflow:auto;box-shadow:0 -10px 30px rgba(0,0,0,.5);border-radius:12px}
+.p-area.afull .aexp{z-index:3200;position:relative}
+.lbl3{padding:3px 8px}
+.amtx>small em{font-style:normal;font-family:var(--body);font-weight:500;letter-spacing:0;text-transform:none;font-size:11.5px;color:var(--muted);margin-left:6px}
+.amtx .sts{align-items:stretch}.amtx .st{align-content:start}
+.ntfsheet{width:auto}@media (min-width:640px){.ntfsheet{width:420px}}
 </style>
 <style>/* Leaflet 1.9.4 (inlined) */
 /* required styles */
@@ -2070,9 +2127,8 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
 
     <!-- 4. schedule vs weather — the proactive piece -->
     <section class="panel p-maproom">
-      <div class="ph"><span class="k">MAP ROOM</span><span class="sample" id="mrStamp">LOADING</span></div>
-      <div class="mrrow" id="mrPrev"></div>
-      <div class="upl"><p>Today's and tomorrow's setup, Day 3, rainfall and the tropics, drawn on our map. Tap a map to open it.</p><button class="btn ghost" data-go="maps">ALL MAPS</button></div>
+      <div class="ph"><span class="k">MAP ROOM</span><button class="btn ghost mrall" data-go="maps">ALL MAPS ▸</button></div>
+      <div class="mrrow" id="mrPrev"></div><span class="sample" id="mrStamp" hidden>LOADING</span>
     </section>
 
     <!-- alerts near you: every warning, watch, advisory and special weather statement whose polygon is near the site; tap for details -->
@@ -3362,7 +3418,7 @@ window.STRIPS = (function(){
   // ---- v118 HOURLY STRIP: 8 hours at a time (phones), swipe for more, day markers at midnight,
   //      tap TEMP / RAIN / WIND for a graph under the strip that scrolls with it; tap again (or the ✕) to close.
   let hchart="", hcolW=52;
-  const hsColW=()=>{ const el=$("hours"); const w=(el&&el.clientWidth)||360, lab=innerWidth<=640?44:50, n=innerWidth<=640?8:(innerWidth<960?10:12); return Math.max(44,Math.floor((w-lab-2)/n)); };
+  const hsColW=()=>{ const el=$("hours"); const w=(el&&el.clientWidth)||360, lab=innerWidth<=640?44:50, n=innerWidth<=640?7:(innerWidth<960?10:12); return Math.max(44,Math.floor((w-lab-2)/n)); };
   const wsplit=w=>{ const s=wfmt(w)||""; const m=s.match(/^([A-Z]*)\s*(.*)$/); return m?[m[1],(m[2]||s).trim()]:["",s]; };
   const hdlab=t=>{ const a=new Date(); a.setHours(0,0,0,0); const b=new Date(t); b.setHours(0,0,0,0); const n=Math.round((b-a)/864e5); return n===0?"TODAY":n===1?"TOMORROW":b.toLocaleDateString("en-US",{weekday:"long"}).toUpperCase(); };
   function hsDayLabel(){ const hs=$("hours"), lb=$("hdaylbl"); if(!hs||!lb) return; const r=hs.getBoundingClientRect(), lab=innerWidth<=640?44:50;
@@ -3403,7 +3459,7 @@ window.STRIPS = (function(){
     const windRow=list.map((h,i)=>{ const s=wfmt(h.wind)||""; if(!s||s==="CALM") return cell(i,h,`<span class="hv"><b class="calm">Calm</b><small>${h.gust&&h.gust>=15?`G${g5(h.gust)}`:"&nbsp;"}</small></span>`); const [d,n]=wsplit(h.wind); return cell(i,h,`<span class="hv"><b>${n.split(/[–-]/).pop()||"—"}</b><small>${d}${h.gust&&h.gust>=15?` G${g5(h.gust)}`:""}</small></span>`); }).join("");   // v119: mph on every phone cell too
     const lab=(k,txt)=>`<button type="button" class="hlab btn2" data-hk="${k}" aria-pressed="${hchart===k}">${txt}</button>`;
     const labW=innerWidth<=640?44:50; const lines=list.map((h,i)=>(i>0&&h.t.getHours()===0)?`<i class="hdl" style="left:${labW+i*hcolW}px"></i>`:"").join("");   // v118b: one continuous day line at each midnight
-    el.innerHTML=`<div class="hs-in">${lines}<div class="hr-row t"><div class="hlab"></div>${tRow}</div><div class="hr-row i"><div class="hlab"></div>${iRow}</div>
+    el.innerHTML=`<div class="hs-in"${selH>=0?` style="--seli:${selH}"`:""}>${lines}<div class="hr-row t"><div class="hlab"></div>${tRow}</div><div class="hr-row i"><div class="hlab"></div>${iRow}</div>
       <div class="hr-row v temp">${lab("temp","TEMP")}${tempRow}</div><div class="hr-row v rain">${lab("rain","RAIN")}${rainRow}</div><div class="hr-row v wind">${lab("wind","WIND<small>mph</small>")}${windRow}</div>
       ${hchart?`<div class="hr-row g"><button type="button" class="hlab btn2" data-hk="${hchart}" aria-pressed="true" aria-label="Close the graph"></button><div class="gc">${hsChart(hchart,list)}</div></div>`:""}</div>`;
     el.scrollLeft=keep; hsDayLabel();
@@ -3552,7 +3608,7 @@ window.STRIPS = (function(){
     if(r[2]<unit) return `<div class="amtl"><small>${lab} AMOUNT</small><b>None expected</b></div>`;
     // v117: three labeled numbers (the middle half of the models: low end = 25th percentile, most likely = median, high end = 75th)
     const v=h=>h<unit?"Trace":f(h)+'"';
-    return `<div class="amtx"><small class="amtt">${lab} AMOUNT · ${window.SDR_RANGE==="wide"?"full model spread":"middle half of the models"}</small><div class="sts"><div class="st lo"><small>LOW END</small><b>${v(r[0])}</b></div><div class="st"><small>MOST LIKELY</small><b>${v(r[1])}</b></div><div class="st lo"><small>HIGH END</small><b>${v(r[2])}</b></div></div></div>`; };
+    return `<div class="amtx"><small class="amtt">${lab} AMOUNT <em>${window.SDR_RANGE==="wide"?"full model spread":"middle half of the models"}</em></small><div class="sts"><div class="st lo"><small>LOW END</small><b>${v(r[0])}</b></div><div class="st"><small>MOST LIKELY</small><b>${v(r[1])}</b></div><div class="st lo"><small>HIGH END</small><b>${v(r[2])}</b></div></div></div>`; };
   const amountOld = (lab,r,snow) => { if(!r) return "";
     const unit=snow?10:1; if(r[2]<unit) return `<div class="amt6"><span class="al">${lab}</span><div class="none">None expected</div></div>`;
     const v=r.map(x=>x/100), NICE=snow?[1,2,3,4,6,8,10,12,18,24,36]:[0.1,0.2,0.25,0.5,0.75,1,1.5,2,3,4,5,6,8,10];
@@ -3661,7 +3717,7 @@ window.STRIPS = (function(){
                 if(!r&&!(x.snowP>=10)&&!(x.iceP>=10)) return `<div class="sts pch">${stat("RAIN","Dry","","dry")}</div>`;
                 return `<div class="sts pch">${stat("RAIN", r+"%")}${(x.thunder||0)>=20?stat("THUNDER", x.thunder+"%", "", x.thunder>=30?"warn":""):""}${(x.snowP||0)>=10?stat("SNOW", x.snowP+"%"):""}${(x.iceP||0)>=10?stat("ICE", x.iceP+"%", "", "warn"):""}</div>${rainWhen(x)}`; })()}
             ${x.rr && x.rr[2]<1 && !anySnow && !anyIce ? `<div class="chl dim">No measurable rain expected</div>` : amount("RAIN", x.rr, false)}${anySnow?amount("SNOW", x.sr, true):""}${anyIce?amount("ICE", x.ir, false):""}
-            ${c!=null?`<div class="agreeline">MODEL AGREEMENT ${seg(c)} <b class="${lv(c)}">${c} of 5</b></div>${c<=2?`<div class="confwhy">Models disagree on ${confWhy(x)}. Expect changes; we will update as it comes into focus.</div>`:""}`:""}
+            ${c!=null?`<div class="agreeline">MODEL AGREEMENT ${seg(c)} <b class="${lv(c)}">${c} of 5</b></div>${c<=2?`<div class="confwhy">Models disagree on ${confWhy(x)} — expect this to change.</div>`:""}`:""}
           </section>
           ${chartsOf(x,"precip")}
           ${(()=>{ const sw=sprayWin(x), ow=outdoorWin(x), so=soilT(i), wa=waterT(i), gd=gduT(i); if(!sw&&!ow&&!so&&!wa&&!gd) return "";
@@ -3674,7 +3730,7 @@ window.STRIPS = (function(){
               "OUTDOOR WORK":()=>`${ow&&ow.rows?rowsHtml(ow.rows):ow&&ow.note?ow.note:""}<p>Mowing, concrete, roofing, crews: the hours with no rain, no lightning, gusts under 30 and bearable temperatures. Yellow means plan around it (a rain or storm chance, gusty, hot); red means hold.</p>`,
               "SOIL TEMP":()=>soilDeep(i), "CROP WATER":()=>waterDeep(i), "HEAT UNITS":()=>gduDeep(i) };
             const t=(lab,o,cls)=>o?`<div class="ft ${cls||""}" role="button" tabindex="0"><small>${cls?"<i></i>":""}${lab}<em>ⓘ</em><button type="button" class="fxx" aria-label="Close">✕</button></small><b class="${/^\d/.test(o.big)?"":"ph"}">${o.big}</b>${o.sub?`<span>${o.sub}</span>`:""}${bar(o)}<div class="fx">${(DEEP[lab]||(()=>""))()}</div></div>`:"";
-            return `<section class="farm"><div class="fhd"><h4>OUTDOOR WORK &amp; FARMS</h4><p>For growers, landscapers, mowing crews, concrete and anyone working outside. Tap a tile for the hour-by-hour.</p></div><div class="ftg">${t("OUTDOOR WORK",ow,ow&&ow.lvl)}${t("SPRAY WINDOW",sw,sw&&sw.lvl)}${t("SOIL TEMP",so)}${t("CROP WATER",wa,wa&&wa.lvl)}${t("HEAT UNITS",gd)}</div></section>`; })()}
+            return `<section class="farm"><div class="fhd"><h4>OUTDOOR WORK &amp; FARMS</h4><p>Growers, landscapers, mowing, concrete, anyone outside. Tap a tile for hours.</p></div><div class="ftg">${t("OUTDOOR WORK",ow,ow&&ow.lvl)}${t("SPRAY WINDOW",sw,sw&&sw.lvl)}${t("SOIL TEMP",so)}${t("CROP WATER",wa,wa&&wa.lvl)}${t("HEAT UNITS",gd)}</div></section>`; })()}
         </div>
         ${x.dayTxt&&x.nightTxt?`<p class="dx-n"><b>Night.</b> ${x.nightTxt}</p>`:""}
         <button type="button" class="dxclose" data-dxclose="${i}">▴ CLOSE ${(x.long||x.d||"").toUpperCase()}</button>
@@ -4023,7 +4079,7 @@ window.AREA = (function(){
     items.forEach(c=>{ const pt=m.latLngToContainerPoint([c.la,c.lo]); const big=c.metro||c.pop>=150000; const fs=big?14:12.5; const w=c.n.length*fs*.6+14;
       const clash=placed.some(q=>Math.abs(q.y-pt.y)<fs+6 && pt.x+w>q.x-4 && pt.x<q.x+q.w+4);
       const label=!clash; if(label) placed.push({x:pt.x,y:pt.y,w});
-      const mk=L.circleMarker([c.la,c.lo],{radius:c.s==="action"?8:big?6.5:5,color:"#000",weight:2,fillColor:COL[c.s],fillOpacity:1}).addTo(dots);
+      const TB=(window.matchMedia&&matchMedia("(pointer:coarse)").matches)?3:0; const mk=L.circleMarker([c.la,c.lo],{radius:(c.s==="action"?8:big?6.5:5)+TB,color:"#000",weight:2,fillColor:COL[c.s],fillOpacity:1}).addTo(dots);
       if(label) mk.bindTooltip(c.n,{permanent:true,direction:"right",offset:[6,0],className:big?"lbl3 big":"lbl3",interactive:true});   // v118: title case; the name is part of the tap target
       mk.on("click",()=>window.showCity && window.showCity(c)); });
     const scored=items.filter(c=>c.s!=="pending");
@@ -5169,7 +5225,6 @@ function SDR_STORY(H, D, spc, nowMs){
 <script>
 // v52 one-line explainers under the busier sections
 (function(){ const add=(sel,txt)=>{ const s=document.querySelector(sel); if(!s||s.querySelector(".secsub")) return; const ph=s.querySelector(".ph"); if(ph) ph.insertAdjacentHTML("afterend",`<div class="secsub">${txt}</div>`); };
-  add(".p-alerts","Watches, warnings and advisories for your area, newest first.");
   add(".p-area",'<span class="lg"><i style="background:var(--clear)"></i>All clear</span><span class="lg"><i style="background:var(--heads)"></i>Heads up</span><span class="lg"><i style="background:var(--action)"></i>Take action</span><span class="lgt">Tap a town for what\'s next</span>');
 })();
 </script>
@@ -5526,11 +5581,7 @@ window.SDR_CAMS = (function(){
     setTimeout(tryMerge,1500); setTimeout(tryMerge,4000); }
 })();
 
-// ===================== v118g: slim live-channel bar right under the hero (phones; computers keep the panel beside the radar) =====================
-(function(){ const st=document.getElementById("status"); if(!st) return;
-  const b=document.createElement("button"); b.type="button"; b.className="livebar span"; b.innerHTML=`<i></i><b>24/7 CHANNEL</b><span>Live radar, alerts and the team's calls, around the clock</span><em>WATCH ▸</em>`;
-  st.insertAdjacentElement("afterend",b); b.onclick=()=>{ const t=document.querySelector('.tabs button[data-pane="live"]'); if(t) t.click(); };
-})();
+// (v121: the slim 24/7 bar under the hero was removed — the LIVE pill and the WATCH LIVE tab do that job)
 
 // ===================== v118i: which spread the blend files carry (middle half vs 10th-90th), read once from the job's meta ====================
 (function(){ try{ fetch((window.NBM_BASE||"https://chrisjustuswx2026.github.io/nbm-ranges")+"/latest.json").then(r=>r.ok?r.json():null).then(m=>{ if(!m) return; window.SDR_META=m;
@@ -5626,7 +5677,6 @@ window.SDR_GL=(function(){
     if (p === "granted") bar.innerHTML = `<i class="on"></i><b>ALERTS ON</b><span>Warnings, status changes, new briefings and a twice-a-day update, while the app is open</span><button type="button" data-test>SEND A TEST</button>`;
     else if (p === "denied") bar.innerHTML = `<i></i><b>ALERTS OFF</b><span>Allow notifications for this app in Settings → Notifications → SDR to turn them on</span>`;
     else bar.innerHTML = `<i></i><b>ALERTS</b><span>Get a notification when the call changes or a briefing is issued</span><button type="button" data-on>TURN ON</button>`;
-    bar.hidden = !(standalone || p === "granted" || location.search.indexOf("alerts=1") >= 0);
   };
   bar.addEventListener("click", async e => {
     if (e.target.closest("[data-on]")) { try { await Notification.requestPermission(); } catch (x) {} paint(); if (Notification.permission === "granted") notify("hello", "SDR · ALERTS ON", `You'll hear from us when the call changes at ${SITE}.`, "overview"); }
@@ -5634,8 +5684,18 @@ window.SDR_GL=(function(){
       setTimeout(() => notify("test", "SDR · TAKE ACTION", `Test: Tornado Warning · ${SITE} until 4:45 PM. Rotation 9 miles southwest, moving northeast. Tap for radar.`, "overview", ".radar", "test"), 8000);
       setTimeout(() => { b.disabled = false; b.textContent = "SEND A TEST"; }, 12000); }
   });
-  const liveBar = st.nextElementSibling && st.nextElementSibling.classList.contains("livebar") ? st.nextElementSibling : st;
-  liveBar.insertAdjacentElement("afterend", bar); paint();
+  // v121: the bar lives behind a bell in the top bar instead of taking a box on the first screen
+  const bell = document.createElement("button"); bell.type = "button"; bell.className = "bolt ntfbell"; bell.id = "ntfbell"; bell.setAttribute("aria-label", "Alerts"); bell.innerHTML = "&#128276;";
+  const anchor = document.getElementById("snd") || document.getElementById("livepill"); if (anchor) anchor.insertAdjacentElement("afterend", bell); else document.querySelector("header.top").appendChild(bell);
+  bar.classList.add("ntfsheet"); document.querySelector("header.top").appendChild(bar); let open = false;
+  const paintBell = () => { bell.classList.toggle("on", Notification.permission === "granted"); bell.classList.toggle("ask", Notification.permission === "default" && standalone); bell.hidden = !(standalone || Notification.permission === "granted" || location.search.indexOf("alerts=1") >= 0); };
+  const _paint = paint; const paintAll = () => { _paint(); bar.hidden = !open; paintBell(); };
+  bell.onclick = () => { open = !open; paintAll(); };
+  document.addEventListener("click", e => { if (open && !e.target.closest("#ntfbell,#ntfbar")) { open = false; paintAll(); } });
+  bar.addEventListener("click", () => setTimeout(paintAll, 400));
+  paintAll();
+  // first open as an app with alerts not decided yet: open the sheet once so the TURN ON button is in view
+  if (standalone && Notification.permission === "default") { let shown = false; try { shown = localStorage.getItem("sdr-ntf-nudged") === "1"; } catch (e) {} if (!shown) { setTimeout(() => { open = true; paintAll(); try { localStorage.setItem("sdr-ntf-nudged", "1"); } catch (e) {} }, 2500); } }
 
   // ---- triggers ----
   // 1) the call changes from ALL CLEAR to HEADS UP / TAKE ACTION (and a warning arriving while already HEADS UP)

@@ -105,6 +105,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
 .compose input::placeholder{color:var(--dim)}
 .compose .go{width:30px;height:30px;border-radius:50%;background:var(--blue);color:#fff;display:grid;place-items:center;flex:none}
 .compose .go svg{width:14px;height:14px}
+[hidden]{display:none!important}
 .demo{position:fixed;bottom:calc(92px + env(safe-area-inset-bottom,0px));right:max(10px,env(safe-area-inset-right,0px));z-index:5;display:flex;gap:5px;opacity:.85}
 .demo button,.demo span{font-family:var(--display);font-weight:700;font-size:10px;letter-spacing:.1em;border:1px solid var(--line);border-radius:4px;padding:2px 6px;color:var(--muted);background:var(--bg)}
 .demo button.on{color:var(--fg);border-color:var(--accent)}
@@ -338,7 +339,7 @@ var SDR_ENGINE=(function(){
   function quick(){var Q=document.getElementById("quick");Q.innerHTML="";QUICK.forEach(function(q){var b=document.createElement("button");b.textContent=q;b.addEventListener("click",function(){send(q);});Q.appendChild(b);});
     var r=document.createElement("button");r.className="brief";r.textContent="Request a briefing";r.addEventListener("click",function(){send("Can we get a briefing for Saturday's game?");});Q.appendChild(r);}
 
-  function seed(){M.innerHTML="";lastSide="";ts("<b>"+day()+"</b> 7:10 AM");
+  function seed(){M.innerHTML="";lastSide="";ts("<b>"+day()+"</b> "+now());
     var live=null; try{ if(SDR_ENGINE.ok()) live=SDR_ENGINE.answer("right now"); }catch(e){}
     bubble("them",live?live:'<span class="st clear">All clear</span>Normal operations today. Nothing on radar within 30 miles.',{from:lastMet});}
 
@@ -379,6 +380,6 @@ var SDR_ENGINE=(function(){
   quick();seed();
   // v125: embedded in the dashboard as the CHAT screen — the back arrow returns to the dashboard; a parent can also ask us to reset
   var back=document.querySelector(".back"); if(back) back.addEventListener("click",function(){ if(window.parent&&window.parent!==window){ window.parent.postMessage({sdr:"chat-close"},"*"); } else { history.back(); } });
-  window.addEventListener("message",function(e){ var d=e.data||{}; if(d.sdr==="chat-open"){ pinPaint(); try{ var v=window.parent.DASH&&window.parent.DASH.venue&&window.parent.DASH.venue(); if(v&&v.name){ var w=document.querySelector(".who b"); if(w) w.textContent="Meteorologist team · "+v.name; } }catch(x){} } });
+  window.addEventListener("message",function(e){ var d=e.data||{}; if(d.sdr==="chat-open"){ pinPaint(); try{ var v=window.parent.DASH&&window.parent.DASH.venue&&window.parent.DASH.venue(); if(v&&v.name){ var w=document.querySelector(".who b"); if(w) w.innerHTML='<span class="lv"><i></i>LIVE CHAT</span> Meteorologist team · '+v.name.replace(/[<&]/g,""); } }catch(x){} } });
 })();
 </script>

@@ -1428,6 +1428,12 @@ body.chat-on{overflow:hidden}
 .call.headsup,.next.headsup{animation:callpulse 2.4s ease-in-out infinite}
 .call.action,.next.action{animation:callpulseR 1.6s ease-in-out infinite}
 @media (prefers-reduced-motion:reduce){.call,.next{animation:none!important}}
+/* v134: on desktop the chat is a pop-up panel docked on the right; the dashboard stays visible and usable beside it */
+@media (min-width:900px){
+  #chatwrap{inset:auto 24px 76px auto;top:84px;width:440px;border-radius:18px;overflow:hidden;
+    border:1px solid rgba(255,255,255,.14);box-shadow:0 24px 70px rgba(0,0,0,.55),0 0 0 1px rgba(0,0,0,.3);animation:chatin .22s ease-out}
+  @keyframes chatin{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+}
 </style>
 <style>/* Leaflet 1.9.4 (inlined) */
 /* required styles */
@@ -2790,7 +2796,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
   // ---------- tabs ----------
   const panes = { overview:"pane-overview", schedule:"pane-overview", maps:"pane-maps", briefing:"pane-briefing", live:"pane-live" };
   function go(name){
-    if(name==="chat"){ if(window.SDR_CHAT_OPEN) SDR_CHAT_OPEN(); else { const f=document.getElementById("fab"); if(f) f.click(); } return; }   // v122: CHAT tab opens the chat drawer, the page underneath stays
+    if(name==="chat"){ const cw=document.getElementById("chatwrap"); if(cw&&!cw.hidden&&innerWidth>=900&&window.SDR_CHAT_CLOSE){ SDR_CHAT_CLOSE(); return; } if(window.SDR_CHAT_OPEN) SDR_CHAT_OPEN(); else { const f=document.getElementById("fab"); if(f) f.click(); } return; }   // v122: CHAT tab opens the chat drawer, the page underneath stays
     if(name==="radar"){ go("overview"); const r=document.querySelector(".radar"); if(window._setRadarFull){ setTimeout(()=>window._setRadarFull(true),60); } else if(r){ setTimeout(()=>r.scrollIntoView({behavior:"smooth",block:"start"}),80); } return; }
     document.querySelectorAll(".tabs button").forEach(x=>x.setAttribute("aria-selected", x.dataset.pane===name));
     const want = panes[name];
@@ -3704,7 +3710,8 @@ window.STRIPS = (function(){
   const tag = why => { const r=(why||"").split(" · ")[0];
     if(/^Storms/.test(r)) return "Storms"; if(/^Rain/.test(r)) return "Rain"; if(/^Ice/.test(r)) return "Ice"; if(/^Snow/.test(r)) return "Snow";
     if(/^Gusts/.test(r)) return "Windy"; if(/freeze|Frost/i.test(r)) return /Hard/.test(r)?"Hard freeze":/Freeze/.test(r)?"Freeze":"Frost"; if(/^Heat/.test(r)) return "Hot"; return r; };
-  const callOf = x => { const m=(x.date||new Date()).getMonth(), rainT=(m>=5&&m<=8)?60:40, r=[], pp=Math.max(x.pp||0,x.ppN||0); let lvl="clear";
+  const _r10=v=>v==null?v:(v<10?0:Math.round(v/10)*10);
+  const callOf = x0 => { const x=Object.assign({},x0,{pp:_r10(x0.pp),ppN:_r10(x0.ppN),thunder:_r10(x0.thunder),snowP:_r10(x0.snowP),iceP:_r10(x0.iceP)}); const m=(x.date||new Date()).getMonth(), rainT=(m>=5&&m<=8)?60:40, r=[], pp=Math.max(x.pp||0,x.ppN||0); let lvl="clear";
     const stormy=x.storm||(x.thunder||0)>=30;
     if(stormy){ r.push(`Storms ${Math.max(pp,x.thunder||0)}%`); lvl = pp>=70 ? "action" : "headsup"; }
     else if(pp>=rainT){ r.push(`Rain ${pp}%`); lvl = (pp>=80 && x.rr && x.rr[1]>=100) ? "action" : "headsup"; }
@@ -3744,7 +3751,7 @@ window.STRIPS = (function(){
       </div></div>`; };
   const lv = c => c>=3?"g":c===2?"o":"r";
   const seg = c => `<span class="agree ${lv(c)}">${[1,2,3,4,5].map(i=>`<i class="${i<=c?"on":""}"></i>`).join("")}</span>`;
-  const stat = (lab,val,unit,cls) => val==null||val===""?"":`<div class="st ${cls||""}${lab==="WIND"?" wide":""}${lab==="SKY"?" sky":""}"${({WIND:' data-chart="wind"',GUSTS:' data-chart="wind"',HIGH:' data-chart="temp"',LOW:' data-chart="temp"',"FEELS LIKE":' data-chart="temp"',SKY:' data-chart="sky"',RAIN:' data-chart="rain"',THUNDER:' data-chart="storm"',SNOW:' data-chart="snow"',ICE:' data-chart="ice"'})[lab]||""}><small>${lab}</small><b>${val}${unit?`<em>${unit}</em>`:""}</b></div>`;
+  const stat = (lab,val,unit,cls) => val==null||val===""?"":`<div class="st ${cls||""}${lab==="WIND"?" wide":""}${lab==="SKY"?" sky":""}"${({WIND:' data-chart="wind"',GUSTS:' data-chart="gust"',HIGH:' data-chart="temp"',LOW:' data-chart="temp"',"FEELS LIKE":' data-chart="temp"',SKY:' data-chart="sky"',RAIN:' data-chart="rain"',THUNDER:' data-chart="storm"',SNOW:' data-chart="snow"',ICE:' data-chart="ice"'})[lab]||""}><small>${lab}</small><b>${val}${unit?`<em>${unit}</em>`:""}</b></div>`;
   // v101 hour-by-hour for an opened day: a one-line "when" for rain, and charts (rain / temperature / wind / thunder) that open only when a number is tapped.
   const hoursOf=x=>{ const day=new Date(x.date||Date.now()).toDateString(); return (HOURS||[]).filter(h=>new Date(h.t).toDateString()===day); };
   // v109: feels-like (daytime extreme) and sky cover (daytime average) for the opened day, from the hourly forecast
@@ -3772,9 +3779,9 @@ window.STRIPS = (function(){
     const peakTag=(xx,yy,t,big,small)=>`<text x="${xx}" y="${yy}" font-family="var(--display),Arial,sans-serif" font-size="${big?15:small?12:13.5}" font-weight="800" letter-spacing=".04em" fill="${small?"#DCE6F5":"#fff"}" text-anchor="middle" stroke="#0E1A33" stroke-width="3.5" paint-order="stroke">${t}</text>`;
     const barsOf=(val,col,unit,max)=>{ const vs=[...Array(24)].map((_,k)=>{ const h=at(k); return h?val(h):null; }); const pk=Math.max(0,...vs.filter(v=>v!=null)); let tagged=false;
       return vs.map((v,k)=>{ if(v==null||v<=0) return ""; const bh=Math.max(3,(bot-top)*Math.min(1,v/max)); const t=!tagged&&v===pk&&pk>0; if(t) tagged=true;
-        const pkK=vs.indexOf(pk), lab=!t&&(narrowP?true:(k%3===0&&Math.abs(k-pkK)>=3&&v!==pk));   // v118: a value at every 3-hour mark, like the temperature line (not on top of the peak tag)
+        const pkK=vs.indexOf(pk), lab=!t&&(k===0||vs[k-1]==null||vs[k-1]!==v)&&!(Math.abs(k-pkK)<=1&&Math.abs(v-pk)<=5);   // v118: a value at every 3-hour mark, like the temperature line (not on top of the peak tag)
         const th=(at(k)&&at(k).thunder)||0, bolt=(unit==="%"&&max===100&&col===rainCol&&th>=20)?`<text x="${X(k)}" y="${bot-bh-(t||lab?21:6)}" text-anchor="middle" font-family="var(--display),Arial,sans-serif" font-size="11.5" font-weight="800" fill="${th>=30?"#FFC857":"#8FA3C2"}" stroke="#0E1A33" stroke-width="3" paint-order="stroke">⚡${th}%</text>`:"";
-        return `<rect x="${X(k)-bw/2}" y="${bot-bh}" width="${bw}" height="${bh}" rx="3" fill="${col(v,at(k))}"/>${t?peakTag(X(k),bot-bh-6,v+unit):lab?peakTag(X(k),bot-bh-6,v+unit,false,true):""}${bolt}`; }).join(""); };
+        return `<rect x="${X(k)-bw/2}" y="${bot-bh}" width="${bw}" height="${bh}" rx="3" fill="${col(v,at(k))}"/>${t?peakTag(X(k),bot-bh-6,v+unit):lab?peakTag(X(k),bot-bh-6,v+unit,false,true):""}`; }).join(""); };
     const rainCol=(v,h)=>(h.thunder||0)>=30?(v>=50?"#F5A524":"#F5D76E"):v>=60?"#2F7BFF":v>=40?"#4FA3FF":v>=20?"#8CC8FF":"#C9E6FF";
     const thH=H.filter(h=>(h.thunder||0)>=20).map(h=>hrOf(h.t)); const thWin=thH.length?hrng2(Math.min(...thH),Math.max(...thH)+1):"";
     const C={};
@@ -3794,16 +3801,13 @@ window.STRIPS = (function(){
     const snowH=H.map(h=>h.snow||0), iceH=H.map(h=>h.ice||0);
     if(Math.max(...snowH)>=0.05) C.snow=`<svg viewBox="0 0 ${W} ${Hh}">${barsOf(h=>h.snow>=0.05?+h.snow.toFixed(1):null,v=>v>=1?"#4D8CFF":"#8CC8FF",'"',Math.max(1,...snowH))}${axis}</svg>`;
     if(Math.max(...iceH)>=0.01) C.ice=`<svg viewBox="0 0 ${W} ${Hh}">${barsOf(h=>h.ice>=0.01?+h.ice.toFixed(2):null,v=>v>=0.1?"#E05AE0":"#F5A1F5",'"',Math.max(0.25,...iceH))}${axis}</svg>`;
-    { const wcol=v=>v>=45?"#FF6B6F":v>=35?"#F5A524":v>=25?"#F5D76E":v>=15?"#7FD6C2":"#4E6E8E", wmax=Math.max(40,gm), sc=v=>(bot-top)*Math.min(1,v/wmax); let tagged=false;
-      const bars=[...Array(24)].map((_,k)=>{ const h=at(k); if(!h) return ""; const w=hrWind(h)||0, g=Math.max(w,h.gust||0); if(g<=0) return ""; const gh=Math.max(3,sc(g)), wh=Math.max(0,sc(w)); const t=!tagged&&g===gm; if(t) tagged=true;
-        const tx=Math.min(R-60,Math.max(L+60,X(k)));
-        const pkK=[...Array(24)].findIndex((_,q)=>{ const hq=at(q); return hq&&Math.max(hrWind(hq)||0,hq.gust||0)===gm; }), lab=!t&&(narrowP?Math.abs(k-pkK)>=1:(k%3===0&&Math.abs(k-pkK)>=3))&&g!==gm;
-        return `<rect x="${X(k)-bw/2}" y="${bot-gh}" width="${bw}" height="${gh}" rx="3" fill="${wcol(g)}" opacity=".38"/>${wh>0?`<rect x="${X(k)-bw/2}" y="${bot-wh}" width="${bw}" height="${wh}" rx="3" fill="${wcol(w)}"/>`:""}${t?peakTag(tx,bot-gh-7,`GUSTS ${g} MPH`,true)+(w>0&&gh-wh>22?peakTag(tx,bot-wh-7,`WIND ${w}`):""):lab?peakTag(X(k),bot-gh-6,g+" mph",false,true):""}`; }).join("");
-      C.wind=`<svg viewBox="0 0 ${W} ${Hh}">${bars}${axis}</svg>`; }
-    if(mt>=20) C.storm=`<svg viewBox="0 0 ${W} ${Hh}">${barsOf(h=>h.thunder||0,v=>v>=50?"#F5A524":"#F5D76E","%",100)}${axis}</svg><div class="ck"><span><i style="background:#F5A524"></i>Chance of thunder</span></div>`;
+    { const wcol=v=>v>=45?"#FF6B6F":v>=35?"#F5A524":v>=25?"#F5D76E":v>=15?"#7FD6C2":"#4E6E8E", wmax=Math.max(30,...H.map(h=>Math.max(hrWind(h)||0,h.gust||0)));
+      C.wind=`<svg viewBox="0 0 ${W} ${Hh}">${barsOf(h=>hrWind(h)||0,v=>wcol(v),"",wmax)}${axis}</svg>`;
+      C.gust=`<svg viewBox="0 0 ${W} ${Hh}">${barsOf(h=>Math.max(hrWind(h)||0,h.gust||0),v=>wcol(v),"",wmax)}${axis}</svg>`; }
+    if(mt>0) C.storm=`<svg viewBox="0 0 ${W} ${Hh}">${barsOf(h=>h.thunder||0,v=>v>=50?"#F5A524":"#F5D76E","%",100)}${axis}</svg><div class="ck"><span><i style="background:#F5A524"></i>Chance of thunder</span></div>`;
     const def="";   // v119: a day opens clean; a chart opens only when its tile is tapped
-    const KEEP=which==="cond"?["temp","wind","sky"]:["rain","storm","snow","ice"];
-    return `<div class="dcharts">${Object.keys(C).filter(k=>KEEP.includes(k)).map(k=>`<div class="dchart${k===def?" open":""}" data-k="${k}"><div class="dch"><b>${({rain:"RAIN CHANCE",temp:"TEMPERATURE & FEELS LIKE",wind:"WIND & GUSTS",storm:"THUNDER",sky:"CLOUD COVER",snow:"SNOW",ice:"ICE"})[k]}<em class="${k==="rain"&&thWin?"th":""}">${k==="rain"&&thWin?"⚡ THUNDER "+thWin:"HOUR BY HOUR"}</em></b><button type="button" data-chart="${k}" aria-label="Close">✕</button></div><div class="dcs">${C[k]}</div></div>`).join("")}</div>`; }
+    const KEEP=which==="cond"?["temp","wind","gust","sky"]:["rain","storm","snow","ice"];
+    return `<div class="dcharts">${Object.keys(C).filter(k=>KEEP.includes(k)).map(k=>`<div class="dchart${k===def?" open":""}" data-k="${k}"><div class="dch"><b>${({rain:"RAIN CHANCE",temp:"TEMPERATURE & FEELS LIKE",wind:"WIND SPEED",gust:"WIND GUSTS",storm:"THUNDER",sky:"CLOUD COVER",snow:"SNOW",ice:"ICE"})[k]}<em class="${(k==="rain"||k==="storm")&&thWin?"th":""}">${k==="rain"&&thWin?"⚡ THUNDER "+thWin:k==="storm"&&thWin?"⚡ "+thWin:(k==="wind"||k==="gust")?"HOUR BY HOUR · MPH":"HOUR BY HOUR"}</em></b><button type="button" data-chart="${k}" aria-label="Close">✕</button></div><div class="dcs">${C[k]}</div></div>`).join("")}</div>`; }
   function renderDays(){
     const el=$("days"); if(!el) return; el.className="dlist sdr";
     const head=$("days-conf"); if(head){ const c3=DAYS.slice(0,3).map(confOf).filter(v=>v!=null); const c=c3.length?Math.min(...c3):null; window.SDR_CONF=DAYS.map(x=>({date:x.date,conf:confOf(x),why:confOf(x)!=null&&confOf(x)<=2?confWhy(x):""}));
@@ -3880,7 +3884,7 @@ window.STRIPS = (function(){
   // rounding the way a forecaster says it: precip/thunder to 10% (under 10% = nothing), humidity to 5%, clouds to 10%
   const P10=v=>v==null?null:(v<10?0:Math.round(v/10)*10), R5=v=>v==null?null:Math.round(v/5)*5, R10=v=>v==null?null:Math.round(v/10)*10;
   const tidyH=h=>Object.assign(h,{pop:P10(h.pop),thunder:P10(h.thunder),rh:R5(h.rh),sky:R10(h.sky)});
-  const tidyD=x=>Object.assign(x,{pp:P10(x.pp),ppN:P10(x.ppN),thunder:P10(x.thunder),rh:R5(x.rh),sky:R10(x.sky)});
+  const tidyD=x=>Object.assign(x,{pp:P10(x.pp),ppN:P10(x.ppN),thunder:P10(x.thunder),snowP:P10(x.snowP),iceP:P10(x.iceP),rh:R5(x.rh),sky:R10(x.sky)});
   // v123: Blend step hours are kept aside and re-merged every time the NWS hours arrive (whichever loads first)
   let EXTRA=[];
   function mergeExtra(){ if(!EXTRA.length) return; const base=HOURS.filter(x=>!x.step); const last=base.length?Math.max(...base.map(x=>+new Date(x.t))):0;
@@ -4261,6 +4265,7 @@ window.CITY_OUTLOOK = (function(){
   const inPoly=(x,y,r)=>{ let ok=false; for(let i=0,j=r.length-1;i<r.length;j=i++){ const [xi,yi]=r[i],[xj,yj]=r[j]; if(((yi>y)!==(yj>y))&&(x<(xj-xi)*(y-yi)/(yj-yi)+xi)) ok=!ok; } return ok; };
   const polys=g=>!g?[]:g.type==="Polygon"?[g.coordinates]:g.type==="MultiPolygon"?g.coordinates:[];
   function judgeText(t, pop){
+    if(pop!=null) pop=pop<10?0:Math.round(pop/10)*10;
     const why=[]; const summer=[6,7,8,9].includes(new Date().getMonth()+1);
     if(pop!=null && pop>=(summer?60:40)) why.push(/thunder/i.test(t)?`Storms ${pop}%`:/snow/i.test(t)?`Snow ${pop}%`:`Rain ${pop}%`);
     else if(/thunder/i.test(t) && (pop||0)>=30) why.push(`Storms ${pop}%`);
@@ -5892,7 +5897,7 @@ window.SDR_GL=(function(){
 
 <script>
 // v125: client chat layer
-(function(){ let wrap=null, fr=null; const CHATV="1793394330";
+(function(){ let wrap=null, fr=null; const CHATV="1793404069";
   function open(){ if(!wrap){ wrap=document.createElement("div"); wrap.id="chatwrap"; wrap.innerHTML='<iframe id="chatfr" title="Message the team" allow="camera"></iframe>'; document.body.appendChild(wrap); fr=wrap.querySelector("iframe"); fr.src="./chat.html?v="+CHATV; fr.addEventListener("load",()=>{ try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }); }
     wrap.hidden=false; document.body.classList.add("chat-on"); if(!(history.state&&history.state.chat)) history.pushState({chat:1},""); try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }
   function close(){ if(wrap){ wrap.hidden=true; } document.body.classList.remove("chat-on"); }

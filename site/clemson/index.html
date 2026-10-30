@@ -6,7 +6,7 @@ window.goPlace=function(la,lo,name,st){ const u=new URL(location.href); u.search
 window.goHome=function(){ const u=new URL(location.href); u.searchParams.delete("place"); location.href=u.toString(); };
 </script>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="./manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="SDR"><link rel="apple-touch-icon" href="./icons/icon-180.png"><meta name="theme-color" content="#0A1428">
-<title>Clemson · SDR Weather Intelligence (Live · v121)</title>
+<title>Clemson · SDR Weather Intelligence (Live · v122)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap">
 <style>
@@ -1343,6 +1343,57 @@ main,main>*,.pane{min-width:0;max-width:100%}
 .amtx>small em{font-style:normal;font-family:var(--body);font-weight:500;letter-spacing:0;text-transform:none;font-size:11.5px;color:var(--muted);margin-left:6px}
 .amtx .sts{align-items:stretch}.amtx .st{align-content:start}
 .ntfsheet{width:auto}@media (min-width:640px){.ntfsheet{width:420px}}
+.p-hours .ph .k .hunit{font-family:var(--body);font-weight:500;font-size:11px;letter-spacing:0;text-transform:none;color:var(--muted);margin-left:10px}
+.hs .hr-row.wind .hlab{flex-wrap:nowrap}
+/* nothing can ever make the page wider than the screen */
+html{overflow-x:hidden}
+main>*,.two>*,section.panel,.hero,.next,.pane>*{min-width:0;max-width:100%}
+section.panel{overflow-x:clip}
+
+/* ===================== v122 ===================== */
+/* hero row: icon · temp · feels like · wind · gusts — one row, units after every number */
+.now{gap:6px 16px}
+.now .v dd em{font-style:normal;font-family:var(--body);font-weight:600;font-size:11px;color:var(--muted);margin-left:3px;letter-spacing:0}
+.now .v dd small{font-family:var(--display);font-weight:700;font-size:11px;letter-spacing:.08em;color:var(--muted);margin-left:5px}
+.now .v.wind dd,.now .v.gust dd{display:flex;align-items:baseline}
+.now .warr{display:inline-block;width:12px;height:12px;margin-right:5px;align-self:center;background:currentColor;-webkit-mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 2l6 9h-4v11h-4V11H6z'/></svg>") center/contain no-repeat;mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 2l6 9h-4v11h-4V11H6z'/></svg>") center/contain no-repeat;color:#9FD8C9}
+.now .v.gust.warn dd{color:var(--heads)}.now .v.gust.bad dd{color:var(--action)}
+.now .nogust{color:var(--dim);font-weight:600}
+@media (max-width:520px){.now{gap:4px 12px}.now .v dd{font-size:19px}.now .temp b{font-size:42px}}
+@media (max-width:760px){.now{display:grid;grid-template-columns:auto repeat(3,minmax(0,auto));justify-content:start;column-gap:12px;align-items:center}.now .v dd{font-size:18px;white-space:nowrap}.now .v.hot{grid-column:2/-1}.now .r30,.now .lline{grid-column:1/-1}.now .v dt{white-space:nowrap}.now .v dd em{font-size:10.5px}}
+@media (max-width:760px){.now .v dt{font-size:9.5px;letter-spacing:.1em}.now .temp b{font-size:40px}}
+/* radar: home shows the map only; full screen gets the outlook-style bar */
+.radar:not(.rfull)>.ph,.radar:not(.rfull) .rtools{display:none!important}
+.radar.rfull>.ph{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 12px;background:var(--panel2);border-bottom:1px solid var(--line)}
+.radar.rfull>.ph .rtitle{font-family:var(--display);font-weight:800;font-size:18px;letter-spacing:.1em;color:#fff;margin-right:4px}
+.radar.rfull>.ph .rclose{position:static;display:inline-flex;margin-left:auto;background:#fff;color:#0A1428;border:0;border-radius:8px;padding:8px 14px;font-family:var(--display);font-weight:800;font-size:13px;letter-spacing:.1em}
+.radar.rfull>.ph .rfs{display:none!important}
+.radar.rfull .rtools{display:flex!important;flex-wrap:wrap;gap:8px;padding:8px 12px;background:var(--panel2);border-bottom:1px solid var(--line)}
+.radar.rfull .leaflet-top.leaflet-right .leaflet-control{margin-top:10px!important}
+.radar.rfull .rplq{top:10px}
+.radar:not(.rfull) #rmap{cursor:pointer}
+.rtile{image-rendering:auto}
+@media (max-width:760px){.radar.rfull>.ph #rmode,.radar.rfull>.ph .rzv{flex-basis:100%}}
+/* map viewer: the tap card sits above every town label */
+.leaflet-tooltip.mvtip{z-index:950!important}
+.mv-map .leaflet-tooltip:not(.mvtip){z-index:1}
+/* outdoor work & farms: one row of verdicts, tap for the tiles */
+.farm .fsum{display:flex;align-items:center;gap:10px;width:100%;background:none;border:0;color:var(--fg);text-align:left;padding:0;cursor:pointer;flex-wrap:wrap}
+.farm .fsum .fhd{margin:0;display:block}.farm .fsum .fhd h4{margin:0}
+.farm .fcs{display:flex;flex-wrap:wrap;gap:6px;flex:1 1 auto}
+.farm .fc{display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid var(--line);font-family:var(--display);font-weight:700;font-size:12.5px;letter-spacing:.02em;color:var(--fg);white-space:nowrap}
+.farm .fc small{font-family:var(--display);font-weight:700;font-size:10px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
+.farm .fc i{width:7px;height:7px;border-radius:50%;background:var(--muted)}.farm .fc.go i{background:var(--clear)}.farm .fc.watch i{background:var(--heads)}.farm .fc.hold i{background:var(--action)}
+.farm .fc.go{color:#7FE0A8}.farm .fc.watch{color:#FFD166}.farm .fc.hold{color:#FF7B7B}
+.farm .fcar{font-style:normal;color:var(--muted);margin-left:auto;transition:transform .2s}.farm.open .fcar{transform:rotate(180deg)}
+.farm .fbody{display:none}.farm.open .fbody{display:block;margin-top:12px}
+.farm .fnote{margin:0 0 10px;font-size:13px;color:var(--muted)}
+.farm{padding-top:12px}
+@media (max-width:760px){.farm .fsum .fhd{flex-basis:100%}.farm .fcar{position:absolute;right:14px;top:12px}.farm{position:relative}}
+/* tabs: chat tab replaces the floating pill; the briefing dot style applies to chat too */
+.fab{display:none!important}
+.tabs button[data-pane="chat"]{position:relative}.tabs button[data-pane="chat"].hasnew::after{content:"";position:absolute;top:6px;right:calc(50% - 18px);width:9px;height:9px;border-radius:50%;background:#2ECC71;box-shadow:0 0 0 2px var(--bg,#0B1733)}
+.p-chat{display:none}
 </style>
 <style>/* Leaflet 1.9.4 (inlined) */
 /* required styles */
@@ -2106,7 +2157,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
 
     <!-- 5. hourly -->
     <section class="panel p-hours">
-      <div class="ph"><span class="k">HOUR BY HOUR<span id="hdaylbl">TODAY</span></span><div class="sseg" id="hspan"><button data-h="12" aria-pressed="true">12H</button><button data-h="24" aria-pressed="false">24H</button><button data-h="72" aria-pressed="false">72H</button><button data-h="0" aria-pressed="false">ALL</button></div></div>
+      <div class="ph"><span class="k">HOUR BY HOUR<span id="hdaylbl">TODAY</span><small class="hunit">wind mph</small></span><div class="sseg" id="hspan"><button data-h="12" aria-pressed="true">12H</button><button data-h="24" aria-pressed="false">24H</button><button data-h="72" aria-pressed="false">72H</button><button data-h="0" aria-pressed="false">ALL</button></div></div>
       <div class="hours" id="hours"></div>
       <div class="detail" id="hdetail" hidden></div>
     </section>
@@ -2392,11 +2443,11 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
 </aside>
 
 <nav class="tabs" aria-label="Sections">
-  <button data-pane="overview" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>OVERVIEW</button>
-  <button data-pane="schedule"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>SCHEDULE</button>
-  <button data-pane="maps"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/></svg>MAPS</button>
+  <button data-pane="overview" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>HOME</button>
+  <button data-pane="radar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><path d="M12 12l6-6"/></svg>RADAR</button>
   <button data-pane="briefing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h9l4 4v14H6z"/><path d="M9 11h6M9 15h6"/></svg>BRIEFING</button>
-  <button data-pane="live"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>WATCH LIVE</button>
+  <button data-pane="chat" id="tab-chat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v11H9l-5 4z"/></svg>CHAT</button>
+  <button data-pane="live"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>LIVE</button>
 </nav>
 
 <script>
@@ -2531,8 +2582,14 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
     const hot = o.wbgt !== null;
     document.getElementById("now").innerHTML =
       `<div class="temp anim">${ICO[o.ico||"sun"]}<b>${o.t}<sup>°</sup></b></div>
-       <dl class="v"><dt>${o.feelK}</dt><dd>${o.feel}°</dd></dl>
-       <dl class="v"><dt>WIND</dt><dd>${(()=>{ const mm=String(o.wind||"").match(/^([A-Za-z]*)\s*(.*)$/); const d=mm?mm[1]:"", n=mm?(mm[2]||o.wind):o.wind; const calm=!n||/^0(\s|$)/.test(String(n).trim())||String(n).trim()==="0"; const gust=o.gust&&o.gust!=="—"&&o.gust!=="0"&&+String(o.gust).replace(/\D/g,"")>=10?`gusts ${o.gust}`:""; return calm?`<b class="calmw">Calm</b><small>${gust||"&nbsp;"}</small>`:`${n}<small>${d?d+" · ":""}${gust||"mph"}</small>`; })()}</dd></dl>
+       <dl class="v"><dt>FEELS LIKE</dt><dd>${o.feel}°</dd></dl>
+       ${(()=>{ const DEG={N:0,NNE:22.5,NE:45,ENE:67.5,E:90,ESE:112.5,SE:135,SSE:157.5,S:180,SSW:202.5,SW:225,WSW:247.5,W:270,WNW:292.5,NW:315,NNW:337.5};
+          const mm=String(o.wind||"").match(/^([A-Za-z]*)\s*(.*)$/); const d=mm?mm[1].toUpperCase():"", nRaw=mm?(mm[2]||""):String(o.wind||""); const n=(String(nRaw).match(/\d+/)||[])[0];
+          const calm=!n||+n===0||/calm/i.test(String(o.wind||"")); const deg=o.wdeg!=null?o.wdeg:DEG[d]; const g=+(String(o.gust||"").replace(/\D/g,""))||0;
+          const arrow=deg!=null&&!calm?`<i class="warr" style="transform:rotate(${(deg+180)%360}deg)" title="blowing toward"></i>`:"";
+          const windDd=calm?`<b class="calmw">Calm</b>`:`${arrow}${n}<em>mph</em>${d?`<small>${d}</small>`:""}`;
+          const gustDd=g>=10&&!(!calm&&g<=+n+3)?`${g}<em>mph</em>`:`<span class="nogust">—</span>`;
+          return `<dl class="v wind"><dt>WIND</dt><dd>${windDd}</dd></dl><dl class="v gust${g>=35?" bad":g>=25?" warn":""}"><dt>GUSTS</dt><dd>${gustDd}</dd></dl>`; })()}
        ${hot ? `<dl class="v hot"><dt>WBGT</dt><dd>${o.wbgt}° <em>est.</em></dd></dl>` : ""}
        <span class="r30" id="r30" hidden></span>
        <span class="live">LIVE · NWS</span>`;
@@ -2723,6 +2780,8 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
   // ---------- tabs ----------
   const panes = { overview:"pane-overview", schedule:"pane-overview", maps:"pane-maps", briefing:"pane-briefing", live:"pane-live" };
   function go(name){
+    if(name==="chat"){ const f=document.getElementById("fab"); if(f) f.click(); return; }   // v122: CHAT tab opens the chat drawer, the page underneath stays
+    if(name==="radar"){ go("overview"); const r=document.querySelector(".radar"); if(window._setRadarFull){ setTimeout(()=>window._setRadarFull(true),60); } else if(r){ setTimeout(()=>r.scrollIntoView({behavior:"smooth",block:"start"}),80); } return; }
     document.querySelectorAll(".tabs button").forEach(x=>x.setAttribute("aria-selected", x.dataset.pane===name));
     const want = panes[name];
     document.querySelectorAll(".pane").forEach(p => p.hidden = p.id!==want);
@@ -2838,7 +2897,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
       const wbgt = feel>=80 && obs.relativeHumidity.value!=null ? Math.round(0.7*t + 0.3*(t-((100-obs.relativeHumidity.value)/5))) : null;
       const isDay = now.getHours()>=7 && now.getHours()<19;
       setTimeout(()=>window.RAIN30&&RAIN30.check(),50);
-      D.renderNow({ t, feel, feelK, cond:obs.textDescription, where:obs._st, wind, gust, hum, wbgt, ico: ico(obs.textDescription, isDay) });
+      D.renderNow({ t, feel, feelK, cond:obs.textDescription, where:obs._st, wind, gust, hum, wbgt, wdeg: obs.windDirection&&obs.windDirection.value!=null?obs.windDirection.value:null, ico: ico(obs.textDescription, isDay) });
     }
 
 
@@ -3035,7 +3094,25 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
   const MRMS = L.TileLayer.extend({ getTileUrl(c){ const E=20037508.342789244, size=2*E/Math.pow(2,c.z);
       const x0=-E+c.x*size, x1=x0+size, y1=E-c.y*size, y0=y1-size;
       return `https://mapservices.weather.noaa.gov/eventdriven/rest/services/radar/radar_base_reflectivity/MapServer/export?bbox=${x0},${y0},${x1},${y1}&bboxSR=3857&imageSR=3857&size=${mrmsPx},${mrmsPx}&format=png32&transparent=true&dpi=96&f=image&_=${this._stamp||0}`; } });
-  const iem = (t, stamp) => L.tileLayer(`${IEM}nexrad-n0q-900913${t?"-"+t:""}/{z}/{x}/{y}.png?_=${stamp}`,{opacity:0,className:"rlayer",maxNativeZoom:capZ,updateWhenZooming:false,updateWhenIdle:true,keepBuffer:1});
+  // v122: tiles pass through a canvas that drops weak returns and lone pixels (TV-style clean mosaic). Raw tiles are the fallback if the image can't be read.
+  window.RADAR_CLEAN = window.RADAR_CLEAN!==false;
+  const CleanTiles = L.TileLayer.extend({
+    createTile(coords, done){ const tile=document.createElement("canvas"); const sz=this.getTileSize(); tile.width=sz.x; tile.height=sz.y; tile.className="rtile";
+      const img=new Image(); img.crossOrigin="anonymous";
+      img.onload=()=>{ try{ const g=tile.getContext("2d",{willReadFrequently:true}); g.drawImage(img,0,0,sz.x,sz.y);
+          if(window.RADAR_CLEAN){ const W=sz.x,H=sz.y, im=g.getImageData(0,0,W,H), d=im.data, keep=new Uint8Array(W*H);
+            for(let i=0,p=0;i<d.length;i+=4,p++){ const a=d[i+3]; if(a<60) continue; const r=d[i],gg=d[i+1],b=d[i+2];
+              // keep green or warmer: green (gg>r+20 && gg>b+20), yellow/orange (r>170&&gg>120&&b<120), red/magenta/white (r>150&&gg<130)
+              if((gg>110&&gg>r+20&&gg>b+20)||(r>170&&gg>120&&b<120)||(r>150&&gg<130)||(r>200&&gg>200&&b>200)) keep[p]=1; }
+            // despeckle: a kept pixel needs at least two kept neighbours
+            for(let y=0;y<H;y++) for(let x=0;x<W;x++){ const p=y*W+x; if(!keep[p]) continue; let n=0;
+              for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){ if(!dx&&!dy) continue; const xx=x+dx,yy=y+dy; if(xx<0||yy<0||xx>=W||yy>=H){ n++; continue; } if(keep[yy*W+xx]) n++; }
+              if(n<2) keep[p]=2; }
+            for(let p=0;p<keep.length;p++){ if(keep[p]!==1) d[p*4+3]=0; }
+            g.putImageData(im,0,0); }
+          done(null,tile); }catch(e){ try{ tile.getContext("2d").drawImage(img,0,0,sz.x,sz.y); }catch(x){} done(null,tile); } };
+      img.onerror=e=>done(e,tile); img.src=this.getTileUrl(coords); return tile; } });
+  const iem = (t, stamp) => new CleanTiles(`${IEM}nexrad-n0q-900913${t?"-"+t:""}/{z}/{x}/{y}.png?_=${stamp}`,{opacity:0,className:"rlayer",maxNativeZoom:capZ,updateWhenZooming:false,updateWhenIdle:true,keepBuffer:1});
   let layers=[], timer=null, mode="mosaic", refresh=null;
   window._radarLoop=false; try{ window._radarLoop=localStorage.getItem("sdr-radar-loop")==="1"; }catch(e){}
   // on-map time stamp: day + time, big, on every mode
@@ -3063,7 +3140,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
     // try every name the radar archive might use: site with/without K, and for velocity both products (N0G super-res, N0U legacy)
     const prods = prod==="N0G" ? ["N0G","N0U"] : prod==="N0B" ? ["N0B","N0Q"] : [prod];
     const ids=[]; prods.forEach(pr=>[RADAR_SITE.replace(/^K/,""), RADAR_SITE].forEach(id=>ids.push(id+"-"+pr))); let k=0;
-    const add=()=>{ const l=L.tileLayer(`${IEM}ridge::${ids[k]}-0/{z}/{x}/{y}.png?_=${Date.now()}`,{opacity:.9,className:"rlayer",maxNativeZoom:prod==="N0G"?8:7,updateWhenZooming:false});   // v79: drawn from a coarser tile and blended up = smooth, Baron-like, no "8-bit" speckle let bad=0;
+    const add=()=>{ const l=new ((prod==="N0G")?L.TileLayer:CleanTiles)(`${IEM}ridge::${ids[k]}-0/{z}/{x}/{y}.png?_=${Date.now()}`,{opacity:.9,className:"rlayer",maxNativeZoom:prod==="N0G"?8:7,updateWhenZooming:false});   // v79: drawn from a coarser tile and blended up = smooth, Baron-like, no "8-bit" speckle let bad=0;
       let good=0; l.on("tileload",()=>good++); l.on("tileerror",()=>{ if(mode==="mosaic"||good||++bad<3) return; if(k<ids.length-1){ k++; m.removeLayer(l); layers=layers.filter(x=>x!==l); add(); } else { src.textContent=label+" · unavailable, showing national"; setMode("mosaic"); } });
       l.on("tileload",()=>window._noteRadarImg&&window._noteRadarImg());
       l.addTo(m); const old=layers.shift(); layers.push(l); if(old) setTimeout(()=>m.removeLayer(old),800); };
@@ -3189,7 +3266,9 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
     if(COARSE){ if(on) m.dragging.enable(); else m.dragging.disable(); const h=document.getElementById("rhint"); if(h) h.hidden=on; } };
   if(COARSE){ m.dragging.disable(); document.getElementById("rmap").insertAdjacentHTML("beforeend",'<button type="button" class="rhint" id="rhint">Tap to pan the map</button>'); document.getElementById("rhint").onclick=()=>setFull(true); }   // v118: the hint is the button
   fs.onclick=()=>setFull(!rbox.classList.contains("rfull")); document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&rbox.classList.contains("rfull")) setFull(false); });
-  { const rc=document.createElement("button"); rc.type="button"; rc.className="rclose"; rc.id="rclose"; rc.innerHTML="✕ <span>CLOSE</span>"; rc.setAttribute("aria-label","Close full screen"); document.getElementById("rmap").appendChild(rc);
+  { const rc=document.createElement("button"); rc.type="button"; rc.className="rclose"; rc.id="rclose"; rc.innerHTML="CLOSE"; rc.setAttribute("aria-label","Close full screen"); const ph0=rbox.querySelector(".ph"); const tt=document.createElement("span"); tt.className="rtitle"; tt.textContent="RADAR"; ph0.insertAdjacentElement("afterbegin",tt); ph0.appendChild(rc);
+    // the map itself opens full screen on phones (the whole picture is the button; pinch/drag inside)
+    const rmapEl=document.getElementById("rmap"); rmapEl.addEventListener("click",e=>{ if(!COARSE||rbox.classList.contains("rfull")) return; if(e.target.closest(".leaflet-control,.rplq,.rctl,button")) return; window._setRadarFull&&window._setRadarFull(true); });
     rc.onclick=()=>{ if(history.state&&history.state.rfull) history.back(); else setFull(false); };
     const _sf=setFull; window._setRadarFull=on=>{ _sf(on); if(on&&!(history.state&&history.state.rfull)) history.pushState({rfull:1},""); };
     window.addEventListener("popstate",()=>{ if(rbox.classList.contains("rfull")) _sf(false); });
@@ -3484,7 +3563,7 @@ window.STRIPS = (function(){
     const lab=(k,txt)=>`<button type="button" class="hlab btn2" data-hk="${k}" aria-pressed="${hchart===k}">${txt}</button>`;
     const labW=innerWidth<=640?44:50; const lines=list.map((h,i)=>(i>0&&h.t.getHours()===0)?`<i class="hdl" style="left:${labW+i*hcolW}px"></i>`:"").join("");   // v118b: one continuous day line at each midnight
     el.innerHTML=`<div class="hs-in"${selH>=0?` style="--seli:${selH}"`:""}>${lines}<div class="hr-row t"><div class="hlab"></div>${tRow}</div><div class="hr-row i"><div class="hlab"></div>${iRow}</div>
-      <div class="hr-row v temp">${lab("temp","TEMP")}${tempRow}</div><div class="hr-row v rain">${lab("rain","RAIN")}${rainRow}</div><div class="hr-row v wind">${lab("wind","WIND<small>mph</small>")}${windRow}</div>
+      <div class="hr-row v temp">${lab("temp","TEMP")}${tempRow}</div><div class="hr-row v rain">${lab("rain","RAIN")}${rainRow}</div><div class="hr-row v wind">${lab("wind","WIND")}${windRow}</div>
       ${hchart?`<div class="hr-row g"><button type="button" class="hlab btn2" data-hk="${hchart}" aria-pressed="true" aria-label="Close the graph"></button><div class="gc">${hsChart(hchart,list)}</div></div>`:""}</div>`;
     el.scrollLeft=keep; hsDayLabel();
     const dt=$("hdetail"); if(!dt) return;
@@ -3682,7 +3761,7 @@ window.STRIPS = (function(){
         return `<rect x="${X(k)-bw/2}" y="${bot-bh}" width="${bw}" height="${bh}" rx="3" fill="${col(v,at(k))}"/>${t?peakTag(X(k),bot-bh-6,v+unit):lab?peakTag(X(k),bot-bh-6,v+unit,false,true):""}`; }).join(""); };
     const rainCol=(v,h)=>(h.thunder||0)>=30?(v>=50?"#F5A524":"#F5D76E"):v>=60?"#2F7BFF":v>=40?"#4FA3FF":v>=20?"#8CC8FF":"#C9E6FF";
     const C={};
-    { const Y=v=>bot-(bot-top)*v/100, band=(v,t)=>`<line x1="${L}" x2="${R}" y1="${Y(v)}" y2="${Y(v)}" stroke="rgba(255,255,255,.18)" stroke-dasharray="3 4"/><text x="${L+2}" y="${Y(v)-3}" font-family="var(--display),Arial,sans-serif" font-size="10.5" font-weight="800" letter-spacing=".1em" fill="#8FA3C2">${t}</text>`;
+    { const Y=v=>bot-(bot-top)*v/100, band=(v,t)=>`<line x1="${L}" x2="${R}" y1="${Y(v)}" y2="${Y(v)}" stroke="rgba(255,255,255,.18)" stroke-dasharray="3 4"/><text x="${R-2}" y="${Y(v)-3}" text-anchor="end" font-family="var(--display),Arial,sans-serif" font-size="10.5" font-weight="800" letter-spacing=".1em" fill="#8FA3C2">${t}</text>`;
       C.rain=`<svg viewBox="0 0 ${W} ${Hh}">${band(20,"SLIGHT")}${band(40,"CHANCE")}${band(60,"LIKELY")}${barsOf(h=>h.pop||0,rainCol,"%",100)}${axis}</svg>`; }
     { const tl=Math.min(...T), th=Math.max(...T), ty=v=>bot-12-(bot-top-26)*((v-tl)/Math.max(1,th-tl)); const P=H.map(h=>[X(hrOf(h.t)),ty(h.temp),h.temp,hrOf(h.t)]); const hp=P.find(q=>q[2]===th), lp=P.find(q=>q[2]===tl);
       const pts=P.map(q=>q[0]+","+q[1]).join(" "), area=`${P[0][0]},${bot} ${pts} ${P[P.length-1][0]},${bot}`;
@@ -3730,6 +3809,7 @@ window.STRIPS = (function(){
       const anySnow = x.sr && x.sr[2]>=10, anyIce = x.ir && x.ir[2]>=1;
       return row + `<div class="dexp ${cls}">
         <p class="dx-txt">${x.dayTxt || x.short || x.nightTxt || ""}</p>
+        ${x.dayTxt&&x.nightTxt?`<p class="dx-n"><b>${(x.long||x.d||"").replace(/^Tonight$/i,"Tonight")} night.</b> ${x.nightTxt}</p>`:""}
         <div class="dx-grid">
           <section><h4>CONDITIONS</h4>
             <div class="sts">${stat("HIGH", x.hi!=null?x.hi+"°":null)}${stat("LOW", x.lo!=null?x.lo+"°":null)}${(()=>{ const fl=feelOf(x); return fl!=null&&x.hi!=null&&Math.abs(fl-x.hi)>=3?stat("FEELS LIKE", fl+"°", "", fl>=100?"bad":fl>=90?"warn":""):""; })()}${(()=>{ const sk=skyOf(x); if(sk==null) return ""; const ic=sk.pct<=30?"sun":"pc"; return `<div class="st skyi" data-chart="sky" title="${sk.lab}"><small>CLOUD COVER</small><b><span class="ski">${svg(ic)}</span>${sk.pct}%<em>${sk.lab.toLowerCase()}</em></b></div>`; })()}
@@ -3754,9 +3834,12 @@ window.STRIPS = (function(){
               "OUTDOOR WORK":()=>`${ow&&ow.rows?rowsHtml(ow.rows):ow&&ow.note?ow.note:""}<p>Mowing, concrete, roofing, crews: the hours with no rain, no lightning, gusts under 30 and bearable temperatures. Yellow means plan around it (a rain or storm chance, gusty, hot); red means hold.</p>`,
               "SOIL TEMP":()=>soilDeep(i), "CROP WATER":()=>waterDeep(i), "HEAT UNITS":()=>gduDeep(i) };
             const t=(lab,o,cls)=>o?`<div class="ft ${cls||""}" role="button" tabindex="0"><small>${cls?"<i></i>":""}${lab}<em>ⓘ</em><button type="button" class="fxx" aria-label="Close">✕</button></small><b class="${/^\d/.test(o.big)?"":"ph"}">${o.big}</b>${o.sub?`<span>${o.sub}</span>`:""}${bar(o)}<div class="fx">${(DEEP[lab]||(()=>""))()}</div></div>`:"";
-            return `<section class="farm"><div class="fhd"><h4>OUTDOOR WORK &amp; FARMS</h4><p>Growers, landscapers, mowing, concrete, anyone outside. Tap a tile for hours.</p></div><div class="ftg">${t("OUTDOOR WORK",ow,ow&&ow.lvl)}${t("SPRAY WINDOW",sw,sw&&sw.lvl)}${t("SOIL TEMP",so)}${t("CROP WATER",wa,wa&&wa.lvl)}${t("HEAT UNITS",gd)}</div></section>`; })()}
+            // v122: collapsed by default — one row of verdict chips; tap the row for the tiles. Remembered per device.
+            let fopen=false; try{ fopen=localStorage.getItem("sdr-farm-open")==="1"; }catch(e){}
+            const chip=(lab,o,cls)=>o?`<span class="fc ${cls||""}">${cls?"<i></i>":""}<small>${lab}</small>${String(o.big).replace(/\s*·.*$/,"")}</span>`:"";
+            const chips=`${chip("Work",ow,ow&&ow.lvl)}${chip("Spray",sw,sw&&sw.lvl)}${chip("Soil",so)}${chip("Water",wa,wa&&wa.lvl)}${chip("Heat units",gd)}`;
+            return `<section class="farm${fopen?" open":""}"><button type="button" class="fsum" aria-expanded="${fopen}"><span class="fhd"><h4>OUTDOOR WORK &amp; FARMS</h4></span><span class="fcs">${chips}</span><em class="fcar">▾</em></button><div class="fbody"><p class="fnote">Growers, landscapers, mowing, concrete, anyone outside. Tap a tile for hours.</p><div class="ftg">${t("OUTDOOR WORK",ow,ow&&ow.lvl)}${t("SPRAY WINDOW",sw,sw&&sw.lvl)}${t("SOIL TEMP",so)}${t("CROP WATER",wa,wa&&wa.lvl)}${t("HEAT UNITS",gd)}</div></div></section>`; })()}
         </div>
-        ${x.dayTxt&&x.nightTxt?`<p class="dx-n"><b>Night.</b> ${x.nightTxt}</p>`:""}
         <button type="button" class="dxclose" data-dxclose="${i}">▴ CLOSE ${(x.long||x.d||"").toUpperCase()}</button>
       </div>`.replace(/ data-chart="[a-z]+"/g, m=>hasHours(x)?m:"");   // v118g: no chart arrows on days without hours
     }).join("");
@@ -3767,11 +3850,13 @@ window.STRIPS = (function(){
       hs.addEventListener("click", e=>{ const lb=e.target.closest(".hlab.btn2"); if(lb){ hchart = hchart===lb.dataset.hk ? "" : lb.dataset.hk; renderHours(); return; }
         const c=e.target.closest(".hc"); if(!c) return; selH = selH===+c.dataset.i ? -1 : +c.dataset.i; renderHours(); if(selH>=0){ const d=$("hdetail"); if(d) setTimeout(()=>d.scrollIntoView({behavior:"smooth",block:"nearest"}),50); } });
       const hd=$("hdetail"); if(hd) hd.addEventListener("click", e=>{ if(e.target.closest("[data-hclose]")){ selH=-1; renderHours(); } }); }
-    const ds=$("days"); if(ds && !ds._w){ ds._w=1; ds.addEventListener("click", e=>{ const ft=e.target.closest(".farm .ft"); if(ft){ if(!e.target.closest(".fx")) ft.classList.toggle("open"); return; }
+    const ds=$("days"); if(ds && !ds._w){ ds._w=1; ds.addEventListener("click", e=>{ const fs=e.target.closest(".farm .fsum"); if(fs){ const sec=fs.closest(".farm"); const on=!sec.classList.contains("open"); sec.classList.toggle("open",on); fs.setAttribute("aria-expanded",on); try{ localStorage.setItem("sdr-farm-open",on?"1":"0"); }catch(x){} return; }
+      const ft=e.target.closest(".farm .ft"); if(ft){ if(!e.target.closest(".fx")) ft.classList.toggle("open"); return; }
       const dc=e.target.closest(".dexp [data-chart]"); if(dc){ const box=dc.closest(".dexp"), k=dc.dataset.chart, c=box.querySelector(`.dchart[data-k="${k}"]`); const was=c&&c.classList.contains("open");
       box.querySelectorAll(".dchart").forEach(x=>x.classList.remove("open")); if(c&&!was){ c.classList.add("open"); const sc=c.querySelector(".dcs"), sv=sc&&sc.querySelector("svg"); if(sc&&sv&&innerWidth<760){ const vb=(sv.getAttribute("viewBox")||"").split(" "), W=+vb[2]||0; const today=/NOW/.test(sv.innerHTML); sc.scrollLeft=today?0:Math.max(0,W/24*6-6); } setTimeout(()=>c.scrollIntoView({behavior:"smooth",block:"center"}),50); } window._dtab=c&&!was?k:null; return; }
-      { const xc=e.target.closest("[data-dxclose]"); if(xc){ const row=ds.querySelector(`.drow[data-i="${xc.dataset.dxclose}"]`); selD=-1; renderDays(); if(row) setTimeout(()=>{ const top=row.getBoundingClientRect().top+window.scrollY-(document.querySelector(".top")||{offsetHeight:60}).offsetHeight-8; window.scrollTo({top,behavior:"smooth"}); },30); return; } }
-      const r=e.target.closest(".drow"); if(!r) return; const pr=e.target.closest(".drain")?"rain":e.target.closest(".dwind")?"wind":e.target.closest(".dt")?"temp":null; window._dtab=pr; selD = (selD===+r.dataset.i) ? -1 : +r.dataset.i; renderDays();   // v120: tapping the open row closes it, whichever column
+      { const xc=e.target.closest("[data-dxclose]"); if(xc){ const i0=xc.dataset.dxclose, r0=ds.querySelector(`.drow[data-i="${i0}"]`); const y0=r0?r0.getBoundingClientRect().top:null; selD=-1; renderDays(); const r1=ds.querySelector(`.drow[data-i="${i0}"]`); if(r1&&y0!=null){ const hh=(document.querySelector(".top")||{offsetHeight:60}).offsetHeight; if(y0<hh+4) window.scrollTo(0, r1.getBoundingClientRect().top+window.scrollY-hh-8); else window.scrollBy(0, r1.getBoundingClientRect().top-y0); } return; } }   // v121: the row stays exactly where it was on screen
+      const r=e.target.closest(".drow"); if(!r) return; const pr=e.target.closest(".drain")?"rain":e.target.closest(".dwind")?"wind":e.target.closest(".dt")?"temp":null; window._dtab=pr; const closing=(selD===+r.dataset.i), i0=r.dataset.i, y0=r.getBoundingClientRect().top; selD = closing ? -1 : +r.dataset.i; renderDays();   // v120: tapping the open row closes it, whichever column
+      if(closing){ const r1=ds.querySelector(`.drow[data-i="${i0}"]`); if(r1){ const hh=(document.querySelector(".top")||{offsetHeight:60}).offsetHeight; if(y0<hh+4) window.scrollTo(0, r1.getBoundingClientRect().top+window.scrollY-hh-8); else window.scrollBy(0, r1.getBoundingClientRect().top-y0); } return; }
       if(selD>=0){ const row=ds.querySelector(`.drow[data-i="${selD}"]`); if(row) setTimeout(()=>{ const top=row.getBoundingClientRect().top+window.scrollY-(document.querySelector(".top")||{offsetHeight:60}).offsetHeight-8; window.scrollTo({top,behavior:"smooth"}); },30); } }); }
     const sg=$("hspan"); if(sg && !sg._w){ sg._w=1; sg.addEventListener("click", e=>{ const b=e.target.closest("button"); if(!b) return; span=+b.dataset.h; sg.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed", x===b)); selH=-1; renderHours(); }); }
   }
@@ -4078,7 +4163,7 @@ window.AREA = (function(){
   if(W) L.geoJSON(W,{pane:"lines",interactive:false,style:{color:"#000",weight:1.2,fill:false}}).addTo(m);
   if(G) L.geoJSON(G,{pane:"lines",interactive:false,style:{color:"#000",weight:1.2,fill:false}}).addTo(m);
   const METROS=["Charlotte","Raleigh","Atlanta","Nashville","Memphis","Birmingham","New Orleans","Jacksonville","Tampa","Orlando","Miami","Charleston","Columbia","Greenville","Jackson","Little Rock","Oklahoma City","Dallas","Houston","San Antonio","Phoenix","Denver","Chicago","Washington","New York","Los Angeles","St. Louis","Kansas City","Louisville","Richmond","Seattle","Boston","Minneapolis","Salt Lake City","Las Vegas","Albuquerque","Detroit","Pittsburgh","Indianapolis","Cincinnati"];
-  let PL=[]; const mkPL=()=>{ PL=(window.GEO_PLACES||[]).map(([n,st,pop,la,lo])=>({n,st,pop,la,lo,metro:METROS.includes(n)&&pop>=50000})).sort((a,b)=>(b.metro-a.metro)||(b.pop-a.pop)); }; mkPL(); window.addEventListener("sdr-places",()=>{ mkPL(); try{ schedule(); }catch(e){} });
+  let PL=[]; const mkPL=()=>{ PL=(window.GEO_PLACES||[]).filter(r=>!window.SDR_CITY_OK||SDR_CITY_OK(r)).map(([n,st,pop,la,lo])=>({n,st,pop,la,lo,metro:METROS.includes(n)&&pop>=50000})).sort((a,b)=>(b.metro-a.metro)||(b.pop-a.pop)); }; mkPL(); window.addEventListener("sdr-places",()=>{ mkPL(); try{ schedule(); }catch(e){} });
   const minPop=z=> z<5?99e9 : z<6?400000 : z<7?150000 : z<8?50000 : z<9?15000 : z<10?4000 : 0;
   const cache=new Map(), K=p=>p.n+"|"+p.st, queue=[]; let active=0, t=null;
   const schedule=()=>{ clearTimeout(t); t=setTimeout(draw,250); };
@@ -5760,9 +5845,9 @@ window.SDR_GL=(function(){
     else bar.innerHTML = `<i></i><b>ALERTS</b><span>Get a notification when the call changes or a briefing is issued</span><button type="button" data-on>TURN ON</button>`;
   };
   bar.addEventListener("click", async e => {
-    if (e.target.closest("[data-on]")) { try { await Notification.requestPermission(); } catch (x) {} paint(); if (Notification.permission === "granted") notify("hello", "SDR · ALERTS ON", `You'll hear from us when the call changes at ${SITE}.`, "overview"); }
+    if (e.target.closest("[data-on]")) { try { await Notification.requestPermission(); } catch (x) {} paint(); if (Notification.permission === "granted") notify("hello", "🟢 ALERTS ON", `You'll hear from us when the call changes at ${SITE}.`, "overview"); }
     if (e.target.closest("[data-test]")) { const b = e.target.closest("button"); b.disabled = true; b.textContent = "SENT · LOCK YOUR PHONE";
-      setTimeout(() => notify("test", "SDR · TAKE ACTION", `Test: Tornado Warning · ${SITE} until 4:45 PM. Rotation 9 miles southwest, moving northeast. Tap for radar.`, "overview", ".radar", "test"), 8000);
+      setTimeout(() => notify("test", `🔴 TAKE ACTION · ${SITE}`, `Test: Tornado Warning until 4:45 PM. Rotation 9 miles southwest, moving northeast. Tap for radar.`, "overview", ".radar", "test"), 8000);
       setTimeout(() => { b.disabled = false; b.textContent = "SEND A TEST"; }, 12000); }
   });
   // v121: the bar lives behind a bell in the top bar instead of taking a box on the first screen
@@ -5784,20 +5869,20 @@ window.SDR_GL=(function(){
   function keyOf(){ return call && (call.classList.contains("action") ? "action" : call.classList.contains("headsup") ? "headsup" : "clear"); }
   function whyOf(){ const w = document.getElementById("st-why"); return (w && w.textContent.trim()) || ""; }
   if (call) new MutationObserver(() => { if (!armed) return; const k = keyOf(); if (k === lastKey) return; const prev = lastKey; lastKey = k;
-    if (k === "action") notify("call", "SDR · TAKE ACTION", `${whyOf()} Tap for radar.`.slice(0, 180), "overview", ".radar", "call");
-    else if (k === "headsup" && prev === "clear") notify("call", "SDR · HEADS UP", `${SITE}: ${whyOf()}`.slice(0, 180), "overview", "#status", "call");
-    else if (k === "clear" && prev === "action") notify("call", "SDR · ALL CLEAR", `${SITE}: the warning has ended. ${whyOf()}`.slice(0, 180), "overview", "#status", "call"); }).observe(call, { attributes: true, attributeFilter: ["class"] });
+    if (k === "action") notify("call", `🔴 TAKE ACTION · ${SITE}`, `${whyOf()} Tap for radar.`.slice(0, 180), "overview", ".radar", "call");
+    else if (k === "headsup" && prev === "clear") notify("call", `🟡 HEADS UP · ${SITE}`, `${whyOf()}`.slice(0, 180), "overview", "#status", "call");
+    else if (k === "clear" && prev === "action") notify("call", `🟢 ALL CLEAR · ${SITE}`, `The warning has ended. ${whyOf()}`.slice(0, 180), "overview", "#status", "call"); }).observe(call, { attributes: true, attributeFilter: ["class"] });
 
   // 2) a new briefing (anything the team or the automation issues for this site)
   setInterval(() => { const L = (window.BRIEF && BRIEF.list && BRIEF.list()) || []; const b = L.find(x => x.local !== false); if (!b) return;
     if (!seen.brief) { remember("brief", b.t); return; } if (b.t <= seen.brief) return; remember("brief", b.t);
-    notify("brief", `SDR · NEW BRIEFING${b.cat && b.cat !== "UPDATE" ? " · " + b.cat : ""}`, `${b.title || "Weather update"}${b.bottom ? " — " + String(b.bottom).replace(/<[^>]+>/g, "") : ""}`.slice(0, 180), "briefing", "", "brief"); }, 30000);
+    notify("brief", `📋 NEW BRIEFING${b.cat && b.cat !== "UPDATE" ? " · " + b.cat : ""} · ${SITE}`, `${b.title || "Weather update"}${b.bottom ? " — " + String(b.bottom).replace(/<[^>]+>/g, "") : ""}`.slice(0, 180), "briefing", "", "brief"); }, 30000);
 
   // 3) twice a day, if the app is open: the What's Next headline
   setInterval(() => { const d = new Date(), hm = d.getHours() * 60 + d.getMinutes(); const slot = hm >= 405 && hm < 480 ? "am" : hm >= 945 && hm < 1020 ? "pm" : null; if (!slot) return;
     const k = d.toDateString() + slot; if (seen.daily === k) return; remember("daily", k);
     const h = document.getElementById("nx-h"), p = document.getElementById("nx-p"); const head = h ? h.textContent.trim() : ""; if (!head) return;
-    notify("daily", `SDR · ${slot === "am" ? "MORNING" : "AFTERNOON"} UPDATE`, `${SITE}: ${head}${p && p.textContent.trim() ? " · " + p.textContent.trim() : ""}`.slice(0, 180), "overview", "#next", "daily"); }, 60000);
+    notify("daily", `${slot === "am" ? "☀️ MORNING" : "🌤 AFTERNOON"} UPDATE · ${SITE}`, `${head}${p && p.textContent.trim() ? " · " + p.textContent.trim() : ""}`.slice(0, 180), "overview", "#next", "daily"); }, 60000);
 
   // hash from a notification opened cold (#briefing)
   if (location.hash && /^#(overview|schedule|maps|briefing|live)$/.test(location.hash)) setTimeout(() => { const t = document.querySelector(`.tabs button[data-pane="${location.hash.slice(1)}"]`); if (t) t.click(); }, 1200);

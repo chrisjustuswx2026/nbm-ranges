@@ -3850,9 +3850,12 @@ window.STRIPS = (function(){
   const P10=v=>v==null?null:(v<10?0:Math.round(v/10)*10), R5=v=>v==null?null:Math.round(v/5)*5, R10=v=>v==null?null:Math.round(v/10)*10;
   const tidyH=h=>Object.assign(h,{pop:P10(h.pop),thunder:P10(h.thunder),rh:R5(h.rh),sky:R10(h.sky)});
   const tidyD=x=>Object.assign(x,{pp:P10(x.pp),ppN:P10(x.ppN),thunder:P10(x.thunder),rh:R5(x.rh),sky:R10(x.sky)});
-  function extendHours(list){ const have=new Set(HOURS.map(x=>+new Date(x.t))); const last=HOURS.length?Math.max(...HOURS.map(x=>+new Date(x.t))):0;
-    const add=list.filter(x=>+new Date(x.t)>last&&!have.has(+new Date(x.t))).map(tidyH); if(!add.length) return; HOURS=HOURS.concat(add).sort((a,b)=>new Date(a.t)-new Date(b.t)); renderHours(); renderDays(); }
-  return { ICOF, setHours(h){ HOURS=h.map(tidyH); wire(); renderHours(); }, extendHours, setDays(d){ DAYS=d.map(tidyD); wire(); renderDays(); }, days(){ return DAYS; }, hours(){ return HOURS; } };
+  // v123: Blend step hours are kept aside and re-merged every time the NWS hours arrive (whichever loads first)
+  let EXTRA=[];
+  function mergeExtra(){ if(!EXTRA.length) return; const base=HOURS.filter(x=>!x.step); const last=base.length?Math.max(...base.map(x=>+new Date(x.t))):0;
+    const add=EXTRA.filter(x=>+new Date(x.t)>last); HOURS=base.concat(add).sort((a,b)=>new Date(a.t)-new Date(b.t)); }
+  function extendHours(list){ EXTRA=list.map(tidyH); mergeExtra(); renderHours(); renderDays(); }
+  return { ICOF, setHours(h){ HOURS=h.map(tidyH); mergeExtra(); wire(); renderHours(); }, extendHours, setDays(d){ DAYS=d.map(tidyD); wire(); renderDays(); }, days(){ return DAYS; }, hours(){ return HOURS; } };
 })();
 </script>
 
@@ -5421,7 +5424,7 @@ function SDR_STORY(H, D, spc, nowMs){
 <script>
 // v70 TOP OF THE PAGE: "Right now" and "What's next" read as the two clear halves; new briefings get a slim strip (only when it matters) and a dot on the Briefing tab
 (function(){
-  const k=document.getElementById("st-k"); const fix=()=>{ if(!k) return; const t=k.textContent; const m=t.match(/^(.*?)\s*·\s*RIGHT NOW$/i); if(m) k.innerHTML=`<b>Right now</b><span>${m[1].toLowerCase().replace(/(^|\s)\S/g,c=>c.toUpperCase())}</span>`; };
+  const k=document.getElementById("st-k"); const fix=()=>{ if(!k) return; const t=k.textContent; const m=t.match(/^(.*?)\s*·\s*RIGHT NOW$/i); if(m) k.innerHTML=`<b>Right now</b><span>${m[1].toLowerCase().replace(/(^|\s)\S/g,c=>c.toUpperCase()).replace(/,\s*([A-Za-z]{2})$/,(x,st)=>", "+st.toUpperCase())}</span>`; };
   if(k){ fix(); new MutationObserver(()=>{ if(!k.querySelector("b")) fix(); }).observe(k,{childList:true,characterData:true,subtree:true}); }
   const nk=document.querySelector("#next .k"); if(nk) nk.innerHTML="<b>What's next</b>";
   const URG=["SEVERE","FLOOD","TROPICAL","HEAT","WINTER","WIND","FREEZE"];

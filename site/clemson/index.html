@@ -1402,6 +1402,12 @@ section.panel{overflow-x:clip}
 .p-hours .ph .k .hblend.on{display:inline}
 .radar .foot{flex-wrap:wrap}
 .radar .foot .osm{flex-basis:100%;font-size:10px;color:var(--dim);letter-spacing:.02em;margin-top:2px}
+/* v124 fixes */
+.radar.rfull>.ph{padding-top:calc(12px + env(safe-area-inset-top,0px))!important}
+.radar.rfull>.ph .rclose{padding:10px 18px;font-size:14px;border-radius:999px}
+.p-hours .ph .k .hunit{display:none}
+.hs .hr-row.wind .hv{display:grid;grid-template-rows:calc(var(--num) + 2px) 13px;align-items:end;justify-items:center}
+.hs .hr-row.wind .hv b.calm{line-height:1.2}
 </style>
 <style>/* Leaflet 1.9.4 (inlined) */
 /* required styles */
@@ -3760,7 +3766,7 @@ window.STRIPS = (function(){
   const hasHours=x=>{ const H=hoursOf(x); if(!H.length) return false; const today=new Date(H[0].t).toDateString()===new Date().toDateString(); return today?H.length>=3:(H.length>=12||H.filter(h=>h.step).length>=6); };
   function chartsOf(x,which){ const H=hoursOf(x); if(!hasHours(x)) return ""; const mt=Math.max(...H.map(h=>h.thunder||0)), G=H.map(h=>h.gust||hrWind(h)||0), gm=Math.max(...G), T=H.map(h=>h.temp);
     const k0=hrOf(H[0].t), today=k0>0&&new Date(H[0].t).toDateString()===new Date().toDateString(), K0=today?k0:0, SPAN=Math.max(1,23-K0);
-    const narrowP=innerWidth<760, colW=narrowP?Math.max(56,Math.floor(((document.querySelector("#days")||{clientWidth:380}).clientWidth-44)/6)):0, W=narrowP?colW*(SPAN+1)+24:720,Hh=narrowP?190:200,L=narrowP?12:30,R=W-12,top=24,bot=Hh-24, X=k=>narrowP?L+colW*(k-K0)+colW/2:L+(R-L)*(k-K0)/SPAN, at=k=>H.find(h=>hrOf(h.t)===k), bw=Math.min(20,Math.max(8,(R-L)/(SPAN+1)*0.7));
+    const narrowP=innerWidth<760, colW=narrowP?Math.max(56,Math.floor(((document.querySelector("#days")||{clientWidth:380}).clientWidth-44)/6)):0, W=narrowP?colW*(SPAN+1)+70:720,Hh=narrowP?190:200,L=narrowP?12:30,R=W-58,top=24,bot=Hh-24, X=k=>narrowP?L+colW*(k-K0)+colW/2:L+(R-L)*(k-K0)/SPAN, at=k=>H.find(h=>hrOf(h.t)===k), bw=Math.min(20,Math.max(8,(R-L)/(SPAN+1)*0.7));
     const AXL={0:"12 AM",3:"3 AM",6:"6 AM",9:"9 AM",12:"NOON",15:"3 PM",18:"6 PM",21:"9 PM"}; const ticks=narrowP?[...Array(24).keys()].filter(k=>k>=K0):today?[k0,...[...Array(24).keys()].filter(k=>k>k0&&k<23&&(SPAN<=8?true:k%3===0))]:[0,3,6,9,12,15,18,21];
     const tl=k=>today&&k===k0?"NOW":AXL[k]||(k===0?"12 AM":k===12?"NOON":(k%12)+(k<12?" AM":" PM"));
     const narrow=false; const axis=ticks.map(k=>`<line x1="${X(k)}" x2="${X(k)}" y1="${top}" y2="${bot}" stroke="rgba(255,255,255,.06)"/>${(narrow&&k%6&&!(today&&k===k0))?"":`<text x="${X(k)}" y="${Hh-5}" font-size="13" font-weight="700" fill="${today&&k===k0?"#FFC857":"#DCE6F5"}" text-anchor="${k===K0&&!narrowP?"start":"middle"}">${tl(k)}</text>`}`).join("")+`<line x1="${L}" x2="${R}" y1="${bot}" y2="${bot}" stroke="rgba(255,255,255,.2)"/>`;
@@ -3771,7 +3777,7 @@ window.STRIPS = (function(){
         return `<rect x="${X(k)-bw/2}" y="${bot-bh}" width="${bw}" height="${bh}" rx="3" fill="${col(v,at(k))}"/>${t?peakTag(X(k),bot-bh-6,v+unit):lab?peakTag(X(k),bot-bh-6,v+unit,false,true):""}`; }).join(""); };
     const rainCol=(v,h)=>(h.thunder||0)>=30?(v>=50?"#F5A524":"#F5D76E"):v>=60?"#2F7BFF":v>=40?"#4FA3FF":v>=20?"#8CC8FF":"#C9E6FF";
     const C={};
-    { const Y=v=>bot-(bot-top)*v/100, band=(v,t)=>`<line x1="${L}" x2="${R}" y1="${Y(v)}" y2="${Y(v)}" stroke="rgba(255,255,255,.18)" stroke-dasharray="3 4"/><text x="${R-2}" y="${Y(v)-3}" text-anchor="end" font-family="var(--display),Arial,sans-serif" font-size="10.5" font-weight="800" letter-spacing=".1em" fill="#8FA3C2">${t}</text>`;
+    { const Y=v=>bot-(bot-top)*v/100, band=(v,t)=>`<line x1="${L}" x2="${R}" y1="${Y(v)}" y2="${Y(v)}" stroke="rgba(255,255,255,.18)" stroke-dasharray="3 4"/><text x="${W-4}" y="${Y(v)+4}" text-anchor="end" font-family="var(--display),Arial,sans-serif" font-size="10.5" font-weight="800" letter-spacing=".1em" fill="#8FA3C2">${t}</text>`;
       C.rain=`<svg viewBox="0 0 ${W} ${Hh}">${band(20,"SLIGHT")}${band(40,"CHANCE")}${band(60,"LIKELY")}${barsOf(h=>h.pop||0,rainCol,"%",100)}${axis}</svg>`; }
     { const tl=Math.min(...T), th=Math.max(...T), ty=v=>bot-12-(bot-top-26)*((v-tl)/Math.max(1,th-tl)); const P=H.map(h=>[X(hrOf(h.t)),ty(h.temp),h.temp,hrOf(h.t)]); const hp=P.find(q=>q[2]===th), lp=P.find(q=>q[2]===tl);
       const pts=P.map(q=>q[0]+","+q[1]).join(" "), area=`${P[0][0]},${bot} ${pts} ${P[P.length-1][0]},${bot}`;

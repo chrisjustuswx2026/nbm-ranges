@@ -84,9 +84,20 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
 .rc p b{color:var(--heads)}
 .rc small{font-size:10.5px;color:var(--dim)}
 .ack{align-self:flex-start;margin:6px 0 2px 2px;display:flex;align-items:center;gap:8px}
-.ack button{font-size:13px;font-weight:700;border:1.5px solid var(--blue);color:var(--blue);border-radius:999px;padding:4px 12px}
+.ack button{font-size:15.5px;font-weight:700;border:2px solid var(--blue);color:var(--blue);border-radius:999px;padding:9px 24px;min-height:42px}
 .ack button.done{border-color:var(--clear-line);color:var(--clear);background:var(--clear-bg)}
-.ack small{font-size:11.5px;color:var(--dim)}
+.ack small{font-size:12px;color:var(--dim)}
+.msgs>*{flex-shrink:0}
+.img.zoomable{cursor:zoom-in}
+.img .cap .zm{color:var(--blue);font-weight:600}
+#lb{position:fixed;inset:0;z-index:999;background:#050A16;display:flex;flex-direction:column}
+#lb[hidden]{display:none!important}
+#lb .lbh{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:calc(10px + env(safe-area-inset-top,0px)) 14px 10px;color:#F4F7FB;font-size:14px;font-weight:600}
+#lb .lbh button{font-family:"Barlow Condensed",sans-serif;font-weight:800;letter-spacing:.1em;font-size:14px;color:#fff;border:1.5px solid rgba(255,255,255,.35);border-radius:999px;padding:7px 16px;background:rgba(255,255,255,.06)}
+#lb .lbs{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;display:flex;align-items:center}
+#lb .lbs>div{margin:auto;line-height:0}
+#lb .lbs svg{display:block;width:100%;height:auto}
+#lb .lbf{text-align:center;color:#A9B6CC;font-size:12px;padding:8px 0 calc(12px + env(safe-area-inset-bottom,0px))}
 .typing{align-self:flex-start;background:var(--bubble);border-radius:19px;border-bottom-left-radius:5px;padding:10px 14px;display:flex;gap:4px;margin-top:10px}
 .typing i{width:7px;height:7px;border-radius:50%;background:var(--muted);opacity:.5;animation:dot 1.2s infinite}
 .typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
@@ -145,6 +156,7 @@ var SDR_ENGINE=(function(){
   var DAYN=["sunday","monday","tuesday","wednesday","thursday","friday","saturday"];
   var FONT='font-family="Barlow Condensed,Arial Narrow,sans-serif"';
   function siteName(){ return g(function(){ return P.DASH.venue().name; },"your site"); }
+  function AT(){ var n=siteName(); return (/county|city|parish|,\s*[A-Z]{2}$|^your site$/i.test(n)?"in ":"at ")+n; }
   function days(){ return g(function(){ return P.STRIPS.days(); },[]); }
   function hours(){ return g(function(){ return P.STRIPS.hours(); },[]); }
   function conf(d){ var C=g(function(){ return P.SDR_CONF; },[]); var ymd=d&&d.date?new Date(d.date).toLocaleDateString("en-CA"):""; var r=C.find(function(c){ return String(c.date).slice(0,10)===ymd; }); return r?r.conf:(d&&d.conf!=null?d.conf:null); }
@@ -167,7 +179,7 @@ var SDR_ENGINE=(function(){
     if(/\bweekend\b/.test(q)){ var si=D.findIndex(function(x){ return new Date(x.date).getDay()===6; }); return {idx:si<0?0:si,day:D[si<0?0:si],label:"Saturday",pair:si>=0&&D[si+1]?[si,si+1]:null}; }
     if(/\btonight\b/.test(q)) return {idx:0,day:D[0],label:"tonight"};
     if(/\btomorrow\b/.test(q)) return {idx:1,day:D[1]||D[0],label:"tomorrow"};
-    for(var i=0;i<7;i++){ if(new RegExp("\\b"+DAYN[i].slice(0,3)+"[a-z]*\\b").test(q)){ var d=new Date(today); var diff=(i-today.getDay()+7)%7; if(diff===0&&/\bnext\b/.test(q)) diff=7; d.setDate(d.getDate()+diff); var idx=D.findIndex(function(x){ return new Date(x.date).toDateString()===d.toDateString(); }); if(idx<0) idx=0; return {idx:idx,day:D[idx],label:cap(DAYN[i])}; } }
+    var DRX=["sun(day)?","mon(day)?","tue(s|sday)?","wed(nesday)?","thu(r|rs|rsday)?","fri(day)?","sat(urday)?"]; for(var i=0;i<7;i++){ if(new RegExp("\\b"+DRX[i]+"\\b").test(q)){ var d=new Date(today); var diff=(i-today.getDay()+7)%7; if(diff===0&&/\bnext\b/.test(q)) diff=7; d.setDate(d.getDate()+diff); var idx=D.findIndex(function(x){ return new Date(x.date).toDateString()===d.toDateString(); }); if(idx<0) idx=0; return {idx:idx,day:D[idx],label:cap(DAYN[i])}; } }
     return {idx:0,day:D[0],label:null,now:/\bnow\b|\bright now\b|\bcurrently\b|\bradar\b|\btoday\b/.test(q)};
   }
   function topic(q){ q=q.toLowerCase();
@@ -208,8 +220,8 @@ var SDR_ENGINE=(function(){
     // the RIGHT NOW call decides whether a warning is ours; anything else in the list is "nearby"
     if(call==="action") parts.push((whyNow()||((warn&&warn.event)||"A warning")+" covers "+site+".").replace(/\.$/,"")+". Get people under cover now — I'll stay on this thread with you.");
     else if(call==="headsup") parts.push(one(["We're at HEADS UP for "+site+" — "+whyNow().replace(/\.$/,"")+".","Heads up status right now: "+whyNow().replace(/\.$/,"")+"."],"hu"));
-    else if(warn){ var ar0=String(warn.areaDesc||"").split(";")[0].trim(); parts.push("You're clear at "+site+", but there's a "+warn.event+" nearby"+(ar0?" for "+ar0:"")+" — I'm watching it."); warn=null; }
-    else parts.push(one(["All quiet at "+site+" right now.","Nothing going on at "+site+" at the moment.","You're clear at "+site+".","Quiet out your way right now."],"nowopen")+(R&&!R.none&&!R.light?" "+cap(R.kind)+" is "+Math.round(R.d)+" miles to your "+R.dir+" — I'm watching it.":R&&!R.none&&R.light?" A few light returns "+Math.round(R.d)+" miles "+R.dir+", nothing reaching the ground.":one([" Radar's quiet out to 45 miles."," Nothing on radar within 45 miles."," Radar's empty around you."],"rq")));
+    else if(warn){ var ar0=String(warn.areaDesc||"").split(";")[0].trim(); parts.push("You're clear "+AT()+", but there's a "+warn.event+" nearby"+(ar0?" for "+ar0:"")+" — I'm watching it."); warn=null; }
+    else parts.push(one(["All quiet "+AT()+" right now.","Nothing going on "+AT()+" at the moment.","You're clear "+AT()+".","Quiet out your way right now."],"nowopen")+(R&&!R.none&&!R.light?" "+cap(R.kind)+" is "+Math.round(R.d)+" miles to your "+R.dir+" — I'm watching it.":R&&!R.none&&R.light?" A few light returns "+Math.round(R.d)+" miles "+R.dir+", nothing reaching the ground.":one([" Radar's quiet out to 45 miles."," Nothing on radar within 45 miles."," Radar's empty around you."],"rq")));
     if(call!=="action"&&warn){ var ar=String(warn.areaDesc||"").split(";")[0].trim(); parts.push("There's a "+warn.event+" nearby"+(ar?" for "+ar:"")+" — not for you, but I'm watching it."); }
     else if(call==="headsup"&&watch&&!warn) parts.push("I'll flag it the moment anything develops.");
     return parts.join(" "); }
@@ -217,20 +229,20 @@ var SDR_ENGINE=(function(){
   function weekLine(t){ var site=siteName(), D=days().slice(0,7); if(!D.length) return "Give me a second, the week's still loading on my end.";
     var wet=D.filter(function(d){ return Math.max(d.pp||0,d.ppN||0)>=40; }), st=D.filter(function(d){ return (d.thunder||0)>=30; }), gusty=D.filter(function(d){ return (d.gust||0)>=30; });
     var tot=D.reduce(function(a,d){ return a+(d.rr&&d.rr[1]?d.rr[1]:0); },0), hi=D.reduce(function(a,d){ return a+(d.rr&&d.rr[2]?d.rr[2]:0); },0); var s="";
-    if(t==="totals"||t==="rain"){ if(!wet.length) s=one(["Not much to measure this week at "+site+".","Dry stretch — totals are close to nothing.","Honestly, you won't need the rain gauge this week."],"wk1"); else s=one(["Here's the week in rain:","Rain by day:","Day by day it looks like this:"],"wk2")+" "+wet.map(function(d){ return (d.long||d.d)+(d.rr&&d.rr[1]!=null?" about "+inch(d.rr[1]):" "+Math.max(d.pp||0,d.ppN||0)+"% chance"); }).join(", ")+". "+(tot?one(["Add it up and you're around "+inch(tot)+" for the week"+(hi>tot?", wetter half of the models closer to "+inch(hi):"")+".","Week total most likely "+inch(tot)+(hi>tot?", could push toward "+inch(hi)+" if the wetter models win":"")+"."],"wkt"):""); if(st.length) s+=" "+cap(st.map(function(d){ return d.long||d.d; }).join(" and "))+" carr"+(st.length>1?"y":"ies")+" a storm chance too."; }
+    if(t==="totals"||t==="rain"){ if(!wet.length) s=one(["Not much to measure this week "+AT()+".","Dry stretch — totals are close to nothing.","Honestly, you won't need the rain gauge this week."],"wk1"); else s=one(["Here's the week in rain:","Rain by day:","Day by day it looks like this:"],"wk2")+" "+wet.map(function(d){ return (d.long||d.d)+(d.rr&&d.rr[1]!=null?" about "+inch(d.rr[1]):" "+Math.max(d.pp||0,d.ppN||0)+"% chance"); }).join(", ")+". "+(tot?one(["Add it up and you're around "+inch(tot)+" for the week.","Week total most likely "+inch(tot)+(function(){ var w=wet.slice().sort(function(a,b){ return ((b.rr&&b.rr[2])||0)-((a.rr&&a.rr[2])||0); })[0]; return w&&w.rr&&w.rr[2]>tot?", and the wetter models put "+(w.long||w.d)+" alone closer to "+inch(w.rr[2]):""; })()+"."],"wkt"):""); if(st.length) s+=" "+cap(st.map(function(d){ return d.long||d.d; }).join(" and "))+" carr"+(st.length>1?"y":"ies")+" a storm chance too."; }
     else if(t==="wind"){ s=gusty.length?"Windiest days are "+gusty.map(function(d){ return (d.long||d.d)+" (gusts to "+d.gust+")"; }).join(", ")+". The rest stays under 30.":one(["No real wind days this week — gusts stay under 30 the whole stretch.","Nothing windy on the board. Under 30 all week."],"wkw"); }
     else if(t==="temp"||t==="cold"){ var his=D.map(function(d){ return d.hi; }).filter(Boolean), los=D.map(function(d){ return d.lo; }).filter(function(x){ return x!=null; }); s="Highs run "+Math.min.apply(null,his)+" to "+Math.max.apply(null,his)+" this week, lows "+Math.min.apply(null,los)+" to "+Math.max.apply(null,los)+"."; var fr=D.filter(function(d){ return d.lo!=null&&d.lo<=36; }); if(fr.length) s+=" Frost worth watching "+fr.map(function(d){ return d.long||d.d; }).join(" and ")+"."; }
-    else { s=wet.length?one(["The days to plan around are ","I'd circle ","Watch "],"wk3")+wet.map(function(d){ return (d.long||d.d)+" ("+Math.max(d.pp||0,d.ppN||0)+"%"+((d.thunder||0)>=30?", storms":"")+")"; }).join(" and ")+". "+one(["Everything else looks workable.","The rest is fine.","Rest of the week's open."],"wk4"):one(["Quiet week at "+site+".","Nothing to plan around this week."],"wk5")+" Highs "+Math.min.apply(null,D.map(function(d){ return d.hi; }).filter(Boolean))+" to "+Math.max.apply(null,D.map(function(d){ return d.hi; }).filter(Boolean))+"."; if(gusty.length) s+=" Gusty "+gusty.map(function(d){ return d.long||d.d; }).join(", ")+" — "+Math.max.apply(null,gusty.map(function(d){ return d.gust; }))+" mph at the top."; }
+    else { s=wet.length?one(["The days to plan around are ","I'd circle ","Watch "],"wk3")+wet.map(function(d){ return (d.long||d.d)+" ("+Math.max(d.pp||0,d.ppN||0)+"%"+((d.thunder||0)>=30?", storms":"")+")"; }).join(" and ")+". "+one(["Everything else looks workable.","The rest is fine.","Rest of the week's open."],"wk4"):one(["Quiet week "+AT()+".","Nothing to plan around this week."],"wk5")+" Highs "+Math.min.apply(null,D.map(function(d){ return d.hi; }).filter(Boolean))+" to "+Math.max.apply(null,D.map(function(d){ return d.hi; }).filter(Boolean))+"."; if(gusty.length) s+=" Gusty "+gusty.map(function(d){ return d.long||d.d; }).join(", ")+" — "+Math.max.apply(null,gusty.map(function(d){ return d.gust; }))+" mph at the top."; }
     return s; }
 
   function dayLine(t,W){ var site=siteName(), d=W.day, idx=W.idx, H=dayHours(d), nm=W.label||dname(d,idx), c=conf(d);
     var pp=Math.max(d.pp||0,d.ppN||0), th=d.thunder||0, rw=window_(H,"pop",30), tw=window_(H,"thunder",20), lvl=outlookLevel(idx), s="";
     if(t==="severe"||((t==="storms"||t==="general")&&lvl&&lvl>=2)){
       if(lvl&&lvl>=2) s=one(["There's a level "+lvl+" of 5 severe risk over "+site+" "+nm,"We've got "+site+" in a level "+lvl+" of 5 severe risk "+nm,cap(nm)+" carries a level "+lvl+" of 5 severe risk for "+site],"sv1")+(tw?one([" — the window I'm watching is "+win(tw.a,tw.b),", mainly "+win(tw.a,tw.b),"; timing looks like "+win(tw.a,tw.b)],"sv2"):"")+". "+one(["That's heads-up territory: keep your plan, know where people go if it turns, and we'll call it the second anything is warned.","Not a cancel — a watch-it. Keep the plan, have the shelter spot in mind, and I'll be on it if a warning goes up.","I wouldn't change plans yet. Know your shelter, and we'll flag it the moment it's warned."],"sv3")+(pp<20&&th<20?" The hour-by-hour is still mostly dry, for what it's worth.":"");
-      else s=one(["No severe risk on the board for "+nm+" at "+site+".","Nothing severe flagged "+nm+".","You're not in a severe risk area "+nm+"."],"sev")+(th>=20?" A regular thunder chance, yes"+(tw?", mostly "+win(tw.a,tw.b):"")+", but nothing organized.":" "+(pp>=40?"Some plain rain around, though.":one(["Quiet day.","Looks quiet.","Nothing much going on."],"qd")));
+      else s=one(["No severe risk on the board for "+nm+" "+AT()+".","Nothing severe flagged "+nm+".","You're not in a severe risk area "+nm+"."],"sev")+(th>=20?" A regular thunder chance, yes"+(tw?", mostly "+win(tw.a,tw.b):"")+", but nothing organized.":" "+(pp>=40?"Some plain rain around, though.":one(["Quiet day.","Looks quiet.","Nothing much going on."],"qd")));
       return s+agreeTail(c); }
     if(t==="rain"||t==="totals"||t==="storms"||t==="general"||t==="hourly"){
-      if(pp<20&&th<20){ s=one(["Dry "+nm+" at "+site+".",cap(nm)+" looks dry.","You're good "+nm+" — dry at "+site+".","No rain "+nm+"."],"dry")+" High near "+d.hi+"°"+(d.lo!=null?", low "+d.lo+"°":"")+(d.gust>=25?", gusts to "+d.gust+" mph":"")+"."+(t==="general"?" "+one(["Good day to get things done outside.","Go ahead and plan on it.","Nothing to work around.","Honestly a nice one."],"dry2"):"");
+      if(pp<20&&th<20){ s=one(["Dry "+nm+" "+AT()+".",cap(nm)+" looks dry.","You're good "+nm+" — dry "+AT()+".","No rain "+nm+"."],"dry")+" High near "+d.hi+"°"+(d.lo!=null?", low "+d.lo+"°":"")+(d.gust>=25?", gusts to "+d.gust+" mph":"")+"."+(t==="general"?" "+one(["Good day to get things done outside.","Go ahead and plan on it.","Nothing to work around.","Honestly a nice one."],"dry2"):"");
         var nx=nextWet(idx+1); if(nx){ var npp=Math.max(nx.day.pp||0,nx.day.ppN||0); s+=" "+one(["Next rain chance is "+nx.label,"The next wet day is "+nx.label,"Rain doesn't show up until "+nx.label],"nxw")+" ("+npp+"%"+(nx.day.rr&&nx.day.rr[1]>=5?", around "+inch(nx.day.rr[1]):"")+((nx.day.thunder||0)>=30?", with storms":"")+")."; } else s+=" "+one(["Dry the rest of the 10 days, too.","Nothing wet in the 10-day at all."],"nxd"); if(c!=null&&c<=2) s+=" "+one(["The models are a little split that far out, so I'd check back the night before.","Fair warning that guidance isn't locked in yet."],"dryc"); }
       else { var lead= th>=30?(pp>=60?one(["Storms are likely","Expect storms","Storms look likely"],"l1"):one(["There's a storm chance","Some storms possible","Storm chance in play"],"l2")): pp>=60?one(["Rain is likely","Expect rain","Plan on rain"],"l3"): pp>=40?one(["Decent rain chance","Fair chance of rain","Rain's possible"],"l4"):one(["Slight rain chance","Small chance of rain","Low rain chance"],"l5");
         s=(rw&&/when|what time|start|timing/i.test(LASTQ)?one(["Timing first: ","When: "],"tm")+win(rw.a,rw.b)+" "+nm+". "+lead+". ":lead+" "+nm+(rw?", "+win(rw.a,rw.b):"")+". "); var am=fmtAmt(d); if(am) s+=cap(am)+". ";
@@ -243,26 +255,59 @@ var SDR_ENGINE=(function(){
     if(t==="snow"){ return (d.snowP>=30?"Snow chance "+d.snowP+"% "+nm+(d.sr&&d.sr[1]?" — most likely about "+(d.sr[1]/10).toFixed(1)+'"':"")+".":"No snow in the picture for "+nm+".")+agreeTail(c); }
     return dayLine("general",W); }
 
-  var LASTW=null, LASTQ="";
+
+  // ---------- thunder: read the hour-by-hour like a forecaster would ----------
+  function dlab(i){ var d=days()[i]; return i===0?"today":i===1?"tomorrow":(d&&(d.long||d.d))||""; }
+  function runs(H,f,thr){ var out=[],cur=null; H.forEach(function(h){ if((h[f]||0)>=thr){ if(!cur){ cur={a:hrOf(h.t),b:hrOf(h.t)+1,peak:0,ph:hrOf(h.t)}; out.push(cur); } cur.b=hrOf(h.t)+(h.step?3:1); if((h[f]||0)>cur.peak){ cur.peak=h[f]; cur.ph=hrOf(h.t); } } else cur=null; }); out.forEach(function(r){ if(r.b>24) r.b=24; }); return out; }
+  function thunderDay(i){ var D=days(), d=D[i]; if(!d) return null; var H=dayHours(d), R=runs(H,"thunder",20); if(R.length){ R.sort(function(a,b){ return b.peak-a.peak; }); return {idx:i,label:dlab(i),main:R[0],more:R[1]||null,peak:R[0].peak,c:conf(d)}; } if((d.thunder||0)>=20) return {idx:i,label:dlab(i),main:null,peak:d.thunder,c:conf(d)}; return null; }
+  function thunderAhead(from,n){ var out=[]; for(var i=from||0;i<Math.min(days().length,8)&&out.length<(n||3);i++){ var t=thunderDay(i); if(t) out.push(t); } return out; }
+  function tWin(t){ return t.main?win(t.main.a,t.main.b):""; }
+  function thunderLine(focusIdx,named){ var L=thunderAhead(0,4); var lastLab=dlab(Math.min(days().length,8)-1);
+    if(!L.length) return one(["No thunder anywhere in the forecast through "+lastLab+".","I don't see any thunder through "+lastLab+" — rain chances, maybe, but no lightning risk."],"tn0");
+    var F=named!=null?thunderDay(named):null, s="";
+    if(named!=null&&!F){ var d=days()[named]; var pp=d?Math.max(d.pp||0,d.ppN||0):0; s=cap(dlab(named))+(pp>=40?" is mostly a rain day — thunder stays under 20% "+AT()+".":" doesn't carry a thunder chance.")+" ";
+      var other=L.filter(function(x){ return x.idx!==named; })[0]; if(other) s+=one(["The thunder day is ","Where I do see thunder is ","The lightning risk is "],"tn1")+other.label+(tWin(other)?", "+tWin(other):"")+" — up to "+other.peak+"%."; return s; }
+    var A=F||L[0];
+    s=(F?cap(A.label)+one(["'s thunder window is ","'s lightning risk is mostly ","'s thunder chance runs "],"tn2"):one(["Thunder's most likely ","The best lightning chance is ","If we get thunder, it's "],"tn3")+A.label+", ")+(tWin(A)||"during the day")+(A.main&&A.main.peak?", peaking around "+A.main.peak+"% near "+hlab(A.main.ph):"")+".";
+    if(A.more) s+=" There's a second, smaller window "+win(A.more.a,A.more.b)+".";
+    var B=L.filter(function(x){ return x.idx!==A.idx; })[0]; if(B) s+=" "+cap(B.label)+(B.peak>A.peak?" is actually the higher one":" has a lower chance")+(tWin(B)?", mainly "+tWin(B):"")+" ("+B.peak+"%).";
+    s+=" "+(A.peak>=40?one(["That's the stretch I'd plan outdoor work around. Once thunder is heard, get people inside.","I'd build the day around that window — when thunder roars, go indoors."],"tn4"):one(["It's a low-end chance, but if you hear thunder, that's the signal to clear people out.","Not a washout, just a thunder risk to keep in mind."],"tn5"));
+    return (s+agreeTail(A.c)).replace(/\s+/g," ").trim(); }
+  // the hour-by-hour story of a wet day: when it starts, when it peaks, when it ends
+  function story(W){ var d=W.day; if(!d) return ""; var H=dayHours(d); if(H.length<4) return ""; var nm=W.label||dname(d,W.idx);
+    var R=runs(H,"pop",30); if(!R.length) return ""; var a=R[0].a, b=R[R.length-1].b; var pk=0,ph=null; H.forEach(function(h){ if((h.pop||0)>pk){ pk=h.pop; ph=hrOf(h.t); } });
+    var hv=runs(H,"pop",Math.max(55,pk-10)); var s=one(["Here's how "+nm+" plays out: ","Hour by hour, "+nm+" looks like this: ","Breaking "+nm+" down: "],"st1");
+    s+="rain chances climb past 30% around "+hlab(a)+", peak near "+pk+"%"+(hv.length?" "+win(hv[0].a,hv[0].b):" around "+hlab(ph))+(b<24?", and drop back under 30% by "+hlab(b):", and stay up into the night")+".";
+    var T=runs(H,"thunder",20); if(T.length){ T.sort(function(x,y){ return y.peak-x.peak; }); s+=" Thunder risk "+win(T[0].a,T[0].b)+", topping out near "+T[0].peak+"%."; }
+    var gw=Math.max.apply(null,H.map(function(h){ return h.gust||0; })); if(gw>=25) s+=" Gusts to "+gw+" with it.";
+    return s; }
+  var LASTW=null, LASTQ="", LASTKEY="", LASTTXT="";
   function nextWet(from){ var D=days(); for(var i=from||0;i<D.length;i++){ var d=D[i]; if(Math.max(d.pp||0,d.ppN||0)>=30||(d.thunder||0)>=30||(d.snowP||0)>=30) return {idx:i,day:d,label:i===0?"today":i===1?"tomorrow":(d.long||d.d)}; } return null; }
-  function namedDay(q){ return /\b(today|tonight|tomorrow|weekend|week|sun|mon|tue|wed|thu|fri|sat)[a-z]*\b/i.test(q); }
+  function namedDay(q){ return /\b(today|tonight|tomorrow|weekend|week|sun(day)?|mon(day)?|tue(s|sday)?|wed(nesday)?|thu(r|rs|rsday)?|fri(day)?|sat(urday)?)\b/i.test(q); }
   function core(q){ LASTQ=q; var t=topic(q), W=when(q); var call=callNow();
     if(!namedDay(q)&&!W.week){ if(LASTW&&!/\bnow\b|right now|radar|currently/i.test(q)) W=LASTW; else if(/^(rain|totals|storms|snow|general)$/.test(t)&&!/\bnow\b|right now|currently/i.test(q)){ var nw=nextWet(0); if(nw) W=nw; } }
     // a rain question with no day named, about a dry day, means "when's the next rain" — answer that day
     if(!namedDay(q)&&!W.week&&/^(rain|totals|storms)$/.test(t)&&W.day&&Math.max(W.day.pp||0,W.day.ppN||0)<20&&(W.day.thunder||0)<20){ var nw2=nextWet(/\bwhen\b/i.test(q)?0:(W.idx||0)); if(nw2) W=nw2; }
     if(W&&W.day) LASTW=W;
-    if(call==="action"||t==="lightning"||t==="now"||(W.now&&!W.week&&t==="general")){ var s=nowLine(); if(t==="lightning") s+=" "+(g(function(){ return P.LTG&&P.LTG.connected; },false)?"Lightning feed is live; nothing inside 10 miles.":"I'm reading storms off radar for you — no cells near the site right now."); return s; }
+    var ql=q.toLowerCase(), future=/\bwhen\b|what time|\bwill\b|going to|chance|timing|start|later|this week|if we get/.test(ql)||namedDay(q), thq=/thunder|lightning|storm/.test(ql);
+    if(call==="action"||t==="now"||(W.now&&!W.week&&t==="general")) return nowLine();
+    if(t==="lightning"&&!future){ var s0=nowLine()+" "+(g(function(){ return P.LTG&&P.LTG.connected; },false)?"Lightning feed is live; nothing inside 10 miles.":"No storm cells near the site right now."); var nt=thunderAhead(0,1)[0]; s0+=nt?" "+one(["Next thunder chance is ","The next time lightning is in play is "],"ntc")+nt.label+(tWin(nt)?", "+tWin(nt):"")+" ("+nt.peak+"%).":" No thunder in the forecast after that either."; return s0; }
+    if((t==="lightning"||t==="storms")&&thq){ var nIdx=namedDay(q)&&!W.week?W.idx:(LASTW&&/if we get it|that day|\bthen\b/.test(ql)&&LASTW.day?LASTW.idx:null); var lv=nIdx!=null?outlookLevel(nIdx):null; if(!(lv&&lv>=2)) return thunderLine(null,nIdx); }
     if(W.week) return weekLine(t);
     if(!W.day) return nowLine();
     if(W.pair&&W.pair[1]!=null){ var D=days(), a=D[W.pair[0]], b2=D[W.pair[1]];
       if(t==="cold"){ var lo=Math.min(a.lo==null?99:a.lo,b2.lo==null?99:b2.lo); return (lo<=32?"Yes — ":lo<=36?"Close call. ":one(["No frost this weekend. ","You're clear on frost. "],"wkf"))+"Saturday night around "+a.lo+"°, Sunday night around "+b2.lo+"°."+(lo<=28?" Hard freeze; protect anything tender.":lo<=32?" Cover what you can.":lo<=36?" Low spots could see a little.":""); }
       if(t==="temp") return "Highs "+a.hi+"° Saturday and "+b2.hi+"° Sunday, lows "+a.lo+"° and "+b2.lo+"°.";
       if(t==="wind") return "Saturday "+(a.wind||"light")+(a.gust?" gusting "+a.gust:"")+", Sunday "+(b2.wind||"light")+(b2.gust?" gusting "+b2.gust:"")+" mph."+(Math.max(a.gust||0,b2.gust||0)>=30?" Sunday's the breezy one.":""); }
+    // asked the same thing again? go a level deeper instead of repeating
+    var key=t+"|"+(W.idx==null?"":W.idx); var deeper=/more detail|deeper|break (it|that) down|details|specific|exactly|hour by hour/i.test(q);
+    if((key===LASTKEY||deeper)&&W.day){ var st0=story(W); if(st0){ LASTKEY=key; return st0; } }
+    LASTKEY=key;
     var s=dayLine(t,W); if(W.pair&&W.pair[1]!=null){ var W2={idx:W.pair[1],day:days()[W.pair[1]],label:"Sunday"}; s+=" "+dayLine(t==="severe"?"general":t,W2); }
     return s.replace(/\s+/g," ").trim(); }
 
   // The plan: a list of {text|att, delay} the widget plays out, with varied rhythm per answer
-  function plan(q,opts){ opts=opts||{}; var txt=core(q), att=attachments(q), v=V(), out=[]; var urgent=callNow()==="action";
+  function plan(q,opts){ opts=opts||{}; var txt=core(q); if(txt===LASTTXT&&LASTW&&LASTW.day){ var st1=story(LASTW); txt=st1&&st1!==txt?st1:one(["Same picture as a minute ago — nothing's changed in the latest data.","No change since I last checked; that's still the forecast."],"same")+" "+txt; } LASTTXT=txt; var att=attachments(q), v=V(), out=[]; var urgent=callNow()==="action";
     var style=urgent?"straight":one(["straight","open","two","picfirst","openq"],"style");
     if(urgent) style="straight";
     if((style==="open"||style==="openq")&&txt.length>90) txt=one(v.open,"vo-"+MET)+" "+txt;
@@ -273,7 +318,7 @@ var SDR_ENGINE=(function(){
     // a tail: sometimes a question back, sometimes a close-out, sometimes nothing
     if(!urgent){ var r=Math.random();
       if(r<0.3) out.push({text:one(v.tail,"vt-"+MET),delay:1800+Math.random()*1200,tail:true});
-      else if(r<0.5) out.push({text:one(["Does that cover what you needed? If so, tap Got it and I'll close this out — you can reach back any time.","If that answers it, hit Got it and we'll close the thread for now. Reach out whenever.","Anything else on this? Otherwise tap Got it and I'll wrap the thread; we're here if it changes."],"close"),delay:2200+Math.random()*1500,tail:true,ack:true});
+      else if(r<0.5) out.push({text:one(["Does that help answer your question? If so, tap Got it and we'll close out the thread for now. You can reach out any time.","Does that answer your question? If so, tap Got it and we'll close out the thread for now. You can reach out any time."],"close"),delay:2200+Math.random()*1500,tail:true,ack:true});
       else if(r<0.58&&!opts.noq&&/rain|storm|thunder|gust|wind|freeze|frost|heat/i.test(txt)&&!/dry|quiet|clear|no frost|nothing/i.test(txt)) out.push({text:one(["Is this for the morning crew or the afternoon?","Are you asking for setup or for the event itself?","What time are you trying to be done by? I can get more specific.","Indoor backup an option for you, or does it have to be outside?"],"q"),delay:2000+Math.random()*1000,tail:true,question:true}); }
     return out; }
   // ---------- attachments: driven by what was asked ----------
@@ -282,7 +327,7 @@ var SDR_ENGINE=(function(){
       var tt=c.querySelector(".mlab b"); return {svg:cl.outerHTML,title:tt?tt.textContent.replace(/Â/g,"").trim():"Map"}; }catch(e){ return null; } }
   function tableCard(title,rows){ var Wd=320, rh=22, Hh=30+rows.length*rh+8; var y=26; var body=rows.map(function(r,i){ var yy=30+i*rh; return '<rect x="0" y="'+(yy-2)+'" width="'+Wd+'" height="'+rh+'" fill="'+(i%2?"rgba(255,255,255,.03)":"transparent")+'"/>'+r.map(function(cell,j){ var x=j===0?10:j===1?120:j===2?200:270; var anchor=j===0?"start":"end"; var xx=j===0?10:(j===1?170:j===2?245:310); return '<text x="'+xx+'" y="'+(yy+13)+'" text-anchor="'+anchor+'" font-size="12" font-weight="'+(j===0?700:600)+'" fill="'+(j===0?"#F4F7FB":"#DCE6F5")+'" '+FONT+'>'+cell+'</text>'; }).join(""); }).join("");
     return '<svg viewBox="0 0 '+Wd+' '+Hh+'" style="width:100%;height:auto;display:block;background:#0E1A33"><text x="10" y="16" font-size="11" font-weight="800" letter-spacing=".08em" fill="#fff" '+FONT+'>'+title+'</text>'+body+'</svg>'; }
-  function weekTable(){ var D=days().slice(0,7); var rows=[["DAY","RAIN","LIKELY","HIGH END"]].concat(D.map(function(d){ var pp=Math.max(d.pp||0,d.ppN||0); return [(d.d||"").toUpperCase(), pp?pp+"%":"dry", d.rr&&d.rr[1]!=null?(d.rr[1]<1?"trace":(d.rr[1]/100).toFixed(2)+'"'):"—", d.rr&&d.rr[2]!=null?(d.rr[2]<1?"trace":(d.rr[2]/100).toFixed(2)+'"'):"—"]; })); return {svg:tableCard("RAIN THIS WEEK · "+siteName().toUpperCase(),rows),title:"Rain by day · middle half of the models"}; }
+  function weekTable(){ var D=days().slice(0,7); var rows=[["DAY","CHANCE","LIKELY","HIGH END"]].concat(D.map(function(d){ var pp=Math.max(d.pp||0,d.ppN||0); return [(d.d||"").toUpperCase(), pp?pp+"%":"dry", d.rr&&d.rr[1]!=null?(d.rr[1]<1?"trace":(d.rr[1]/100).toFixed(2)+'"'):"—", d.rr&&d.rr[2]!=null?(d.rr[2]<1?"trace":(d.rr[2]/100).toFixed(2)+'"'):"—"]; })); return {svg:tableCard("RAIN THIS WEEK · "+siteName().toUpperCase(),rows),title:"Rain by day · middle half of the models"}; }
   function hourlyCard(W){ var H=dayHours(W.day); if(H.length<6) return null; var Wd=320,Hh=176,L=22,R=Wd-22,top=40,bot=Hh-46; var hrs=H.map(function(h){ return hrOf(h.t); }); var k0=Math.min.apply(null,hrs), span=Math.max(1,Math.max.apply(null,hrs)-k0); var X=function(k){ return L+(R-L)*(k-k0)/span; };
     var T=H.map(function(h){ return h.temp; }), tl=Math.min.apply(null,T), th=Math.max.apply(null,T); var ty=function(v){ return bot-16-(bot-top-20)*((v-tl)/Math.max(1,th-tl)); };
     var pts=H.map(function(h){ return X(hrOf(h.t))+","+ty(h.temp); }).join(" ");
@@ -292,6 +337,8 @@ var SDR_ENGINE=(function(){
     var g=Math.max.apply(null,H.map(function(h){ return h.gust||0; }));
     return {svg:'<svg viewBox="0 0 '+Wd+' '+Hh+'" style="width:100%;height:auto;display:block;background:#0E1A33"><text x="'+L+'" y="16" font-size="11" font-weight="800" letter-spacing=".08em" fill="#fff" '+FONT+'>HOUR BY HOUR · '+(W.label||dname(W.day,W.idx)).toUpperCase()+'</text><text x="'+R+'" y="16" text-anchor="end" font-size="10" fill="#A9B6CC" '+FONT+'>temp · rain chance'+(g?' · gusts to '+g:'')+'</text><polyline points="'+pts+'" fill="none" stroke="#FFC857" stroke-width="3" stroke-linejoin="round"/>'+labs+bars+'<line x1="'+L+'" x2="'+R+'" y1="'+(Hh-18)+'" y2="'+(Hh-18)+'" stroke="rgba(255,255,255,.25)"/>'+ax+'</svg>',title:"Hourly for "+(W.label||dname(W.day,W.idx))}; }
   function attachments(q){ if(!P) return []; var t=topic(q), W=when(q), ql=q.toLowerCase(), out=[]; if(!namedDay(q)&&!W.week&&LASTW) W=LASTW; var wantsPic=/send|show|see|picture|map|image|chart|graph|outlook|radar|hourly|totals|table/.test(ql);
+    var fut=/\bwhen\b|what time|\bwill\b|going to|chance|timing|start|later|if we get/.test(ql)||namedDay(q);
+    if((t==="lightning"||t==="storms")&&fut&&/thunder|lightning|storm/.test(ql)){ var ti=namedDay(q)&&!W.week?W.idx:null; var TD=ti!=null?thunderDay(ti):null; if(!TD) TD=thunderAhead(0,1)[0]; if(TD){ var hc=hourlyCard({idx:TD.idx,day:days()[TD.idx],label:cap(TD.label)}); if(hc) out.push(hc); } var lv2=outlookLevel(TD?TD.idx:0); if(lv2&&lv2>=2){ var sv=cardSvg(new RegExp("^spc"+((TD?TD.idx:0)+1)+"$")); if(sv) out.push(sv); } return out.slice(0,2); }
     if(t==="now"||t==="lightning"||/radar/.test(ql)){ var r=cardSvg(/^radar$/); if(r) out.push(r); }
     if(t==="severe"||t==="storms"){ var s=W.week?(cardSvg(/^spc1$/)||cardSvg(/^spc48$/)):(cardSvg(new RegExp("^spc"+((W.idx||0)+1)+"$"))||cardSvg(/^spc48$/)); if(s) out.push(s); if(!W.week&&W.idx===0){ var md=cardSvg(/^md$/); if(md) out.push(md); } }
     if(W.week&&(t==="totals"||t==="rain"||t==="general"||t==="hourly")) out.push(weekTable());
@@ -329,12 +376,26 @@ var SDR_ENGINE=(function(){
     '<div class="bar"><span class="base"></span><span class="iq" style="left:19%;width:37%"></span><span class="md" style="left:36%"></span><span class="th" style="left:62%"></span></div>'+
     '<div class="lab"><span>1 in 10 <b>0.16"</b></span><span>1 in 4 <b>0.30"</b></span><span>1 in 4 <b>0.90"</b></span><span>1 in 10 <b>1.45"</b></span></div>'+
     '<p>Most runs land between <b>0.3" and 0.9"</b>. About 1 in 10 go past an inch.</p><small>What the models say · National Blend ranges for Memorial Stadium · 10:14 AM</small>';M.appendChild(d);lastSide="them";M.scrollTop=M.scrollHeight;}
-  function imageSvg(svg,cap){var d=document.createElement("div");d.className="img";d.innerHTML='<div class="svgpic">'+svg+'</div><div class="cap"><b>'+cap+'</b><span>'+now()+'</span></div>';M.appendChild(d);lastSide="them";M.scrollTop=M.scrollHeight;}
+  function imageSvg(svg,cap){var d=document.createElement("div");d.className="img zoomable";d.innerHTML='<div class="svgpic">'+svg+'</div><div class="cap"><b>'+cap+'</b><span class="zm">Tap to enlarge</span></div>';d.addEventListener("click",function(){lbOpen(svg,cap);});M.appendChild(d);lastSide="them";M.scrollTop=M.scrollHeight;}
+  // picture viewer: full screen, pinch or double-tap to zoom, drag to look around
+  var LB=null,lbScale=1,lbBase=0;
+  function lbSize(){var w=LB.querySelector(".lbs>div");w.style.width=Math.round(lbBase*lbScale)+"px";}
+  function lbOpen(svg,cap){if(!LB){LB=document.createElement("div");LB.id="lb";LB.innerHTML='<div class="lbh"><b></b><button type="button">CLOSE</button></div><div class="lbs"><div></div></div><div class="lbf">Pinch or double-tap to zoom</div>';document.body.appendChild(LB);
+      LB.querySelector("button").addEventListener("click",lbClose);
+      var sc=LB.querySelector(".lbs"),d0=0,s0=1,lastTap=0;
+      sc.addEventListener("touchstart",function(e){if(e.touches.length===2){d0=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);s0=lbScale;}else{var t=Date.now();if(t-lastTap<300){lbScale=lbScale>1.2?1:2.5;lbSize();e.preventDefault();}lastTap=t;}},{passive:false});
+      sc.addEventListener("touchmove",function(e){if(e.touches.length===2&&d0){e.preventDefault();var d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);lbScale=Math.max(1,Math.min(5,s0*d/d0));lbSize();}},{passive:false});
+      sc.addEventListener("touchend",function(e){if(e.touches.length<2)d0=0;});
+      sc.addEventListener("dblclick",function(){lbScale=lbScale>1.2?1:2.5;lbSize();});
+      window.addEventListener("popstate",function(){if(LB&&!LB.hidden){LB.hidden=true;}});}
+    LB.querySelector(".lbh b").textContent=cap;LB.querySelector(".lbs>div").innerHTML=svg;lbScale=1;lbBase=Math.min(window.innerWidth-16,900);lbSize();LB.hidden=false;try{history.pushState({lb:1},"");}catch(e){}}
+  function lbClose(){if(LB&&!LB.hidden){LB.hidden=true;try{if(history.state&&history.state.lb)history.back();}catch(e){}}}
   function markRead(){var s=M.querySelector(".status");if(s){s.textContent="Read "+now();s.classList.add("read");}}
   function ackRow(){var r=document.createElement("div");r.className="ack";var b=document.createElement("button");b.textContent="Got it";var sm=document.createElement("small");sm.textContent="lets the team know you saw it";
     b.addEventListener("click",function(){b.textContent="✓ Got it";b.classList.add("done");sm.textContent="acknowledged "+now();b.disabled=true;});r.appendChild(b);r.appendChild(sm);M.appendChild(r);}
   function typing(on){var t=M.querySelector(".typing");if(t)t.remove();if(on){var d=document.createElement("div");d.className="typing";d.innerHTML="<i></i><i></i><i></i>";M.appendChild(d);M.scrollTop=M.scrollHeight;}}
 
+  var PLAYGEN=0;
   var QUICK=["Are we good for Saturday?","When do storms start?","How much rain?","Lightning near us?"];
   function quick(){var Q=document.getElementById("quick");Q.innerHTML="";QUICK.forEach(function(q){var b=document.createElement("button");b.textContent=q;b.addEventListener("click",function(){send(q);});Q.appendChild(b);});
     var r=document.createElement("button");r.className="brief";r.textContent="Request a briefing";r.addEventListener("click",function(){send("Can we get a briefing for Saturday's game?");});Q.appendChild(r);}
@@ -344,7 +405,7 @@ var SDR_ENGINE=(function(){
     bubble("them",live?live:'<span class="st clear">All clear</span>Normal operations today. Nothing on radar within 30 miles.',{from:lastMet});}
 
   function send(text){if(!text.trim())return; if(lastMsgAt&&Date.now()-lastMsgAt>20*60000){ var B=["Emma","Matthew","Lily","Miller","Anne"].filter(function(n){ return n!==lastMet; }); lastMet=B[Math.floor(Math.random()*B.length)]; try{ SDR_ENGINE.setMet(lastMet); }catch(e){} } lastMsgAt=Date.now(); ts(now());
-    bubble("me",text.replace(/</g,"&lt;"));ci.value="";clearTimeout(helloT);clearTimeout(replyT);
+    bubble("me",text.replace(/</g,"&lt;"));ci.value="";clearTimeout(helloT);clearTimeout(replyT);PLAYGEN++;typing(false);
     if(isThanks(text)){var b=pick(BYE,lastBye)+(Math.random()<0.4?" I'll close this thread out for now — reach back any time.":"");lastBye=b;setTimeout(function(){markRead();typing(true);setTimeout(function(){typing(false);bubble("them",b,{from:lastMet});},1800);},1500);return;}
     var n=firstName(text);
     helloT=setTimeout(function(){markRead();typing(true);
@@ -353,33 +414,33 @@ var SDR_ENGINE=(function(){
         var PL=null; try{ if(SDR_ENGINE.ok()) PL=SDR_ENGINE.plan(text); }catch(e){ PL=null; }
         var skipHello=PL&&Math.random()<0.35;   // sometimes the answer just comes, no hello
         if(!skipHello){ var pool=/radar|right now|currently|\bnow\b/i.test(text)?BODY_RADAR:BODY; var h=pick(pool,lastHello);lastHello=h;bubble("them",greet(n)+h,{from:lastMet}); }
-        var play=function(items,k){ if(k>=items.length){ M.scrollTop=M.scrollHeight; return; } var it=items[k]; var wait=(k===0?(skipHello?0:3200+Math.random()*2800):it.delay)+ (it.text?Math.min(2600,600+it.text.length*18):900);
-          typing(true); setTimeout(function(){ typing(false); if(it.att) imageSvg(it.att.svg,it.att.title); else bubble("them",it.text.replace(/</g,"&lt;"),{from:lastMet}); if(it.ack) ackRow(); M.scrollTop=M.scrollHeight; play(items,k+1); }, wait); };
+        var gen=++PLAYGEN; var play=function(items,k){ if(gen!==PLAYGEN){ typing(false); return; } if(k>=items.length){ M.scrollTop=M.scrollHeight; return; } var it=items[k]; var wait=(k===0?(skipHello?0:3200+Math.random()*2800):it.delay)+ (it.text?Math.min(2600,600+it.text.length*18):900);
+          typing(true); setTimeout(function(){ if(gen!==PLAYGEN) return; typing(false); if(it.att) imageSvg(it.att.svg,it.att.title); else bubble("them",it.text.replace(/</g,"&lt;"),{from:lastMet}); if(it.ack) ackRow(); M.scrollTop=M.scrollHeight; play(items,k+1); }, wait); };
         if(PL){ replyT=setTimeout(function(){ play(PL,0); }, skipHello?1200:600); }
         else { replyT=setTimeout(function(){typing(true);setTimeout(function(){typing(false);
-          bubble("them","Heads up for Saturday evening. Scattered storms around; we'd lean toward them reaching the stadium 4 to 6 PM. Keep the 2 PM setup on; have the indoor option ready for 6.",{from:lastMet}); image("them","map","Severe risk · Saturday");rangeCard();ackRow();
+          bubble("them","Your forecast is still loading on my end. Give me a moment and I'll come right back to this.",{from:lastMet});
           M.scrollTop=M.scrollHeight;},2400);},3500+Math.floor(Math.random()*2500)); }
       },1600);},3500);}
   document.getElementById("compose").addEventListener("submit",function(e){e.preventDefault();send(ci.value);});
-  document.getElementById("cam").addEventListener("click",function(){ts(now());image("me","photo","Photo · from the press box");clearStatus();var s=document.createElement("div");s.className="status";s.textContent="Delivered";M.appendChild(s);});
+  var camB=document.getElementById("cam"); if(camB) camB.hidden=true;
   function mode(nt){night=nt;document.getElementById("d-day").classList.toggle("on",!nt);document.getElementById("d-night").classList.toggle("on",nt);
     var p=document.getElementById("promise");p.textContent=nt?"After hours · back in the morning":"Replies within 15 min";p.classList.toggle("off",nt);}
   document.getElementById("d-day").addEventListener("click",function(){mode(false);});
   document.getElementById("d-night").addEventListener("click",function(){mode(true);});
-  document.getElementById("d-reset").addEventListener("click",function(){clearTimeout(helloT);clearTimeout(replyT);seed();});
+  document.getElementById("d-reset").addEventListener("click",function(){clearTimeout(helloT);clearTimeout(replyT);PLAYGEN++;typing(false);seed();});
   // the banner mirrors the dashboard: RIGHT NOW call + What's Next headline, refreshed every 30 s
   function pinPaint(){ try{ var P=window.parent; if(!P||P===window) return; var c=P.document.getElementById("call"), nh=P.document.getElementById("nx-h"), np=P.document.getElementById("nx-p"), sh=P.document.getElementById("st-h");
-      var lvl=c&&c.classList.contains("action")?"action":c&&c.classList.contains("headsup")?"headsup":"clear"; var word=sh?sh.textContent.trim():({clear:"ALL CLEAR",headsup:"HEADS UP",action:"TAKE ACTION"})[lvl];
+      var lvl=c&&c.classList.contains("action")?"action":c&&c.classList.contains("headsup")?"headsup":"clear"; var word=(sh&&sh.textContent.trim())||({clear:"ALL CLEAR",headsup:"HEADS UP",action:"TAKE ACTION"})[lvl];
       var nx=P.document.getElementById("next"); var nlvl=nx&&nx.classList.contains("action")?"action":nx&&nx.classList.contains("headsup")?"headsup":"clear"; var show=lvl!=="clear"?lvl:nlvl;
       var head=nh?nh.textContent.trim():""; var sub=lvl!=="clear"?(P.document.getElementById("st-why")||{}).textContent||"":(np&&!np.hidden?np.textContent.trim():"");
       var pin=document.getElementById("pin"); if(!head&&!word) return; pin.className="pin "+show; pin.hidden=false;
       document.getElementById("pin-h").innerHTML='<span class="cw '+lvl+'">'+word+'</span>'+(lvl==="clear"&&head&&!/checking/i.test(head)?"· "+head.replace(/</g,"&lt;"):"");
       document.getElementById("pin-s").textContent=(sub||"").trim(); }catch(e){} }
   var pinEl=document.getElementById("pin"); if(pinEl) pinEl.addEventListener("click",function(){ if(window.parent&&window.parent!==window) window.parent.postMessage({sdr:"chat-close"},"*"); });
-  pinPaint(); setInterval(pinPaint,30000);
+  pinPaint(); [800,2500,6000].forEach(function(t){setTimeout(pinPaint,t);}); setInterval(pinPaint,15000);
   quick();seed();
   // v125: embedded in the dashboard as the CHAT screen — the back arrow returns to the dashboard; a parent can also ask us to reset
   var back=document.querySelector(".back"); if(back) back.addEventListener("click",function(){ if(window.parent&&window.parent!==window){ window.parent.postMessage({sdr:"chat-close"},"*"); } else { history.back(); } });
-  window.addEventListener("message",function(e){ var d=e.data||{}; if(d.sdr==="chat-open"){ pinPaint(); try{ var v=window.parent.DASH&&window.parent.DASH.venue&&window.parent.DASH.venue(); if(v&&v.name){ var w=document.querySelector(".who b"); if(w) w.innerHTML='<span class="lv"><i></i>LIVE CHAT</span> Meteorologist team · '+v.name.replace(/[<&]/g,""); } }catch(x){} } });
+  window.addEventListener("message",function(e){ var d=e.data||{}; if(d.sdr==="chat-open"){ pinPaint(); setTimeout(pinPaint,1500); try{ var v=window.parent.DASH&&window.parent.DASH.venue&&window.parent.DASH.venue(); if(v&&v.name){ var w=document.querySelector(".who b"); if(w) w.innerHTML='<span class="lv"><i></i>LIVE CHAT</span> Meteorologist team · '+v.name.replace(/[<&]/g,""); } }catch(x){} } });
 })();
 </script>

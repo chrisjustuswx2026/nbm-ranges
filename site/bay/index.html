@@ -1408,7 +1408,7 @@ section.panel{overflow-x:clip}
 .p-hours .ph .k .hunit{display:none}
 .hs .hr-row.wind .hv{display:grid;grid-template-rows:calc(var(--num) + 2px) 13px;align-items:end;justify-items:center}
 .hs .hr-row.wind .hv b.calm{line-height:1.2}
-.now .v.hot{display:none}
+.now .v.hot.bad dd{color:var(--action)}
 </style>
 <style>/* Leaflet 1.9.4 (inlined) */
 /* required styles */
@@ -2581,7 +2581,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
           const windDd=calm?`<b class="calmw">Calm</b>`:`${arrow}${n}<em>mph</em>${d?`<small>${d}</small>`:""}`;
           const gustDd=g>=10&&!(!calm&&g<=+n+3)?`${g}<em>mph</em>`:`<span class="nogust">—</span>`;
           return `<dl class="v wind"><dt>WIND</dt><dd>${windDd}</dd></dl><dl class="v gust${g>=35?" bad":g>=25?" warn":""}"><dt>GUSTS</dt><dd>${gustDd}</dd></dl>`; })()}
-       ${hot ? `<dl class="v hot"><dt>WBGT</dt><dd>${o.wbgt}° <em>est.</em></dd></dl>` : ""}
+       ${hot && +o.wbgt>=82 ? `<dl class="v hot${+o.wbgt>=87?" bad":""}"><dt>WBGT</dt><dd>${o.wbgt}°<em>est</em></dd></dl>` : ""}
        <span class="r30" id="r30" hidden></span>
        <span class="live">LIVE · NWS</span>`;
   }

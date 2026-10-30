@@ -1408,6 +1408,7 @@ section.panel{overflow-x:clip}
 .p-hours .ph .k .hunit{display:none}
 .hs .hr-row.wind .hv{display:grid;grid-template-rows:calc(var(--num) + 2px) 13px;align-items:end;justify-items:center}
 .hs .hr-row.wind .hv b.calm{line-height:1.2}
+.now .v.hot{display:none}
 </style>
 <style>/* Leaflet 1.9.4 (inlined) */
 /* required styles */
@@ -2906,7 +2907,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
       const key = t => { const y=t.getFullYear(), mo=String(t.getMonth()+1).padStart(2,"0"), d=String(t.getDate()).padStart(2,"0"), h=String(t.getHours()).padStart(2,"0"); return `${y}-${mo}-${d}T${h}:00`; };
       const hmap = {}; om.hourly.time.forEach((t,i)=>hmap[t]=om.hourly.uv_index[i]); allH.forEach(h=>{ const u=hmap[key(h.t)]; if(u!=null) h.uv=u; });
       window._UVDAY = {}; om.daily.time.forEach((t,i)=>window._UVDAY[t]=om.daily.uv_index_max[i]);
-      const nowUV = hmap[key(new Date(new Date().setMinutes(0,0,0)))]; if(nowUV!=null && nowUV>0.5){ const v=document.querySelector("#now .v:last-of-type"); if(v) v.insertAdjacentHTML("afterend", `<dl class="v"><dt>UV</dt><dd>${Math.round(nowUV)}</dd></dl>`); }
+      const nowUV = hmap[key(new Date(new Date().setMinutes(0,0,0)))]; window._UVNOW = nowUV;   // v124: not shown in the hero
     }catch(e){ console.warn("UV", e); }
     STRIPS.setHours(allH);
     const dp = daily.properties.periods;

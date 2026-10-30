@@ -6,7 +6,7 @@ window.goPlace=function(la,lo,name,st){ const u=new URL(location.href); u.search
 window.goHome=function(){ const u=new URL(location.href); u.searchParams.delete("place"); location.href=u.toString(); };
 </script>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="manifest" href="./manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="SDR"><link rel="apple-touch-icon" href="./icons/icon-180.png"><meta name="theme-color" content="#0A1428">
-<title>Bay County · SDR Weather Intelligence (Live · v123)</title>
+<title>Bay County · SDR Weather Intelligence (Live · v125)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap">
 <style>
@@ -1409,6 +1409,12 @@ section.panel{overflow-x:clip}
 .hs .hr-row.wind .hv{display:grid;grid-template-rows:calc(var(--num) + 2px) 13px;align-items:end;justify-items:center}
 .hs .hr-row.wind .hv b.calm{line-height:1.2}
 .now .v.hot.bad dd{color:var(--action)}
+.dchart .dch b em.th{display:inline;color:#FFC857;font-style:normal;font-family:var(--display);font-weight:800;font-size:12px;letter-spacing:.1em;margin-left:8px}
+/* client chat layer */
+#chatwrap{position:fixed;inset:0;z-index:5000;background:#0A1428}
+#chatwrap[hidden]{display:none}
+#chatwrap iframe{width:100%;height:100%;border:0;display:block}
+body.chat-on{overflow:hidden}
 </style>
 <style>/* Leaflet 1.9.4 (inlined) */
 /* required styles */
@@ -2771,7 +2777,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
   // ---------- tabs ----------
   const panes = { overview:"pane-overview", schedule:"pane-overview", maps:"pane-maps", briefing:"pane-briefing", live:"pane-live" };
   function go(name){
-    if(name==="chat"){ const f=document.getElementById("fab"); if(f) f.click(); return; }   // v122: CHAT tab opens the chat drawer, the page underneath stays
+    if(name==="chat"){ if(window.SDR_CHAT_OPEN) SDR_CHAT_OPEN(); else { const f=document.getElementById("fab"); if(f) f.click(); } return; }   // v122: CHAT tab opens the chat drawer, the page underneath stays
     if(name==="radar"){ go("overview"); const r=document.querySelector(".radar"); if(window._setRadarFull){ setTimeout(()=>window._setRadarFull(true),60); } else if(r){ setTimeout(()=>r.scrollIntoView({behavior:"smooth",block:"start"}),80); } return; }
     document.querySelectorAll(".tabs button").forEach(x=>x.setAttribute("aria-selected", x.dataset.pane===name));
     const want = panes[name];
@@ -3750,9 +3756,11 @@ window.STRIPS = (function(){
     const peakTag=(xx,yy,t,big,small)=>`<text x="${xx}" y="${yy}" font-family="var(--display),Arial,sans-serif" font-size="${big?15:small?12:13.5}" font-weight="800" letter-spacing=".04em" fill="${small?"#DCE6F5":"#fff"}" text-anchor="middle" stroke="#0E1A33" stroke-width="3.5" paint-order="stroke">${t}</text>`;
     const barsOf=(val,col,unit,max)=>{ const vs=[...Array(24)].map((_,k)=>{ const h=at(k); return h?val(h):null; }); const pk=Math.max(0,...vs.filter(v=>v!=null)); let tagged=false;
       return vs.map((v,k)=>{ if(v==null||v<=0) return ""; const bh=Math.max(3,(bot-top)*Math.min(1,v/max)); const t=!tagged&&v===pk&&pk>0; if(t) tagged=true;
-        const pkK=vs.indexOf(pk), lab=!t&&(narrowP?Math.abs(k-pkK)>=1:(k%3===0&&Math.abs(k-pkK)>=3))&&v!==pk;   // v118: a value at every 3-hour mark, like the temperature line (not on top of the peak tag)
-        return `<rect x="${X(k)-bw/2}" y="${bot-bh}" width="${bw}" height="${bh}" rx="3" fill="${col(v,at(k))}"/>${t?peakTag(X(k),bot-bh-6,v+unit):lab?peakTag(X(k),bot-bh-6,v+unit,false,true):""}`; }).join(""); };
+        const pkK=vs.indexOf(pk), lab=!t&&(narrowP?true:(k%3===0&&Math.abs(k-pkK)>=3&&v!==pk));   // v118: a value at every 3-hour mark, like the temperature line (not on top of the peak tag)
+        const th=(at(k)&&at(k).thunder)||0, bolt=(unit==="%"&&max===100&&col===rainCol&&th>=20)?`<text x="${X(k)}" y="${bot-bh-(t||lab?21:6)}" text-anchor="middle" font-family="var(--display),Arial,sans-serif" font-size="11.5" font-weight="800" fill="${th>=30?"#FFC857":"#8FA3C2"}" stroke="#0E1A33" stroke-width="3" paint-order="stroke">⚡${th}%</text>`:"";
+        return `<rect x="${X(k)-bw/2}" y="${bot-bh}" width="${bw}" height="${bh}" rx="3" fill="${col(v,at(k))}"/>${t?peakTag(X(k),bot-bh-6,v+unit):lab?peakTag(X(k),bot-bh-6,v+unit,false,true):""}${bolt}`; }).join(""); };
     const rainCol=(v,h)=>(h.thunder||0)>=30?(v>=50?"#F5A524":"#F5D76E"):v>=60?"#2F7BFF":v>=40?"#4FA3FF":v>=20?"#8CC8FF":"#C9E6FF";
+    const thH=H.filter(h=>(h.thunder||0)>=20).map(h=>hrOf(h.t)); const thWin=thH.length?hrng2(Math.min(...thH),Math.max(...thH)+1):"";
     const C={};
     { const Y=v=>bot-(bot-top)*v/100, band=(v,t)=>`<line x1="${L}" x2="${R}" y1="${Y(v)}" y2="${Y(v)}" stroke="rgba(255,255,255,.18)" stroke-dasharray="3 4"/><text x="${W-4}" y="${Y(v)+4}" text-anchor="end" font-family="var(--display),Arial,sans-serif" font-size="10.5" font-weight="800" letter-spacing=".1em" fill="#8FA3C2">${t}</text>`;
       C.rain=`<svg viewBox="0 0 ${W} ${Hh}">${band(20,"SLIGHT")}${band(40,"CHANCE")}${band(60,"LIKELY")}${barsOf(h=>h.pop||0,rainCol,"%",100)}${axis}</svg>`; }
@@ -3779,7 +3787,7 @@ window.STRIPS = (function(){
     if(mt>=20) C.storm=`<svg viewBox="0 0 ${W} ${Hh}">${barsOf(h=>h.thunder||0,v=>v>=50?"#F5A524":"#F5D76E","%",100)}${axis}</svg><div class="ck"><span><i style="background:#F5A524"></i>Chance of thunder</span></div>`;
     const def="";   // v119: a day opens clean; a chart opens only when its tile is tapped
     const KEEP=which==="cond"?["temp","wind","sky"]:["rain","storm","snow","ice"];
-    return `<div class="dcharts">${Object.keys(C).filter(k=>KEEP.includes(k)).map(k=>`<div class="dchart${k===def?" open":""}" data-k="${k}"><div class="dch"><b>${({rain:"RAIN CHANCE",temp:"TEMPERATURE & FEELS LIKE",wind:"WIND & GUSTS",storm:"THUNDER",sky:"CLOUD COVER",snow:"SNOW",ice:"ICE"})[k]}<em>HOUR BY HOUR</em></b><button type="button" data-chart="${k}" aria-label="Close">✕</button></div><div class="dcs">${C[k]}</div></div>`).join("")}</div>`; }
+    return `<div class="dcharts">${Object.keys(C).filter(k=>KEEP.includes(k)).map(k=>`<div class="dchart${k===def?" open":""}" data-k="${k}"><div class="dch"><b>${({rain:"RAIN CHANCE",temp:"TEMPERATURE & FEELS LIKE",wind:"WIND & GUSTS",storm:"THUNDER",sky:"CLOUD COVER",snow:"SNOW",ice:"ICE"})[k]}<em class="${k==="rain"&&thWin?"th":""}">${k==="rain"&&thWin?"⚡ THUNDER "+thWin:"HOUR BY HOUR"}</em></b><button type="button" data-chart="${k}" aria-label="Close">✕</button></div><div class="dcs">${C[k]}</div></div>`).join("")}</div>`; }
   function renderDays(){
     const el=$("days"); if(!el) return; el.className="dlist sdr";
     const head=$("days-conf"); if(head){ const c3=DAYS.slice(0,3).map(confOf).filter(v=>v!=null); const c=c3.length?Math.min(...c3):null; window.SDR_CONF=DAYS.map(x=>({date:x.date,conf:confOf(x),why:confOf(x)!=null&&confOf(x)<=2?confWhy(x):""}));
@@ -5842,4 +5850,17 @@ window.SDR_GL=(function(){
   if (location.hash && /^#(overview|schedule|maps|briefing|live)$/.test(location.hash)) setTimeout(() => { const t = document.querySelector(`.tabs button[data-pane="${location.hash.slice(1)}"]`); if (t) t.click(); }, 1200);
 })();
 </script>
-</body></html>
+
+<script>
+// v125: client chat layer
+(function(){ let wrap=null, fr=null;
+  function open(){ if(!wrap){ wrap=document.createElement("div"); wrap.id="chatwrap"; wrap.innerHTML='<iframe id="chatfr" title="Message the team" allow="camera"></iframe>'; document.body.appendChild(wrap); fr=wrap.querySelector("iframe"); fr.src="./chat.html"; fr.addEventListener("load",()=>{ try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }); }
+    wrap.hidden=false; document.body.classList.add("chat-on"); if(!(history.state&&history.state.chat)) history.pushState({chat:1},""); try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }
+  function close(){ if(wrap){ wrap.hidden=true; } document.body.classList.remove("chat-on"); }
+  window.SDR_CHAT_OPEN=open; window.SDR_CHAT_CLOSE=close;
+  window.addEventListener("message",e=>{ const d=e.data||{}; if(d.sdr==="chat-close"){ if(history.state&&history.state.chat) history.back(); else close(); } });
+  window.addEventListener("popstate",()=>{ if(wrap&&!wrap.hidden) close(); });
+  const fab=document.getElementById("fab"); if(fab) fab.addEventListener("click",e=>{ e.stopImmediatePropagation(); e.preventDefault(); open(); },true);
+  document.querySelectorAll("#chatopen").forEach(b=>b.onclick=open);
+})();
+</script></body></html>

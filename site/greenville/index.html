@@ -1436,6 +1436,19 @@ body.chat-on{overflow:hidden}
 }
 /* v138: the What's Next day-pill row is retired */
 #nx-list,.next .nxl{display:none!important}
+/* v139 risk cards */
+.mvtip .rk{min-width:230px;max-width:300px}
+.mvtip .rkh{font-family:var(--display),sans-serif;font-weight:800;letter-spacing:.1em;font-size:14px;margin:0 22px 6px 0}
+.mvtip .rkm{display:flex;align-items:center;gap:10px;margin:0 0 8px}
+.mvtip .rks{display:flex;gap:3px}
+.mvtip .rks i{width:22px;height:9px;border-radius:3px;display:block}
+.mvtip .rkm b{font-family:var(--display),sans-serif;font-weight:800;letter-spacing:.1em;font-size:13px}
+.mvtip .rkb{margin:0;padding-left:17px;color:#DCE6F5;font-size:13.5px;line-height:1.4}
+.mvtip .rkb li{margin:3px 0}
+.mvtip .rkb b{font-size:13.5px;color:#fff}
+.mvtip .rkm b{white-space:nowrap}
+.mvtip .rks i{width:18px}
+.mvtip .rkh{color:#fff}
 
 /* v135 settings */
 #setbtn{color:var(--muted)}
@@ -2254,7 +2267,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
 
     <!-- alerts near you: every warning, watch, advisory and special weather statement whose polygon is near the site; tap for details -->
     <section class="panel p-alerts">
-      <div class="ph"><span class="k">ALERTS NEAR YOU</span><span class="live" id="na-live">LIVE · NWS</span></div>
+      <div class="ph"><span class="k">ALERTS NEAR YOU</span><span class="live" id="na-live">LIVE</span></div>
       <div class="alist" id="alist"></div>
     </section>
 
@@ -2456,7 +2469,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
       <div class="ph"><span class="k">WATCH LIVE</span><span class="live" id="live-flag">ON AIR · 24/7</span></div>
       <div class="brief">
         <div class="vid chan">
-          <span class="chip hold tag" id="live-tag">LOOP · SATELLITE → RADAR → SPC → CITIES</span>
+          <span class="chip hold tag" id="live-tag">LOOP · SATELLITE → RADAR → OUTLOOKS → CITIES</span>
           <span class="play"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>
           <div class="lbar"><span>SOUTHEAST</span><b id="ch-now">ALL CLEAR · NEXT: STORMS FRIDAY</b></div>
         </div>
@@ -2638,7 +2651,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
           return `<dl class="v wind"><dt>WIND</dt><dd>${windDd}</dd></dl><dl class="v gust${g>=35?" bad":g>=25?" warn":""}"><dt>GUSTS</dt><dd>${gustDd}</dd></dl>`; })()}
        ${hot && +o.wbgt>=82 ? `<dl class="v hot${+o.wbgt>=87?" bad":""}"><dt>WBGT</dt><dd>${o.wbgt}°<em>est</em></dd></dl>` : ""}
        <span class="r30" id="r30" hidden></span>
-       <span class="live">LIVE · NWS</span>`;
+       <span class="live">LIVE</span>`;
   }
   function setVenue(key){
     vkey = key; const v = VENUES[key]; events = v.events.slice();
@@ -3012,7 +3025,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
       if(nextWet){ ni = ico(nextWet.shortForecast); nh = `${nextWet.shortForecast} ~${hhmm(new Date(nextWet.startTime))}`; np = `${nextWet.probabilityOfPrecipitation.value}% chance. Quiet until then.`; }
       else { const d2 = days.find(x=>x.pp>=40); ni = d2 ? d2.ico : "sun"; nh = d2 ? `${d2.d==="TONIGHT"?"Tonight":d2.d}: ${d2.pp}% rain` : "Quiet through the week"; np = d2 ? "Dry until then." : "Nothing on the 7-day worth planning around."; }
     }
-    Object.assign(D.SCENES[key], { k:(window.__LOC?__LOC.name.toUpperCase():"GREENVILLE COUNTY")+" · RIGHT NOW", h:D.WORD[key], why, nh, np, ni, f3b:"Live · NWS · updated "+hhmm(now),
+    Object.assign(D.SCENES[key], { k:(window.__LOC?__LOC.name.toUpperCase():"GREENVILLE COUNTY")+" · RIGHT NOW", h:D.WORD[key], why, nh, np, ni, f3b:"Live · updated "+hhmm(now),
       rd: (window.RADAR_NEAR&&!window.RADAR_NEAR.none) ? `${cap(window.RADAR_NEAR.kind)} ${Math.round(window.RADAR_NEAR.d)} miles ${window.RADAR_NEAR.dir}` : window.RADAR_NEAR ? "Radar quiet within 45 miles" : near ? `Nearest warning ${near.d.toFixed(0)} mi · ${near.a.properties.event}` : "No warning polygons within range" });
     D.setScene(key);
     if(key==="action"){ $("f1b").textContent = hhmm(new Date(warn.properties.ends||warn.properties.expires)); }
@@ -3038,7 +3051,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
     Promise.all(D.CITIES.filter(c=>c.st!=="SC").map(scoreCity)).then(()=>{ if(window.zoomLevel==="se") renderArea("se"); });
   } catch(err){
     console.error(err);
-    const what = /points\//.test(err.message)?"NWS location lookup":/forecastHourly|hourly/.test(err.message)?"NWS hourly forecast":/forecast/.test(err.message)?"NWS 7-day forecast":/alerts/.test(err.message)?"NWS alerts":/observations|stations/.test(err.message)?"NWS station observations":"live data";
+    const what = /points\//.test(err.message)?"location lookup":/forecastHourly|hourly/.test(err.message)?"hourly forecast":/forecast/.test(err.message)?"7-day forecast":/alerts/.test(err.message)?"alerts":/observations|stations/.test(err.message)?"station observations":"live data";
     $("call").insertAdjacentHTML("beforeend", `<small class="loaderr" style="color:var(--heads)">${what} didn't load (${err.message}). Some tiles are showing sample data.</small>`);
   } }
   // v114 RAIN ON RADAR: every 2 minutes, read the newest radar picture for 60 miles around the site and find the nearest echo,
@@ -4077,22 +4090,22 @@ window.MAPROOM = (function(){
     C.push({ id:"radar", title:"LIVE RADAR", sub:"Lower 48", line:"Latest scan · tap to zoom in", box:USB, opts:{image:data.radarImg, points:ptU}, overlays:[] });
     [0,1,2].forEach(d=>{ const f=(data.spc&&data.spc[d])||[]; const rank=["TSTM","MRGL","SLGT","ENH","MDT","HIGH"];
       let top=null, sts=new Set(); f.forEach(x=>{ const L=x.properties.LABEL; if(L==="TSTM") return; const t=statesTouched(x.geometry); if(t.length){ t.forEach(s=>sts.add(s)); if(!top||rank.indexOf(L)>rank.indexOf(top)) top=L; } });
-      C.push({ id:"spc"+(d+1), title:"SEVERE OUTLOOK · "+dayName(d).split(" · ")[0], sub:dayName(d).split(" · ")[1].replace(/\b(\w)(\w*)/g,(m,a,b)=>a+b.toLowerCase())+" · SPC", line: data.spc==null?"Outlook didn't load": top?`${SPCN[top]} risk: ${[...sts].join(", ")}`:"No severe concerns at the moment",
+      C.push({ id:"spc"+(d+1), title:"SEVERE OUTLOOK · "+dayName(d).split(" · ")[0], sub:dayName(d).split(" · ")[1].replace(/\b(\w)(\w*)/g,(m,a,b)=>a+b.toLowerCase())+"", line: data.spc==null?"Outlook didn't load": top?`${SPCN[top]} risk: ${[...sts].join(", ")}`:"No severe concerns at the moment",
         flag: top && rank.indexOf(top)>=2, box:USB, opts:{points:ptU}, overlays:[{features:f,style:x=>({fill:x.properties.fill||SPCC[x.properties.LABEL]||"#C1E9C1",stroke:x.properties.stroke||"#555",w:1,fo:.6})}] }); });
     // v67 flooding rain risk (WPC excessive rainfall), days 1-4
     if(data.ero){ const EN=["","Marginal","Slight","Moderate","High"], EC=["","#6BBF6B","#F6E05E","#E05252","#E05AE0"];
       [0,1,2,3].forEach(d=>{ const f=data.ero[d]; if(f==null) return; let top=0; const sts=new Set(); f.forEach(x=>{ const t=statesTouched(x.geometry); if(t.length){ t.forEach(s=>sts.add(s)); top=Math.max(top,x._lvl); } });
         const here=f.reduce((m,x)=>polys(x.geometry).some(p=>inPoly(site.lo,site.la,p[0]))?Math.max(m,x._lvl):m,0);
-        C.push({ id:"ero"+(d+1), title:"FLOODING RAIN RISK · "+dayName(d).split(" · ")[0], sub:dayName(d).split(" · ")[1].replace(/\b(\w)(\w*)/g,(m,a,b)=>a+b.toLowerCase())+" · WPC",
+        C.push({ id:"ero"+(d+1), title:"FLOODING RAIN RISK · "+dayName(d).split(" · ")[0], sub:dayName(d).split(" · ")[1].replace(/\b(\w)(\w*)/g,(m,a,b)=>a+b.toLowerCase())+"",
           line: top?`${here?`${site.name.split(" · ")[0]}: level ${here} of 4 (${EN[here]}) · `:""}${EN[top]} risk: ${[...sts].join(", ")}`:"No flooding rain concerns at the moment",
           flag: here>=2||top>=3, box:USB, opts:{points:ptU}, overlays:[{features:f,style:x=>({fill:EC[x._lvl],stroke:"#333",w:1,fo:.6})}],
-          view:{ features:f, style:x=>({stroke:true,color:"#333",weight:1,fillColor:EC[x._lvl],fillOpacity:.55}), explain:x=>`<b>Level ${x._lvl} of 4 (${EN[x._lvl]})</b> risk of flooding rain · ${dayName(d).split(" · ")[0].toLowerCase()} (WPC)` } }); }); }
+          view:{ features:f, style:x=>({stroke:true,color:"#333",weight:1,fillColor:EC[x._lvl],fillOpacity:.55}), explain:x=>window.SDR_RISKCARD?SDR_RISKCARD("ero",x._lvl,d,x.geometry):`<b>Level ${x._lvl} of 4 (${EN[x._lvl]})</b> risk of flooding rain` } }); }); }
     // SPC days 4-8: any 15%/30% area touching our states
     if(data.spc48){ let best=null; const all=[]; data.spc48.forEach(d=>(d.features||[]).forEach(f=>{ all.push(f); const t=statesTouched(f.geometry); if(t.length&&(!best||(f._p||15)>(best.p))) best={p:f._p||15,day:d.day,st:t}; }));
       const dl=n=>{ const t=new Date(); t.setDate(t.getDate()+n-1); return t.toLocaleDateString("en-US",{weekday:"short"}); };
-      C.push({ id:"spc48", title:"SEVERE OUTLOOK · DAYS 4–8", sub:"SPC extended outlook", line: best?`${best.p}% severe risk ${dl(best.day)} (Day ${best.day}): ${best.st.join(", ")}`:"No severe concerns at the moment", flag:!!best, box:USB, opts:{points:ptU},
+      C.push({ id:"spc48", title:"SEVERE OUTLOOK · DAYS 4–8", sub:"Extended outlook", line: best?`${best.p}% severe risk ${dl(best.day)} (Day ${best.day}): ${best.st.join(", ")}`:"No severe concerns at the moment", flag:!!best, box:USB, opts:{points:ptU},
         overlays:[{features:all,style:f=>({fill:(f._p||15)>=30?"#F28C28":"#F6D55C",stroke:"#222",w:1,fo:.55})}],
-        view:{ features:all, style:f=>({color:"#222",weight:1,fillColor:(f._p||15)>=30?"#F28C28":"#F6D55C",fillOpacity:.5}), explain:f=>`<b>${f._p||15}% chance of severe storms</b> · Day ${f._day} (SPC)`, legend:'<span><i style="background:#F6D55C"></i>15%</span><span><i style="background:#F28C28"></i>30%</span>' } }); }
+        view:{ features:all, style:f=>({color:"#222",weight:1,fillColor:(f._p||15)>=30?"#F28C28":"#F6D55C",fillOpacity:.5}), explain:f=>`<b>${f._p||15}% chance of severe storms</b> · Day ${f._day}`, legend:'<span><i style="background:#F6D55C"></i>15%</span><span><i style="background:#F28C28"></i>30%</span>' } }); }
     // rainfall: specific to the client's site, plus the heaviest band in our states
     const siteIn = (feats)=>{ let v=0; (feats||[]).forEach(f=>{ if((f._v||0)>v && polys(f.geometry).some(p=>inPoly(site.lo,site.la,p[0]))) v=f._v; }); return v; };
     const inch = v => v>=1?v.toFixed(1):v.toFixed(2);
@@ -4101,16 +4114,16 @@ window.MAPROOM = (function(){
       let mx=0, st=[]; f.forEach(x=>{ if((x._v||0)>mx){ const t=statesTouched(x.geometry); if(t.length){ mx=x._v; st=t; } } });
       const sv=siteIn(f);
       const line = !f.length||mx<0.01 ? "No rain concerns at the moment" : `${sName}: ${sv>=0.01?"about "+inch(sv)+'"':"little or none"} · up to ${inch(mx)}" in ${st.slice(0,4).join(", ")}`;
-      C.push({ id:"qpf", title:`RAINFALL · ${lab}`, sub:"WPC total precipitation", line, flag: sv>=1, box:USB, opts:{points:ptU}, overlays:[{features:f,style:x=>({fill:qcol(x._v||0),stroke:"none",fo:.7})}],
-        view:{ features:f, style:x=>({stroke:false,fillColor:qcol(x._v||0),fillOpacity:.65}), explain:x=>`<b>${x._v>=1?x._v.toFixed(1):x._v.toFixed(2)}" or more</b> · rainfall ${lab.toLowerCase()} (WPC)` } }); });
+      C.push({ id:"qpf", title:`RAINFALL · ${lab}`, sub:"Total rainfall", line, flag: sv>=1, box:USB, opts:{points:ptU}, overlays:[{features:f,style:x=>({fill:qcol(x._v||0),stroke:"none",fo:.7})}],
+        view:{ features:f, style:x=>({stroke:false,fillColor:qcol(x._v||0),fillOpacity:.65}), explain:x=>`<b>${x._v>=1?x._v.toFixed(1):x._v.toFixed(2)}" or more</b> · rainfall ${lab.toLowerCase()}` } }); });
     // ---- extras: WPC setup (today, tomorrow), CPC 6-10 / 8-14, Drought Monitor, winter (Nov-Mar) ----
     const X=window.MRX, inF=f=>polys(f.geometry).some(p=>inPoly(site.lo,site.la,p[0])&&!p.slice(1).some(h=>inPoly(site.lo,site.la,h)));
     const sName2=(site.name||"Your site").split(" · ")[0], US=[-125,24,-66,50];
     if(data.cpc){ const dates=(f,n)=>{ const p=(f&&f.properties)||{}; const s=p.start_date||p.START_DATE, e=p.end_date||p.END_DATE; const fm=x=>new Date(x).toLocaleDateString("en-US",{month:"short",day:"numeric",timeZone:"UTC"}); return s&&e?`${fm(s)}–${fm(e)}`:n; };
       [["t610","6–10 DAY · TEMPERATURE","t"],["p610","6–10 DAY · RAIN","p"],["t814","8–14 DAY · TEMPERATURE","t"],["p814","8–14 DAY · RAIN","p"]].forEach(([k,title,kind])=>{ const F=data.cpc[k]; if(!F) return;
         const at=F.filter(inF).sort((a,b)=>(+(b.properties||{}).prob||0)-(+(a.properties||{}).prob||0))[0]; const line=at?`${sName2}: ${X.cpcSay(at,kind)} · ${dates(at,"")}`:`${sName2}: near normal`;
-        C.push({ id:"cpc"+k, title, sub:"CPC outlook", line, box:US, opts:{points:[{lo:site.lo,la:site.la,fill:"#F28C28",r:4.5}]}, overlays:[{features:F,style:f=>({fill:X.cpcCol(f,kind),stroke:"none",fo:.85})}],
-          view:{ features:F, style:f=>({stroke:false,fillColor:X.cpcCol(f,kind),fillOpacity:.75}), explain:f=>`<b>${X.cpcSay(f,kind)}</b> · ${title.toLowerCase()} · ${dates(f,"")} (CPC)`,
+        C.push({ id:"cpc"+k, title, sub:"Pattern outlook", line, box:US, opts:{points:[{lo:site.lo,la:site.la,fill:"#F28C28",r:4.5}]}, overlays:[{features:F,style:f=>({fill:X.cpcCol(f,kind),stroke:"none",fo:.85})}],
+          view:{ features:F, style:f=>({stroke:false,fillColor:X.cpcCol(f,kind),fillOpacity:.75}), explain:f=>`<b>${X.cpcSay(f,kind)}</b> · ${title.toLowerCase()} · ${dates(f,"")}`,
             legend:kind==="t"?'<span><i style="background:#D9480F"></i>Warmer than normal</span><span><i style="background:#BFBFBF"></i>Near normal</span><span><i style="background:#2563EB"></i>Cooler than normal</span>':'<span><i style="background:#2F9A2D"></i>Wetter than normal</span><span><i style="background:#BFBFBF"></i>Near normal</span><span><i style="background:#A87532"></i>Drier than normal</span>' } }); }); }
     if(data.drought){ const F=data.drought; let worst=-1; F.forEach(f=>{ if(inF(f)) worst=Math.max(worst,X.dmOf(f)); });
       const p0=(F[0]&&F[0].properties)||{}, md=p0.MapDate||p0.ValidStart; const upd=md?new Date(typeof md==="number"?md:String(md).replace(/^(\d{4})(\d{2})(\d{2})$/,"$1-$2-$3")).toLocaleDateString("en-US",{month:"short",day:"numeric",timeZone:"UTC"}):"";
@@ -4121,8 +4134,8 @@ window.MAPROOM = (function(){
     else if(data.drought===null) C.push({ id:"drought", title:"DROUGHT MONITOR", sub:"U.S. Drought Monitor · weekly", line:"Didn't load", box:USB, opts:{points:ptU}, overlays:[] });
     if(Array.isArray(data.winter)){ const F=data.winter, WC={MINOR:"#BEE3FF",MODERATE:"#5BA8FF",MAJOR:"#B455FF",EXTREME:"#E10098",LIMITED:"#E8F4FF"};
       const lev=f=>{ const s=Object.values(f.properties||{}).join(" ").toUpperCase(); return ["EXTREME","MAJOR","MODERATE","MINOR","LIMITED"].find(k=>s.includes(k))||"MINOR"; };
-      const at=F.find(inF); C.push({ id:"winter", title:"WINTER IMPACTS", sub:"WPC winter storm severity", line: at?`${sName2}: ${lev(at).toLowerCase()} winter impacts`:(F.length?"Winter impacts elsewhere, none here":"No winter concerns at the moment"), flag:!!at, box:USB, opts:{points:ptU},
-        overlays:[{features:F,style:f=>({fill:WC[lev(f)],stroke:"none",fo:.7})}], view:{ features:F, style:f=>({stroke:false,fillColor:WC[lev(f)],fillOpacity:.65}), explain:f=>`<b>${lev(f)} winter impacts</b> (WPC)`, legend:Object.entries(WC).map(([k,c])=>`<span><i style="background:${c}"></i>${k[0]+k.slice(1).toLowerCase()}</span>`).join("") } }); }
+      const at=F.find(inF); C.push({ id:"winter", title:"WINTER IMPACTS", sub:"Winter storm impacts", line: at?`${sName2}: ${lev(at).toLowerCase()} winter impacts`:(F.length?"Winter impacts elsewhere, none here":"No winter concerns at the moment"), flag:!!at, box:USB, opts:{points:ptU},
+        overlays:[{features:F,style:f=>({fill:WC[lev(f)],stroke:"none",fo:.7})}], view:{ features:F, style:f=>({stroke:false,fillColor:WC[lev(f)],fillOpacity:.65}), explain:f=>`<b>${lev(f)} winter impacts</b>`, legend:Object.entries(WC).map(([k,c])=>`<span><i style="background:${c}"></i>${k[0]+k.slice(1).toLowerCase()}</span>`).join("") } }); }
     const tro=data.tropics||{areas:[],cones:[]}; const hi=tro.areas.map(a=>a._risk).sort((a,b)=>["Low","Medium","High"].indexOf(b)-["Low","Medium","High"].indexOf(a))[0];
     C.push({ id:"tropics", title:"TROPICS · 7-DAY OUTLOOK", sub:"National Hurricane Center", line: data.tropics==null?"Tropical outlook didn't load": tro.cones.length?`${tro.cones.length} active system${tro.cones.length>1?"s":""} with a forecast cone`: tro.areas.length?`${tro.areas.length} area${tro.areas.length>1?"s":""} to watch · highest chance ${hi||"low"}`:"Nothing expected in the next 7 days",
       flag: tro.cones.length>0, box:[-100,7,-45,38], opts:{points:pt},
@@ -4351,6 +4364,29 @@ window.MAPVIEW = (function(){
     <div class="mvwrap"><div class="mv-map" id="mvMap"></div><div class="tvc" id="mvBrand"></div></div><div class="mv-info" id="mvInfo">Tap any color on the map to see what it means there.</div><div class="rleg" id="mvLeg"></div>`;
   document.body.appendChild(box);
   let m=null, over=null, towns=null;
+
+  // v139: the risk card a tap on a flooding-rain or severe outlook area opens
+  window.SDR_RISKCARD=function(kind,lvl,dayIdx,geom){
+    const FL={n:4,name:["","Marginal","Slight","Moderate","High"],col:["","#6BBF6B","#F6E05E","#E05252","#E05AE0"],
+      mean:["","Isolated flooding is possible, mainly low spots and poor drainage under the heaviest downpours.","Scattered flash flooding is possible. Creeks, low roads and drains flood first; most places won't flood.","Numerous flash floods are likely, some of them dangerous.","Widespread, significant flash flooding is expected."],
+      act:["","Watch low spots and poor drainage when the heaviest rain comes through.","Never drive through water on a road. Keep crews away from creeks and low crossings during heavy rain.","Avoid travel during the heaviest rain and move equipment out of low areas ahead of it.","Life-threatening flooding is possible. Have a way to reach higher ground and follow local officials."]};
+    const SV={n:5,name:["General thunder","Marginal","Slight","Enhanced","Moderate","High"],col:["#C1E9C1","#66A366","#F6E05E","#F5A524","#E05252","#E05AE0"],
+      mean:["Thunderstorms possible, not expected to be severe. Lightning is the concern.","Isolated severe storms possible — a storm or two could bring damaging wind gusts or hail.","Scattered severe storms possible. Damaging wind gusts are the most common threat; most places won't see one.","Numerous severe storms possible. Damaging winds and hail likely in places; a few tornadoes can't be ruled out.","Widespread severe storms likely, some intense. Damaging winds, large hail and tornadoes are all possible.","A major severe weather outbreak is expected, including strong tornadoes or widespread destructive winds."],
+      act:["When thunder roars, go indoors.","Keep plans, know where people go, and make sure you'll get warnings.","Keep plans, but have shelter picked out and a way to get warnings before storms arrive.","Plan around it: move outdoor activities if you can, and assign shelter before storms arrive.","Make a plan now: postpone outdoor events and know exactly where everyone shelters.","Treat it as a dangerous day: postpone outdoor events and be ready to shelter quickly."]};
+    const K=kind==="ero"?FL:SV, c=K.col[lvl]||"#8FA3C2", d=new Date(); d.setDate(d.getDate()+dayIdx);
+    const dl=(dayIdx===0?"today":dayIdx===1?"tomorrow":d.toLocaleDateString("en-US",{weekday:"long"}))+", "+d.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"});
+    // timing at the client's site, when the site is inside this area
+    let when="";
+    try{ const v=window.DASH&&DASH.venue&&DASH.venue(); const rings=!geom?[]:geom.type==="Polygon"?[geom.coordinates[0]]:geom.type==="MultiPolygon"?geom.coordinates.map(p=>p[0]):[];
+      const inR=(x,y,r)=>{ let ok=false; for(let i=0,j=r.length-1;i<r.length;j=i++){ const [xi,yi]=r[i],[xj,yj]=r[j]; if(((yi>y)!==(yj>y))&&(x<(xj-xi)*(y-yi)/(yj-yi)+xi)) ok=!ok; } return ok; };
+      if(v&&rings.some(r=>inR(v.lo,v.la,r))&&window.STRIPS){ const day=d.toDateString(); const H=STRIPS.hours().filter(h=>new Date(h.t).toDateString()===day);
+        const hit=H.filter(h=>kind==="ero"?(h.pop||0)>=50:(h.thunder||0)>=20).map(h=>new Date(h.t).getHours());
+        const hl=k=>{ k=((k%24)+24)%24; return k===0?"midnight":k===12?"noon":(k%12)+(k<12?" AM":" PM"); };
+        if(hit.length) when=`At ${v.name}: mainly ${hl(Math.min(...hit))} to ${hl(Math.max(...hit)+1)}.`; else if(H.length) when=`At ${v.name}: your site is inside this area.`; } }catch(e){}
+    const seg=[...Array(K.n)].map((_,i)=>`<i style="background:${i<lvl?c:"rgba(255,255,255,.12)"}"></i>`).join("");
+    const head=kind==="ero"?`${K.name[lvl]} risk · flooding rain`:lvl===0?"General thunder":`${K.name[lvl]} risk · severe storms`;
+    return `<div class="rk"><div class="rkh">${head.toUpperCase()}</div>`+(lvl>0?`<div class="rkm"><span class="rks">${seg}</span><b style="color:${c}">LEVEL ${lvl} OF ${K.n}</b></div>`:"")+
+      `<ul class="rkb"><li>${K.mean[lvl]}</li><li><b>When:</b> ${dl}. ${when}</li><li><b>What to do:</b> ${K.act[lvl]}</li></ul></div>`; };
   const SPCN={TSTM:["General thunder","Thunderstorms possible, not expected to be severe."],MRGL:["Marginal risk · level 1 of 5","Isolated severe storms possible."],SLGT:["Slight risk · level 2 of 5","Scattered severe storms possible."],ENH:["Enhanced risk · level 3 of 5","Numerous severe storms possible."],MDT:["Moderate risk · level 4 of 5","Widespread severe storms likely."],HIGH:["High risk · level 5 of 5","Widespread, long-lived, intense severe storms expected."]};
   const SPCC={TSTM:"#C1E9C1",MRGL:"#7FC57F",SLGT:"#F6F67F",ENH:"#E6C27F",MDT:"#E67F7F",HIGH:"#FF7FFF"};
   const METROS=["Charlotte","Raleigh","Atlanta","Nashville","Memphis","Birmingham","New Orleans","Jacksonville","Tampa","Orlando","Miami","Charleston","Columbia","Greenville","Jackson","Little Rock","Oklahoma City","Dallas","Houston","San Antonio","Phoenix","Denver","Chicago","Washington","New York","Los Angeles","St. Louis","Kansas City","Louisville","Richmond"];
@@ -4403,10 +4439,10 @@ window.MAPVIEW = (function(){
       return `<small>OUR BLEND ${W.toUpperCase()} · NEXT 3 DAYS</small>${c<0.1?"Little or no snow.":`About ${b.toFixed(1)}" of snow, as much as ${c.toFixed(1)}" on the high end.`}`; }
     if(id==="drought"){ const R=span(0,6,k=>B.R("rain",k)).filter(Boolean); if(!R.length) return null; return `<small>OUR BLEND ${W.toUpperCase()} · NEXT 7 DAYS</small>About ${inch(R.reduce((s,r)=>s+r[1],0)/100)}" of rain.`; }
     return null; }
-  function query(ll, html, f){ if(tip){ m.removeLayer(tip); tip=null; } const lvl=f&&f._lvl&&/^ero/.test((CUR||{}).id||"")?MEAN.ero[f._lvl]:"";
+  function query(ll, html, f){ if(tip){ m.removeLayer(tip); tip=null; } const lvl=/class="rk"/.test(html)?"":f&&f._lvl&&/^ero/.test((CUR||{}).id||"")?MEAN.ero[f._lvl]:"";
     const base=`<button class="mvx" aria-label="Close" onclick="this.closest('.leaflet-tooltip').remove()">✕</button>${html}${lvl?`<div class="mvm">${lvl}</div>`:""}`;
     tip=L.tooltip({permanent:true,interactive:true,direction:"auto",offset:[14,0],className:"mvtip",opacity:1}).setLatLng(ll).setContent(base).addTo(m); try{ L.DomEvent.disableClickPropagation(tip.getElement()); }catch(e){}
-    const t0=tip; if(CUR) persp(CUR,ll,f).then(t=>{ if(t&&t0===tip) tip.setContent(base+`<div class="mvb">${t}</div>`); }).catch(()=>{}); }
+    const t0=tip; if(CUR&&!/^(ero|spc)\d$/.test(CUR.id||"")) persp(CUR,ll,f).then(t=>{ if(t&&t0===tip) tip.setContent(base+`<div class="mvb">${t}</div>`); }).catch(()=>{}); }
   const info = html => { document.getElementById("mvInfo").innerHTML = html; };
   const add = (fc, style, explain) => L.geoJSON(fc,{style, onEachFeature:(f,l)=>l.on("click",e=>{ L.DomEvent.stopPropagation(e); query(e.latlng, explain(f), f); })}).addTo(over);
   function priority(d){
@@ -4428,12 +4464,12 @@ window.MAPVIEW = (function(){
     if(card.id==="radar"){ close(); if(window.DASH&&DASH.go) DASH.go("overview"); else document.querySelector('.tabs button[data-pane="overview"]')?.click(); setTimeout(()=>{ const r=document.getElementById("rmap"); if(r){ r.closest(".radar").scrollIntoView({behavior:"smooth",block:"start"}); if(window.RADAR_VIEW) RADAR_VIEW("us"); } },350); return; }
     if(/^spc/.test(card.id)){ const d=+card.id.slice(3)-1; const f=(data.spc&&data.spc[d])||[];
       add({type:"FeatureCollection",features:f},x=>({color:x.properties.stroke||"#555",weight:1,fillColor:x.properties.fill||SPCC[x.properties.LABEL]||"#C1E9C1",fillOpacity:.6}),
-        x=>{ const n=SPCN[x.properties.LABEL]||[x.properties.LABEL,""]; return `<b>${n[0]}</b> · ${card.title}<br>${n[1]}`; });
+        x=>{ const lv={TSTM:0,MRGL:1,SLGT:2,ENH:3,MDT:4,HIGH:5}[x.properties.LABEL]; if(lv==null){ const n=SPCN[x.properties.LABEL]||[x.properties.LABEL,""]; return `<b>${n[0]}</b><br>${n[1]}`; } return SDR_RISKCARD("spc",lv,d,x.geometry); });
       leg.innerHTML=["TSTM","MRGL","SLGT","ENH","MDT","HIGH"].filter(k=>f.some(x=>x.properties.LABEL===k)).map(k=>`<span><i style="background:${SPCC[k]}"></i>${SPCN[k][0].split(" ·")[0]}</span>`).join(""); }
     if(card.view){ const V=card.view; add({type:"FeatureCollection",features:V.features||[]},V.style,V.explain);
       (V.points||[]).forEach(p=>L.marker([p.la,p.lo],{interactive:false,icon:L.divIcon({className:"",html:`<span class="hlmark" style="color:${p.col}">${p.t}</span>`,iconSize:[22,22],iconAnchor:[11,11]})}).addTo(over));
       leg.innerHTML=V.legend||""; }
-    else if(card.id==="qpf"){ add({type:"FeatureCollection",features:data.qpf||[]},x=>({stroke:false,fillColor:window.MAPROOM.qcol(x._v||0),fillOpacity:.65}), x=>`<b>${x._v>=1?x._v.toFixed(1):x._v.toFixed(2)}" or more of rain</b> expected over the next 7 days (WPC).`); }
+    else if(card.id==="qpf"){ add({type:"FeatureCollection",features:data.qpf||[]},x=>({stroke:false,fillColor:window.MAPROOM.qcol(x._v||0),fillOpacity:.65}), x=>`<b>${x._v>=1?x._v.toFixed(1):x._v.toFixed(2)}" or more of rain</b> expected over the next 7 days.`); }
     if(card.id==="tropics"){ const t=data.tropics||{areas:[],cones:[]};
       add({type:"FeatureCollection",features:t.areas},x=>({color:"#000",weight:1,fillColor:{Low:"#FFFF00",Medium:"#FF9900",High:"#FF0000"}[x._risk],fillOpacity:.45}), x=>{ const p=x.properties||{}; return `<b>${x._risk} chance of development in 7 days</b>${p.prob2day||p.PROB2DAY?` · 2-day: ${p.prob2day||p.PROB2DAY}`:""}${p.prob7day||p.PROB7DAY?` · 7-day: ${p.prob7day||p.PROB7DAY}`:""}<br>National Hurricane Center tropical weather outlook.`; });
       add({type:"FeatureCollection",features:t.cones},()=>({color:"#fff",weight:1.5,fillColor:"#fff",fillOpacity:.3}), x=>{ const p=x.properties||{}; return `<b>${p.stormname||p.STORMNAME||"Active storm"}</b> · forecast cone${p.advisnum||p.ADVISNUM?` · advisory ${p.advisnum||p.ADVISNUM}`:""}<br>The center is expected to stay inside the cone about two-thirds of the time. Impacts reach well outside it.`; });
@@ -5931,7 +5967,7 @@ window.SDR_GL=(function(){
 
 <script>
 // v125: client chat layer
-(function(){ let wrap=null, fr=null; const CHATV="1793452360";
+(function(){ let wrap=null, fr=null; const CHATV="1793460147";
   function open(){ if(!wrap){ wrap=document.createElement("div"); wrap.id="chatwrap"; wrap.innerHTML='<iframe id="chatfr" title="Message the team" allow="camera"></iframe>'; document.body.appendChild(wrap); fr=wrap.querySelector("iframe"); fr.src="./chat.html?v="+CHATV; fr.addEventListener("load",()=>{ try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }); }
     wrap.hidden=false; document.body.classList.add("chat-on"); if(!(history.state&&history.state.chat)) history.pushState({chat:1},""); try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }
   function close(){ if(wrap){ wrap.hidden=true; } document.body.classList.remove("chat-on"); }

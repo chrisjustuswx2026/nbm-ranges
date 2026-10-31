@@ -1434,6 +1434,34 @@ body.chat-on{overflow:hidden}
     border:1px solid rgba(255,255,255,.14);box-shadow:0 24px 70px rgba(0,0,0,.55),0 0 0 1px rgba(0,0,0,.3);animation:chatin .22s ease-out}
   @keyframes chatin{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
 }
+
+/* v135 settings */
+#setbtn{color:var(--muted)}
+@media (max-width:700px){#snd{display:none!important}}
+#setwrap{position:fixed;inset:0;z-index:6000;background:rgba(3,7,16,.6);display:flex;align-items:flex-end;justify-content:center}
+#setwrap[hidden]{display:none}
+#setwrap .sheet{width:100%;max-width:520px;max-height:88vh;overflow:auto;background:#0B1730;border:1px solid rgba(255,255,255,.12);border-radius:20px 20px 0 0;padding:0 0 calc(18px + env(safe-area-inset-bottom,0px));box-shadow:0 -20px 60px rgba(0,0,0,.5);animation:setin .22s ease-out}
+@keyframes setin{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+@media (min-width:900px){#setwrap{align-items:center}#setwrap .sheet{border-radius:18px;max-height:84vh}}
+#setwrap .shd{position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;padding:16px 18px 12px;background:#0B1730;border-bottom:1px solid rgba(255,255,255,.08);z-index:1}
+#setwrap .shd b{font-family:var(--display),sans-serif;font-weight:800;letter-spacing:.12em;font-size:15px;color:#fff}
+#setwrap .shd button{font-family:var(--display),sans-serif;font-weight:800;letter-spacing:.1em;font-size:13px;color:#fff;border:1.5px solid rgba(255,255,255,.3);border-radius:999px;padding:6px 14px}
+#setwrap h4{margin:18px 18px 8px;font-family:var(--display),sans-serif;font-weight:800;font-size:12px;letter-spacing:.14em;color:#8FA3C2}
+#setwrap .grp{margin:0 14px;border:1px solid rgba(255,255,255,.1);border-radius:14px;overflow:hidden;background:rgba(255,255,255,.02)}
+#setwrap .row{display:flex;align-items:center;gap:12px;padding:13px 14px;border-top:1px solid rgba(255,255,255,.07);color:#F4F7FB;font-size:15.5px;width:100%;text-align:left}
+#setwrap .row:first-child{border-top:0}
+#setwrap .row .tx{flex:1;min-width:0}
+#setwrap .row .tx small{display:block;color:#8FA3C2;font-size:12.5px;margin-top:2px;line-height:1.3}
+#setwrap .row .go{color:#6FB7FF;font-weight:700;font-size:14px;white-space:nowrap}
+#setwrap .row .lv{font-family:var(--display),sans-serif;font-weight:800;letter-spacing:.08em;font-size:13px;margin-right:2px}
+#setwrap .sw{position:relative;width:48px;height:28px;border-radius:999px;background:#2A3550;flex:0 0 auto;transition:background .15s}
+#setwrap .sw::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform .15s}
+#setwrap .sw.on{background:#22C55E}
+#setwrap .sw.on::after{transform:translateX(20px)}
+#setwrap .sw.dis{opacity:.4}
+#setwrap .note{margin:8px 20px 0;color:#8FA3C2;font-size:12.5px;line-height:1.35}
+#setwrap .ab{margin:18px 18px 4px;color:#8FA3C2;font-size:12.5px;line-height:1.5;text-align:center}
+#setwrap .ab b{color:#F4F7FB;font-family:var(--display),sans-serif;letter-spacing:.1em;font-size:13px}
 </style>
 <style>/* Leaflet 1.9.4 (inlined) */
 /* required styles */
@@ -5835,6 +5863,10 @@ window.SDR_GL=(function(){
 
   async function notify(kind, title, body, pane, target, tag){
     if (!can || Notification.permission !== "granted") return false;
+    // v135: the client's Settings decide which kinds they get (tests always go through)
+    if (kind !== "test" && kind !== "hello") { let P = {}; try { P = window.SDR_PREFS ? SDR_PREFS() : {}; } catch (e) {}
+      const k = kind === "brief" ? "brief" : kind === "daily" ? "daily" : /^🔴/.test(title) ? "action" : "headsup";
+      if (P[k] === false) return false; }
     const r = reg || await navigator.serviceWorker.ready;
     try { await r.showNotification(title, { body, icon: "./icons/icon-192.png", badge: "./icons/badge-96.png", tag: tag || kind, renotify: true, data: { pane: pane || "overview", target: target || "" } }); return true; }
     catch (e) { try { new Notification(title, { body, icon: "./icons/icon-192.png" }); return true; } catch (x) { return false; } }
@@ -5897,7 +5929,7 @@ window.SDR_GL=(function(){
 
 <script>
 // v125: client chat layer
-(function(){ let wrap=null, fr=null; const CHATV="1793404068";
+(function(){ let wrap=null, fr=null; const CHATV="1793413122";
   function open(){ if(!wrap){ wrap=document.createElement("div"); wrap.id="chatwrap"; wrap.innerHTML='<iframe id="chatfr" title="Message the team" allow="camera"></iframe>'; document.body.appendChild(wrap); fr=wrap.querySelector("iframe"); fr.src="./chat.html?v="+CHATV; fr.addEventListener("load",()=>{ try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }); }
     wrap.hidden=false; document.body.classList.add("chat-on"); if(!(history.state&&history.state.chat)) history.pushState({chat:1},""); try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }
   function close(){ if(wrap){ wrap.hidden=true; } document.body.classList.remove("chat-on"); }
@@ -5907,4 +5939,62 @@ window.SDR_GL=(function(){
   const fab=document.getElementById("fab"); if(fab) fab.addEventListener("click",e=>{ e.stopImmediatePropagation(); e.preventDefault(); open(); },true);
   document.querySelectorAll("#chatopen").forEach(b=>b.onclick=open);
 })();
-</script></body></html>
+</script>
+<script>
+// ===================== v135: Settings =====================
+(function(){
+  const SUPPORT_EMAIL = "";      // e.g. "support@<SDR domain>" — the Email support row appears once this is set
+  const PRIVACY_URL = "", TERMS_URL = "./terms.html";   // the policy rows appear once the approved pages exist
+  const VERSION = "v135";
+  const top=document.querySelector("header.top"); if(!top) return;
+  const btn=document.createElement("button"); btn.type="button"; btn.className="bolt"; btn.id="setbtn"; btn.setAttribute("aria-label","Settings"); btn.textContent="⚙";
+  const clock=document.getElementById("clock"); if(clock) clock.insertAdjacentElement("beforebegin",btn); else top.appendChild(btn);
+  const KEY="sdr-prefs"; const prefs=()=>{ try{ return Object.assign({action:true,headsup:true,brief:true,daily:true},JSON.parse(localStorage.getItem(KEY)||"{}")); }catch(e){ return {action:true,headsup:true,brief:true,daily:true}; } };
+  const save=p=>{ try{ localStorage.setItem(KEY,JSON.stringify(p)); }catch(e){} };
+  window.SDR_PREFS=prefs;
+  let wrap=null;
+  const siteName=()=>{ const v=document.querySelector("#venue span:nth-child(2)"); return v?v.textContent.trim():document.title.split("·")[0].trim(); };
+  const soundOn=()=>{ try{ return localStorage.getItem("dash-sound")!=="0"; }catch(e){ return true; } };
+  const sw=(on,key,dis)=>`<span class="sw${on?" on":""}${dis?" dis":""}" data-k="${key}"></span>`;
+  function paint(){ const P=prefs(), perm=("Notification" in window)?Notification.permission:"unsupported", canN=perm==="granted";
+    wrap.querySelector(".sheet").innerHTML=`
+      <div class="shd"><b>SETTINGS</b><button type="button" data-x>CLOSE</button></div>
+      <h4>YOUR SITE</h4>
+      <div class="grp">
+        <div class="row"><span class="tx">${siteName()}<small>Your forecast, alerts and briefings are set for this site.</small></span></div>
+        <button class="row" type="button" data-site><span class="tx">Switch site</span><span class="go">›</span></button>
+        <button class="row" type="button" data-req><span class="tx">Request a change to this site<small>New address, new event location, or another site. Goes straight to the team.</small></span><span class="go">›</span></button>
+      </div>
+      <h4>ALERTS</h4>
+      <div class="grp">
+        ${canN?`<div class="row"><span class="tx">Notifications are on<small>On this device, while the app is open.</small></span></div>`:perm==="denied"?`<div class="row"><span class="tx">Notifications are blocked<small>${/iPhone|iPad|Android/i.test(navigator.userAgent)?"Allow them for this app in your phone's Settings → Notifications.":"Allow notifications for this site in your browser's settings."}</small></span></div>`:perm==="unsupported"?`<div class="row"><span class="tx">Notifications aren't available here<small>Add the app to your home screen to get them.</small></span></div>`:`<button class="row" type="button" data-perm><span class="tx">Turn on notifications<small>Get told the moment the call changes.</small></span><span class="go">TURN ON</span></button>`}
+        <div class="row"><span class="tx"><span class="lv" style="color:#FF8A8E">TAKE ACTION</span><small>Warnings and lightning at your site.</small></span>${sw(P.action,"action",!canN)}</div>
+        <div class="row"><span class="tx"><span class="lv" style="color:#F5B800">HEADS UP</span><small>When your site goes to Heads Up, and back to All Clear.</small></span>${sw(P.headsup,"headsup",!canN)}</div>
+        <div class="row"><span class="tx">New briefings<small>Whenever the team issues one for your site.</small></span>${sw(P.brief,"brief",!canN)}</div>
+        <div class="row"><span class="tx">Morning and afternoon update<small>The What's Next headline, about 6:45 AM and 3:45 PM.</small></span>${sw(P.daily,"daily",!canN)}</div>
+      </div>
+      ${P.action?"":`<p class="note">TAKE ACTION alerts are off. We recommend leaving them on — they're the ones that matter most.</p>`}
+      <h4>SOUND</h4>
+      <div class="grp"><div class="row"><span class="tx">Alert sounds<small>A tone when the call changes while the dashboard is open.</small></span>${sw(soundOn(),"sound")}</div></div>
+      <h4>SUPPORT</h4>
+      <div class="grp">
+        <button class="row" type="button" data-chat><span class="tx">Message the team<small>A meteorologist replies, usually within 15 minutes.</small></span><span class="go">›</span></button>
+        ${SUPPORT_EMAIL?`<a class="row" href="mailto:${SUPPORT_EMAIL}"><span class="tx">Email support<small>${SUPPORT_EMAIL}</small></span><span class="go">›</span></a>`:""}
+      </div>
+      ${PRIVACY_URL||TERMS_URL?`<h4>LEGAL</h4><div class="grp">${PRIVACY_URL?`<a class="row" href="${PRIVACY_URL}" target="_blank" rel="noopener"><span class="tx">Privacy Policy</span><span class="go">›</span></a>`:""}${TERMS_URL?`<a class="row" href="${TERMS_URL}" target="_blank" rel="noopener"><span class="tx">Terms of Use &amp; Weather Disclaimer</span><span class="go">›</span></a>`:""}</div>`:""}
+      <p class="ab"><b>SDR WEATHER INTELLIGENCE</b><br>Confidence in Chaos · ${VERSION}</p>`; }
+  function open(){ if(!wrap){ wrap=document.createElement("div"); wrap.id="setwrap"; wrap.innerHTML='<div class="sheet" role="dialog" aria-label="Settings"></div>'; document.body.appendChild(wrap);
+      wrap.addEventListener("click",async e=>{ if(e.target===wrap||e.target.closest("[data-x]")){ close(); return; }
+        const s=e.target.closest(".sw"); if(s&&!s.classList.contains("dis")){ const k=s.dataset.k; if(k==="sound"){ const b=document.getElementById("snd"); if(b) b.click(); } else { const P=prefs(); P[k]=!P[k]; save(P); } paint(); return; }
+        if(e.target.closest("[data-perm]")){ try{ await Notification.requestPermission(); }catch(x){} paint(); return; }
+        if(e.target.closest("[data-site]")){ close(); const v=document.getElementById("venue"); if(v) setTimeout(()=>v.click(),150); return; }
+        if(e.target.closest("[data-req]")){ close(); if(window.SDR_CHAT_OPEN){ SDR_CHAT_OPEN(); setTimeout(()=>{ const f=document.getElementById("chatfr"); try{ f.contentWindow.postMessage({sdr:"chat-prefill",text:"I'd like to request a change to my site: "},"*"); }catch(x){} },700); } return; }
+        if(e.target.closest("[data-chat]")){ close(); if(window.SDR_CHAT_OPEN) SDR_CHAT_OPEN(); return; } });
+      document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&wrap&&!wrap.hidden) close(); });
+      window.addEventListener("popstate",()=>{ if(wrap&&!wrap.hidden) wrap.hidden=true; }); }
+    paint(); wrap.hidden=false; try{ history.pushState({set:1},""); }catch(e){} }
+  function close(){ if(wrap&&!wrap.hidden){ wrap.hidden=true; try{ if(history.state&&history.state.set) history.back(); }catch(e){} } }
+  btn.onclick=open; window.SDR_SETTINGS_OPEN=open;
+})();
+</script>
+</body></html>

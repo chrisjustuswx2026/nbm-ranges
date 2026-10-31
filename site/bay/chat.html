@@ -139,7 +139,7 @@ html,body{overflow-x:hidden}
 <div class="app">
   <header class="hd">
     <button class="back" aria-label="Back to dashboard"><svg width="12" height="20" viewBox="0 0 12 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2 2 10l8 8"/></svg></button>
-    <div class="who"><span class="logo"><img id="logo" alt="SDR Weather Intelligence"></span><b><span class="lv"><i></i>LIVE CHAT</span> Meteorologist team</b><small id="promise">Replies within 15 min</small></div>
+    <div class="who"><span class="logo"><img id="logo" alt="SDR Weather Intelligence"></span><b><span class="lv"><i></i>LIVE CHAT</span> Meteorologist team</b><small id="promise">Usually replies within 15 min</small></div>
     <button class="more" aria-label="More">⋯</button>
   </header>
   <div class="pin" id="pin" hidden><span class="dot"></span><div><b id="pin-h"></b><small id="pin-s"></small></div><span class="go">Dashboard ›</span></div>
@@ -499,7 +499,7 @@ var SDR_ENGINE=(function(){
   document.getElementById("compose").addEventListener("submit",function(e){e.preventDefault();send(ci.value);});
   var camB=document.getElementById("cam"); if(camB) camB.hidden=true;
   function mode(nt){night=nt;document.getElementById("d-day").classList.toggle("on",!nt);document.getElementById("d-night").classList.toggle("on",nt);
-    var p=document.getElementById("promise");p.textContent=nt?"After hours · back in the morning":"Replies within 15 min";p.classList.toggle("off",nt);}
+    var p=document.getElementById("promise");p.textContent=nt?"After hours · back in the morning":"Usually replies within 15 min";p.classList.toggle("off",nt);}
   document.getElementById("d-day").addEventListener("click",function(){mode(false);});
   document.getElementById("d-night").addEventListener("click",function(){mode(true);});
   document.getElementById("d-reset").addEventListener("click",function(){clearTimeout(helloT);clearTimeout(replyT);PLAYGEN++;typing(false);seed();});
@@ -516,6 +516,6 @@ var SDR_ENGINE=(function(){
   quick();seed();
   // v125: embedded in the dashboard as the CHAT screen — the back arrow returns to the dashboard; a parent can also ask us to reset
   var back=document.querySelector(".back"); if(back) back.addEventListener("click",function(){ if(window.parent&&window.parent!==window){ window.parent.postMessage({sdr:"chat-close"},"*"); } else { history.back(); } });
-  window.addEventListener("message",function(e){ var d=e.data||{}; if(d.sdr==="chat-open"){ pinPaint(); setTimeout(pinPaint,1500); try{ var v=window.parent.DASH&&window.parent.DASH.venue&&window.parent.DASH.venue(); if(v&&v.name){ var w=document.querySelector(".who b"); if(w) w.innerHTML='<span class="lv"><i></i>LIVE CHAT</span> Meteorologist team · '+v.name.replace(/[<&]/g,""); } }catch(x){} } });
+  window.addEventListener("message",function(e){ var d=e.data||{}; if(d.sdr==="chat-prefill"&&d.text){ ci.value=d.text; try{ ci.focus(); ci.setSelectionRange(d.text.length,d.text.length); }catch(x){} return; } if(d.sdr==="chat-open"){ pinPaint(); setTimeout(pinPaint,1500); try{ var v=window.parent.DASH&&window.parent.DASH.venue&&window.parent.DASH.venue(); if(v&&v.name){ var w=document.querySelector(".who b"); if(w) w.innerHTML='<span class="lv"><i></i>LIVE CHAT</span> Meteorologist team · '+v.name.replace(/[<&]/g,""); } }catch(x){} } });
 })();
 </script>

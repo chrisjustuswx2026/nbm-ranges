@@ -1434,6 +1434,8 @@ body.chat-on{overflow:hidden}
     border:1px solid rgba(255,255,255,.14);box-shadow:0 24px 70px rgba(0,0,0,.55),0 0 0 1px rgba(0,0,0,.3);animation:chatin .22s ease-out}
   @keyframes chatin{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
 }
+/* v138: the What's Next day-pill row is retired */
+#nx-list,.next .nxl{display:none!important}
 
 /* v135 settings */
 #setbtn{color:var(--muted)}
@@ -5743,7 +5745,7 @@ window.SDR_CAMS = (function(){
 // ===================== v118f: What's Next lists the next days worth planning around =====================
 (function(){
   const box=document.getElementById("next"); if(!box) return;
-  const el=document.createElement("div"); el.className="nxl"; el.id="nx-list"; box.appendChild(el);
+  const el=document.createElement("div"); el.className="nxl"; el.id="nx-list"; el.hidden=true; el.style.display="none";   // v138: off for good
   const tagOf=x=>{ const pp=Math.max(x.pp||0,x.ppN||0), th=x.thunder||0, g=x.gust||0, m=(x.date||new Date()).getMonth(), rainT=(m>=5&&m<=8)?60:40; const r=[];
     if(th>=30) r.push(["Storms "+Math.max(pp,th)+"%", pp>=70?"action":"headsup"]); else if(pp>=rainT) r.push(["Rain "+pp+"%","headsup"]);
     if((x.iceP||0)>=20) r.unshift(["Ice "+x.iceP+"%","action"]); else if((x.snowP||0)>=30) r.unshift(["Snow "+x.snowP+"%","headsup"]);
@@ -5929,7 +5931,7 @@ window.SDR_GL=(function(){
 
 <script>
 // v125: client chat layer
-(function(){ let wrap=null, fr=null; const CHATV="1793413122";
+(function(){ let wrap=null, fr=null; const CHATV="1793452359";
   function open(){ if(!wrap){ wrap=document.createElement("div"); wrap.id="chatwrap"; wrap.innerHTML='<iframe id="chatfr" title="Message the team" allow="camera"></iframe>'; document.body.appendChild(wrap); fr=wrap.querySelector("iframe"); fr.src="./chat.html?v="+CHATV; fr.addEventListener("load",()=>{ try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }); }
     wrap.hidden=false; document.body.classList.add("chat-on"); if(!(history.state&&history.state.chat)) history.pushState({chat:1},""); try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }
   function close(){ if(wrap){ wrap.hidden=true; } document.body.classList.remove("chat-on"); }

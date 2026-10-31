@@ -1449,6 +1449,19 @@ body.chat-on{overflow:hidden}
 .mvtip .rkm b{white-space:nowrap}
 .mvtip .rks i{width:18px}
 .mvtip .rkh{color:#fff}
+/* v141: desktop channel = full-width 16:9 beside the radar, alerts tucked right under it, no letterbox */
+@media (min-width:1200px){
+  #pane-overview{grid-template-rows:min-content 1fr}
+  #pane-overview .deskchan{align-self:start;display:block}
+  #pane-overview .deskchan .vid{aspect-ratio:16/9!important;min-height:0!important;height:auto;width:100%;max-width:none;background:#000;overflow:hidden}
+  #pane-overview .deskchan .vid iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  #pane-overview .deskchan > .foot{display:none!important}
+  #pane-overview .deskchan .ph .chopen{margin-left:10px;font-family:var(--display);font-weight:800;letter-spacing:.1em;font-size:11px;color:#CFE4FF;border:1px solid var(--line);border-radius:999px;padding:3px 10px;background:transparent;cursor:pointer}
+  #pane-overview .deskchan .ph .chopen:hover{color:#fff;border-color:#6FB7FF}
+  #pane-overview .p-alerts{align-self:start}
+  #pane-overview .radar{align-self:stretch;height:auto;display:flex;flex-direction:column}
+  #pane-overview .radar .map{flex:1 1 auto}
+}
 
 /* v135 settings */
 #setbtn{color:var(--muted)}
@@ -2232,7 +2245,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
         <div class="foot"><span class="arrow">→</span><b id="rd-line">Nothing on radar within 60 miles</b><span class="sample" style="margin-left:auto" id="rd-src">NEXRAD MOSAIC · 5 MIN</span><small class="osm">Map © OpenStreetMap contributors · OpenFreeMap · Radar: NEXRAD/IEM</small></div>
       </section>
       <section class="panel deskchan">
-        <div class="ph"><span class="k">CHANNEL · ROLLING</span><span class="live">MUTED</span></div>
+        <div class="ph"><span class="k">CHANNEL · ROLLING</span><span class="live" style="margin-left:auto">MUTED</span><button type="button" class="chopen" data-go="live">OPEN ›</button></div>
         <div class="vid chan" style="border:0;border-radius:0"><span class="play"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span><div class="lbar"><span>SOUTHEAST</span><b>ALL CLEAR · NEXT: STORMS FRIDAY</b></div></div>
         <div class="foot" style="padding:10px 14px;border-top:1px solid var(--line);display:flex;gap:10px;align-items:center"><span class="k" style="color:var(--muted)">OPS ROOM VIEW · TAP TO EXPAND</span><button class="btn ghost" data-go="live" style="margin-left:auto">OPEN</button></div>
       </section>
@@ -5968,7 +5981,7 @@ window.SDR_GL=(function(){
 
 <script>
 // v125: client chat layer
-(function(){ let wrap=null, fr=null; const CHATV="1793466985";
+(function(){ let wrap=null, fr=null; const CHATV="1793467771";
   function open(){ if(!wrap){ wrap=document.createElement("div"); wrap.id="chatwrap"; wrap.innerHTML='<iframe id="chatfr" title="Message the team" allow="camera"></iframe>'; document.body.appendChild(wrap); fr=wrap.querySelector("iframe"); fr.src="./chat.html?v="+CHATV; fr.addEventListener("load",()=>{ try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }); }
     wrap.hidden=false; document.body.classList.add("chat-on"); if(!(history.state&&history.state.chat)) history.pushState({chat:1},""); try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }
   function close(){ if(wrap){ wrap.hidden=true; } document.body.classList.remove("chat-on"); }

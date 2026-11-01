@@ -1523,6 +1523,30 @@ body.desk-live #live-flag::before{background:#FF4D4D!important;animation:deskbli
 .mvtip .rvg{display:block;width:100%;height:auto;border-radius:8px;background:#0B1730;margin:2px 0 6px}
 .mvtip .rvi{font-size:12.5px;color:#C9D3E3;line-height:1.4;border-top:1px solid rgba(160,180,215,.25);padding-top:6px;margin-top:4px}
 .mvtip .rvi b{display:block;font-family:var(--display),sans-serif;letter-spacing:.1em;font-size:10.5px;color:#8FA3C2;margin-bottom:2px}
+#rvSheet{position:fixed;inset:0;z-index:9000;background:rgba(3,8,20,.72);display:flex;align-items:center;justify-content:center;padding:max(12px,env(safe-area-inset-top)) 12px 12px}
+#rvSheet[hidden]{display:none}
+#rvSheet .rvbox{position:relative;width:min(1100px,100%);max-height:100%;overflow:auto;background:#0E1A33;border:1px solid rgba(160,180,215,.25);border-radius:18px;padding:22px 24px 24px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+#rvSheet .rvx{position:absolute;top:12px;right:14px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.08);color:#fff;font-size:18px;border:0;cursor:pointer}
+#rvSheet .rvhd b{display:block;font-family:var(--display),sans-serif;font-weight:800;font-size:clamp(22px,3.4vw,32px);letter-spacing:.02em;line-height:1.1;margin-right:48px}
+#rvSheet .rvhd span{display:block;margin-top:6px;font-family:var(--display),sans-serif;font-weight:800;letter-spacing:.1em;font-size:15px}
+#rvSheet .rvstats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0 10px}
+@media(max-width:700px){#rvSheet .rvstats{grid-template-columns:1fr 1fr}#rvSheet .rvbox{padding:18px 14px}}
+#rvSheet .rvstats>div{background:rgba(255,255,255,.04);border:1px solid rgba(160,180,215,.18);border-radius:12px;padding:10px 12px}
+#rvSheet .rvstats small{display:block;font-family:var(--display),sans-serif;font-weight:800;letter-spacing:.12em;font-size:11.5px;color:#8FA3C2}
+#rvSheet .rvstats b{display:block;font-family:var(--display),sans-serif;font-weight:800;font-size:clamp(20px,2.6vw,28px);line-height:1.15;margin-top:2px}
+#rvSheet .rvstats em{display:block;font-style:normal;font-size:13px;color:#A9B6CC;margin-top:2px}
+#rvSheet .rvbig{display:block;width:100%;height:auto;background:#0B1730;border-radius:12px;margin-top:6px}
+#rvSheet .rvkey{display:flex;gap:18px;font-size:13px;color:#A9B6CC;margin:8px 2px 0}
+#rvSheet .rvkey i{display:inline-block;width:26px;height:0;border-top:4px solid #6FB7FF;vertical-align:middle;margin-right:6px}
+#rvSheet .rvkey i.f{border-top-style:dashed}
+#rvSheet .rvload{padding:60px 10px;text-align:center;color:#A9B6CC;background:#0B1730;border-radius:12px}
+#rvSheet .rvimp{margin-top:16px}
+#rvSheet .rvimp h4{margin:0 0 8px;font-family:var(--display),sans-serif;letter-spacing:.12em;font-size:13px;color:#8FA3C2}
+#rvSheet .rvimp>div{display:grid;grid-template-columns:84px 1fr;gap:12px;padding:9px 0;border-top:1px solid rgba(160,180,215,.15);font-size:15px;line-height:1.4;color:#C9D3E3}
+#rvSheet .rvimp>div b{font-family:var(--display),sans-serif;font-size:17px;color:#fff}
+#rvSheet .rvimp>div.hit{color:#fff}#rvSheet .rvimp>div.hit b{color:#FFC857}
+.leaflet-tooltip.rvlab{background:rgba(10,20,40,.88);border:0;box-shadow:none;color:#fff;font-family:var(--display),sans-serif;font-weight:800;font-size:12.5px;letter-spacing:.03em;padding:2px 7px;border-radius:6px}
+.leaflet-tooltip.rvlab:before{display:none}
 #rivAlert{display:grid;gap:8px;margin-top:8px}
 #rivAlert:empty{display:none}
 #rivAlert .rva{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.02);cursor:pointer;text-align:left;width:100%;color:inherit}
@@ -4564,10 +4588,15 @@ window.MAPVIEW = (function(){
       add({type:"FeatureCollection",features:f},x=>({color:x.properties.stroke||"#555",weight:1,fillColor:x.properties.fill||SPCC[x.properties.LABEL]||"#C1E9C1",fillOpacity:.6}),
         x=>{ const lv={TSTM:0,MRGL:1,SLGT:2,ENH:3,MDT:4,HIGH:5}[x.properties.LABEL]; if(lv==null){ const n=SPCN[x.properties.LABEL]||[x.properties.LABEL,""]; return `<b>${n[0]}</b><br>${n[1]}`; } return SDR_RISKCARD("spc",lv,d,x.geometry); });
       leg.innerHTML=["TSTM","MRGL","SLGT","ENH","MDT","HIGH"].filter(k=>f.some(x=>x.properties.LABEL===k)).map(k=>`<span><i style="background:${SPCC[k]}"></i>${SPCN[k][0].split(" ·")[0]}</span>`).join(""); }
-    if(card.id==="rivers"&&card.gauges){ const RC=["#22C55E","#F6E05E","#F5A524","#E05252","#C040E0"];
-      card.gauges.slice().sort((a,b)=>Math.max(a.o.c,a.f.c)-Math.max(b.o.c,b.f.c)).forEach(g=>{ const l=Math.max(g.o.c,g.f.c); L.circleMarker([g.la,g.lo],{radius:l>=1?9:7,color:"#0A1428",weight:2,fillColor:l<0?"#8FA3C2":RC[l],fillOpacity:1}).addTo(over).on("click",e=>{ L.DomEvent.stopPropagation(e); query(e.latlng, window.SDR_RIVERCARD(g), null); }); });
-      info("Tap a dot to see the river level, the forecast and flood stage.");
-      if(card.focus){ const g=card.gauges.find(x=>x.id===card.focus); if(g) setTimeout(()=>{ try{ m.setView([g.la,g.lo],10); query(L.latLng(g.la,g.lo), window.SDR_RIVERCARD(g), null); }catch(e){} },500); }
+    if(card.id==="rivers"&&card.gauges){ const RC=["#22C55E","#F6E05E","#F5A524","#E05252","#C040E0"], cv=window._rvCanvas||(window._rvCanvas=L.canvas({padding:.4})), MK=[];
+      card.gauges.slice().sort((a,b)=>Math.max(a.o.c,a.f.c)-Math.max(b.o.c,b.f.c)).forEach(g=>{ const l=Math.max(g.o.c,g.f.c), nearSite=g.dist!=null&&g.dist<=60;
+        const mk=L.circleMarker([g.la,g.lo],{renderer:cv,radius:l>=2?9:l>=1?8:nearSite?7:5,color:"#0A1428",weight:l>=1||nearSite?2:1,fillColor:l<0?"#8FA3C2":RC[l],fillOpacity:l<0?.55:1}).addTo(over);
+        mk.on("click",e=>{ L.DomEvent.stopPropagation(e); window.SDR_RIVERSHEET(g); }); MK.push([mk,g,l]); });
+      const labs=()=>{ const z=m.getZoom(), b=m.getBounds(), put=[]; let n=0; MK.slice().sort((x,y)=>y[2]-x[2]||((x[1].dist||1e9)-(y[1].dist||1e9))).forEach(([mk,g,l])=>{ const ll=mk.getLatLng(), pt=m.latLngToContainerPoint(ll);
+          let show=(z>=10||(z>=8.5&&(l>=1||(g.dist!=null&&g.dist<=40)))||(l>=2&&z>=6))&&b.contains(ll)&&n<30&&!put.some(q=>Math.abs(q.x-pt.x)<170&&Math.abs(q.y-pt.y)<26); if(show){ n++; put.push(pt); if(!mk.getTooltip()) mk.bindTooltip(window.SDR_RIVERLABEL(g),{permanent:true,direction:"right",offset:[8,0],className:"rvlab"}); else mk.openTooltip(); } else if(mk.getTooltip()) mk.closeTooltip(); }); };
+      m.off("zoomend moveend",window._rvLabs||(()=>{})); window._rvLabs=labs; m.on("zoomend moveend",labs);
+      info("Every river gauge in the country. Tap a dot for the full river graph, flood stages and forecast.");
+      const v0=(window.DASH&&DASH.venue&&DASH.venue())||{}; setTimeout(()=>{ try{ if(card.focus){ const g=card.gauges.find(x=>x.id===card.focus); if(g){ m.setView([g.la,g.lo],10); window.SDR_RIVERSHEET(g); } } else if(v0.la!=null) m.setView([+v0.la,+v0.lo],9); labs(); }catch(e){} },900);
       leg.innerHTML=["In its banks","Near flood stage","Minor","Moderate","Major"].map((t,i)=>`<span><i style="background:${RC[i]}"></i>${t}</span>`).join(""); }
     if(card.view){ const V=card.view; add({type:"FeatureCollection",features:V.features||[]},V.style,V.explain);
       (V.points||[]).forEach(p=>L.marker([p.la,p.lo],{interactive:false,icon:L.divIcon({className:"",html:`<span class="hlmark" style="color:${p.col}">${p.t}</span>`,iconSize:[22,22],iconAnchor:[11,11]})}).addTo(over));
@@ -4579,7 +4608,7 @@ window.MAPVIEW = (function(){
       leg.innerHTML='<span><i style="background:#FFFF00"></i>Low</span><span><i style="background:#FF9900"></i>Medium</span><span><i style="background:#FF0000"></i>High</span><span><i style="background:#fff"></i>Forecast cone</span>'; }
     priority(data);
     const pr=data.priority||{}; if((pr.mds||[]).length) leg.innerHTML+='<span><i style="background:transparent;border:2px dashed #FF8C1A"></i>Storms organizing</span>'; if((pr.watches||[]).length) leg.innerHTML+='<span><i style="background:#FFFF00"></i>Tornado watch</span><span><i style="background:#DB7093"></i>Severe T-storm watch</span>';
-    const bx=SDR_FPBOX(); BOX=card.focus||[[bx[1],bx[0]],[bx[3],bx[2]]]; const wide=!card.focus&&innerWidth>=700;   // phones open on the region (the whole U.S. is too small to read there)
+    const bx=SDR_FPBOX(); BOX=(card.id!=="rivers"&&card.focus)||[[bx[1],bx[0]],[bx[3],bx[2]]]; const wide=!card.focus&&innerWidth>=700&&card.id!=="rivers";   // phones open on the region (the whole U.S. is too small to read there)
     setTimeout(()=>{ zoomTo(wide?"us":"r"); placeTowns(); },50);
   }
   function close(){ box.hidden=true; document.body.style.overflow=""; }
@@ -6174,7 +6203,7 @@ window.SDR_GL=(function(){
 
 <script>
 // v125: client chat layer
-(function(){ let wrap=null, fr=null; const CHATV="1793545519";
+(function(){ let wrap=null, fr=null; const CHATV="1793562308";
   function open(){ if(!wrap){ wrap=document.createElement("div"); wrap.id="chatwrap"; wrap.innerHTML='<iframe id="chatfr" title="Message the team" allow="camera"></iframe>'; document.body.appendChild(wrap); fr=wrap.querySelector("iframe"); fr.src="./chat.html?v="+CHATV; fr.addEventListener("load",()=>{ try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }); }
     wrap.hidden=false; document.body.classList.add("chat-on"); if(!(history.state&&history.state.chat)) history.pushState({chat:1},""); try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }
   function close(){ if(wrap){ wrap.hidden=true; } document.body.classList.remove("chat-on"); }
@@ -6256,6 +6285,7 @@ window.SDR_GL=(function(){
     const day=d.toDateString()===now.toDateString()?"today":(()=>{ const t2=new Date(now); t2.setDate(t2.getDate()+1); return d.toDateString()===t2.toDateString()?"tomorrow":d.toLocaleDateString("en-US",{weekday:"short"}); })(); return tm+" "+day; };
   const ft=v=>v==null?"—":(+v).toFixed(1)+" ft";
   const nameOf=g=>String(g.n||g.id||"River gauge").replace(/\s+/g," ").trim();
+  function allG(){ const v=venue(); return (R&&R.gauges||[]).map(g=>Object.assign({},g,{dist:v&&v.la!=null?mi(+v.la,+v.lo,g.la,g.lo):null})); }
   function near(maxMi){ const v=venue(); if(!R||!v||v.la==null) return []; return (R.gauges||[]).map(g=>Object.assign({},g,{dist:mi(+v.la,+v.lo,g.la,g.lo)})).filter(g=>g.dist<=maxMi).sort((a,b)=>a.dist-b.dist); }
   function sentence(g){ const d=g.d||{}, C=d.cats||{}, o=g.o||{}, cr=d.crest, fl=C.minor;
     let s=`<b>${ft(o.v)}</b> now${o.t?" ("+fmtT(o.t)+")":""}`;
@@ -6278,19 +6308,65 @@ window.SDR_GL=(function(){
     const ax=days.map(t=>`<line x1="${X(t)}" x2="${X(t)}" y1="${T}" y2="${B}" stroke="rgba(255,255,255,.07)"/><text x="${X(t)+2}" y="${H-6}" font-size="9" fill="#A9B6CC" font-family="Barlow Condensed,Arial Narrow,sans-serif">${new Date(t*1000).toLocaleDateString("en-US",{weekday:"short"}).toUpperCase()}</text>`).join("");
     const yl=[lo+pad,(lo+hi)/2,hi-pad].map(v=>`<text x="${L-4}" y="${Y(v)+3}" text-anchor="end" font-size="9" fill="#A9B6CC" font-family="Barlow Condensed,Arial Narrow,sans-serif">${v.toFixed(0)}</text>`).join("");
     return `<svg class="rvg" viewBox="0 0 ${W} ${H}">${bands}${ax}${yl}${nowX>L&&nowX<R0?`<line x1="${nowX}" x2="${nowX}" y1="${T}" y2="${B}" stroke="#fff" stroke-opacity=".35"/><text x="${nowX+3}" y="${T+8}" font-size="9" fill="#fff" font-family="Barlow Condensed,Arial Narrow,sans-serif">NOW</text>`:""}${d.obs.length?`<path d="${path(d.obs)}" fill="none" stroke="#6FB7FF" stroke-width="2.4"/>`:""}${d.fc.length?`<path d="${path((d.obs.length?[d.obs[d.obs.length-1]]:[]).concat(d.fc))}" fill="none" stroke="#6FB7FF" stroke-width="2.2" stroke-dasharray="5 4"/>`:""}<text x="${L}" y="${H-6}" font-size="9" fill="#6FB7FF" font-family="Barlow Condensed,Arial Narrow,sans-serif" dx="-28">ft</text></svg><div style="font-size:11.5px;color:#8FA3C2;margin:-2px 0 4px">Solid: observed · dashed: forecast</div>`; }
+  // ---- v150: short label for the map ("Reedy River · Greenville") ----
+  window.SDR_RIVERLABEL=g=>{ const n=nameOf(g); const m=n.match(/^(.*?)\s+(?:at|near|above|below)\s+(.*)$/i); if(!m) return n; const place=(m[2].match(/(?:in|near|at)\s+([A-Z][\w .'-]+)$/)||[])[1]||m[2]; return m[1]+" · "+place.replace(/\s+(Bridge|Dam|Road|Rd|Street|St|Hwy|Highway)\b.*$/i,"").trim(); };
+  // ---- v150: fetch the full river detail for any gauge (if the data job didn't already include it) ----
+  const API="https://api.water.noaa.gov/nwps/v1";
+  async function detail(g){ if(g.d) return g.d; try{ const ctl=new AbortController(), t=setTimeout(()=>ctl.abort(),9000);
+      const [a,b]=await Promise.all([fetch(`${API}/gauges/${g.id}`,{signal:ctl.signal}).then(r=>r.json()), fetch(`${API}/gauges/${g.id}/stageflow`,{signal:ctl.signal}).then(r=>r.json())]); clearTimeout(t);
+      const num=v=>{ v=+v; return isFinite(v)&&v>-900?Math.round(v*100)/100:null; }; const fl=a.flood||{}, C=fl.categories||{};
+      const ser=(blk,since,step)=>{ const out=[]; let last=0; ((blk||{}).data||[]).forEach(x=>{ const t=Date.parse(x.validTime)/1000, v=num(x.primary); if(!t||v==null||(since&&t<since)||t-last<step*60) return; last=t; out.push([t,v]); }); return out; };
+      const obs=ser(b.observed,Date.now()/1000-3*864e2*1e2/100,60), fc=ser(b.forecast,0,180); const crest=fc.length?fc.reduce((m,p)=>p[1]>m[1]?p:m,fc[0]):null;
+      g.d={cats:{action:num((C.action||{}).stage),minor:num((C.minor||{}).stage),moderate:num((C.moderate||{}).stage),major:num((C.major||{}).stage)},units:fl.stageUnits||"ft",obs,fc,crest,
+        impacts:(fl.impacts||[]).map(x=>[num(x.stage),String(x.statement||"").trim()]).filter(x=>x[0]!=null&&x[1]).slice(0,12)}; return g.d; }catch(e){ return null; } }
+  // ---- v150: big graph ----
+  function bigGraph(g){ const d=g.d; if(!d||(!d.obs.length&&!d.fc.length)) return "";
+    const sm=innerWidth<700, W=sm?640:980,H=sm?460:420,L=sm?64:58,R0=W-14,T=26,B=H-(sm?52:44), fs=sm?1.45:1, pts=d.obs.concat(d.fc); const t0=pts[0][0], t1=pts[pts.length-1][0];
+    const C=d.cats||{}, vals=pts.map(p=>p[1]); let lo=Math.min(...vals), hi=Math.max(...vals);
+    if(C.action!=null) hi=Math.max(hi,C.action); if(C.minor!=null) hi=Math.max(hi,C.minor+Math.max(1,(C.minor-lo)*.12)); lo=Math.max(0,Math.min(lo,hi-3)); const pad=(hi-lo)*.06||1; lo-=pad; hi+=pad;
+    const X=t=>L+(R0-L)*(t-t0)/Math.max(1,t1-t0), Y=v=>B-(B-T)*(v-lo)/Math.max(.01,hi-lo), F='font-family="Barlow Condensed,Arial Narrow,sans-serif"';
+    let bands=""; const cuts=[["action",COL[1],"NEAR FLOOD"],["minor",COL[2],"MINOR"],["moderate",COL[3],"MODERATE"],["major",COL[4],"MAJOR"]];
+    cuts.forEach(([k,c,lab],i)=>{ const v=C[k]; if(v==null||v>hi) return; const nxt=cuts.slice(i+1).map(q=>C[q[0]]).find(x=>x!=null&&x>v); const yTop=Y(Math.min(hi,nxt!=null?nxt:hi)), yB=Y(Math.max(lo,v));
+      bands+=`<rect x="${L}" y="${yTop}" width="${R0-L}" height="${Math.max(0,yB-yTop)}" fill="${c}" opacity=".14"/><line x1="${L}" x2="${R0}" y1="${Y(v)}" y2="${Y(v)}" stroke="${c}" stroke-width="2" stroke-dasharray="7 5"/><text x="${L+10}" y="${Y(v)-7}" text-anchor="start" font-size="${17*fs}" font-weight="800" fill="${c}" stroke="#0B1730" stroke-width="4" paint-order="stroke" ${F}>${lab} ${(+v).toFixed(1)} FT</text>`; });
+    const path=a=>a.map((p,i)=>(i?"L":"M")+X(p[0]).toFixed(1)+","+Y(p[1]).toFixed(1)).join("");
+    const days=[]; { const s0=new Date(t0*1000); s0.setHours(0,0,0,0); for(let k=1;k<20;k++){ const d2=new Date(s0); d2.setDate(s0.getDate()+k); const t=d2.getTime()/1000; if(t>=t1) break; days.push(t); } }
+    const ax=days.map(t=>`<line x1="${X(t)}" x2="${X(t)}" y1="${T}" y2="${B}" stroke="rgba(255,255,255,.08)"/><text x="${X(t)+6}" y="${H-14}" font-size="${16*fs}" font-weight="700" fill="#A9B6CC" ${F}>${new Date(t*1000).toLocaleDateString("en-US",sm?{weekday:"short"}:{weekday:"short",month:"numeric",day:"numeric"}).toUpperCase()}</text>`).join("");
+    const step=Math.max(1,Math.round((hi-lo)/5)); const yl=[]; for(let v=Math.ceil(lo);v<=hi;v+=step) yl.push(`<line x1="${L}" x2="${R0}" y1="${Y(v)}" y2="${Y(v)}" stroke="rgba(255,255,255,.05)"/><text x="${L-10}" y="${Y(v)+5}" text-anchor="end" font-size="${15*fs}" fill="#A9B6CC" ${F}>${v} ft</text>`);
+    const nowX=X(Date.now()/1000), last=d.obs[d.obs.length-1], cr=d.crest;
+    const dot=(p,c,t,up)=>`<circle cx="${X(p[0])}" cy="${Y(p[1])}" r="7" fill="${c}" stroke="#0B1730" stroke-width="3"/><text x="${X(p[0])}" y="${Y(p[1])+(up?-16:28)}" text-anchor="middle" font-size="${18*fs}" font-weight="800" fill="#fff" stroke="#0B1730" stroke-width="4" paint-order="stroke" ${F}>${t}</text>`;
+    return `<svg class="rvbig" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">${yl.join("")}${bands}${ax}${nowX>L&&nowX<R0?`<line x1="${nowX}" x2="${nowX}" y1="${T}" y2="${B}" stroke="#fff" stroke-opacity=".45" stroke-width="2"/><text x="${nowX}" y="${T-6}" text-anchor="middle" font-size="${15*fs}" font-weight="800" fill="#fff" ${F}>NOW</text>`:""}
+      ${d.obs.length?`<path d="${path(d.obs)}" fill="none" stroke="#6FB7FF" stroke-width="4" stroke-linejoin="round"/>`:""}${d.fc.length?`<path d="${path((last?[last]:[]).concat(d.fc))}" fill="none" stroke="#6FB7FF" stroke-width="4" stroke-dasharray="10 7"/>`:""}
+      ${last?dot(last,"#6FB7FF",(+last[1]).toFixed(1)+" ft",true):""}${cr&&(!last||cr[1]>last[1]+0.2)?dot(cr,"#FFC857","CREST "+(+cr[1]).toFixed(1)+" ft",true):""}</svg>
+      <div class="rvkey"><span><i></i>Observed</span><span><i class="f"></i>Forecast</span></div>`; }
+  function trend(d){ if(!d||d.obs.length<3) return null; const a=d.obs[d.obs.length-1], b=d.obs.find(p=>p[0]>=a[0]-6*3600)||d.obs[0]; const ch=a[1]-b[1]; return Math.abs(ch)<0.15?"Steady":(ch>0?"Rising ":"Falling ")+Math.abs(ch).toFixed(1)+" ft in 6 hrs"; }
+  window.SDR_RIVERSHEET=async function(g){ let el=document.getElementById("rvSheet"); if(!el){ el=document.createElement("div"); el.id="rvSheet"; document.body.appendChild(el);
+      el.addEventListener("click",e=>{ if(e.target===el||e.target.closest(".rvx")) el.hidden=true; }); document.addEventListener("keydown",e=>{ if(e.key==="Escape") el.hidden=true; }); }
+    const paint=()=>{ const l=lv(g), c=l<0?"#A9B6CC":COL[Math.max(0,l)], d=g.d, C=(d&&d.cats)||{}, o=g.o||{}, cr=d&&d.crest;
+      const top=Math.max(o.v||0, cr?cr[1]:0); const imps=((d&&d.impacts)||[]).slice().sort((a,b)=>a[0]-b[0]);
+      el.innerHTML=`<div class="rvbox" role="dialog" aria-label="River level"><button type="button" class="rvx" aria-label="Close">✕</button>
+        <div class="rvhd"><b>${nameOf(g).replace(/</g,"&lt;")}</b><span style="color:${c}">${l<0?"NO CURRENT READING":LAB[l].toUpperCase()}${g.dist!=null?` · ${Math.round(g.dist)} MILES AWAY`:""}</span></div>
+        <div class="rvstats">
+          <div><small>RIGHT NOW</small><b>${ft(o.v)}</b><em>${o.t?fmtT(o.t):""}</em></div>
+          <div><small>TREND</small><b>${trend(d)||"—"}</b><em>last 6 hours</em></div>
+          <div><small>FLOOD STAGE</small><b>${ft(C.minor)}</b><em>${C.minor!=null&&o.v!=null?(o.v>=C.minor?`${(o.v-C.minor).toFixed(1)} ft above`:`${(C.minor-o.v).toFixed(1)} ft below`):""}</em></div>
+          <div><small>FORECAST CREST</small><b>${cr&&(o.v==null||cr[1]>o.v+0.2)?ft(cr[1]):d&&d.fc&&d.fc.length?"Steady or falling":"No forecast"}</b><em>${cr&&(o.v==null||cr[1]>o.v+0.2)?fmtT(cr[0]):""}</em></div></div>
+        ${d?bigGraph(g):`<div class="rvload">${g._loading?"Loading the river graph…":"No river graph is available for this spot."}</div>`}
+        ${imps.length?`<div class="rvimp"><h4>WHAT HAPPENS AT EACH LEVEL</h4>${imps.map(x=>`<div class="${x[0]<=top+0.01?"hit":""}"><b>${(+x[0]).toFixed(1)} ft</b><span>${String(x[1]).replace(/</g,"&lt;")}</span></div>`).join("")}</div>`:""}
+      </div>`; el.hidden=false; };
+    if(!g.d){ g._loading=true; paint(); await detail(g); g._loading=false; } paint(); };
   window.SDR_RIVERCARD=function(g){ const l=lv(g), c=COL[Math.max(0,l)]||"#8FA3C2", d=g.d||{};
     let imp=""; if(d.impacts&&d.impacts.length){ const top=Math.max(g.o&&g.o.v||0, d.crest?d.crest[1]:0); const hit=d.impacts.filter(x=>x[0]<=top+0.01).sort((a,b)=>b[0]-a[0])[0]; if(hit&&l>=1) imp=`<div class="rvi"><b>AT ${(+hit[0]).toFixed(1)} FT</b>${String(hit[1]).replace(/</g,"&lt;")}</div>`; }
     return `<div class="rv"><div class="rvh">${nameOf(g).replace(/</g,"&lt;")}</div><div class="rvs" style="color:${l<0?"#A9B6CC":c}">${l<0?"NO CURRENT READING":LAB[l].toUpperCase()}${g.dist!=null?` · ${Math.round(g.dist)} MI AWAY`:""}</div>${graph(g)}<div class="rvn">${sentence(g)}</div>${imp}</div>`; };
   window.SDR_RIVERS_CARD=function(){ const N=near(40); if(!N.length) return null; const v=venue(); const w=N.reduce((m,g)=>Math.max(m,lv(g)),-1), worst=N.filter(g=>lv(g)===w)[0];
     const pts=N.map(g=>({lo:g.lo,la:g.la,fill:COL[Math.max(0,lv(g))],r:4.5})).concat([{lo:+v.lo,la:+v.la,fill:"#F28C28",r:5}]);
-    return { id:"rivers", title:"RIVERS", sub:"River levels near you", line: w>=1?`${nameOf(worst)}: ${LAB[w].toLowerCase()}`:`${N.length} gauges within 40 miles · all in their banks`, flag:w>=2, box:[+v.lo-1.1,+v.la-.75,+v.lo+1.1,+v.la+.75], opts:{points:pts}, overlays:[], gauges:N }; };
+    return { id:"rivers", title:"RIVERS", sub:"River levels near you", line: w>=1?`${nameOf(worst)}: ${LAB[w].toLowerCase()}`:`${N.length} gauges within 40 miles · all in their banks`, flag:w>=2, box:[+v.lo-1.1,+v.la-.75,+v.lo+1.1,+v.la+.75], opts:{points:pts}, overlays:[], gauges:allG() }; };
   function openCard(g){ const c=window.SDR_RIVERS_CARD(); if(!c||!window.MAPVIEW) return; if(g) c.focus=g.id; window.MAPVIEW.open(c,{}); }
   function paintAlerts(){ const host=document.querySelector(".p-alerts"); if(!host) return; let box=document.getElementById("rivAlert"); if(!box){ box=document.createElement("div"); box.id="rivAlert"; host.appendChild(box); }
     const N=near(40); const flood=(window.ALERTS||[]).some(a=>/Flood (Watch|Warning)|Flash Flood/i.test(((a.properties||a).event)||""));
     let show=N.filter(g=>lv(g)>=1); if(flood&&show.length<3) show=show.concat(N.filter(g=>lv(g)<1&&g.d&&g.d.fc&&g.d.fc.length&&!show.includes(g)).slice(0,3-show.length));
     show.sort((a,b)=>lv(b)-lv(a)); show=show.slice(0,4);
     box.innerHTML=show.map((g,i)=>{ const l=lv(g); return `<button type="button" class="rva" data-i="${i}"><i style="background:${COL[Math.max(0,l)]}"></i><div><b style="color:${l>=1?COL[l]:"var(--fg)"}">RIVER · ${nameOf(g).toUpperCase().replace(/</g,"&lt;")}</b><span>${l>=1?LAB[l]+(g.f&&g.f.c>g.o.c?" forecast":" now")+". ":""}${sentence(g).replace(/<[^>]+>/g,"")}</span></div><em>Graph ›</em></button>`; }).join("");
-    box.querySelectorAll(".rva").forEach(b=>b.onclick=()=>openCard(show[+b.dataset.i]));
+    box.querySelectorAll(".rva").forEach(b=>b.onclick=()=>window.SDR_RIVERSHEET(show[+b.dataset.i]));
     riverCall(N); }
   // moderate or major flooding (now or forecast) within 40 miles lifts ALL CLEAR to HEADS UP; minor flooding stays a quiet row.
   // Never overrides HEADS UP or TAKE ACTION set by anything else; steps back down by itself when the river does.

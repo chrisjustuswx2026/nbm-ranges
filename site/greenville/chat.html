@@ -479,7 +479,11 @@ var SDR_ENGINE=(function(){
     var fut=/\bwhen\b|what time|\bwill\b|going to|chance|timing|start|later|if we get/.test(ql)||namedDay(q);
     if((t==="lightning"||t==="storms")&&fut&&/thunder|lightning|storm/.test(ql)){ var ti=namedDay(q)&&!W.week?W.idx:null; var TD=ti!=null?thunderDay(ti):null; if(!TD) TD=thunderAhead(0,1)[0]; if(TD){ var hc=hourlyCard({idx:TD.idx,day:days()[TD.idx],label:cap(TD.label)}); if(hc) out.push(hc); } var lv2=outlookLevel(TD?TD.idx:0); if(lv2&&lv2>=2){ var sv=cardSvg(new RegExp("^spc"+((TD?TD.idx:0)+1)+"$")); if(sv) out.push(sv); } return out.slice(0,2); }
     if(t==="now"||t==="lightning"||/radar/.test(ql)){ var r=cardSvg(/^radar$/); if(r) out.push(r); }
-    if(t==="severe"||t==="storms"){ var s=W.week?(cardSvg(/^spc1$/)||cardSvg(/^spc48$/)):(cardSvg(new RegExp("^spc"+((W.idx||0)+1)+"$"))||cardSvg(/^spc48$/)); if(s) out.push(s); if(!W.week&&W.idx===0){ var md=cardSvg(/^md$/); if(md) out.push(md); } }
+    if(t==="severe"||t==="storms"){   // v149: the storm day that matters here, not today's national map
+      var TD2=(namedDay(q)&&!W.week)?thunderDay(W.idx||0):thunderAhead(0,1)[0], di=TD2?TD2.idx:(W.week?0:(W.idx||0)), lvS=outlookLevel(di);
+      if(lvS&&lvS>=1){ var s=cardSvg(new RegExp("^spc"+(di+1)+"$")); if(s) out.push(s); if(di===0){ var md=cardSvg(/^md$/); if(md) out.push(md); } }
+      if(TD2){ var hcS=hourlyCard({idx:TD2.idx,day:days()[TD2.idx],label:cap(TD2.label)}); if(hcS) out.push(hcS); }
+      if(W.week&&/rain/.test(ql)) out.push(weekTable(TD2?TD2.idx:undefined)); }
     if(W.week&&(t==="totals"||t==="rain"||t==="general"||t==="hourly")) out.push(weekTable());
     var dry=W.day&&Math.max(W.day.pp||0,W.day.ppN||0)<20&&(W.day.thunder||0)<20;
     if(!W.week&&W.day&&(t==="hourly"||t==="temp"||t==="wind"||(!dry&&(t==="rain"||t==="totals"||t==="storms"))||(t==="general"&&wantsPic))){ var h=hourlyCard(W); if(h) out.push(h); }
@@ -585,11 +589,11 @@ var SDR_ENGINE=(function(){
 
   function seed(){M.innerHTML="";lastSide="";ts("<b>"+day()+"</b> "+now());
     var live=null; try{ if(SDR_ENGINE.ok()) live=SDR_ENGINE.answer("right now"); }catch(e){}
-    bubble("them",live?live:'<span class="st clear">All clear</span>Normal operations today. Nothing on radar within 30 miles.',{from:lastMet});}
+    bubble("them",live?live:'<span class="st clear">All clear</span>Normal operations today. Nothing on radar within 30 miles.',{from:"SDR Forecast Desk"});}
 
   function send(text){if(!text.trim())return; if(lastMsgAt&&Date.now()-lastMsgAt>20*60000){ GREETED=false; POSTED={}; var B=["Emma","Matthew","Lily","Miller","Anne"].filter(function(n){ return n!==lastMet; }); lastMet=B[Math.floor(Math.random()*B.length)]; try{ SDR_ENGINE.setMet(lastMet); }catch(e){} } lastMsgAt=Date.now(); ts(now());
     bubble("me",text.replace(/</g,"&lt;"));ci.value="";clearTimeout(helloT);clearTimeout(replyT);PLAYGEN++;typing(false);
-    if(isThanks(text)){var b=pick(BYE,lastBye)+(Math.random()<0.4?" I'll close this thread out for now — reach back any time.":"");lastBye=b;setTimeout(function(){markRead();typing(true);setTimeout(function(){typing(false);bubble("them",b,{from:lastMet});},1800);},1500);return;}
+    if(isThanks(text)){var b=pick(BYE,lastBye)+(Math.random()<0.4?" I'll close this thread out for now — reach back any time.":"");lastBye=b;setTimeout(function(){markRead();typing(true);setTimeout(function(){typing(false);bubble("them",b,{from:"SDR Forecast Desk"});},1800);},1500);return;}
     var n=firstName(text);
     helloT=setTimeout(function(){markRead();typing(true);
       setTimeout(function(){typing(false);
@@ -609,12 +613,12 @@ var SDR_ENGINE=(function(){
         var PL=null, wasAnswer=false; try{ if(SDR_ENGINE.ok()){ PL=SDR_ENGINE.followUp(text); wasAnswer=!!PL; if(!PL) PL=SDR_ENGINE.plan(text); } }catch(e){ PL=null; }
         if(PL) PL=PL.filter(function(it){ return !(it.att&&POSTED[it.att.title]); });
         var skipHello=PL&&(wasAnswer||GREETED||Math.random()<0.35); if(PL&&!skipHello) GREETED=true;   // sometimes the answer just comes, no hello
-        if(!skipHello){ var pool=/radar|right now|currently|\bnow\b/i.test(text)?BODY_RADAR:BODY; var h=pick(pool,lastHello);lastHello=h;bubble("them",greet(n)+h,{from:lastMet}); }
+        if(!skipHello){ var pool=/radar|right now|currently|\bnow\b/i.test(text)?BODY_RADAR:BODY; var h=pick(pool,lastHello);lastHello=h;bubble("them",greet(n)+h,{from:"SDR Forecast Desk"}); }
         var gen=++PLAYGEN; var play=function(items,k){ if(gen!==PLAYGEN){ typing(false); return; } if(k>=items.length){ M.scrollTop=M.scrollHeight; return; } var it=items[k]; var wait=(k===0?(skipHello?0:3200+Math.random()*2800):it.delay)+ (it.text?Math.min(2600,600+it.text.length*18):900);
-          typing(true); setTimeout(function(){ if(gen!==PLAYGEN) return; typing(false); if(it.att){ imageSvg(it.att.svg,it.att.title); POSTED[it.att.title]=1; } else bubble("them",it.text.replace(/</g,"&lt;"),{from:lastMet}); if(it.ack) ackRow(); M.scrollTop=M.scrollHeight; play(items,k+1); }, wait); };
+          typing(true); setTimeout(function(){ if(gen!==PLAYGEN) return; typing(false); if(it.att){ imageSvg(it.att.svg,it.att.title); POSTED[it.att.title]=1; } else bubble("them",it.text.replace(/</g,"&lt;"),{from:"SDR Forecast Desk"}); if(it.ack) ackRow(); M.scrollTop=M.scrollHeight; play(items,k+1); }, wait); };
         if(PL){ replyT=setTimeout(function(){ play(PL,0); }, skipHello?1200:600); }
         else { replyT=setTimeout(function(){typing(true);setTimeout(function(){typing(false);
-          bubble("them","Your forecast is still loading on my end. Give me a moment and I'll come right back to this.",{from:lastMet});
+          bubble("them","Your forecast is still loading on my end. Give me a moment and I'll come right back to this.",{from:"SDR Forecast Desk"});
           M.scrollTop=M.scrollHeight;},2400);},3500+Math.floor(Math.random()*2500)); }
       } },1600);},3500);}
   document.getElementById("compose").addEventListener("submit",function(e){e.preventDefault();send(ci.value);});

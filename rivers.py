@@ -1,7 +1,7 @@
 """SDR Weather Intelligence — river gauges for the dashboards (runs in the NBM ranges job).
 
 Writes <out>/rivers.json:
-  every river gauge in the Southeast with its current and forecast flood category, and — for gauges near a client
+  every river gauge in the lower 48 with its current and forecast flood category, and — for gauges near a client
   site or in flood anywhere — flood stages plus the observed (last 3 days) and forecast river level, for the graph.
 
 Source: the national water prediction service API (api.water.noaa.gov/nwps/v1). No key needed.
@@ -17,10 +17,10 @@ import urllib.request
 
 OUT = sys.argv[1] if len(sys.argv) > 1 else "public"
 API = "https://api.water.noaa.gov/nwps/v1"
-BBOX = (-92.5, 24.0, -75.0, 37.8)            # Southeast: LA/MS/AL/GA/FL/SC/NC/TN
+BBOX = (-125.0, 24.0, -66.0, 50.0)           # the lower 48
 SITES = [("clemson", 34.6787, -82.8432), ("greenville", 34.85, -82.39), ("bay", 30.17, -85.66)]
 NEAR_MI = 60                                   # hydrographs for gauges this close to a client site
-MAX_DETAIL = 90                                # cap on per-gauge detail calls
+MAX_DETAIL = 150                               # cap on per-gauge detail calls (the dashboard fetches any other gauge live when tapped)
 CAT = {"no_flooding": 0, "action": 1, "minor": 2, "moderate": 3, "major": 4}
 
 

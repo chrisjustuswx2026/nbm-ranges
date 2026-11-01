@@ -1,4 +1,8 @@
 {
  "youtubeLiveLink": "https://youtube.com/live/0kJsmlz95V0",
- "how_to": "When the stream restarts, paste the new YouTube Live link above (keep the quotes), then Commit. All three dashboards pick it up within a few minutes. Never paste the stream key here."
+ "deskLive": false,
+ "deskNote": "",
+ "aiChatUrl": "https://sdr-chat.raspy-bonus-f476.workers.dev",
+ "chatMode": "auto",
+ "how_to": "youtubeLiveLink: paste the new YouTube Live link when the stream restarts. deskLive: true while a meteorologist is on air. aiChatUrl: the chat server address. chatMode: auto or review. Never paste the stream key here."
 }

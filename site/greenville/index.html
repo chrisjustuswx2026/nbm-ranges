@@ -4582,23 +4582,25 @@ window.MAPVIEW = (function(){
     const RN=window.RADAR_NEAR; if(RN&&!RN.none&&RN.light&&cls!=="dry"){ cls="light"; txt=`Light returns ${Math.round(RN.d)} mi ${RN.dir.replace(/north/,"N").replace(/south/,"S").replace(/east/,"E").replace(/west/,"W")}`; el&&(el.className="r30 wet",el.innerHTML=RING+txt); }
     const M=window.RAIN30_MOVE, mv=!M?"":M.toward?`, headed your way at ${M.sp} mph`:M.away?", moving away":`, moving ${M.to}`;
     const wd=x=>({N:"north",NE:"northeast",E:"east",SE:"southeast",S:"south",SW:"southwest",W:"west",NW:"northwest"})[x]||x;
-    s.textContent = cls==="dry" ? "No rain within 30 miles." : cls==="light" ? `Just a few sprinkles ${Math.round(RN.d)} miles ${RN.dir}${mv}.` : cls==="near" ? "Rain falling here now." : txt.replace(/^Rain (\d+) mi (\w+)$/,(x,n,dr)=>`Rain ${n} miles ${wd(dr)}`)+mv+".";
+    s.textContent = cls==="dry" ? "No rain within 30 miles." : cls==="light" ? `Just a few sprinkles ${Math.round(RN.d)} miles ${RN.dir}${mv}.` : cls==="near" ? "Rain falling here now." : cls==="around" ? "Showers nearby, none falling here right now." : txt.replace(/^Rain (\d+) mi (\w+)$/,(x,n,dr)=>`Rain ${n} miles ${wd(dr)}`)+mv+".";
     hero.classList.add("r30on"); hero.classList.toggle("r30dry", cls==="dry"); }
   function check(){
     const url = `https://mapservices.weather.noaa.gov/eventdriven/rest/services/radar/radar_base_reflectivity/MapServer/export?bbox=${cx-half},${cy-half},${cx+half},${cy+half}&bboxSR=3857&imageSR=3857&size=${PX},${PX}&format=png32&transparent=true&dpi=96&f=image&_=${Date.now()}`;
     const img = new Image(); img.crossOrigin = "anonymous";
     img.onload = ()=>{ try{
       const c=document.createElement("canvas"); c.width=c.height=PX; const g=c.getContext("2d"); g.drawImage(img,0,0);
-      const d=g.getImageData(0,0,PX,PX).data, pxMi = (2*MI*1.08)/PX; let best=null, hits=0, sx=0, sy=0;
+      const d=g.getImageData(0,0,PX,PX).data, pxMi = (2*MI*1.08)/PX; let best=null, hits=0, sx=0, sy=0; const BK={};
       for(let y=0;y<PX;y++) for(let x=0;x<PX;x++){
         const i=(y*PX+x)*4, r=d[i], gg=d[i+1], b=d[i+2], a=d[i+3];
         if(a<120) continue; if(b>r && b>gg) continue;                       // skip clear + light blue/cyan (<20 dBZ)
         const dx=(x-PX/2)*pxMi, dy=(PX/2-y)*pxMi, dist=Math.hypot(dx,dy); if(dist>MI) continue;
-        hits++; sx+=dx; sy+=dy; if(!best || dist<best.dist) best={dist, dir:DIRS[Math.round(((Math.atan2(dx,dy)*180/Math.PI)+360)%360/45)%8]};
+        hits++; sx+=dx; sy+=dy; const bk=Math.floor(y/6)*100+Math.floor(x/6); BK[bk]=(BK[bk]||0)+1;
       }
+      for(const k in BK){ if(BK[k]<10) continue; const bx=(k%100)*6+3, by=Math.floor(k/100)*6+3, dx=(bx-PX/2)*pxMi, dy=(PX/2-by)*pxMi, dist=Math.hypot(dx,dy); if(dist>MI) continue;
+        if(!best||dist<best.dist) best={dist, dir:DIRS[Math.round(((Math.atan2(dx,dy)*180/Math.PI)+360)%360/45)%8]}; }
       track(hits,sx,sy,Date.now());
-      if(hits<4) show("dry","No rain within 30 mi");
-      else if(best.dist<5) show("near","Rain overhead");
+      if(!best) show("dry","No rain within 30 mi");
+      else if(best.dist<5) show(window.OBS_WET&&OBS_WET.wet?"near":"around","Rain overhead");
       else show("wet",`Rain ${Math.round(best.dist/5)*5||5} mi ${best.dir}`);
     }catch(e){ const el=document.getElementById("r30"); if(el) el.hidden=true; } };
     img.onerror = ()=>{ const el=document.getElementById("r30"); if(el) el.hidden=true; };
@@ -6091,7 +6093,7 @@ window.SDR_GL=(function(){
 
 <script>
 // v125: client chat layer
-(function(){ let wrap=null, fr=null; const CHATV="1793540067";
+(function(){ let wrap=null, fr=null; const CHATV="1793545521";
   function open(){ if(!wrap){ wrap=document.createElement("div"); wrap.id="chatwrap"; wrap.innerHTML='<iframe id="chatfr" title="Message the team" allow="camera"></iframe>'; document.body.appendChild(wrap); fr=wrap.querySelector("iframe"); fr.src="./chat.html?v="+CHATV; fr.addEventListener("load",()=>{ try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }); }
     wrap.hidden=false; document.body.classList.add("chat-on"); if(!(history.state&&history.state.chat)) history.pushState({chat:1},""); try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }
   function close(){ if(wrap){ wrap.hidden=true; } document.body.classList.remove("chat-on"); }

@@ -136,5 +136,12 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        # never fail the whole job over rivers
+        # never fail the whole job over rivers; leave a small file that says what went wrong (readable at /rivers.json)
         print("rivers: skipped —", e)
+        try:
+            os.makedirs(OUT, exist_ok=True)
+            with open(os.path.join(OUT, "rivers.json"), "w") as fh:
+                json.dump({"generated": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"), "count": 0,
+                           "gauges": [], "error": str(e)[:300]}, fh)
+        except Exception:
+            pass

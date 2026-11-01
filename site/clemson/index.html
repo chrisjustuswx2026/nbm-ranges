@@ -2623,6 +2623,19 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
     wind:`<svg viewBox="0 0 24 24" fill="none" stroke="#DCE6F5" stroke-width="2" stroke-linecap="round"><path d="M3 8h10a3 3 0 1 0-3-3M3 12h14a3 3 0 1 1-3 3M3 16h7a2 2 0 1 1-2 2"/></svg>`,
     clearnight:`<svg viewBox="0 0 24 24" fill="#DCE6F5"><path d="M20 15.5A8.5 8.5 0 0 1 8.5 4a8.5 8.5 0 1 0 11.5 11.5z"/></svg>`
   };
+  Object.assign(ICO,{sn:`<svg viewBox="0 0 24 24"><path d="M7 15h10a4 4 0 0 0 .5-8A6 6 0 0 0 6 8a3.5 3.5 0 0 0 1 7z" fill="#B9C7E0"/><path d="M6.3 19h3.4M8 17.3v3.4M6.78 17.78l2.45 2.45M9.22 17.78l-2.45 2.45M10.8 21.2h3.4M12.5 19.5v3.4M11.28 19.98l2.45 2.45M13.72 19.98l-2.45 2.45M15.3 19h3.4M17 17.3v3.4M15.78 17.78l2.45 2.45M18.22 17.78l-2.45 2.45" stroke="#F2F8FF" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>`,mix:`<svg viewBox="0 0 24 24"><path d="M7 15h10a4 4 0 0 0 .5-8A6 6 0 0 0 6 8a3.5 3.5 0 0 0 1 7z" fill="#B9C7E0"/><path d="M9 18v3" stroke="#2F7CF6" stroke-width="2" stroke-linecap="round"/><path d="M13.3 19.6h3.4M15 17.900000000000002v3.4M13.78 18.38l2.45 2.45M16.22 18.38l-2.45 2.45" stroke="#F2F8FF" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>`,ice:`<svg viewBox="0 0 24 24"><path d="M7 15h10a4 4 0 0 0 .5-8A6 6 0 0 0 6 8a3.5 3.5 0 0 0 1 7z" fill="#B9C7E0"/><g fill="#F5A1F5"><path d="M8 17.5l1.4 1.4L8 20.3l-1.4-1.4z"/><path d="M12.5 19l1.4 1.4-1.4 1.4-1.4-1.4z"/><path d="M17 17.5l1.4 1.4-1.4 1.4-1.4-1.4z"/></g></svg>`,tsn:`<svg viewBox="0 0 24 24"><path d="M7 16h10a4 4 0 0 0 .5-8A6 6 0 0 0 6 9a3.5 3.5 0 0 0 1 7z" fill="#B9C7E0"/><path d="M12.5 14l-3 5h3l-1 4 4-6h-3z" fill="#FFCE2E"/><path d="M4.8 19.5h3.4M6.5 17.8v3.4M5.28 18.28l2.45 2.45M7.72 18.28l-2.45 2.45M16.3 19.5h3.4M18 17.8v3.4M16.78 18.28l2.45 2.45M19.22 18.28l-2.45 2.45" stroke="#F2F8FF" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>`});   // v149: snow, rain/snow, ice, thundersnow
+  // v149: what to do for each kind of warning (TAKE ACTION line)
+  window.SDR_WARNDO = e => { e=String(e||"");
+    if(/Tornado/.test(e)) return "Take shelter now in an interior room on the lowest floor.";
+    if(/Avalanche/.test(e)) return "Stay off and out from under steep, snow-covered slopes.";
+    if(/Blizzard|Winter Storm|Ice Storm|Lake Effect|Snow Squall|Heavy Snow/.test(e)) return "Avoid travel if you can. Roads will be slick and visibility poor.";
+    if(/Flood/.test(e)) return "Never drive through water on a road. Move to higher ground if water rises.";
+    if(/Extreme Cold|Wind Chill|Cold Weather/.test(e)) return "Limit time outdoors, dress in layers and protect pipes.";
+    if(/Heat/.test(e)) return "Limit outdoor work. Water, shade and rest breaks.";
+    if(/High Wind|Extreme Wind|Dust/.test(e)) return "Secure loose items and watch for falling trees and power lines.";
+    if(/Red Flag|Fire/.test(e)) return "No outdoor burning. Fires can spread fast.";
+    if(/Hurricane|Tropical Storm|Storm Surge/.test(e)) return "Follow local officials. Finish preparations now.";
+    return ""; };
   const SCENES = {
     clear:  { k:"MEMORIAL STADIUM · RIGHT NOW", h:"ALL CLEAR", why:"No watches or warnings nearby.",
       ni:"ts", nh:"Storms ~4:40 PM", np:"Leading edge hits the stadium about 4:40, clears by 6.", f3b:"Next update 1:30 PM", rd:"Nothing on radar within 60 miles", vdot:"var(--clear)" },
@@ -2978,9 +2991,9 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
   const D = window.DASH; const $ = id => document.getElementById(id);
   const F = c => Math.round(c*9/5+32), MPH = kmh => Math.round(kmh*0.621371);
   const mi = (a,b,c,d)=>{ const R=3958.8,t=x=>x*Math.PI/180; const h=Math.sin(t(c-a)/2)**2+Math.cos(t(a))*Math.cos(t(c))*Math.sin(t(d-b)/2)**2; return 2*R*Math.asin(Math.sqrt(h)); };
-  const ico = (txt, isDay=true) => { const s=(txt||"").toLowerCase();
-    if(/thunder|storm/.test(s)) return "ts"; if(/rain|shower|drizzle/.test(s)) return "rn"; if(/snow|sleet|ice|frost|freez/.test(s)) return "frost";
-    if(/partly|mostly cloudy|cloud/.test(s)) return "pc"; if(/wind|breez/.test(s)) return "wind"; return isDay ? "sun" : "clearnight"; };
+  const ico = (s,isDay=true)=>{ s=(s||"").toLowerCase(); const sn=/snow|flurr|blizzard/.test(s), ic=/sleet|freezing|ice pellets|\bice\b/.test(s), th=/thunder|storm/.test(s)&&!/winter storm|snow ?storm|ice storm/.test(s);
+    if(th&&(sn||ic)) return "tsn"; if(th) return "ts"; if(ic) return "ice"; if(sn&&/rain|drizzle/.test(s)) return "mix"; if(sn) return "sn"; if(/rain|shower|drizzle/.test(s)) return "rn"; if(/frost/.test(s)) return "frost";
+    if(/partly|mostly cloudy|cloud|fog/.test(s)) return "pc"; if(/wind|breez/.test(s)) return "wind"; return isDay ? "sun" : "clearnight"; };
   const svg = k => (D.ICO[k]||D.ICO.sun);
   const hhmm = d => { let h=d.getHours(), m=d.getMinutes(), ap=h>=12?"PM":"AM"; h=h%12||12; return h+(m?":"+String(m).padStart(2,"0"):"")+" "+ap; };
   const dayName = d => d.toLocaleDateString("en-US",{weekday:"short"}).toUpperCase();
@@ -2996,7 +3009,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
     }
     return best;
   }
-  const isWarn = a => /Warning$/.test(a.properties.event) && /Tornado|Severe Thunderstorm|Flash Flood|Hurricane|Extreme Wind/.test(a.properties.event);
+  const isWarn = a => { const e=String(a.properties.event||""); return /Emergency$/.test(e) || (/Warning$/.test(e) && e!=="Storm Warning" && !/Freeze|Frost|Gale|Small Craft|Hazardous Seas|Heavy Freezing Spray|Brisk Wind|Low Water|Special Marine|Lake Wind|Hurricane Force Wind/.test(e)); };   // v149: avalanche, winter storm, ice storm, flood, wind, heat, cold … all warnings
   const isWatch = a => /Watch|Advisory|Special Weather Statement/.test(a.properties.event);   // routine Statements (rip current, coastal flood, hydrologic) stay in the list/crawl only
   const covers = a => (a.properties.affectedZones||[]).length>0; // point query already filtered to the site
 
@@ -3087,7 +3100,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
     const nextWet = hp.find(h=>(h.probabilityOfPrecipitation.value||0)>=RULES.headsUpPrecipPct);
     let key, why, nh, np, ni;
     if (warn) {
-      key="action"; why = `${warn.properties.event} for the stadium until ${hhmm(new Date(warn.properties.ends||warn.properties.expires))}. Clear the field and the lots.`;
+      key="action"; why = `${warn.properties.event} until ${hhmm(new Date(warn.properties.ends||warn.properties.expires))}. ${(window.SDR_WARNDO&&SDR_WARNDO(warn.properties.event))||"Clear the field and the lots."}`;
       ni="ts"; nh = `All clear after ${hhmm(new Date(warn.properties.ends||warn.properties.expires))}`; np = "Hold until the warning ends.";
     } else if (watch || soon || (near && near.d<=SITE.watchMi) || (window.RADAR_NEAR&&!window.RADAR_NEAR.none&&!window.RADAR_NEAR.light&&window.RADAR_NEAR.d<=SITE.watchMi)) {
       key="headsup"; const RN=window.RADAR_NEAR&&!window.RADAR_NEAR.none&&!window.RADAR_NEAR.light&&window.RADAR_NEAR.d<=SITE.watchMi?window.RADAR_NEAR:null;
@@ -3163,20 +3176,20 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
     const d=cx.getImageData(0,0,N,N).data;
     // v116: only real rain counts. Pixel must be green or stronger (about 20 dBZ+; the pale blues are drizzle, virga and clutter),
     //   and it must sit in a cluster: at least 10 such pixels in its 2-mile block. Stray speckle never trips the card.
-    const pxMi=2*MI/N, B=5, NB=N/B, blk=new Int16Array(NB*NB), blkH=new Int16Array(NB*NB);
+    const pxMi=2*MI/N, B=5, NB=N/B, blk=new Int16Array(NB*NB), blkH=new Int16Array(NB*NB), blkS=new Int16Array(NB*NB);
     for(let y=0;y<N;y++) for(let x=0;x<N;x++){ const k=(y*N+x)*4; if(d[k+3]<80) continue; const r=d[k],g=d[k+1],b=d[k+2];
       const lvl=(r>180&&g<120)||(r>150&&b>150&&g<120)?3:(r>170&&g>150&&b<120)?2:(g>120&&g>r+20&&g>b+20)?1:0;   // 0 = pale blue drizzle/noise (ignored)
-      if(!lvl) continue; const bi=Math.floor(y/B)*NB+Math.floor(x/B); blk[bi]++; if(lvl>=2) blkH[bi]++; }
-    let best=null, heavy30=0;
+      if(!lvl) continue; const bi=Math.floor(y/B)*NB+Math.floor(x/B); blk[bi]++; if(lvl>=2) blkH[bi]++; if(lvl>=3) blkS[bi]++; }
+    let best=null, heavy30=0, storm30=0;
     for(let by=0;by<NB;by++) for(let bx=0;bx<NB;bx++){ const bi=by*NB+bx; if(blk[bi]<10) continue;
       const dx=((bx+.5)*B-N/2)*pxMi, dy=(N/2-(by+.5)*B)*pxMi, dist=Math.hypot(dx,dy); if(dist>MI) continue;
-      if(dist<=30&&blkH[bi]>=4) heavy30++;
+      if(dist<=30&&blkH[bi]>=4) heavy30++; if(dist<=30&&blkS[bi]>=4) storm30++;
       if(!best||dist<best.d) best={d:dist,dx,dy,lvl:blkH[bi]>=4?2:1}; }
     if(!best){ window.RADAR_NEAR={none:true}; }
     else { const ang=(Math.atan2(best.dx,best.dy)*180/Math.PI+360)%360, DIRS=["north","northeast","east","southeast","south","southwest","west","northwest"];
-      const sw=heavy30>=3?"storms":best.lvl>=2?"heavy rain":"rain"; const groundWet=!!(window.OBS_WET&&OBS_WET.wet);
+      const sw=storm30>=2?"storms":best.lvl>=2?"heavy rain":"rain";   // v149: storms = real storm cores, not just heavier rain const groundWet=!!(window.OBS_WET&&OBS_WET.wet);
       const light=best.lvl<2&&heavy30<3&&!groundWet;   // v119: green only, nothing measured at the ground = virga / drizzle / clutter, not a call
-      window.RADAR_NEAR={d:best.d,dir:DIRS[Math.round(ang/45)%8],kind:light?"light returns":sw,heavy:heavy30>=3,light,groundWet,at:Date.now()}; }
+      window.RADAR_NEAR={d:best.d,dir:DIRS[Math.round(ang/45)%8],kind:light?"light returns":sw,heavy:storm30>=2,light,groundWet,at:Date.now()}; }
     const rl=document.getElementById("rd-line"); const R=window.RADAR_NEAR;
     if(rl){ rl.textContent = R.none ? "Radar quiet within 45 miles" : R.light ? `Light returns ${Math.round(R.d)} miles ${R.dir} · nothing measured at the ground` : R.d<3 ? `${cap(R.kind)} at ${SITE.name}` : `${cap(R.kind)} ${Math.round(R.d)} miles ${R.dir}${R.groundWet&&OBS_WET.hits[0]?` · ${OBS_WET.hits[0].name} reporting rain`:""}`; }
   }catch(e){ console.warn("radarNear",e); } }
@@ -3640,7 +3653,8 @@ window.SOUND = (function(){
 // for live and sample so Andrew wires one renderer.
 window.STRIPS = (function(){
   const D = ()=>window.DASH; const $ = id=>document.getElementById(id);
-  const ICOF = (s,isDay)=>{ s=(s||"").toLowerCase(); if(/thunder|storm/.test(s)) return "ts"; if(/rain|shower|drizzle/.test(s)) return "rn"; if(/snow|sleet|ice|frost|freez/.test(s)) return "frost"; if(/partly|mostly cloudy|cloud|fog/.test(s)) return "pc"; if(/wind|breez/.test(s)) return "wind"; return isDay?"sun":"clearnight"; };
+  const ICOF = (s,isDay)=>{ s=(s||"").toLowerCase(); const sn=/snow|flurr|blizzard/.test(s), ic=/sleet|freezing|ice pellets|\bice\b/.test(s), th=/thunder|storm/.test(s)&&!/winter storm|snow ?storm|ice storm/.test(s);
+    if(th&&(sn||ic)) return "tsn"; if(th) return "ts"; if(ic) return "ice"; if(sn&&/rain|drizzle/.test(s)) return "mix"; if(sn) return "sn"; if(/rain|shower|drizzle/.test(s)) return "rn"; if(/frost/.test(s)) return "frost"; if(/partly|mostly cloudy|cloud|fog/.test(s)) return "pc"; if(/wind|breez/.test(s)) return "wind"; return isDay?"sun":"clearnight"; };
   const svg = k => D().ICO[k]||D().ICO.sun;
   const hh = d => { let h=d.getHours(), ap=h>=12?"PM":"AM"; h=h%12||12; return h+" "+ap; };
   const dayN = d => d.toLocaleDateString("en-US",{weekday:"short"}).toUpperCase();
@@ -3658,7 +3672,7 @@ window.STRIPS = (function(){
   // ---- v118 HOURLY STRIP: 8 hours at a time (phones), swipe for more, day markers at midnight,
   //      tap TEMP / RAIN / WIND for a graph under the strip that scrolls with it; tap again (or the ✕) to close.
   let hchart="", hcolW=52;
-  const hsColW=()=>{ const el=$("hours"); const w=(el&&el.clientWidth)||360, lab=innerWidth<=640?44:50, n=innerWidth<=640?7:(innerWidth<960?10:12); return Math.max(44,Math.floor((w-lab-2)/n)); };
+  const hsColW=()=>{ const el=$("hours"); const w=(el&&el.clientWidth)||360, lab=innerWidth<=640?44:50, n=innerWidth<=640?5:(innerWidth<960?8:10); return Math.max(56,Math.floor((w-lab-2)/n)); };
   const wsplit=w=>{ const s=wfmt(w)||""; const m=s.match(/^([A-Z]*)\s*(.*)$/); return m?[m[1],(m[2]||s).trim()]:["",s]; };
   const hdlab=t=>{ const a=new Date(); a.setHours(0,0,0,0); const b=new Date(t); b.setHours(0,0,0,0); const n=Math.round((b-a)/864e5); return n===0?"TODAY":n===1?"TOMORROW":b.toLocaleDateString("en-US",{weekday:"long"}).toUpperCase(); };
   function hsDayLabel(){ const hs=$("hours"), lb=$("hdaylbl"); if(!hs||!lb) return; const r=hs.getBoundingClientRect(), lab=innerWidth<=640?44:50;
@@ -3695,9 +3709,9 @@ window.STRIPS = (function(){
     const dshort=t=>t.toLocaleDateString("en-US",{weekday:"short"}).toUpperCase();
     const cell=(i,h,inner,cls)=>`<div class="hc${i===selH?" sel":""}${cls||""}${h.step?" stp":""}${h.est?" est":""}" data-i="${i}" data-day="${hdlab(h.t)}" data-step="${h.step||""}">${inner}</div>`;
     const tRow=list.map((h,i)=>cell(i,h,`${i===0||h.t.getHours()===0?`<em>${i===0?"NOW":dshort(h.t)}</em>`:""}<small>${i===0?hh(h.t):hh(h.t)}</small>`, i===0?" nowc":"")).join("");
-    const iRow=list.map((h,i)=>cell(i,h,`<span class="hi">${svg(h.ico)}</span>`)).join("");
+    const iRow=list.map((h,i)=>{ const k=(h.snow||0)>=0.05?(h.ico==="ts"?"tsn":h.ico==="rn"?"mix":h.ico==="pc"||h.ico==="sun"||h.ico==="clearnight"?"sn":h.ico):h.ico; return cell(i,h,`<span class="hi">${svg(k)}</span>`); }).join("");
     const tempRow=list.map((h,i)=>cell(i,h,`<span class="hv"><b>${h.temp}°</b></span>`)).join("");
-    const anyPop=list.some(h=>h.pop); const rainRow=list.map((h,i)=>cell(i,h,`<span class="hv">${h.pop?`<b class="${(h.thunder||0)>=30?"st":""}">${h.pop}%</b>`:(i===0&&!anyPop?`<span class="hdry">Dry through these hours</span>`:"")}</span>`)).join("");   // v119: a dry strip says so once
+    const anyPop=list.some(h=>h.pop); const rainRow=list.map((h,i)=>cell(i,h,`<span class="hv">${h.pop?`<b class="${(h.thunder||0)>=30?"st":""}">${h.pop}<i class="pct">%</i></b>`:(i===0&&!anyPop?`<span class="hdry">Dry through these hours</span>`:"")}</span>`)).join("");   // v119: a dry strip says so once
     const windRow=list.map((h,i)=>{ const s=wfmt(h.wind)||""; if(!s||s==="CALM") return cell(i,h,`<span class="hv"><b class="calm">Calm</b><small>${h.gust&&h.gust>=15?`G${g5(h.gust)}`:"&nbsp;"}</small></span>`); const [d,n]=wsplit(h.wind); return cell(i,h,`<span class="hv"><b>${n.split(/[–-]/).pop()||"—"}</b><small>${d}${h.gust&&h.gust>=15?` G${g5(h.gust)}`:""}</small></span>`); }).join("");   // v119: mph on every phone cell too
     const lab=(k,txt)=>`<button type="button" class="hlab btn2" data-hk="${k}" aria-pressed="${hchart===k}">${txt}</button>`;
     const labW=innerWidth<=640?44:50; const lines=list.map((h,i)=>(i>0&&h.t.getHours()===0)?`<i class="hdl" style="left:${labW+i*hcolW}px"></i>`:"").join("");   // v118b: one continuous day line at each midnight
@@ -3851,7 +3865,7 @@ window.STRIPS = (function(){
   // precip amount on a real inch scale: the colored segment is the range of outcomes, numbers sit right on the ends, EXPECT sits over its tick
   // v102: the amount is one line (most likely, then the range in words), no slider
   const amount = (lab,r,snow) => { if(!r) return ""; const unit=snow?10:1; const f=h=>rIn(h,snow);
-    if(r[2]<unit) return `<div class="amtl"><small>${lab} AMOUNT</small><b>None expected</b></div>`;
+    if(r[2]<unit) return `<div class="amtl"><small>${lab} AMOUNT</small><b>${snow?'Under 0.1" · a dusting at most':lab==="ICE"?"A light glaze at most":"None expected"}</b></div>`;
     // v117: three labeled numbers (the middle half of the models: low end = 25th percentile, most likely = median, high end = 75th)
     const v=h=>h<unit?"Trace":f(h)+'"';
     return `<div class="amtx"><small class="amtt">${lab} AMOUNT <em>${window.SDR_RANGE==="wide"?"full model spread":"middle half of the models"}</em></small><div class="sts"><div class="st lo"><small>LOW END</small><b>${v(r[0])}</b></div><div class="st"><small>MOST LIKELY</small><b>${v(r[1])}</b></div><div class="st lo"><small>HIGH END</small><b>${v(r[2])}</b></div></div></div>`; };
@@ -3888,7 +3902,8 @@ window.STRIPS = (function(){
     const thr=mp>=50?40:Math.max(10,mp-15), wet=H.filter(h=>(h.pop||0)>=thr), s0=hrOf(wet[0].t), e0=hrOf(wet[wet.length-1].t)+1, storm=mt>=30;
     const pk=H.filter(h=>(h.pop||0)>=mp-10), ps=hrOf(pk[0].t), pe=hrOf(pk[pk.length-1].t)+1;
     let t= wet.length>=16?(mp>=60?`on and off all day`:`possible any time of day`): s0>=12&&e0>=23?`mainly after ${hlab(s0)}`: s0<=6&&e0<=13?`early, dry by ${hlab(e0)}`: `most likely ${hrng2(s0,e0)}`;
-    const lead=mp>=60?(storm?"Storms":"Rain"):mp>=40?(storm?"A chance of storms":"A chance of rain"):(storm?"A few storms":"Spotty showers");
+    const _sn=H.some(h=>(h.snow||0)>=0.05||/snow|flurr/i.test(h.short||"")), _rn=H.some(h=>/rain|drizzle/i.test(h.short||""));
+    const lead=_sn?(storm?(mp>=60?"Snow and thunder":"Snow showers, a little thunder"):mp>=60?(_rn?"Rain and snow":"Snow"):mp>=40?(_rn?"A chance of rain and snow":"A chance of snow"):"A few flurries"):mp>=60?(storm?"Storms":"Rain"):mp>=40?(storm?"A chance of storms":"A chance of rain"):(storm?"A few storms":"Spotty showers");
     const best=(pe-ps<e0-s0&&pe-ps<=6)?` · best chance ${hrng2(ps,pe)}`:""; return `<div class="when">${lead} <b>${t}</b>${best}</div>`; }
   const hasHours=x=>{ const H=hoursOf(x); if(!H.length) return false; const today=new Date(H[0].t).toDateString()===new Date().toDateString(); return today?H.length>=3:(H.length>=12||H.filter(h=>h.step).length>=6); };
   function chartsOf(x,which){ const H=hoursOf(x); if(!hasHours(x)) return ""; const mt=Math.max(...H.map(h=>h.thunder||0)), G=H.map(h=>h.gust||hrWind(h)||0), gm=Math.max(...G), T=H.map(h=>h.temp);
@@ -3920,15 +3935,15 @@ window.STRIPS = (function(){
       C.temp=`<svg viewBox="0 0 ${W} ${Hh}"><defs><linearGradient id="tg${W}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFC857" stop-opacity=".32"/><stop offset="1" stop-color="#FFC857" stop-opacity="0"/></linearGradient></defs><polygon points="${area2}" fill="url(#tg${W})"/><polyline points="${pts2}" fill="none" stroke="#FFC857" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round"/>${flLine}${labs2}${axis}</svg>`; }
     if(H.some(h=>h.sky!=null)){ const Y=v=>bot-(bot-top)*v/100; C.sky=`<svg viewBox="0 0 ${W} ${Hh}">${[25,50,75].map(v=>`<line x1="${L}" x2="${R}" y1="${Y(v)}" y2="${Y(v)}" stroke="rgba(255,255,255,.12)" stroke-dasharray="3 4"/>`).join("")}${barsOf(h=>h.sky!=null?Math.round(h.sky):null,v=>v>=80?"#8FA3C2":v>=50?"#B9C6DB":v>=25?"#DCE6F5":"#FFE08A","%",100)}${axis}</svg>`; }
     const snowH=H.map(h=>h.snow||0), iceH=H.map(h=>h.ice||0);
-    if(Math.max(...snowH)>=0.05) C.snow=`<svg viewBox="0 0 ${W} ${Hh}">${barsOf(h=>h.snow>=0.05?+h.snow.toFixed(1):null,v=>v>=1?"#4D8CFF":"#8CC8FF",'"',Math.max(1,...snowH))}${axis}</svg>`;
-    if(Math.max(...iceH)>=0.01) C.ice=`<svg viewBox="0 0 ${W} ${Hh}">${barsOf(h=>h.ice>=0.01?+h.ice.toFixed(2):null,v=>v>=0.1?"#E05AE0":"#F5A1F5",'"',Math.max(0.25,...iceH))}${axis}</svg>`;
+    { let cum=0; const CS=snowH.map(v=>cum+=v), tot=cum; if(tot>=0.05) C.snow=`<svg viewBox="0 0 ${W} ${Hh}">${barsOf(h=>{ const v=CS[H.indexOf(h)]; return v>=0.05?+v.toFixed(1):null; },v=>v>=2?"#4D8CFF":"#8CC8FF",'"',Math.max(1,tot*1.15))}${axis}</svg><div class="ck"><span><i style="background:#8CC8FF"></i>Snow piling up through the day · about ${tot<0.1?"0.1":tot.toFixed(1)}" by midnight</span></div>`; }
+    { let cum=0; const CI=iceH.map(v=>cum+=v), tot=cum; if(tot>=0.01) C.ice=`<svg viewBox="0 0 ${W} ${Hh}">${barsOf(h=>{ const v=CI[H.indexOf(h)]; return v>=0.01?+v.toFixed(2):null; },v=>v>=0.1?"#E05AE0":"#F5A1F5",'"',Math.max(0.25,tot*1.15))}${axis}</svg><div class="ck"><span><i style="background:#F5A1F5"></i>Ice building up through the day · about ${tot.toFixed(2)}" by midnight</span></div>`; }
     { const wcol=v=>v>=45?"#FF6B6F":v>=35?"#F5A524":v>=25?"#F5D76E":v>=15?"#7FD6C2":"#4E6E8E", wmax=Math.max(30,...H.map(h=>Math.max(hrWind(h)||0,h.gust||0)));
       C.wind=`<svg viewBox="0 0 ${W} ${Hh}">${barsOf(h=>hrWind(h)||0,v=>wcol(v),"",wmax)}${axis}</svg>`;
       C.gust=`<svg viewBox="0 0 ${W} ${Hh}">${barsOf(h=>Math.max(hrWind(h)||0,h.gust||0),v=>wcol(v),"",wmax)}${axis}</svg>`; }
     if(mt>0) C.storm=`<svg viewBox="0 0 ${W} ${Hh}">${barsOf(h=>h.thunder||0,v=>v>=50?"#F5A524":"#F5D76E","%",100)}${axis}</svg><div class="ck"><span><i style="background:#F5A524"></i>Chance of thunder</span></div>`;
     const def="";   // v119: a day opens clean; a chart opens only when its tile is tapped
     const KEEP=which==="cond"?["temp","wind","gust","sky"]:["rain","storm","snow","ice"];
-    return `<div class="dcharts">${Object.keys(C).filter(k=>KEEP.includes(k)).map(k=>`<div class="dchart${k===def?" open":""}" data-k="${k}"><div class="dch"><b>${({rain:"RAIN CHANCE",temp:"TEMPERATURE & FEELS LIKE",wind:"WIND SPEED",gust:"WIND GUSTS",storm:"THUNDER",sky:"CLOUD COVER",snow:"SNOW",ice:"ICE"})[k]}<em class="${(k==="rain"||k==="storm")&&thWin?"th":""}">${k==="rain"&&thWin?"⚡ THUNDER "+thWin:k==="storm"&&thWin?"⚡ "+thWin:(k==="wind"||k==="gust")?"HOUR BY HOUR · MPH":"HOUR BY HOUR"}</em></b><button type="button" data-chart="${k}" aria-label="Close">✕</button></div><div class="dcs">${C[k]}</div></div>`).join("")}</div>`; }
+    return `<div class="dcharts">${Object.keys(C).filter(k=>KEEP.includes(k)).map(k=>`<div class="dchart${k===def?" open":""}" data-k="${k}"><div class="dch"><b>${({rain:"RAIN CHANCE",temp:"TEMPERATURE & FEELS LIKE",wind:"WIND SPEED",gust:"WIND GUSTS",storm:"THUNDER",sky:"CLOUD COVER",snow:"SNOW · RUNNING TOTAL",ice:"ICE · RUNNING TOTAL"})[k]}<em class="${(k==="rain"||k==="storm")&&thWin?"th":""}">${k==="rain"&&thWin?"⚡ THUNDER "+thWin:k==="storm"&&thWin?"⚡ "+thWin:(k==="wind"||k==="gust")?"HOUR BY HOUR · MPH":"HOUR BY HOUR"}</em></b><button type="button" data-chart="${k}" aria-label="Close">✕</button></div><div class="dcs">${C[k]}</div></div>`).join("")}</div>`; }
   function renderDays(){
     const el=$("days"); if(!el) return; el.className="dlist sdr";
     const head=$("days-conf"); if(head){ const c3=DAYS.slice(0,3).map(confOf).filter(v=>v!=null); const c=c3.length?Math.min(...c3):null; window.SDR_CONF=DAYS.map(x=>({date:x.date,conf:confOf(x),why:confOf(x)!=null&&confOf(x)<=2?confWhy(x):""}));
@@ -3948,7 +3963,8 @@ window.STRIPS = (function(){
         <span class="chev">${i===selD?"−":"+"}</span></div>`;
       if(i!==selD) return row;
       const c=confOf(x), sp=spray(x), g=gdu(x), et=etRate(x);
-      const anySnow = x.sr && x.sr[2]>=10, anyIce = x.ir && x.ir[2]>=1;
+      const _H=hoursOf(x), hsn=_H.reduce((a,h)=>a+(h.snow||0),0), hic=_H.reduce((a,h)=>a+(h.ice||0),0), _tx=(x.dayTxt||"")+" "+(x.short||"")+" "+(x.nightTxt||"");
+      const anySnow = (x.sr && x.sr[2]>=10) || (x.snowP||0)>=20 || hsn>=0.05 || /snow|flurr/i.test(_tx), anyIce = (x.ir && x.ir[2]>=1) || (x.iceP||0)>=20 || hic>=0.01 || /freezing rain|sleet|\bice\b/i.test(_tx);   // v149: show the spread whenever it can snow or ice
       return row + `<div class="dexp ${cls}">
         <p class="dx-txt">${x.dayTxt || x.short || x.nightTxt || ""}</p>
         ${x.dayTxt&&x.nightTxt?`<p class="dx-n"><b>${(x.long||x.d||"").replace(/^Tonight$/i,"Tonight")} night.</b> ${x.nightTxt}</p>`:""}
@@ -3962,7 +3978,7 @@ window.STRIPS = (function(){
             ${(()=>{ const r=Math.max(x.pp||0,x.ppN||0);   // v101: one rain number, then WHEN (from the hourly forecast)
                 if(!r&&!(x.snowP>=10)&&!(x.iceP>=10)) return `<div class="sts pch">${stat("RAIN","Dry","","dry")}</div>`;
                 return `<div class="sts pch">${stat("RAIN", r+"%")}${(x.thunder||0)>=20?stat("THUNDER", x.thunder+"%", "", x.thunder>=30?"warn":""):""}${(x.snowP||0)>=10?stat("SNOW", x.snowP+"%"):""}${(x.iceP||0)>=10?stat("ICE", x.iceP+"%", "", "warn"):""}</div>${rainWhen(x)}`; })()}
-            ${x.rr && x.rr[2]<1 && !anySnow && !anyIce ? `<div class="chl dim">No measurable rain expected</div>` : amount("RAIN", x.rr, false)}${anySnow?amount("SNOW", x.sr, true):""}${anyIce?amount("ICE", x.ir, false):""}
+            ${x.rr && x.rr[2]<1 && !anySnow && !anyIce ? `<div class="chl dim">No measurable rain expected</div>` : amount("RAIN", x.rr, false)}${anySnow?amount("SNOW", x.sr, true):""}${anySnow&&!x.sr&&hsn>=0.05?`<div class="amtl"><small>SNOW AMOUNT</small><b>About ${hsn.toFixed(1)}"</b></div>`:""}${anyIce?amount("ICE", x.ir, false):""}${(anySnow||anyIce)&&window.SDR_ROADS?SDR_ROADS(x,hsn,hic):""}
             ${c!=null?`<div class="agreeline">MODEL AGREEMENT ${seg(c)} <b class="${lv(c)}">${c} of 5</b></div>${c<=2?`<div class="confwhy">Models disagree on ${confWhy(x)} — expect this to change.</div>`:""}`:""}
           </section>
           ${chartsOf(x,"precip")}
@@ -5030,7 +5046,10 @@ window.SITE_LL = window.__LOC?{lat:__LOC.la,lon:__LOC.lo}:(window.SITE_LL || { l
   function rainWin(i){ if(i==null||!window.STRIPS||!STRIPS.hours) return ""; const H=STRIPS.hours()||[]; const t0=new Date(); t0.setHours(0,0,0,0); t0.setDate(t0.getDate()+i);
     const w=H.filter(h=>new Date(h.t)>=t0&&new Date(h.t)<new Date(+t0+36*3600e3)&&(h.pop||0)>=50); if(!w.length) return ""; const mx=Math.max(...w.map(h=>h.pop)); const pk=w.filter(h=>h.pop>=mx-10);
     const f=d=>{ d=new Date(d); let h=d.getHours(), ap=h>=12?"PM":"AM"; return (h%12||12)+" "+ap; }; const dn=t0.toLocaleDateString("en-US",{weekday:"short"}).toUpperCase();
-    return `HEAVIEST RAIN · ${dn} ${f(w[0].t)} – ${f(+new Date(w[w.length-1].t)+3600e3)}${pk.length<w.length?` · MOST LIKELY ${f(pk[0].t)} – ${f(+new Date(pk[pk.length-1].t)+3600e3)}`:""}`; }
+    const wd=d=>new Date(d).toLocaleDateString("en-US",{weekday:"short"}).toUpperCase();
+    const fs=t=>(new Date(t).toDateString()!==t0.toDateString()?wd(t)+" ":"")+f(t);
+    const fe=(a,b)=>{ const A=new Date(a), B=new Date(b), mid=B.getHours()===0&&B.getMinutes()===0&&B-A<=24*3600e3; return (A.toDateString()===B.toDateString()||mid?"":wd(B)+" ")+f(B); };
+    return `HEAVIEST RAIN · ${dn} ${f(w[0].t)} – ${fe(w[0].t,+new Date(w[w.length-1].t)+3600e3)}${pk.length<w.length?` · MOST LIKELY ${fs(pk[0].t)} – ${fe(pk[0].t,+new Date(pk[pk.length-1].t)+3600e3)}`:""}`; }
   function stormWin(i){ if(i==null||!window.STRIPS||!STRIPS.hours) return ""; const H=STRIPS.hours()||[]; const t0=new Date(); t0.setHours(0,0,0,0); t0.setDate(t0.getDate()+i);
     const day=H.filter(h=>new Date(h.t).toDateString()===t0.toDateString()); const sc=h=>Math.max(h.thunder||0,/thunder|storm/i.test(h.short||"")?(h.pop||0):0);
     const w=day.filter(h=>sc(h)>=15||(h.pop||0)>=40); if(!w.length) return ""; const mx=Math.max(...w.map(sc)); const pk=w.filter(h=>sc(h)>=Math.max(15,mx-10));
@@ -5550,7 +5569,7 @@ function SDR_STORY(H, D, spc, nowMs){
       if(d0&&d0.lo!=null){ if(d0.lo<=32&&!/freez|frost/.test(hl)) add("Tonight",(d0.lo<=25?"hard freeze ":"freeze ")+d0.lo+"°",d0.lo<=25?"headsup":""); else if(d0.lo<=36&&!/frost|freez/.test(hl)) add("Tonight","frost",""); }
       if(d1){ if(d0&&d0.hi!=null&&d1.hi!=null&&Math.abs(d1.hi-d0.hi)>=10&&!/cool|warm|cold|heat|colder|warmer/.test(hl)) add("Tomorrow",(d1.hi<d0.hi?"cool-down ":"warm-up ")+d0.hi+"° → "+d1.hi+"°","");
         if((d1.gust||0)>=30&&!/gust|wind/.test(hl)) add("Tomorrow","gusts to "+d1.gust,d1.gust>=45?"action":"headsup");
-        const pp=Math.max(d1.pp||0,d1.ppN||0); if(pp>=40&&!/rain|storm|shower/.test(hl)) add("Tomorrow",((d1.thunder||0)>=30?"storms ":"rain ")+pp+"%",(d1.thunder||0)>=30?"headsup":"");
+        const pp=Math.max(d1.pp||0,d1.ppN||0); if(pp>=40&&!/rain|storm|shower/.test(hl)) add("Tomorrow",(/snow|flurr/i.test((d1.short||"")+(d1.dayTxt||""))||(d1.snowP||0)>=30?"snow ":(d1.thunder||0)>=30?"storms ":"rain ")+pp+"%",(d1.thunder||0)>=30?"headsup":"");
         if(d1.lo!=null){ if(d1.lo<=32&&!/freez|frost/.test(hl)) add("Tomorrow night",(d1.lo<=25?"hard freeze ":"freeze ")+d1.lo+"°",d1.lo<=25?"headsup":""); else if(d1.lo<=36&&!/frost|freez/.test(hl)) add("Tomorrow night","frost",""); } }
       if(d1&&d2&&d1.hi!=null&&d2.hi!=null&&Math.abs(d2.hi-d1.hi)>=10&&!by["Tomorrow"]&&!/cool|warm|cold|heat/.test(hl)) add(d2.long||d2.d,(d2.hi<d1.hi?"cool-down ":"warm-up ")+d1.hi+"° → "+d2.hi+"°","");
       const order=["Tonight","Tomorrow","Tomorrow night"]; const keys=Object.keys(by).sort((x,y)=>(order.indexOf(x)<0?9:order.indexOf(x))-(order.indexOf(y)<0?9:order.indexOf(y)));
@@ -5565,7 +5584,7 @@ function SDR_STORY(H, D, spc, nowMs){
     const O=window.STORY_OVERRIDE; if(O&&O.h){ set({level:O.level||"headsup",ico:O.ico||"pc",h:O.h,p:O.p||""}); return; }
     if(!document.getElementById("rmap") && !/\bclear\b/.test(($("call")||{}).className||"")) return;
     if(!window.STRIPS||!STRIPS.days) return; const D=STRIPS.days()||[], H=(STRIPS.hours&&STRIPS.hours())||[]; if(!D.length&&!H.length) return;
-    set(SDR_STORY(H.map(h=>({t:h.t,pop:h.pop,thunder:h.thunder,short:h.short,feel:h.feel})), D, SPC, Date.now()));
+    let r=SDR_STORY(H.map(h=>({t:h.t,pop:h.pop,thunder:h.thunder,short:h.short,feel:h.feel})), D, SPC, Date.now()); try{ if(window.SDR_NOWFIRST) r=SDR_NOWFIRST(r,H)||r; }catch(e){} set(r);
   }
   window.STORY={ run:story };
   setTimeout(async()=>{ await spc(); story(); },2600); setInterval(async()=>{ await spc(); story(); },120000);
@@ -5725,12 +5744,12 @@ function SDR_STORY(H, D, spc, nowMs){
   const tab=document.querySelector('.tabs button[data-pane="briefing"]'); const SEEN="sdr-brief-seen";
   let seen=0; try{ seen=+localStorage.getItem(SEEN)||0; }catch(e){}
   if(tab) tab.addEventListener("click",()=>{ seen=Date.now(); try{ localStorage.setItem(SEEN,String(seen)); }catch(e){} paint(); });
-  function paint(){ const L=((window.BRIEF&&BRIEF.list&&BRIEF.list())||[]).filter(x=>x.local!==false&&Date.now()-x.t<12*3600e3); const b=L[0];
+  function paint(){ const L=((window.BRIEF&&BRIEF.list&&BRIEF.list())||[]).filter(x=>x.local!==false&&Date.now()-x.t<48*3600e3); const b=L[0];
     // dot on the Briefing tab for anything new
     if(tab){ tab.classList.toggle("hasnew",!!(b&&b.t>seen)); }
     // slim strip under the top cards only for threats
     const host=document.getElementById("status"); let st=document.getElementById("bstrip");
-    const show=b&&URG.includes(b.cat)&&b.t>seen;
+    const age=b?Date.now()-b.t:1e15; const show=b&&b.cat!=="UPDATE"&&(age<6*3600e3||b.t>seen);   // v149: 6 hours on Home, then until they've opened it
     if(!show){ if(st) st.hidden=true; return; }
     if(!st&&host){ st=document.createElement("button"); st.id="bstrip"; st.type="button"; host.insertAdjacentElement("afterend",st); st.onclick=()=>{ if(tab) tab.click(); if(window.BRIEF&&BRIEF.show) BRIEF.show(b); window.scrollTo(0,0); }; }
     if(st){ st.hidden=false; st.innerHTML=`<i></i><span><b>New briefing</b>${b.title}</span><em>Read →</em>`; st.onclick=()=>{ if(tab) tab.click(); if(window.BRIEF&&BRIEF.show) BRIEF.show(b); window.scrollTo(0,0); }; } }
@@ -6153,7 +6172,7 @@ window.SDR_GL=(function(){
 
 <script>
 // v125: client chat layer
-(function(){ let wrap=null, fr=null; const CHATV="1793490596";
+(function(){ let wrap=null, fr=null; const CHATV="1793540066";
   function open(){ if(!wrap){ wrap=document.createElement("div"); wrap.id="chatwrap"; wrap.innerHTML='<iframe id="chatfr" title="Message the team" allow="camera"></iframe>'; document.body.appendChild(wrap); fr=wrap.querySelector("iframe"); fr.src="./chat.html?v="+CHATV; fr.addEventListener("load",()=>{ try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }); }
     wrap.hidden=false; document.body.classList.add("chat-on"); if(!(history.state&&history.state.chat)) history.pushState({chat:1},""); try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }
   function close(){ if(wrap){ wrap.hidden=true; } document.body.classList.remove("chat-on"); }
@@ -6288,5 +6307,49 @@ window.SDR_GL=(function(){
   window.addEventListener("alerts-ready",paintAlerts);
   load(); setInterval(load,15*60000);
 })();
+</script>
+
+<style>
+/* v149 */
+.hs .hv b .pct{font-style:normal;font-size:.6em;opacity:.8;margin-left:1px}
+.roads{display:flex;gap:10px;align-items:baseline;margin:10px 0 2px;padding:9px 12px;border-radius:10px;background:rgba(255,255,255,.04);border-left:3px solid var(--dim)}
+.roads small{font-family:var(--display);font-weight:800;letter-spacing:.12em;font-size:11px;color:var(--muted);flex:none}
+.roads span{font-size:14.5px;line-height:1.35}
+.roads.warn{border-left-color:var(--heads)} .roads.bad{border-left-color:var(--action)}
+</style>
+<script>
+// v149: roads line for snow / ice days
+window.SDR_ROADS=(x,hs,hi)=>{ const sn=Math.max(hs||0,x.sr?x.sr[1]/100:0), ic=Math.max(hi||0,x.ir?x.ir[1]/100:0), lo=x.lo, hiT=x.hi; let t,c;
+  if(ic>=0.01||(x.iceP||0)>=30){ t="Ice possible. Bridges and overpasses glaze first; avoid travel if it starts to stick."; c="bad"; }
+  else if(sn>=2){ t="Snow-covered roads likely. Travel will be slow and difficult."; c="bad"; }
+  else if(sn>=0.5||(sn>0&&lo!=null&&lo<=30)){ t="Slick spots likely on bridges, overpasses and untreated roads, especially early morning and at night."; c="warn"; }
+  else if(sn>0||(x.snowP||0)>=20){ t=hiT!=null&&hiT>=36?"Mostly wet roads. Snow may coat grass and cars but shouldn't stick to paved roads.":"A few slick spots possible on bridges and overpasses."; c=""; }
+  else return ""; return `<div class="roads ${c}"><small>ROADS</small><span>${t}</span></div>`; };
+
+// v149: What's Next never skips showers happening now or in the next few hours
+window.SDR_NOWFIRST=(r,H)=>{ if(!r||/\bnow\b|arriving|moves in|by \d|winding/i.test(r.h)) return r;
+  const now=Date.now(), hm=d=>{ d=new Date(d); let h=d.getHours(); return h===12?"noon":h===0?"midnight":(h%12)+" "+(h>=12?"PM":"AM"); };
+  const H6=(H||[]).filter(h=>+new Date(h.t)>now-3600e3&&+new Date(h.t)<now+6*3600e3), wet=H6.filter(h=>(h.pop||0)>=20);
+  const RN=window.RADAR_NEAR, radar=RN&&!RN.none&&!RN.light&&RN.d<=20, obs=window.OBS_WET&&OBS_WET.wet;
+  if(!wet.length&&!radar&&!obs) return r;
+  const mx=Math.max(0,...H6.map(h=>h.pop||0)), cold=H6.some(h=>/snow|flurr/i.test(h.short||""))||(H6[0]&&H6[0].feel!=null&&H6[0].feel<=33);
+  const W=cold?(mx>=50?"Snow showers":"Flurries"):mx>=50?"Showers":mx>=30?"Spotty showers":"A few sprinkles";
+  const first=wet[0], start=first?+new Date(first.t):now, nowish=radar||obs||start-now<60*60e3;
+  const end=(H||[]).filter(h=>+new Date(h.t)>Math.max(now,start)).find(h=>(h.pop||0)<20);
+  const h=nowish?(end&&+new Date(end.t)-now<12*3600e3?`${W} until ${hm(end.t)}`:`${W} around now`):`${W} after ${hm(start)}`;
+  const rest=String(r.p||"").replace(/\s*Dry until then\.?/i,"").trim();
+  return {level:r.level==="clear"?"clear":r.level, ico:cold?"sn":"rn", h, p:`Then ${r.h.charAt(0).toLowerCase()+r.h.slice(1)}${rest?": "+rest.charAt(0).toLowerCase()+rest.slice(1):"."}`}; };
+
+// v149: say "noon" and "midnight" instead of 12 PM / 12 AM, everywhere on the page
+(function(){ const RX=/\b12(?::00)?\s?(AM|PM|a\.m\.|p\.m\.)/gi, SKIP={SCRIPT:1,STYLE:1,TEXTAREA:1,INPUT:1};
+  const fix=n=>{ const t=n.nodeValue; if(!t||t.indexOf("12")<0) return; RX.lastIndex=0; if(!RX.test(t)) return; RX.lastIndex=0;
+    const upper=t===t.toUpperCase()&&/[A-Z]{3}/.test(t.replace(RX,"")), alone=t.trim().replace(RX,"").trim()==="";
+    const v=t.replace(RX,(m,ap)=>{ const w=/^p/i.test(ap)?"noon":"midnight"; return upper?w.toUpperCase():alone?w.charAt(0).toUpperCase()+w.slice(1):w; });
+    if(v!==t) n.nodeValue=v; };
+  const walk=root=>{ if(!root) return; if(root.nodeType===3){ if(!(root.parentNode&&SKIP[root.parentNode.nodeName])) fix(root); return; }
+    if(root.nodeType!==1||SKIP[root.nodeName]) return; const tw=document.createTreeWalker(root,NodeFilter.SHOW_TEXT); let n; while((n=tw.nextNode())){ if(!(n.parentNode&&SKIP[n.parentNode.nodeName])) fix(n); } };
+  let q=new Set(), on=false; const run=()=>{ on=false; const L=[...q]; q.clear(); L.forEach(walk); };
+  new MutationObserver(ms=>{ ms.forEach(m=>{ if(m.type==="characterData") q.add(m.target); else m.addedNodes.forEach(x=>q.add(x)); }); if(!on){ on=true; requestAnimationFrame(run); } }).observe(document.body,{subtree:true,childList:true,characterData:true});
+  walk(document.body); })();
 </script>
 </body></html>

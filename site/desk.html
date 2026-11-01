@@ -41,6 +41,7 @@ textarea:focus{border-color:var(--blue)}
 .att{display:flex;flex-wrap:wrap;gap:8px;margin:0 14px 10px}
 .att label{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:13.5px;cursor:pointer}
 .att input{accent-color:var(--blue)}
+.more{margin:0 14px 10px}.more summary{cursor:pointer;color:var(--muted);font-size:13.5px;margin-bottom:8px}.more .att{margin:0}
 .acts{display:flex;gap:8px;padding:0 14px 14px}
 .acts button{border:1.5px solid var(--line);border-radius:999px;padding:9px 18px;font-family:var(--display);font-weight:800;letter-spacing:.1em;font-size:14px}
 .acts .send{background:var(--clear);border-color:var(--clear);color:#06210F}
@@ -77,14 +78,17 @@ textarea:focus{border-color:var(--blue)}
   const esc=s=>String(s||"").replace(/[&<]/g,c=>c==="&"?"&amp;":"&lt;");
   const shown=new Set(); let timer=null;
   function card(it){ const c=document.createElement("div"); const lv=["clear","watch","concern"].includes(it.level)?it.level:"watch"; c.className="card "+lv; c.dataset.id=it.id;
-    const att=["radar","hourly","outlook","rain"]; const lab={radar:"📡 Radar snapshot",hourly:"📈 Hour by hour",outlook:"🗺 Outlook map",rain:"🌧 Rain this week"};
+    const att=["hourly","tenday","radar","rain","spc1","spc2","spc3","spc48","ero1","ero2","ero3","qpf13","qpf15","qpf17","cpct610","cpct814","cpcp610","cpcp814","drought","winter","tropics","rivers"];
+    const lab={hourly:"📈 Day snapshot",tenday:"🌡 10-day highs & lows",radar:"📡 Radar",rain:"🌧 Rain table",spc1:"⚡ Severe · today",spc2:"⚡ Severe · tomorrow",spc3:"⚡ Severe · day 3",spc48:"⚡ Severe · days 4–8",ero1:"💧 Flood risk · today",ero2:"💧 Flood risk · tomorrow",ero3:"💧 Flood risk · day 3",qpf13:"🗺 Rainfall 1–3 days",qpf15:"🗺 Rainfall 1–5 days",qpf17:"🗺 Rainfall 1–7 days",cpct610:"📆 Temps 6–10 day",cpct814:"📆 Temps 8–14 day",cpcp610:"📆 Rain 6–10 day",cpcp814:"📆 Rain 8–14 day",drought:"🟫 Drought",winter:"❄️ Winter impacts",tropics:"🌀 Tropics",rivers:"🌊 Rivers"};
+    const ALIAS={outlook:"spc1",rainmap:"qpf13",temp_outlook:"cpct610",rain_outlook:"cpcp610"}; it.attach=(it.attach||[]).map(a=>ALIAS[a]||a);
     c.innerHTML=`<div class="ch"><span class="lv ${lv}">${lv==="concern"?"CONCERN":lv==="clear"?"ROUTINE":"WATCH"}</span><b>${esc(it.client||it.site)}</b><span class="age" data-t="${it.t}">${age(it.t)}</span></div>
       <div class="q">“${esc(it.question)}”</div>${it.event?`<div class="ev">${esc(it.event)}</div>`:""}
       ${it.issue?`<div class="issue">${esc(it.issue)}</div>`:""}
       ${(it.briefing||[]).length?`<div class="k">BRIEFING</div><ul class="brief">${it.briefing.map(b=>`<li>${esc(b)}</li>`).join("")}</ul>`:""}
       ${(it.history||[]).length?`<details class="hist"><summary>Earlier in this conversation</summary>${it.history.map(h=>`<p><b>${h.role==="user"?"Client":"Team"}:</b> ${esc(h.content)}</p>`).join("")}</details>`:""}
       <div class="k">DRAFT — EDIT FREELY</div><textarea>${esc(it.draft)}</textarea>
-      <div class="att">${att.map(a=>`<label><input type="checkbox" value="${a}" ${(it.attach||[]).includes(a)?"checked":""}>${lab[a]}</label>`).join("")}</div>
+      <div class="k">PICTURES — TICK WHAT TO SEND</div>${(()=>{ const on=(it.attach||[]).filter(a=>lab[a]); const quick=on.concat(["hourly","tenday","radar","rain"].filter(a=>!on.includes(a))); const rest=att.filter(a=>!quick.includes(a)); const box=a=>`<label><input type="checkbox" value="${a}" ${on.includes(a)?"checked":""}>${lab[a]}</label>`;
+        return `<div class="att">${quick.map(box).join("")}</div><details class="more"><summary>More maps from the dashboard</summary><div class="att">${rest.map(box).join("")}</div></details>`; })()}
       <div class="acts"><button class="send" type="button">SEND</button><button class="drop" type="button">DISMISS</button></div>`;
     c.querySelector(".send").onclick=async()=>{ const b=c.querySelector(".send"); b.disabled=true; b.textContent="SENDING…";
       try{ await api("/desk/send",{id:it.id,text:c.querySelector("textarea").value.trim(),met:met.value,attach:[...c.querySelectorAll(".att input:checked")].map(x=>x.value)}); c.remove(); shown.delete(it.id); toast("Sent as "+met.value); count(); }

@@ -195,6 +195,7 @@ var SDR_ENGINE=(function(){
     return {idx:0,day:D[0],label:null,now:/\bnow\b|\bright now\b|\bcurrently\b|\bradar\b|\btoday\b/.test(q)};
   }
   function topic(q){ q=q.toLowerCase();
+    if(/cool ?down|cool-down|cooler|cooling|warm ?up|warm-up|warmer|warming|cold snap|cold front|colder|pattern|next week|week ahead|long[- ]range|extended|10[- ]day|ten[- ]day|two weeks|2 weeks|trend|6[- ]to[- ]10|8[- ]to[- ]14|10[- ]to[- ]14/.test(q)&&!/thunder|storm|severe|tornado|lightning/.test(q)) return "trend";
     if(/lightning|strike/.test(q)) return "lightning";
     if(/severe|tornado|hail|outlook/.test(q)) return "severe";
     if(/thunder|storm/.test(q)) return "storms";
@@ -458,7 +459,7 @@ var SDR_ENGINE=(function(){
       else if(r<0.58&&!opts.noq&&/rain|storm|thunder|gust|wind|freeze|frost|heat/i.test(txt)&&!/dry|quiet|clear|no frost|nothing/i.test(txt)) { var QQ={"Is this for the morning crew or the afternoon?":"part","Are you asking for setup or for the event itself?":"setup","What time are you trying to be done by? I can get more specific.":"time","Indoor backup an option for you, or does it have to be outside?":"indoor"}; var qt=one(Object.keys(QQ),"q"); out.push({text:qt,delay:2000+Math.random()*1000,tail:true,question:true}); LASTASK={kind:QQ[qt],W:LASTW,t:Date.now()}; } }
     return out; }
   // ---------- attachments: driven by what was asked ----------
-  function cardSvg(idRe){ try{ var cards=[].slice.call(P.document.querySelectorAll("#mrPrev .mcard")); var c=cards.find(function(x){ return idRe.test(x.dataset.id||""); }); if(!c) return null; var svg=c.querySelector(".mimg svg"); if(!svg) return null; var cl=svg.cloneNode(true); cl.removeAttribute("width"); cl.removeAttribute("height"); cl.setAttribute("style","width:100%;height:auto;display:block");
+  function cardSvg(idRe,titleRe){ try{ var cards=[].slice.call(P.document.querySelectorAll("#mrPrev .mcard")); var c=cards.find(function(x){ return idRe.test(x.dataset.id||"")&&(!titleRe||titleRe.test(x.textContent||"")); }); if(!c) return null; var svg=c.querySelector(".mimg svg"); if(!svg) return null; var cl=svg.cloneNode(true); cl.removeAttribute("width"); cl.removeAttribute("height"); cl.setAttribute("style","width:100%;height:auto;display:block");
       var o=svg.querySelectorAll("*"), n=cl.querySelectorAll("*"); for(var i=0;i<o.length&&i<n.length;i++){ var cs=P.getComputedStyle(o[i]); if(/text|tspan/i.test(o[i].tagName)){ n[i].setAttribute("font-size",cs.fontSize); n[i].setAttribute("font-family",cs.fontFamily); n[i].setAttribute("font-weight",cs.fontWeight); n[i].setAttribute("letter-spacing",cs.letterSpacing); n[i].setAttribute("fill",cs.fill); if(cs.paintOrder) n[i].setAttribute("paint-order",cs.paintOrder); if(cs.stroke&&cs.stroke!=="none"){ n[i].setAttribute("stroke",cs.stroke); n[i].setAttribute("stroke-width",cs.strokeWidth); } } if(cs.display==="none") n[i].remove(); }
       var tt=c.querySelector(".mlab b"); return {svg:cl.outerHTML,title:tt?tt.textContent.replace(/Â/g,"").trim():"Map"}; }catch(e){ return null; } }
   function tableCard(title,rows,hl){ var Wd=320, rh=22, Hh=30+rows.length*rh+8; var y=26; var body=rows.map(function(r,i){ var yy=30+i*rh; return '<rect x="0" y="'+(yy-2)+'" width="'+Wd+'" height="'+rh+'" fill="'+(i===hl?"rgba(79,163,255,.22)":i%2?"rgba(255,255,255,.03)":"transparent")+'"/>'+r.map(function(cell,j){ var x=j===0?10:j===1?120:j===2?200:270; var anchor=j===0?"start":"end"; var xx=j===0?10:(j===1?170:j===2?245:310); return '<text x="'+xx+'" y="'+(yy+13)+'" text-anchor="'+anchor+'" font-size="12" font-weight="'+(j===0?700:600)+'" fill="'+(j===0?"#F4F7FB":"#DCE6F5")+'" '+FONT+'>'+cell+'</text>'; }).join(""); }).join("");
@@ -494,7 +495,28 @@ var SDR_ENGINE=(function(){
     return {svg:'<svg viewBox="0 0 '+Wd+' '+Hh+'" style="width:100%;height:auto;display:block;background:#0E1A33"><text x="'+L+'" y="20" font-size="13" font-weight="800" letter-spacing=".08em" fill="#fff" '+FONT+'>'+(W.label||dname(W.day,W.idx)).toUpperCase()+' SNAPSHOT · HOUR BY HOUR</text><text x="'+L+'" y="38" font-size="11.5" fill="#A9B6CC" '+FONT+'>'+sub+'</text>'
       +'<text x="'+L+'" y="'+(tT-4)+'" font-size="9.5" font-weight="800" letter-spacing=".12em" fill="#FFC857" '+FONT+'>TEMPERATURE</text><polyline points="'+pts+'" fill="none" stroke="#FFC857" stroke-width="3" stroke-linejoin="round"/>'+tlab
       +'<text x="'+L+'" y="'+(rT-2)+'" font-size="9.5" font-weight="800" letter-spacing=".12em" fill="#6FB7FF" '+FONT+'>CHANCE OF RAIN</text>'+guide+bars+'<line x1="'+L+'" x2="'+R+'" y1="'+rB+'" y2="'+rB+'" stroke="rgba(255,255,255,.25)"/>'+wind+ax+'</svg>',title:cap(W.label||dname(W.day,W.idx))+" snapshot"}; }
+  // v156: the next 10 days of highs and lows, one bar per day (low at the bottom, high at the top)
+  function tenDayCard(){ var D=days().filter(function(d){ return d.hi!=null||d.lo!=null; }).slice(0,10); if(D.length<4) return null;
+    var Wd=360,Hh=250,L=16,R=Wd-16,T=58,B=Hh-44, n=D.length, cw=(R-L)/n;
+    var V=[]; D.forEach(function(d){ if(d.hi!=null) V.push(d.hi); if(d.lo!=null) V.push(d.lo); }); var lo=Math.min.apply(null,V)-3, hi=Math.max.apply(null,V)+3, Y=function(v){ return B-(B-T)*(v-lo)/Math.max(1,hi-lo); };
+    var lab=function(x,y,t,c,sz){ return '<text x="'+x+'" y="'+y+'" text-anchor="middle" font-size="'+(sz||12)+'" font-weight="800" fill="'+(c||"#fff")+'" '+FONT+' stroke="#0E1A33" stroke-width="3.5" paint-order="stroke">'+t+'</text>'; };
+    var col=function(v){ return v>=90?"#E05252":v>=80?"#F5A524":v>=70?"#FFC857":v>=60?"#9BD37A":v>=50?"#6FB7FF":v>=40?"#4D8CFF":"#9C8CFF"; };
+    var hiI=0, loI=0; D.forEach(function(d,i){ if((d.hi||-999)>(D[hiI].hi||-999)) hiI=i; if((d.lo!=null?d.lo:999)<(D[loI].lo!=null?D[loI].lo:999)) loI=i; });
+    var bars=D.map(function(d,i){ var x=L+cw*i+cw/2, h=d.hi!=null?d.hi:d.lo, l=d.lo!=null?d.lo:d.hi, y1=Y(h), y2=Y(l);
+      return '<defs><linearGradient id="tg'+i+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+col(h)+'"/><stop offset="1" stop-color="'+col(l)+'"/></linearGradient></defs><rect x="'+(x-9)+'" y="'+y1+'" width="18" height="'+Math.max(4,y2-y1)+'" rx="9" fill="url(#tg'+i+')"/>'
+        +lab(x,y1-6,h+"°",i===hiI?"#FFC857":"#fff",i===hiI?13.5:12)+lab(x,y2+15,l+"°",i===loI?"#8FC3FF":"#C9D3E3",i===loI?13.5:11.5)
+        +'<text x="'+x+'" y="'+(Hh-14)+'" text-anchor="middle" font-size="11" font-weight="800" fill="#A9B6CC" '+FONT+'>'+(i===0&&d.d==="TONIGHT"?"TNT":String(d.d||(d.long||"").slice(0,3)).slice(0,3).toUpperCase())+'</text>'; }).join("");
+    var cold=D[loI], warm=D[hiI], nm=function(d,i){ var w=d.long||d.d||""; return (i>=7?"next ":"")+w; };
+    return {svg:'<svg viewBox="0 0 '+Wd+' '+Hh+'" style="width:100%;height:auto;display:block;background:#0E1A33"><text x="'+L+'" y="20" font-size="13" font-weight="800" letter-spacing=".08em" fill="#fff" '+FONT+'>NEXT '+n+' DAYS · HIGHS AND LOWS</text><text x="'+L+'" y="38" font-size="11.5" fill="#A9B6CC" '+FONT+'>Coldest night '+(cold.lo!=null?cold.lo+"° ":"")+nm(cold,loI)+' · warmest day '+(warm.hi!=null?warm.hi+"° ":"")+nm(warm,hiI)+'</text>'+bars+'</svg>',title:"Highs and lows · next "+n+" days"}; }
   function attachments(q){ if(!P) return []; var t=topic(q), W=when(q), ql=q.toLowerCase(), out=[];
+    if(/drought|dry spell|burn ban|soil moisture/.test(ql)){ var dr=cardSvg(/^drought$/); if(dr) return [dr]; }
+    if(/tropic|hurricane|tropical storm/.test(ql)){ var tr=cardSvg(/^tropics$/); if(tr) return [tr]; }
+    if(/flood/.test(ql)&&!/river/.test(ql)){ var ei=W&&W.idx!=null&&W.idx<=2?W.idx:0; var er=cardSvg(new RegExp("^ero"+(ei+1)+"$"))||cardSvg(/^ero1$/); var q3=cardSvg(/^qpf$/,/1–3|1-3/); return [er,q3].filter(Boolean); }
+    if(/river/.test(ql)){ var rv=cardSvg(/^rivers$/); if(rv) return [rv]; }
+    if(/rain/.test(ql)&&/(this|next) week|7[- ]day|week ahead|through the week/.test(ql)){ var q7=cardSvg(/^qpf$/,/1–7|1-7/); if(q7) return [q7,weekTable()]; }
+    if((t==="severe"||t==="storms")&&/next week|later|weekend|days? 4|4[- ]to[- ]8/.test(ql)){ var s48=cardSvg(/^spc48$/); if(s48) return [s48]; }
+    if(t==="trend"&&/rain|wet|dry/.test(ql)){ var cp=cardSvg(/^cpcp610$/)||cardSvg(/^cpcp814$/); var td0=tenDayCard(); return [td0,cp].filter(Boolean); }
+    if(t==="trend"){ var td=tenDayCard(); if(td) out.push(td); var co=/8|14|two weeks|2 weeks|later|end of|mid[- ]/.test(ql)?(cardSvg(/^cpct814$/)||cardSvg(/^cpct610$/)):(cardSvg(/^cpct610$/)||cardSvg(/^cpct814$/)); if(co) out.push(co); return out; }
     if(/sunset|sunrise|sun set|sun rise|get dark|daylight|dusk|dawn/.test(ql)) return [];
     if(t==="general"&&(!WX.test(ql)||/\b(who won|score|scores|traffic|tickets?|parking|menu|address|phone number|stock|news|price|cost)\b/.test(ql))) return [];
     if(t==="wind"&&!(namedDay(q)&&W.idx>1)&&!W.week){ var wc=windCard(); if(wc) return [wc]; } if(!namedDay(q)&&!W.week&&LASTW) W=LASTW; var wantsPic=/send|show|see|picture|map|image|chart|graph|outlook|radar|hourly|totals|table/.test(ql);
@@ -513,7 +535,9 @@ var SDR_ENGINE=(function(){
     // the rainfall map covers days 1-3 only: send it only when the day asked about is inside it; otherwise the week table shows that day in context
     if(t==="totals"&&!W.week&&W.day&&Math.max(W.day.pp||0,W.day.ppN||0)>=20){ var qp=(W.idx!=null&&W.idx<=2)?cardSvg(/^qpf$/):null; if(qp) out.push(qp); else { var wt=weekTable(W.idx); var nm2=(W.label||dname(W.day,W.idx)); wt.title="Rain by day · "+cap(nm2)+" is the wet one"; out.push(wt); } }
     return out.slice(0,2); }
-  function attachNamed(n){ try{ if(n==="radar") return cardSvg(/^radar$/); if(n==="outlook") return cardSvg(/^spc1$/)||cardSvg(/^ero1$/); if(n==="rain") return weekTable(LASTW&&LASTW.idx); if(n==="hourly"){ var W=LASTW&&LASTW.day?LASTW:{idx:0,day:days()[0],label:"today"}; return hourlyCard(W)||windCard(); } }catch(e){} return null; }
+  function attachNamed(n){ try{ var Q={qpf13:/1–3|1-3/,qpf15:/1–5|1-5/,qpf17:/1–7|1-7/}; if(Q[n]) return cardSvg(/^qpf$/,Q[n]);
+      if(/^(spc[1-3]|spc48|ero[1-3]|cpc[tp](610|814)|drought|winter|tropics|md|watch|rivers)$/.test(n)) return cardSvg(new RegExp("^"+n+"$"));
+      if(n==="radar") return cardSvg(/^radar$/); if(n==="tenday") return tenDayCard(); if(n==="temp_outlook") return cardSvg(/^cpct610$/)||cardSvg(/^cpct814$/); if(n==="rain_outlook") return cardSvg(/^cpcp610$/)||cardSvg(/^cpcp814$/); if(n==="rainmap") return cardSvg(/^qpf$/); if(n==="outlook") return cardSvg(/^spc1$/)||cardSvg(/^ero1$/); if(n==="rain") return weekTable(LASTW&&LASTW.idx); if(n==="hourly"){ var W=LASTW&&LASTW.day?LASTW:{idx:0,day:days()[0],label:"today"}; return hourlyCard(W)||windCard(); } }catch(e){} return null; }
   return { answer:core, plan:plan, followUp:followUp, attachments:attachments, attachNamed:attachNamed, setMet:setMet, ok:function(){ return !!(P&&days().length); } };
 })();
 

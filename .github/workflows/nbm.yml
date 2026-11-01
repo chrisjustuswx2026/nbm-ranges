@@ -70,6 +70,8 @@ jobs:
           TDOT_KEY: ${{ secrets.TDOT_KEY }}
           LA511_KEY: ${{ secrets.LA511_KEY }}
         run: python cameras.py public
+      - name: River gauges near the client sites and anywhere in flood (never fails the job)
+        run: python rivers.py public
       - name: Dashboards (the site folder becomes /clemson/ and /bay/ on the same website)
         run: if [ -d site ]; then cp -r site/. public/; fi
       - uses: actions/upload-pages-artifact@v3

@@ -189,6 +189,7 @@ var SDR_ENGINE=(function(){
     if(/\bthis week\b|\bthe week\b|\bweek\b|\bnext few days\b|\b(7|seven|10|ten)[- ]day/.test(q)) return {week:true};
     if(/\bweekend\b/.test(q)){ var si=D.findIndex(function(x){ return new Date(x.date).getDay()===6; }); return {idx:si<0?0:si,day:D[si<0?0:si],label:"Saturday",pair:si>=0&&D[si+1]?[si,si+1]:null}; }
     if(/\btonight\b/.test(q)) return {idx:0,day:D[0],label:"tonight"};
+    if(/\bthis (morning|afternoon|evening)\b|\blater today\b/.test(q)) return {idx:0,day:D[0],label:"today"};
     if(/\btomorrow\b/.test(q)) return {idx:1,day:D[1]||D[0],label:"tomorrow"};
     var DRX=["sun(day)?","mon(day)?","tue(s|sday)?","wed(nesday)?","thu(r|rs|rsday)?","fri(day)?","sat(urday)?"]; for(var i=0;i<7;i++){ if(new RegExp("\\b"+DRX[i]+"\\b").test(q)){ var d=new Date(today); var diff=(i-today.getDay()+7)%7; if(diff===0&&/\bnext\b/.test(q)) diff=7; d.setDate(d.getDate()+diff); var idx=D.findIndex(function(x){ return new Date(x.date).toDateString()===d.toDateString(); }); if(idx<0) idx=0; return {idx:idx,day:D[idx],label:cap(DAYN[i])}; } }
     return {idx:0,day:D[0],label:null,now:/\bnow\b|\bright now\b|\bcurrently\b|\bradar\b|\btoday\b/.test(q)};
@@ -303,9 +304,9 @@ var SDR_ENGINE=(function(){
     var s=(r.b<24?one(["It winds down by "+hlab(r.b)+" "+nm,"Rain is mostly done by "+hlab(r.b)+" "+nm,"Look for it to wrap up around "+hlab(r.b)+" "+nm],"se2"):"It doesn't really end "+nm+" — it rains into the night")+(hv?"; the heaviest is "+hv:"")+".";
     var nx=days()[W.idx+1]; if(nx){ var r2=rainRuns(nx); if(r2&&r2.a<=3) s+=" "+(r2.b<=12?one(["Then another round early "+dlab(W.idx+1),"There's leftover rain early "+dlab(W.idx+1)],"se3"):"Then more on and off "+dlab(W.idx+1))+" until about "+hlab(r2.b)+"."; }
     return s; }
-  function partOf(q){ q=q.toLowerCase(); if(/\bmorning\b|\bam\b|sunrise/.test(q)) return [6,12,"morning"]; if(/afternoon|midday|lunch/.test(q)) return [12,18,"afternoon"]; if(/evening|after work|sunset/.test(q)) return [17,22,"evening"]; if(/overnight/.test(q)) return [0,6,"overnight"]; return null; }
+  function partOf(q){ q=q.toLowerCase(); if(/\bmorning\b|\bam\b|sunrise/.test(q)) return [6,12,"morning"]; if(/afternoon|midday|lunch/.test(q)) return [12,18,"afternoon"]; if(/evening|after work/.test(q)) return [17,22,"evening"]; if(/overnight/.test(q)) return [0,6,"overnight"]; return null; }
   function partLine(W,P){ var d=W.day, nm=W.label||dname(d,W.idx); var H=dayHours(d).filter(function(h){ var k=hrOf(h.t); return k>=P[0]&&k<P[1]; }); if(!H.length) return null;
-    var pops=H.map(function(h){ return h.pop||0; }), mx=Math.max.apply(null,pops), mn=Math.min.apply(null,pops), th=Math.max.apply(null,H.map(function(h){ return h.thunder||0; })); var lab=cap(nm)+" "+P[2];
+    var pops=H.map(function(h){ return h.pop||0; }), mx=Math.max.apply(null,pops), mn=Math.min.apply(null,pops), th=Math.max.apply(null,H.map(function(h){ return h.thunder||0; })); var lab=(nm==="today"||nm==="tonight")?(P[2]==="evening"?"This evening":"This "+P[2]):cap(nm)+" "+P[2];
     if(mx<20) return one([lab+" looks dry — rain chances stay under 20% from "+hlab(P[0])+" to "+hlab(P[1])+".",lab+" is fine. Under 20% the whole stretch, "+hlab(P[0])+" to "+hlab(P[1])+"."],"pt1")+(H[0].temp!=null?" Temperatures "+Math.min.apply(null,H.map(function(h){ return h.temp; }))+"° to "+Math.max.apply(null,H.map(function(h){ return h.temp; }))+"°.":"");
     var first=pops[0], last=pops[pops.length-1], s;
     if(first>=40&&last<first-15){ var ok=H.find(function(h){ return (h.pop||0)<30; }); s="Not a dry "+P[2]+" — rain chances start near "+first+"%"+(ok?" and drop under 30% by "+hlab(hrOf(ok.t)):" and ease to "+last+"% by "+hlab(P[1]))+"."; }
@@ -350,6 +351,38 @@ var SDR_ENGINE=(function(){
     return s; }
   function curWx(){ var H=hours(), n=Date.now(), best=null; H.forEach(function(h){ if(!best||Math.abs(h.t-n)<Math.abs(best.t-n)) best=h; }); if(!best||Math.abs(best.t-n)>2*3600e3) return ""; return best.temp+"°"+(best.feel!=null&&Math.abs(best.feel-best.temp)>=3?", feels like "+best.feel+"°":"")+(best.wind?", wind "+best.wind+" mph":"")+(best.gust>=20?", gusts to "+best.gust:"")+"."; }
 
+
+  // ---------- sun times (NOAA approximation) ----------
+  function venueLL(){ return g(function(){ var v=P.DASH.venue(); return v&&v.la!=null?{la:+v.la,lo:+v.lo}:null; },null); }
+  function sunTimes(date,la,lo){ var rad=Math.PI/180, d0=new Date(Date.UTC(date.getFullYear(),date.getMonth(),date.getDate())); var n=Math.floor((d0-Date.UTC(date.getFullYear(),0,0))/864e5);
+    var gm=2*Math.PI/365*(n-1+(12-12)/24), eq=229.18*(0.000075+0.001868*Math.cos(gm)-0.032077*Math.sin(gm)-0.014615*Math.cos(2*gm)-0.040849*Math.sin(2*gm));
+    var dec=0.006918-0.399912*Math.cos(gm)+0.070257*Math.sin(gm)-0.006758*Math.cos(2*gm)+0.000907*Math.sin(2*gm)-0.002697*Math.cos(3*gm)+0.00148*Math.sin(3*gm);
+    var ha=Math.acos(Math.cos(90.833*rad)/(Math.cos(la*rad)*Math.cos(dec))-Math.tan(la*rad)*Math.tan(dec))/rad;
+    var rise=720-4*(lo+ha)-eq, set=720-4*(lo-ha)-eq; var mk=function(m){ return new Date(d0.getTime()+m*60000); }; return {rise:mk(rise),set:mk(set)}; }
+  function tfmt(d){ return d.toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}); }
+  function sunLine(W){ var ll=venueLL(); if(!ll) return "I don't have your site's location handy for that one — one of the team will follow up.";
+    var base=W&&W.day?new Date(W.day.date):new Date(); var t=sunTimes(base,ll.la,ll.lo), nx=new Date(base); nx.setDate(nx.getDate()+1); var t2=sunTimes(nx,ll.la,ll.lo);
+    var nm=W&&W.day&&W.idx>0?(W.label||dname(W.day,W.idx)):"tonight";
+    if(/sunrise|sun rise|sun come|dawn|get light/i.test(LASTQ)){ var dn=W&&W.day?(W.idx===0?"this morning":W.idx===1?"tomorrow":(W.label||dname(W.day,W.idx))):"tomorrow", tr=W&&W.day&&W.idx>0?t.rise:(W&&W.day&&W.idx===0?t.rise:t2.rise); return "Sunrise "+dn+" is "+tfmt(tr)+" "+AT()+". "+"First light is about 25 minutes before that."; }
+    return "Sunset "+nm+" is "+tfmt(t.set)+" "+AT()+". It's mostly dark about 25 minutes after that"+(W&&W.idx>0?".":", and sunrise tomorrow is "+tfmt(t2.rise)+"."); }
+  // ---------- wind for the next 12 hours ----------
+  function wnum(h){ if(typeof h.wind==="number") return h.wind; var m=String(h.wind||"").match(/\d+/g); return m?+m[m.length-1]:null; }
+  function next12(){ var now=Date.now(); return hours().filter(function(h){ return h.t>=now-3600e3&&h.t<=now+12*3600e3; }); }
+  function windAhead(){ var H=next12(); if(H.length<3) return null; var W_=H.map(wnum).filter(function(x){ return x!=null; }), G=H.map(function(h){ return Math.max(h.gust||0,wnum(h)||0); });
+    var gm=Math.max.apply(null,G), wm=W_.length?Math.max.apply(null,W_):0, wl=W_.length?Math.min.apply(null,W_):0; var pk=H[G.indexOf(gm)];
+    var dir=(H[0].wdir||H[0].dir||"")+""; var s="Next 12 hours "+AT()+": wind "+(dir&&!/\d/.test(dir)?dir+" ":"")+(wl===wm?wm:wl+" to "+wm)+" mph"+(gm>wm?", gusts to "+gm+(pk?" around "+hlab(hrOf(pk.t)):""):"")+".";
+    var late=H.slice(Math.floor(H.length*0.6)), lg=late.length?Math.max.apply(null,late.map(function(h){ return Math.max(h.gust||0,wnum(h)||0); })):gm;
+    if(lg<=gm-6) s+=" It eases later — gusts under "+(lg+2)+" by "+hlab(hrOf(late[0].t))+".";
+    s+=" "+(gm>=40?"That's strong enough to hold lifts and secure anything loose.":gm>=30?"Breezy enough to secure loose material and watch tents.":gm>=25?"Fine for most work; I'd hold off on spraying.":"Nothing that gets in the way.");
+    return s; }
+  function windCard(){ var H=next12(); if(H.length<4) return null; var Wd=320,Hh=170,L=22,R=Wd-14,top=34,bot=Hh-24; var n=H.length, bw=Math.max(6,(R-L)/n-4);
+    var G=H.map(function(h){ return Math.max(h.gust||0,wnum(h)||0); }), mx=Math.max(30,Math.max.apply(null,G)); var X=function(i){ return L+(R-L)*(i+0.5)/n; }, Y=function(v){ return bot-(bot-top)*v/mx; };
+    var col=function(v){ return v>=45?"#FF6B6F":v>=35?"#F5A524":v>=25?"#F5D76E":v>=15?"#7FD6C2":"#4E6E8E"; };
+    var bars=H.map(function(h,i){ var w=wnum(h)||0, gst=G[i]; return '<rect x="'+(X(i)-bw/2)+'" y="'+Y(gst)+'" width="'+bw+'" height="'+(bot-Y(gst))+'" rx="2" fill="'+col(gst)+'" opacity=".38"/><rect x="'+(X(i)-bw/2)+'" y="'+Y(w)+'" width="'+bw+'" height="'+(bot-Y(w))+'" rx="2" fill="'+col(w)+'"/>'+((i%3===0||gst===Math.max.apply(null,G))?'<text x="'+X(i)+'" y="'+(Y(gst)-5)+'" text-anchor="middle" font-size="10.5" font-weight="800" fill="#fff" '+FONT+'>'+gst+'</text>':""); }).join("");
+    var ax=H.map(function(h,i){ var k=hrOf(h.t); return i%3===0?'<text x="'+X(i)+'" y="'+(Hh-6)+'" text-anchor="middle" font-size="9.5" font-weight="700" fill="#A9B6CC" '+FONT+'>'+(k===0?"12A":k===12?"NOON":(k%12)+(k<12?"A":"P"))+'</text>':""; }).join("");
+    return {svg:'<svg viewBox="0 0 '+Wd+' '+Hh+'" style="width:100%;height:auto;display:block;background:#0E1A33"><text x="'+L+'" y="16" font-size="11" font-weight="800" letter-spacing=".08em" fill="#fff" '+FONT+'>WIND · NEXT 12 HOURS</text><text x="'+R+'" y="16" text-anchor="end" font-size="10" fill="#A9B6CC" '+FONT+'>solid wind · light gusts · mph</text>'+bars+'<line x1="'+L+'" x2="'+R+'" y1="'+bot+'" y2="'+bot+'" stroke="rgba(255,255,255,.25)"/>'+ax+'</svg>',title:"Wind and gusts, next 12 hours"}; }
+  // anything we can't answer from the dashboard gets an honest hand-off, not a guess
+  var WX=/weather|forecast|rain|storm|thunder|lightning|wind|gust|breez|temp|hot|cold|warm|cool|heat|freez|frost|snow|ice|sun|cloud|fog|humid|radar|alert|warning|watch|severe|tornado|hail|flood|look|good|ok|okay|fine|go\b|plan|outside|outdoor|event|game|practice|work|safe|cancel|postpone|today|tonight|tomorrow|week|weekend|morning|afternoon|evening|night|\b(mon|tue|wed|thu|fri|sat|sun)/i;
   var LASTASK=null;
   function hourIn(q){ var m=q.toLowerCase().match(/\b(\d{1,2})(?::(\d{2}))?\s*(am|pm|a|p)?\b/); if(!m) return /noon/.test(q)?12:/midnight/.test(q)?24:null; var h=+m[1]; if(h>12) return h; var ap=m[3]; if(ap&&ap[0]==="p"&&h<12) h+=12; else if(!ap&&h<7) h+=12; return h; }
   function followUp(q){ var A=LASTASK; if(!A||Date.now()-A.t>15*60e3||!A.W||!A.W.day) return null; var ql=q.toLowerCase();
@@ -369,16 +402,19 @@ var SDR_ENGINE=(function(){
     return [{text:txt.replace(/\s+/g," ").trim(),delay:0}]; }
   var LASTW=null, LASTQ="", LASTKEY="", LASTTXT="";
   function nextWet(from){ var D=days(); for(var i=from||0;i<D.length;i++){ var d=D[i]; if(Math.max(d.pp||0,d.ppN||0)>=30||(d.thunder||0)>=30||(d.snowP||0)>=30) return {idx:i,day:d,label:i===0?"today":i===1?"tomorrow":(d.long||d.d)}; } return null; }
-  function namedDay(q){ return /\b(today|tonight|tomorrow|weekend|week|sun(day)?|mon(day)?|tue(s|sday)?|wed(nesday)?|thu(r|rs|rsday)?|fri(day)?|sat(urday)?)\b/i.test(q); }
+  function namedDay(q){ return /\bthis (morning|afternoon|evening)\b/i.test(q)||/\b(today|tonight|tomorrow|weekend|week|sun(day)?|mon(day)?|tue(s|sday)?|wed(nesday)?|thu(r|rs|rsday)?|fri(day)?|sat(urday)?)\b/i.test(q); }
   function core(q){ LASTQ=q; var t=topic(q), W=when(q); var call=callNow();
     if(!namedDay(q)&&!W.week){ if(LASTW&&!/\bnow\b|right now|radar|currently/i.test(q)) W=LASTW; else if(/^(rain|totals|storms|snow|general)$/.test(t)&&!/\bnow\b|right now|currently/i.test(q)){ var nw=nextWet(0); if(nw) W=nw; } }
     // a rain question with no day named, about a dry day, means "when's the next rain" — answer that day
     if(!namedDay(q)&&!W.week&&/^(rain|totals|storms)$/.test(t)&&W.day&&Math.max(W.day.pp||0,W.day.ppN||0)<20&&(W.day.thunder||0)<20){ var nw2=nextWet(/\bwhen\b/i.test(q)?0:(W.idx||0)); if(nw2) W=nw2; }
-    if(W&&W.day) LASTW=W;
+    if(W&&W.day&&!W.now) LASTW=W;   // a "right now" check (including the opening message) is never the day we're talking about
     var ql=q.toLowerCase(), future=/\bwhen\b|what time|\bwill\b|going to|chance|timing|start|later|this week|if we get/.test(ql)||namedDay(q), thq=/thunder|lightning|storm/.test(ql);
     if(call==="action"||t==="now"||(W.now&&!W.week&&t==="general")) return nowLine();
     if(t==="lightning"&&!future){ var s0=nowLine()+" "+(g(function(){ return P.LTG&&P.LTG.connected; },false)?"Lightning feed is live; nothing inside 10 miles.":"No storm cells near the site right now."); var nt=thunderAhead(0,1)[0]; s0+=nt?" "+one(["Next thunder chance is ","The next time lightning is in play is "],"ntc")+nt.label+(tWin(nt)?", "+tWin(nt):"")+" ("+nt.peak+"%).":" No thunder in the forecast after that either."; return s0; }
     if((t==="lightning"||t==="storms")&&thq){ var nIdx=namedDay(q)&&!W.week?W.idx:(LASTW&&/if we get it|that day|\bthen\b/.test(ql)&&LASTW.day?LASTW.idx:null); var lv=nIdx!=null?outlookLevel(nIdx):null; if(!(lv&&lv>=2)) return thunderLine(null,nIdx); }
+    if(/sunset|sunrise|sun set|sun rise|sun go(es)? down|sun come|get dark|daylight|dusk|dawn/.test(ql)) return sunLine(namedDay(q)&&!W.week?W:null);
+    if(t==="wind"&&!(namedDay(q)&&W.idx>1)&&!W.week){ var wa=windAhead(); if(wa) return wa; }
+    if(t==="general"&&(!WX.test(ql)||/\b(who won|score|scores|traffic|tickets?|parking|menu|address|phone number|stock|news|price|cost)\b/.test(ql))) return one(["Good question — that one's outside what I can pull up from your dashboard. I'll have one of the team follow up with you.","That's not something I have in front of me on your dashboard. Let me pass it to the team and we'll get back to you."],"oos");
     if(/severe|tornado|hail/.test(ql)&&!namedDay(q)) return severeAhead(q);
     if(/best day|which day|what day|driest|good day/.test(ql)) { var bd=bestDays(); if(bd) return bd; }
     if(t==="cold"&&(W.week||!namedDay(q))) { var cw=coldWeek(); if(cw) return cw; }
@@ -395,6 +431,9 @@ var SDR_ENGINE=(function(){
       if(t==="cold"){ var lo=Math.min(a.lo==null?99:a.lo,b2.lo==null?99:b2.lo); return (lo<=32?"Yes — ":lo<=36?"Close call. ":one(["No frost this weekend. ","You're clear on frost. "],"wkf"))+"Saturday night around "+a.lo+"°, Sunday night around "+b2.lo+"°."+(lo<=28?" Hard freeze; protect anything tender.":lo<=32?" Cover what you can.":lo<=36?" Low spots could see a little.":""); }
       if(t==="temp") return "Highs "+a.hi+"° Saturday and "+b2.hi+"° Sunday, lows "+a.lo+"° and "+b2.lo+"°.";
       if(t==="wind") return "Saturday "+(a.wind||"light")+(a.gust?" gusting "+a.gust:"")+", Sunday "+(b2.wind||"light")+(b2.gust?" gusting "+b2.gust:"")+" mph."+(Math.max(a.gust||0,b2.gust||0)>=30?" Sunday's the breezy one.":""); }
+    // "are we good?" with no day: answer for now first, then the next thing to plan around
+    if(t==="general"&&!namedDay(q)&&!W.week&&W.day&&W.idx>=2){ var D0=days(), dry=function(d){ return d&&Math.max(d.pp||0,d.ppN||0)<20&&(d.thunder||0)<20; };
+      if(dry(D0[0])&&dry(D0[1])){ var nx0=dayLine("rain",W); return one(["You're good for now — dry today and tomorrow, highs near "+D0[0].hi+"°.","Yes for the next couple of days — today and tomorrow stay dry, highs near "+D0[0].hi+"°."],"gd")+" The next thing to plan around is "+dlab(W.idx)+": "+nx0.charAt(0).toLowerCase()+nx0.slice(1); } }
     // asked the same thing again? go a level deeper instead of repeating
     var key=t+"|"+(W.idx==null?"":W.idx); var deeper=/more detail|deeper|break (it|that) down|details|specific|exactly|hour by hour/i.test(q);
     if((key===LASTKEY||deeper)&&W.day){ var st0=story(W); if(st0){ LASTKEY=key; return st0; } }
@@ -433,7 +472,10 @@ var SDR_ENGINE=(function(){
     var ax=[0,3,6,9,12,15,18,21].filter(function(k){ return k>=k0&&k<=k0+span; }).map(function(k){ return '<text x="'+X(k)+'" y="'+(Hh-5)+'" font-size="9.5" font-weight="700" fill="#A9B6CC" text-anchor="middle" '+FONT+'>'+(k===0?"12A":k===12?"NOON":(k%12)+(k<12?"A":"P"))+'</text>'; }).join("");
     var g=Math.max.apply(null,H.map(function(h){ return h.gust||0; }));
     return {svg:'<svg viewBox="0 0 '+Wd+' '+Hh+'" style="width:100%;height:auto;display:block;background:#0E1A33"><text x="'+L+'" y="16" font-size="11" font-weight="800" letter-spacing=".08em" fill="#fff" '+FONT+'>HOUR BY HOUR · '+(W.label||dname(W.day,W.idx)).toUpperCase()+'</text><text x="'+R+'" y="16" text-anchor="end" font-size="10" fill="#A9B6CC" '+FONT+'>temp · rain chance'+(g?' · gusts to '+g:'')+'</text><polyline points="'+pts+'" fill="none" stroke="#FFC857" stroke-width="3" stroke-linejoin="round"/>'+labs+bars+'<line x1="'+L+'" x2="'+R+'" y1="'+(Hh-18)+'" y2="'+(Hh-18)+'" stroke="rgba(255,255,255,.25)"/>'+ax+'</svg>',title:"Hourly for "+(W.label||dname(W.day,W.idx))}; }
-  function attachments(q){ if(!P) return []; var t=topic(q), W=when(q), ql=q.toLowerCase(), out=[]; if(!namedDay(q)&&!W.week&&LASTW) W=LASTW; var wantsPic=/send|show|see|picture|map|image|chart|graph|outlook|radar|hourly|totals|table/.test(ql);
+  function attachments(q){ if(!P) return []; var t=topic(q), W=when(q), ql=q.toLowerCase(), out=[];
+    if(/sunset|sunrise|sun set|sun rise|get dark|daylight|dusk|dawn/.test(ql)) return [];
+    if(t==="general"&&(!WX.test(ql)||/\b(who won|score|scores|traffic|tickets?|parking|menu|address|phone number|stock|news|price|cost)\b/.test(ql))) return [];
+    if(t==="wind"&&!(namedDay(q)&&W.idx>1)&&!W.week){ var wc=windCard(); if(wc) return [wc]; } if(!namedDay(q)&&!W.week&&LASTW) W=LASTW; var wantsPic=/send|show|see|picture|map|image|chart|graph|outlook|radar|hourly|totals|table/.test(ql);
     var fut=/\bwhen\b|what time|\bwill\b|going to|chance|timing|start|later|if we get/.test(ql)||namedDay(q);
     if((t==="lightning"||t==="storms")&&fut&&/thunder|lightning|storm/.test(ql)){ var ti=namedDay(q)&&!W.week?W.idx:null; var TD=ti!=null?thunderDay(ti):null; if(!TD) TD=thunderAhead(0,1)[0]; if(TD){ var hc=hourlyCard({idx:TD.idx,day:days()[TD.idx],label:cap(TD.label)}); if(hc) out.push(hc); } var lv2=outlookLevel(TD?TD.idx:0); if(lv2&&lv2>=2){ var sv=cardSvg(new RegExp("^spc"+((TD?TD.idx:0)+1)+"$")); if(sv) out.push(sv); } return out.slice(0,2); }
     if(t==="now"||t==="lightning"||/radar/.test(ql)){ var r=cardSvg(/^radar$/); if(r) out.push(r); }
@@ -444,7 +486,8 @@ var SDR_ENGINE=(function(){
     // the rainfall map covers days 1-3 only: send it only when the day asked about is inside it; otherwise the week table shows that day in context
     if(t==="totals"&&!W.week&&W.day&&Math.max(W.day.pp||0,W.day.ppN||0)>=20){ var qp=(W.idx!=null&&W.idx<=2)?cardSvg(/^qpf$/):null; if(qp) out.push(qp); else { var wt=weekTable(W.idx); var nm2=(W.label||dname(W.day,W.idx)); wt.title="Rain by day · "+cap(nm2)+" is the wet one"; out.push(wt); } }
     return out.slice(0,2); }
-  return { answer:core, plan:plan, followUp:followUp, attachments:attachments, setMet:setMet, ok:function(){ return !!(P&&days().length); } };
+  function attachNamed(n){ try{ if(n==="radar") return cardSvg(/^radar$/); if(n==="outlook") return cardSvg(/^spc1$/)||cardSvg(/^ero1$/); if(n==="rain") return weekTable(LASTW&&LASTW.idx); if(n==="hourly"){ var W=LASTW&&LASTW.day?LASTW:{idx:0,day:days()[0],label:"today"}; return hourlyCard(W)||windCard(); } }catch(e){} return null; }
+  return { answer:core, plan:plan, followUp:followUp, attachments:attachments, attachNamed:attachNamed, setMet:setMet, ok:function(){ return !!(P&&days().length); } };
 })();
 
 </script>
@@ -463,9 +506,9 @@ var SDR_ENGINE=(function(){
   function isThanks(t){return /\b(thank|thanks|thx|ty|appreciate|got it|perfect|awesome|great)\b/i.test(t)&&t.length<60;}
 
   function ts(label){var d=document.createElement("div");d.className="ts";d.innerHTML=label;M.appendChild(d);lastSide="";}
-  function sender(n){var d=document.createElement("div");d.className="who-l";d.textContent=n+(/Meteorologist team|Division/.test(n)?"":" · Meteorologist");M.appendChild(d);}
+  function sender(n){var d=document.createElement("div");d.className="who-l";d.textContent=/Forecast Desk/.test(n)?"SDR Forecast Desk · automated answer":n+(/Meteorologist team|Division|Weather Intelligence/.test(n)?"":" · Meteorologist");M.appendChild(d);}
   function clearStatus(){var s=M.querySelector(".status");if(s)s.remove();}
-  function bubble(side,html,opts){opts=opts||{};if(side==="them"&&opts.from&&lastSide!=="them")sender(opts.from);
+  var lastFrom="";function bubble(side,html,opts){opts=opts||{};if(side==="them"&&opts.from&&(lastSide!=="them"||opts.from!==lastFrom)){sender(opts.from);lastFrom=opts.from;}if(side!=="them")lastFrom="";
     var b=document.createElement("div");b.className="b "+side+(lastSide===side?" cont":"");b.innerHTML=html;M.appendChild(b);
     if(side==="me"){clearStatus();var s=document.createElement("div");s.className="status";s.textContent="Delivered";M.appendChild(s);}
     lastSide=side;M.scrollTop=M.scrollHeight;return b;}
@@ -493,7 +536,49 @@ var SDR_ENGINE=(function(){
     b.addEventListener("click",function(){b.textContent="✓ Got it";b.classList.add("done");sm.textContent="acknowledged "+now();b.disabled=true;});r.appendChild(b);r.appendChild(sm);M.appendChild(r);}
   function typing(on){var t=M.querySelector(".typing");if(t)t.remove();if(on){var d=document.createElement("div");d.className="typing";d.innerHTML="<i></i><i></i><i></i>";M.appendChild(d);M.scrollTop=M.scrollHeight;}}
 
+
+  // ===================== v145: AI replies through the SDR chat server (address in channel.json → aiChatUrl) =====================
+  var AIHIST=[];
+  function aiUrl(){ try{ var C=window.parent&&window.parent.CHANNEL; return C&&C.aiChatUrl?String(C.aiChatUrl):""; }catch(e){ return ""; } }
+  function aiLoc(){ try{ var v=window.parent.DASH.venue(); var n=String(v.name||""), m=n.match(/^(.*?),\s*([A-Z]{2})$/); var ST={SC:"South Carolina",NC:"North Carolina",GA:"Georgia",FL:"Florida",AL:"Alabama",TN:"Tennessee",VA:"Virginia",MS:"Mississippi",LA:"Louisiana",TX:"Texas"};
+    var city=v.city||(m?m[1].replace(/ County$/,""):""), st=v.state||(m?m[2]:""); if(!city&&/clemson|memorial stadium/i.test(n)){ city="Clemson"; st="SC"; } return {city:city,region:ST[st]||st,timezone:"America/New_York"}; }catch(e){ return {}; } }
+  function aiData(){ var P=window.parent, out=[], g=function(id){ try{ var e=P.document.getElementById(id); return e?e.textContent.replace(/\s+/g," ").trim():""; }catch(x){ return ""; } };
+    try{ var v=P.DASH.venue(); out.push("Site: "+v.name+(v.la!=null?" ("+(+v.la).toFixed(2)+", "+(+v.lo).toFixed(2)+")":"")); }catch(e){}
+    out.push("Local time now: "+new Date().toLocaleString("en-US",{weekday:"long",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}));
+    out.push("RIGHT NOW: "+(g("st-h")||"")+". "+g("st-why"));
+    try{ var H=P.STRIPS.hours(), n=Date.now(), c=H.reduce(function(b,h){ return !b||Math.abs(h.t-n)<Math.abs(b.t-n)?h:b; },null); if(c) out.push("Conditions now: "+c.temp+"°"+(c.feel!=null?", feels like "+c.feel+"°":"")+", wind "+(c.wind||"?")+" mph"+(c.gust?", gusts "+c.gust:"")+(c.short?", "+c.short:"")); }catch(e){}
+    out.push("WHAT'S NEXT: "+g("nx-h")+". "+g("nx-p"));
+    try{ var A=(P.ALERTS||[]).map(function(a){ a=a.properties||a; return a.event+(a.areaDesc?" ("+String(a.areaDesc).split(";").slice(0,3).join(";")+")":"")+(a.ends||a.expires?" until "+new Date(a.ends||a.expires).toLocaleString("en-US",{weekday:"short",hour:"numeric",minute:"2-digit"}):""); }); out.push("ALERTS NEAR SITE: "+(A.length?A.slice(0,8).join(" | "):"none")); }catch(e){}
+    try{ var R=P.RADAR_NEAR; out.push("RADAR: "+(!R||R.none?"nothing within about 45 miles":(R.light?"light returns ":R.kind+" ")+Math.round(R.d)+" miles "+R.dir)); }catch(e){}
+    try{ var cards=[].slice.call(P.document.querySelectorAll("#mrPrev .mcard")).map(function(c){ var t=c.querySelector(".mlab b"), l=c.querySelector(".mlab span, .mline, small"); return (t?t.textContent.trim():"")+(l?": "+l.textContent.trim():""); }).filter(Boolean); if(cards.length) out.push("OUTLOOK MAPS: "+cards.slice(0,10).join(" | ")); }catch(e){}
+    try{ var D=P.STRIPS.days(); out.push("DAILY (rain = middle half of the models: low/most likely/high, inches; model agreement x of 5):");
+      D.slice(0,10).forEach(function(d){ var dt=new Date(d.date); var rr=d.rr?" rain "+(d.rr[0]/100).toFixed(2)+"/"+(d.rr[1]/100).toFixed(2)+"/"+(d.rr[2]/100).toFixed(2)+'"':"";
+        out.push("- "+dt.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"})+": "+(d.short||d.sky||"")+" high "+d.hi+" low "+d.lo+", rain chance day "+(d.pp||0)+"% night "+(d.ppN||0)+"%, thunder "+(d.thunder||0)+"%,"+rr+", wind "+(d.wind||"?")+" gusts "+(d.gust||"?")+(d.snowP?", snow chance "+d.snowP+"%":"")+(d.conf!=null?", model agreement "+d.conf+" of 5":"")); }); }catch(e){}
+    try{ var H2=P.STRIPS.hours(), now2=Date.now(), lines=[], byDay={}; H2.forEach(function(h){ if(h.t<now2-3600e3) return; var k=new Date(h.t).toDateString(); (byDay[k]=byDay[k]||[]).push(h); });
+      Object.keys(byDay).slice(0,8).forEach(function(k,i){ var L=byDay[k]; var wet=L.some(function(h){ return (h.pop||0)>=30||(h.thunder||0)>=20; }); if(i>1&&!wet) return;
+        lines.push(new Date(k).toLocaleDateString("en-US",{weekday:"short"})+": "+L.filter(function(h,j){ return i<2||new Date(h.t).getHours()%2===0; }).map(function(h){ var hr=new Date(h.t).getHours(); return (hr===0?"12a":hr===12?"12p":hr%12+(hr<12?"a":"p"))+" "+h.temp+"° "+(h.pop||0)+"%"+((h.thunder||0)?"/T"+h.thunder:"")+(h.gust?" g"+h.gust:""); }).join(", ")); });
+      if(lines.length) out.push("HOURLY (hour temp rain%/T=thunder% g=gust):\n"+lines.join("\n")); }catch(e){}
+    return out.join("\n"); }
+  function chatMode(){ try{ var C=window.parent.CHANNEL; return C&&C.chatMode==="review"?"review":"auto"; }catch(e){ return "auto"; } }
+  function siteName(){ try{ return window.parent.DASH.venue().name; }catch(e){ return ""; } }
+  var THREAD=(function(){ var k="sdr-thread-"+siteName(); try{ var v=localStorage.getItem(k); if(v) return v; v=Date.now().toString(36)+Math.random().toString(36).slice(2,8); localStorage.setItem(k,v); return v; }catch(e){ return Date.now().toString(36)+Math.random().toString(36).slice(2,8); } })();
+  function schedText(){ try{ return [].slice.call(window.parent.document.querySelectorAll("#sched .ev")).map(function(e){ var tm=e.querySelector(".tm"), nm=e.querySelector(".nm"); return (tm?tm.textContent.replace(/\s+/g," ").trim():"")+" · "+(nm?nm.textContent.replace(/\s+/g," ").trim():""); }).join("\n"); }catch(e){ return ""; } }
+  // review mode: the team's replies arrive on the thread
+  var POLL=null, SINCE=Date.now()-60000, LASTASKED="";
+  function pollThread(){ var url=aiUrl(); if(!url||POLL) return; var n=0;
+    POLL=setInterval(function(){ if(++n>450){ clearInterval(POLL); POLL=null; return; }
+      fetch(url.replace(/\/$/,"")+"/thread?id="+encodeURIComponent(THREAD)+"&since="+SINCE).then(function(r){ return r.json(); }).then(function(j){ (j.messages||[]).forEach(function(m){ SINCE=Math.max(SINCE,m.t); clearStatus();
+        bubble("them",String(m.text||"").replace(/</g,"&lt;"),{from:m.from||"Meteorologist"}); AIHIST.push({role:"assistant",content:m.text});
+        (m.attach||[]).forEach(function(a,i){ setTimeout(function(){ var c=null; try{ if(LASTASKED) SDR_ENGINE.answer(LASTASKED); c=SDR_ENGINE.attachNamed(a); }catch(e){} if(c){ imageSvg(c.svg,c.title); POSTED[c.title]=1; } },700+i*700); }); }); }).catch(function(){}); },8000); }
+  function aiReply(text,done){ var url=aiUrl(); if(!url) return false;
+    var ctl=new AbortController(), timer=setTimeout(function(){ ctl.abort(); },45000);
+    fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},signal:ctl.signal,body:JSON.stringify({site:siteName(),client:siteName(),question:text,history:AIHIST.slice(-12),dashboard:aiData(),schedule:schedText(),met:lastMet,location:aiLoc(),mode:chatMode(),thread:THREAD})})
+      .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,j:j}; }); })
+      .then(function(x){ clearTimeout(timer); if(x.ok&&x.j&&x.j.queued){ done({queued:true}); return; } if(!x.ok||!x.j||!x.j.text) throw new Error((x.j&&x.j.error)||"no reply"); done({text:x.j.text,from:x.j.from||"SDR Forecast Desk"}); })
+      .catch(function(){ clearTimeout(timer); done(null); });
+    return true; }
   var PLAYGEN=0, GREETED=false, POSTED={};
+  var ONIT=["Got it. A meteorologist is looking at this now and will reply here shortly.","Thanks — a meteorologist has your question and will answer here in a few minutes."];
   var QUICK=["Are we good for Saturday?","When do storms start?","How much rain?","Lightning near us?"];
   function quick(){var Q=document.getElementById("quick");Q.innerHTML="";QUICK.forEach(function(q){var b=document.createElement("button");b.textContent=q;b.addEventListener("click",function(){send(q);});Q.appendChild(b);});
     var r=document.createElement("button");r.className="brief";r.textContent="Request a briefing";r.addEventListener("click",function(){send("Can we get a briefing for Saturday's game?");});Q.appendChild(r);}
@@ -509,6 +594,18 @@ var SDR_ENGINE=(function(){
     helloT=setTimeout(function(){markRead();typing(true);
       setTimeout(function(){typing(false);
         if(night){bubble("them",greet(n)+"You've caught us after hours. A meteorologist will respond to your question first thing in the morning. Your dashboard has your status and the latest briefing in the meantime.",{from:"SDR Weather Intelligence Division"});return;}
+        if(aiUrl()){ var gen0=PLAYGEN; typing(true); AIHIST.push({role:"user",content:text}); LASTASKED=text;
+          var tStart=Date.now();
+          if(aiReply(text,function(res){ if(gen0!==PLAYGEN) return;
+              if(!res){ typing(false); fallback(); return; }
+              if(res.queued){ typing(false); bubble("them",ONIT[Math.floor(Math.random()*ONIT.length)],{from:"SDR Weather Intelligence"}); pollThread(); return; }
+              var reply=res.text, FROM=res.from;
+              AIHIST.push({role:"assistant",content:reply});
+              var wait=Math.max(0,Math.min(5000,900+reply.length*14)-(Date.now()-tStart));
+              setTimeout(function(){ if(gen0!==PLAYGEN) return; typing(false); bubble("them",reply.replace(/</g,"&lt;"),{from:FROM}); GREETED=true;
+                var att=[]; try{ att=(SDR_ENGINE.attachments(text)||[]).filter(function(a){ return !POSTED[a.title]; }).slice(0,1); }catch(e){}
+                att.forEach(function(a,i){ setTimeout(function(){ if(gen0!==PLAYGEN) return; imageSvg(a.svg,a.title); POSTED[a.title]=1; },1200+i*900); }); },wait); })) return; }
+        fallback(); function fallback(){
         var PL=null, wasAnswer=false; try{ if(SDR_ENGINE.ok()){ PL=SDR_ENGINE.followUp(text); wasAnswer=!!PL; if(!PL) PL=SDR_ENGINE.plan(text); } }catch(e){ PL=null; }
         if(PL) PL=PL.filter(function(it){ return !(it.att&&POSTED[it.att.title]); });
         var skipHello=PL&&(wasAnswer||GREETED||Math.random()<0.35); if(PL&&!skipHello) GREETED=true;   // sometimes the answer just comes, no hello
@@ -519,7 +616,7 @@ var SDR_ENGINE=(function(){
         else { replyT=setTimeout(function(){typing(true);setTimeout(function(){typing(false);
           bubble("them","Your forecast is still loading on my end. Give me a moment and I'll come right back to this.",{from:lastMet});
           M.scrollTop=M.scrollHeight;},2400);},3500+Math.floor(Math.random()*2500)); }
-      },1600);},3500);}
+      } },1600);},3500);}
   document.getElementById("compose").addEventListener("submit",function(e){e.preventDefault();send(ci.value);});
   var camB=document.getElementById("cam"); if(camB) camB.hidden=true;
   function mode(nt){night=nt;document.getElementById("d-day").classList.toggle("on",!nt);document.getElementById("d-night").classList.toggle("on",nt);

@@ -1462,6 +1462,27 @@ body.chat-on{overflow:hidden}
   #pane-overview .radar{align-self:stretch;height:auto;display:flex;flex-direction:column}
   #pane-overview .radar .map{flex:1 1 auto}
 }
+/* v143: no floating channel player over the radar on phones — the channel lives in the LIVE tab */
+#pip{display:none!important}
+/* v144 desk on-air indicator */
+@keyframes deskblink{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(255,77,77,.65)}50%{opacity:.35;box-shadow:0 0 0 6px rgba(255,77,77,0)}}
+.tabs button[data-pane="live"]{position:relative}
+body.desk-live .tabs button[data-pane="live"]{color:#FF6B6F}
+body.desk-live .tabs button[data-pane="live"]::after{content:"";position:absolute;top:7px;left:calc(50% + 11px);width:9px;height:9px;border-radius:50%;background:#FF4D4D;animation:deskblink 1.1s ease-in-out infinite}
+body:not(.desk-live) .livepill{border-color:var(--line);background:transparent;color:var(--muted)}
+body:not(.desk-live) .livepill::before{background:#5B6B88;animation:none}
+body.desk-live .livepill{background:rgba(229,72,77,.22);border-color:#FF4D4D;color:#fff}
+body.desk-live .livepill::before{animation:deskblink 1.1s ease-in-out infinite!important}
+.deskline{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);color:var(--muted);font-size:14px}
+.deskline.on{background:rgba(229,72,77,.14);color:#FFE3E3}
+.deskline.on i{width:10px;height:10px;border-radius:50%;background:#FF4D4D;flex:0 0 auto;animation:deskblink 1.1s ease-in-out infinite}
+.deskline.on b{font-family:var(--display);font-weight:800;letter-spacing:.12em;color:#FF6B6F;font-size:13px}
+.deskline.on b{white-space:nowrap}
+body.desk-live #live-flag{color:#FF6B6F}
+body.desk-live #live-flag::before{background:#FF4D4D!important;animation:deskblink 1.1s ease-in-out infinite}
+/* v148: RIGHT NOW in one line — the place is already in the site picker */
+#st-k span{display:none!important}
+.ltgline[hidden]{display:none!important}
 
 /* v135 settings */
 #setbtn{color:var(--muted)}
@@ -1490,6 +1511,25 @@ body.chat-on{overflow:hidden}
 #setwrap .note{margin:8px 20px 0;color:#8FA3C2;font-size:12.5px;line-height:1.35}
 #setwrap .ab{margin:18px 18px 4px;color:#8FA3C2;font-size:12.5px;line-height:1.5;text-align:center}
 #setwrap .ab b{color:#F4F7FB;font-family:var(--display),sans-serif;letter-spacing:.1em;font-size:13px}
+
+/* v146 rivers */
+/* the first prototype's sample chat drawer is retired on the live sites (the CHAT tab opens the real chat) */
+#drawer,#scrim,#fab{display:none!important}
+.mvtip .rv{min-width:250px;max-width:320px}
+.mvtip .rvh{font-family:var(--display),sans-serif;font-weight:800;letter-spacing:.06em;font-size:15px;color:#fff;margin:0 22px 2px 0;line-height:1.2}
+.mvtip .rvs{font-family:var(--display),sans-serif;font-weight:800;letter-spacing:.1em;font-size:12px;margin:0 0 6px}
+.mvtip .rvn{font-size:13.5px;color:#DCE6F5;line-height:1.4;margin:0 0 6px}
+.mvtip .rvn b{color:#fff}
+.mvtip .rvg{display:block;width:100%;height:auto;border-radius:8px;background:#0B1730;margin:2px 0 6px}
+.mvtip .rvi{font-size:12.5px;color:#C9D3E3;line-height:1.4;border-top:1px solid rgba(160,180,215,.25);padding-top:6px;margin-top:4px}
+.mvtip .rvi b{display:block;font-family:var(--display),sans-serif;letter-spacing:.1em;font-size:10.5px;color:#8FA3C2;margin-bottom:2px}
+#rivAlert{display:grid;gap:8px;margin-top:8px}
+#rivAlert:empty{display:none}
+#rivAlert .rva{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.02);cursor:pointer;text-align:left;width:100%;color:inherit}
+#rivAlert .rva i{width:10px;height:10px;border-radius:50%}
+#rivAlert .rva b{display:block;font-family:var(--display);font-weight:800;letter-spacing:.08em;font-size:13px}
+#rivAlert .rva span{display:block;font-size:13px;color:var(--muted);line-height:1.35}
+#rivAlert .rva em{font-style:normal;color:#6FB7FF;font-weight:700;font-size:13px}
 </style>
 <style>/* Leaflet 1.9.4 (inlined) */
 /* required styles */
@@ -2207,7 +2247,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
     <div class="call clear" id="call">
       <div class="k" id="st-k">BAY COUNTY · RIGHT NOW</div>
       <div class="big"><span class="dot"></span><h1 id="st-h">ALL CLEAR</h1></div>
-      <p class="why" id="st-r30"></p><p class="why" id="st-why">No watches or warnings for Bay County.</p>
+      <p class="why" id="st-r30"></p><p class="why" id="st-why">No watches or warnings nearby.</p>
       <div class="now" id="now"></div>
       <div class="clockrow" id="clockrow" hidden><b id="f1b">5:25 PM</b><span>Hold until the warning ends</span></div>
     </div>
@@ -2584,7 +2624,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
     clearnight:`<svg viewBox="0 0 24 24" fill="#DCE6F5"><path d="M20 15.5A8.5 8.5 0 0 1 8.5 4a8.5 8.5 0 1 0 11.5 11.5z"/></svg>`
   };
   const SCENES = {
-    clear:  { k:"BAY COUNTY · RIGHT NOW", h:"ALL CLEAR", why:"No watches or warnings for Bay County.",
+    clear:  { k:"BAY COUNTY · RIGHT NOW", h:"ALL CLEAR", why:"No watches or warnings nearby.",
       ni:"ts", nh:"Quiet through Friday", np:"Front arrives Saturday with a few storms; breezy behind it.", f3b:"Next update 1:30 PM", rd:"Nothing on radar within 60 miles", vdot:"var(--clear)" },
     headsup:{ k:"BAY COUNTY · RIGHT NOW", h:"HEADS UP", why:"Storms 22 miles west, moving east at 20 mph. Bring beach crews in by 4:15.",
       ni:"ts", nh:"Leading edge ~4:40 PM", np:"Afternoon outdoor work is at risk. Evening event looks fine.", f3b:"Next update 4:15 PM", rd:"Line 22 mi west · ETA 4:40 PM", vdot:"var(--heads)" },
@@ -2634,7 +2674,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
   const VENUES = {
     stadium: { name:"Bay County, FL", client:"BAY COUNTY EMERGENCY MANAGEMENT", st:"FL", la:30.1588, lo:-85.6602, sub:"Panama City · county operations", schedK:"YOUR OPERATIONS · TODAY",
       obs:{ t:68, feel:68, feelK:"FEELS LIKE", ico:"sun", cond:"Sunny", where:"Panama City, FL", wind:"N 8", gust:"14", hum:"55%", wbgt:null },
-      why:"No watches or warnings for Bay County.", ni:"sun",
+      why:"No watches or warnings nearby.", ni:"sun",
       nh:"Quiet through Friday", np:"Front arrives Saturday with a few storms; breezy behind it.",
       events:[
         { t:"7:00 AM",  n:"Debris & road crews roll",      s:"clear",   r:"Dry, light wind." },
@@ -3034,7 +3074,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
       ni = ico((soon||nextWet||{}).shortForecast||"storm"); nh = soon ? `${soon.shortForecast} ~${hhmm(new Date(soon.startTime))}` : "Watching the next 3 hours"; np = nextWet ? `${nextWet.shortForecast}, ${nextWet.probabilityOfPrecipitation.value}% at ${hhmm(new Date(nextWet.startTime))}.` : "We'll update you before anything gets inside 30 miles.";
     } else {
       key="clear";
-      { const RN=window.RADAR_NEAR; why = RN&&!RN.none ? `${cap(RN.kind)} ${Math.round(RN.d)} miles to your ${RN.dir}.` : near ? `Nearest warning ${near.d.toFixed(0)} miles away. Nothing for Bay County.` : "No watches or warnings for Bay County."; }
+      { const RN=window.RADAR_NEAR; why = RN&&!RN.none ? `${cap(RN.kind)} ${Math.round(RN.d)} miles to your ${RN.dir}.` : near ? `Nearest warning ${near.d.toFixed(0)} miles away. Nothing here.` : "No watches or warnings nearby."; }
       if(nextWet){ ni = ico(nextWet.shortForecast); nh = `${nextWet.shortForecast} ~${hhmm(new Date(nextWet.startTime))}`; np = `${nextWet.probabilityOfPrecipitation.value}% chance. Quiet until then.`; }
       else { const d2 = days.find(x=>x.pp>=40); ni = d2 ? d2.ico : "sun"; nh = d2 ? `${d2.d==="TONIGHT"?"Tonight":d2.d}: ${d2.pp}% rain` : "Quiet through the week"; np = d2 ? "Dry until then." : "Nothing on the 7-day worth planning around."; }
     }
@@ -3391,6 +3431,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
     // the line under the call
     line.textContent = "LIGHTNING · " + (!L.connected && !L.strikes.length ? "feed not connected" :
       a.near ? `nearest ${a.near.d.toFixed(0)} mi ${a.near.b} · ${hhmm(new Date(a.near.t))}` : "none within 50 mi in the last 30 min");
+    line.hidden = !L.connected && !L.strikes.length;   // v148: nothing to say until the feed is connected
     const call = $("call");
     window._ltgHold=!!a.hold;
     if(a.hold){
@@ -4167,7 +4208,7 @@ window.MAPROOM = (function(){
     const prev=document.getElementById("mrPrev"), full=document.getElementById("mrFull");
     if(prev) prev.innerHTML='<div class="mload">Loading maps…</div>';
     try{ LAST = await window.MAPDATA(); }catch(e){ LAST={}; console.warn("map room",e); }
-    const list=cards(LAST); CARDS=list;
+    const list=cards(LAST); if(window.SDR_RIVERS_CARD){ const rc=window.SDR_RIVERS_CARD(); if(rc) list.splice(1,0,rc); } CARDS=list;
     if(prev) render(prev, list, false); if(full) render(full, list, true);
     const st=document.getElementById("mrStamp"); if(st) st.textContent = (LAST.sample?"SAMPLE · ":"LIVE · ")+new Date().toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
   }
@@ -4204,7 +4245,7 @@ window.MAPROOM = (function(){
 window.CHANNEL = { youtubeChannelId: "", youtubeVideoId: "0kJsmlz95V0" };
 (async function(){
   try{ const r=await fetch("../channel.json?_="+Date.now(),{cache:"no-store"}); if(r.ok){ const j=await r.json(); const pick=v=>{ v=String(v||"").trim(); const m=v.match(/(?:live\/|v=|youtu\.be\/|embed\/)([\w-]{11})/); return m?m[1]:(/^[\w-]{11}$/.test(v)?v:""); };
-    const v=pick(j.youtubeLiveLink||j.youtubeVideoId); if(v) window.CHANNEL.youtubeVideoId=v; if(j.youtubeChannelId) window.CHANNEL.youtubeChannelId=String(j.youtubeChannelId).trim(); } }catch(e){}
+    const v=pick(j.youtubeLiveLink||j.youtubeVideoId); if(v) window.CHANNEL.youtubeVideoId=v; window.CHANNEL.deskLive=j.deskLive===true; window.CHANNEL.deskNote=String(j.deskNote||"").trim(); window.CHANNEL.aiChatUrl=String(j.aiChatUrl||"").trim(); window.CHANNEL.chatMode=j.chatMode==="review"?"review":"auto"; if(j.youtubeChannelId) window.CHANNEL.youtubeChannelId=String(j.youtubeChannelId).trim(); } }catch(e){}
   window.dispatchEvent(new Event("sdr-channel"));
   const id = window.CHANNEL.youtubeChannelId, vid = window.CHANNEL.youtubeVideoId;
   const url = id ? `https://www.youtube-nocookie.com/embed/live_stream?channel=${id}&autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1`
@@ -4483,6 +4524,11 @@ window.MAPVIEW = (function(){
       add({type:"FeatureCollection",features:f},x=>({color:x.properties.stroke||"#555",weight:1,fillColor:x.properties.fill||SPCC[x.properties.LABEL]||"#C1E9C1",fillOpacity:.6}),
         x=>{ const lv={TSTM:0,MRGL:1,SLGT:2,ENH:3,MDT:4,HIGH:5}[x.properties.LABEL]; if(lv==null){ const n=SPCN[x.properties.LABEL]||[x.properties.LABEL,""]; return `<b>${n[0]}</b><br>${n[1]}`; } return SDR_RISKCARD("spc",lv,d,x.geometry); });
       leg.innerHTML=["TSTM","MRGL","SLGT","ENH","MDT","HIGH"].filter(k=>f.some(x=>x.properties.LABEL===k)).map(k=>`<span><i style="background:${SPCC[k]}"></i>${SPCN[k][0].split(" ·")[0]}</span>`).join(""); }
+    if(card.id==="rivers"&&card.gauges){ const RC=["#22C55E","#F6E05E","#F5A524","#E05252","#C040E0"];
+      card.gauges.slice().sort((a,b)=>Math.max(a.o.c,a.f.c)-Math.max(b.o.c,b.f.c)).forEach(g=>{ const l=Math.max(g.o.c,g.f.c); L.circleMarker([g.la,g.lo],{radius:l>=1?9:7,color:"#0A1428",weight:2,fillColor:l<0?"#8FA3C2":RC[l],fillOpacity:1}).addTo(over).on("click",e=>{ L.DomEvent.stopPropagation(e); query(e.latlng, window.SDR_RIVERCARD(g), null); }); });
+      info("Tap a dot to see the river level, the forecast and flood stage.");
+      if(card.focus){ const g=card.gauges.find(x=>x.id===card.focus); if(g) setTimeout(()=>{ try{ m.setView([g.la,g.lo],10); query(L.latLng(g.la,g.lo), window.SDR_RIVERCARD(g), null); }catch(e){} },500); }
+      leg.innerHTML=["In its banks","Near flood stage","Minor","Moderate","Major"].map((t,i)=>`<span><i style="background:${RC[i]}"></i>${t}</span>`).join(""); }
     if(card.view){ const V=card.view; add({type:"FeatureCollection",features:V.features||[]},V.style,V.explain);
       (V.points||[]).forEach(p=>L.marker([p.la,p.lo],{interactive:false,icon:L.divIcon({className:"",html:`<span class="hlmark" style="color:${p.col}">${p.t}</span>`,iconSize:[22,22],iconAnchor:[11,11]})}).addTo(over));
       leg.innerHTML=V.legend||""; }
@@ -4518,20 +4564,23 @@ window.MAPVIEW = (function(){
     // one quiet-state line under ALL CLEAR: "No warnings · no rain within 30 miles"
     const s=document.getElementById("st-r30"), hero=document.getElementById("status"); if(!s||!hero) return;
     const RN=window.RADAR_NEAR; if(RN&&!RN.none&&RN.light&&cls!=="dry"){ cls="light"; txt=`Light returns ${Math.round(RN.d)} mi ${RN.dir.replace(/north/,"N").replace(/south/,"S").replace(/east/,"E").replace(/west/,"W")}`; el&&(el.className="r30 wet",el.innerHTML=RING+txt); }
-    s.textContent = cls==="dry" ? "No warnings · no rain within 30 miles" : cls==="light" ? `No warnings · light radar returns ${Math.round(RN.d)} miles ${RN.dir}, nothing measured at the ground` : cls==="near" ? "No warnings · rain at the stadium now" : "No warnings · "+txt.replace(/^Rain/,"rain").replace(/ mi /," miles ");
+    const M=window.RAIN30_MOVE, mv=!M?"":M.toward?`, headed your way at ${M.sp} mph`:M.away?", moving away":`, moving ${M.to}`;
+    const wd=x=>({N:"north",NE:"northeast",E:"east",SE:"southeast",S:"south",SW:"southwest",W:"west",NW:"northwest"})[x]||x;
+    s.textContent = cls==="dry" ? "No rain within 30 miles." : cls==="light" ? `Just a few sprinkles ${Math.round(RN.d)} miles ${RN.dir}${mv}.` : cls==="near" ? "Rain falling here now." : txt.replace(/^Rain (\d+) mi (\w+)$/,(x,n,dr)=>`Rain ${n} miles ${wd(dr)}`)+mv+".";
     hero.classList.add("r30on"); hero.classList.toggle("r30dry", cls==="dry"); }
   function check(){
     const url = `https://mapservices.weather.noaa.gov/eventdriven/rest/services/radar/radar_base_reflectivity/MapServer/export?bbox=${cx-half},${cy-half},${cx+half},${cy+half}&bboxSR=3857&imageSR=3857&size=${PX},${PX}&format=png32&transparent=true&dpi=96&f=image&_=${Date.now()}`;
     const img = new Image(); img.crossOrigin = "anonymous";
     img.onload = ()=>{ try{
       const c=document.createElement("canvas"); c.width=c.height=PX; const g=c.getContext("2d"); g.drawImage(img,0,0);
-      const d=g.getImageData(0,0,PX,PX).data, pxMi = (2*MI*1.08)/PX; let best=null, hits=0;
+      const d=g.getImageData(0,0,PX,PX).data, pxMi = (2*MI*1.08)/PX; let best=null, hits=0, sx=0, sy=0;
       for(let y=0;y<PX;y++) for(let x=0;x<PX;x++){
         const i=(y*PX+x)*4, r=d[i], gg=d[i+1], b=d[i+2], a=d[i+3];
         if(a<120) continue; if(b>r && b>gg) continue;                       // skip clear + light blue/cyan (<20 dBZ)
         const dx=(x-PX/2)*pxMi, dy=(PX/2-y)*pxMi, dist=Math.hypot(dx,dy); if(dist>MI) continue;
-        hits++; if(!best || dist<best.dist) best={dist, dir:DIRS[Math.round(((Math.atan2(dx,dy)*180/Math.PI)+360)%360/45)%8]};
+        hits++; sx+=dx; sy+=dy; if(!best || dist<best.dist) best={dist, dir:DIRS[Math.round(((Math.atan2(dx,dy)*180/Math.PI)+360)%360/45)%8]};
       }
+      track(hits,sx,sy,Date.now());
       if(hits<4) show("dry","No rain within 30 mi");
       else if(best.dist<5) show("near","Rain overhead");
       else show("wet",`Rain ${Math.round(best.dist/5)*5||5} mi ${best.dir}`);
@@ -4539,6 +4588,28 @@ window.MAPVIEW = (function(){
     img.onerror = ()=>{ const el=document.getElementById("r30"); if(el) el.hidden=true; };
     img.src = url;
   }
+  // v148: which way is it going? compare the center of the rain now with a frame 12–40 minutes old
+  const HIST=[]; window.RAIN30_MOVE=null;
+  const WORD={N:"north",NE:"northeast",E:"east",SE:"southeast",S:"south",SW:"southwest",W:"west",NW:"northwest"};
+  function track(n,sx,sy,t){ if(n<8){ HIST.length=0; window.RAIN30_MOVE=null; return; }
+    const c={t,x:sx/n,y:sy/n,n}; HIST.push(c); HIST.sort((a,b)=>a.t-b.t); while(HIST.length&&t-HIST[0].t>40*60000) HIST.shift();
+    if(t<Date.now()-60000) return;                                   // a past frame only primes the history
+    const old=HIST.find(h=>t-h.t>=12*60000&&h.n>n*0.4&&h.n<n*2.5);
+    if(!old){ window.RAIN30_MOVE=null; return; }
+    const hr=(t-old.t)/3600e3, vx=(c.x-old.x)/hr, vy=(c.y-old.y)/hr, sp=Math.hypot(vx,vy);
+    if(sp<5||sp>70){ window.RAIN30_MOVE=null; return; }               // not moving, or noise — say nothing
+    const dd=Math.hypot(c.x,c.y)||1, cos=-(vx*c.x+vy*c.y)/(sp*dd);
+    window.RAIN30_MOVE={sp:Math.max(5,Math.round(sp/5)*5),toward:cos>0.6,away:cos<-0.6,to:WORD[DIRS[Math.round(((Math.atan2(vx,vy)*180/Math.PI)+360)%360/45)%8]]}; }
+  // prime with a frame from ~15 minutes ago so the direction can show on first load
+  (function prime(){ const t=Date.now()-15*60000;
+    const url = `https://mapservices.weather.noaa.gov/eventdriven/rest/services/radar/radar_base_reflectivity/MapServer/export?bbox=${cx-half},${cy-half},${cx+half},${cy+half}&bboxSR=3857&imageSR=3857&size=${PX},${PX}&format=png32&transparent=true&dpi=96&f=image&time=${t}`;
+    const img=new Image(); img.crossOrigin="anonymous";
+    img.onload=()=>{ try{ const c=document.createElement("canvas"); c.width=c.height=PX; const g=c.getContext("2d"); g.drawImage(img,0,0);
+      const d=g.getImageData(0,0,PX,PX).data, pxMi=(2*MI*1.08)/PX; let n=0,sx=0,sy=0;
+      for(let y=0;y<PX;y++) for(let x=0;x<PX;x++){ const i=(y*PX+x)*4; if(d[i+3]<120) continue; if(d[i+2]>d[i]&&d[i+2]>d[i+1]) continue;
+        const dx=(x-PX/2)*pxMi, dy=(PX/2-y)*pxMi; if(Math.hypot(dx,dy)>MI) continue; n++; sx+=dx; sy+=dy; }
+      if(n>=8) track(n,sx,sy,t); check(); }catch(e){} };
+    img.src=url; })();
   check(); setInterval(check, 120000);
   window.RAIN30 = { check };
 })();
@@ -5983,8 +6054,25 @@ window.SDR_GL=(function(){
 </script>
 
 <script>
+// ===================== v144: desk on-air indicator (SDR_DESK_V144) =====================
+(function(){
+  const tab=document.querySelector('.tabs button[data-pane="live"]'), flag=document.getElementById("live-flag"), pane=document.getElementById("pane-live");
+  let line=null;
+  function paint(){ const C=window.CHANNEL||{}, on=!!C.deskLive; document.body.classList.toggle("desk-live",on);
+    if(flag) flag.textContent=on?"LIVE NOW":"24/7 CHANNEL";
+    if(pane&&!line){ line=document.createElement("div"); line.className="deskline"; const first=pane.querySelector(".panel .ph"); if(first) first.insertAdjacentElement("afterend",line); }
+    if(line){ line.className="deskline"+(on?" on":""); line.innerHTML=on?`<i></i><b>LIVE NOW</b><span>${(C.deskNote||"A meteorologist is on the air, tracking the weather for you.").replace(/</g,"&lt;")}</span>`:`<span>No live coverage needed at this time. The 24/7 channel keeps rolling below.</span>`; }
+    const pill=document.getElementById("livepill"); if(pill) pill.title=on?"A meteorologist is live now":"Watch the 24/7 channel"; }
+  window.addEventListener("sdr-channel",paint); paint();
+  // pick up the switch without a reload: re-read channel.json every 2 minutes
+  setInterval(async()=>{ try{ const r=await fetch("../channel.json?_="+Date.now(),{cache:"no-store"}); if(!r.ok) return; const j=await r.json(); const was=!!(window.CHANNEL||{}).deskLive;
+    window.CHANNEL.deskLive=j.deskLive===true; window.CHANNEL.deskNote=String(j.deskNote||"").trim(); if(was!==window.CHANNEL.deskLive||true) paint(); }catch(e){} },120000);
+})();
+</script>
+
+<script>
 // v125: client chat layer
-(function(){ let wrap=null, fr=null; const CHATV="1793473466";
+(function(){ let wrap=null, fr=null; const CHATV="1793490596";
   function open(){ if(!wrap){ wrap=document.createElement("div"); wrap.id="chatwrap"; wrap.innerHTML='<iframe id="chatfr" title="Message the team" allow="camera"></iframe>'; document.body.appendChild(wrap); fr=wrap.querySelector("iframe"); fr.src="./chat.html?v="+CHATV; fr.addEventListener("load",()=>{ try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }); }
     wrap.hidden=false; document.body.classList.add("chat-on"); if(!(history.state&&history.state.chat)) history.pushState({chat:1},""); try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }
   function close(){ if(wrap){ wrap.hidden=true; } document.body.classList.remove("chat-on"); }
@@ -6050,6 +6138,74 @@ window.SDR_GL=(function(){
     paint(); wrap.hidden=false; try{ history.pushState({set:1},""); }catch(e){} }
   function close(){ if(wrap&&!wrap.hidden){ wrap.hidden=true; try{ if(history.state&&history.state.set) history.back(); }catch(e){} } }
   btn.onclick=open; window.SDR_SETTINGS_OPEN=open;
+})();
+</script>
+
+<script>
+// ===================== v146: river levels (SDR_RIVERS_V146) =====================
+(function(){
+  const COL=["#22C55E","#F6E05E","#F5A524","#E05252","#C040E0"], LAB=["In its banks","Near flood stage","Minor flooding","Moderate flooding","Major flooding"], KEY=["action","minor","moderate","major"];
+  let R=null;
+  const mi=(a,b,c,d)=>{ const p=Math.PI/180, x=Math.sin((c-a)*p/2)**2+Math.cos(a*p)*Math.cos(c*p)*Math.sin((d-b)*p/2)**2; return 3958.8*2*Math.asin(Math.sqrt(x)); };
+  const venue=()=>{ try{ return window.DASH.venue(); }catch(e){ return null; } };
+  const catOf=(v,C)=>{ if(v==null||!C) return -1; return C.major!=null&&v>=C.major?4:C.moderate!=null&&v>=C.moderate?3:C.minor!=null&&v>=C.minor?2:C.action!=null&&v>=C.action?1:0; };
+  const lv=g=>{ const d=g.d||{}, C=d.cats; let l=Math.max(g.o?g.o.c:-1, g.f?g.f.c:-1); if(C){ l=Math.max(l, catOf(g.o&&g.o.v,C), d.crest?catOf(d.crest[1],C):-1); } return l; };
+  const fmtT=t=>{ const d=new Date(typeof t==="number"?t*1000:t); if(isNaN(d)) return ""; if(d.getMinutes()>=30) d.setHours(d.getHours()+1); d.setMinutes(0,0,0); const now=new Date(), tm=d.toLocaleTimeString("en-US",{hour:"numeric",minute:d.getMinutes()?"2-digit":undefined});
+    const day=d.toDateString()===now.toDateString()?"today":(()=>{ const t2=new Date(now); t2.setDate(t2.getDate()+1); return d.toDateString()===t2.toDateString()?"tomorrow":d.toLocaleDateString("en-US",{weekday:"short"}); })(); return tm+" "+day; };
+  const ft=v=>v==null?"—":(+v).toFixed(1)+" ft";
+  const nameOf=g=>String(g.n||g.id||"River gauge").replace(/\s+/g," ").trim();
+  function near(maxMi){ const v=venue(); if(!R||!v||v.la==null) return []; return (R.gauges||[]).map(g=>Object.assign({},g,{dist:mi(+v.la,+v.lo,g.la,g.lo)})).filter(g=>g.dist<=maxMi).sort((a,b)=>a.dist-b.dist); }
+  function sentence(g){ const d=g.d||{}, C=d.cats||{}, o=g.o||{}, cr=d.crest, fl=C.minor;
+    let s=`<b>${ft(o.v)}</b> now${o.t?" ("+fmtT(o.t)+")":""}`;
+    if(cr&&cr[1]!=null&&(o.v==null||cr[1]>o.v+0.2)) s+=` · forecast to crest near <b>${ft(cr[1])}</b> around ${fmtT(cr[0])}`;
+    else if(d.fc&&d.fc.length) s+=" · forecast to hold steady or fall";
+    else s+=" · no forecast for this spot";
+    if(fl!=null) s+=`. Flood stage ${ft(fl)}.`; else s+=".";
+    return s; }
+  function graph(g){ const d=g.d; if(!d||(!d.obs.length&&!d.fc.length)) return "";
+    const W=300,H=150,L=30,R0=W-8,T=10,B=H-20, pts=d.obs.concat(d.fc); const t0=pts[0][0], t1=pts[pts.length-1][0];
+    const C=d.cats||{}, vals=pts.map(p=>p[1]); let lo=Math.min(...vals), hi=Math.max(...vals, C.action||-1e9);
+    if(C.minor!=null) hi=Math.max(hi, Math.min(C.minor*1.08, C.minor+3)); lo=Math.max(0,Math.min(lo, hi-2)); const pad=(hi-lo)*.08||1; lo-=pad; hi+=pad;
+    const X=t=>L+(R0-L)*(t-t0)/Math.max(1,t1-t0), Y=v=>B-(B-T)*(v-lo)/Math.max(.01,hi-lo);
+    let bands=""; const cuts=[["action",COL[1]],["minor",COL[2]],["moderate",COL[3]],["major",COL[4]]];
+    cuts.forEach(([k,c],i)=>{ const v=C[k]; if(v==null||v>hi) return; const nxt=cuts.slice(i+1).map(q=>C[q[0]]).find(x=>x!=null&&x>v); const yTop=Y(Math.min(hi,nxt!=null?nxt:hi)), yB=Y(Math.max(lo,v));
+      bands+=`<rect x="${L}" y="${yTop}" width="${R0-L}" height="${Math.max(0,yB-yTop)}" fill="${c}" opacity=".16"/><line x1="${L}" x2="${R0}" y1="${Y(v)}" y2="${Y(v)}" stroke="${c}" stroke-width="1.2" stroke-dasharray="4 3"/><text x="${R0-2}" y="${Y(v)-3}" text-anchor="end" font-size="9" font-weight="700" fill="${c}" stroke="#0B1730" stroke-width="3" paint-order="stroke" font-family="Barlow Condensed,Arial Narrow,sans-serif">${k==="action"?"NEAR FLOOD":k.toUpperCase()} ${(+v).toFixed(1)}</text>`; });
+    const path=a=>a.map((p,i)=>(i?"L":"M")+X(p[0]).toFixed(1)+","+Y(p[1]).toFixed(1)).join("");
+    const nowX=X(Date.now()/1000);
+    const days=[]; { const s=new Date(t0*1000); s.setHours(0,0,0,0); for(let k=1;k<20;k++){ const d2=new Date(s); d2.setDate(s.getDate()+k); const t=d2.getTime()/1000; if(t>=t1) break; days.push(t); } }
+    const ax=days.map(t=>`<line x1="${X(t)}" x2="${X(t)}" y1="${T}" y2="${B}" stroke="rgba(255,255,255,.07)"/><text x="${X(t)+2}" y="${H-6}" font-size="9" fill="#A9B6CC" font-family="Barlow Condensed,Arial Narrow,sans-serif">${new Date(t*1000).toLocaleDateString("en-US",{weekday:"short"}).toUpperCase()}</text>`).join("");
+    const yl=[lo+pad,(lo+hi)/2,hi-pad].map(v=>`<text x="${L-4}" y="${Y(v)+3}" text-anchor="end" font-size="9" fill="#A9B6CC" font-family="Barlow Condensed,Arial Narrow,sans-serif">${v.toFixed(0)}</text>`).join("");
+    return `<svg class="rvg" viewBox="0 0 ${W} ${H}">${bands}${ax}${yl}${nowX>L&&nowX<R0?`<line x1="${nowX}" x2="${nowX}" y1="${T}" y2="${B}" stroke="#fff" stroke-opacity=".35"/><text x="${nowX+3}" y="${T+8}" font-size="9" fill="#fff" font-family="Barlow Condensed,Arial Narrow,sans-serif">NOW</text>`:""}${d.obs.length?`<path d="${path(d.obs)}" fill="none" stroke="#6FB7FF" stroke-width="2.4"/>`:""}${d.fc.length?`<path d="${path((d.obs.length?[d.obs[d.obs.length-1]]:[]).concat(d.fc))}" fill="none" stroke="#6FB7FF" stroke-width="2.2" stroke-dasharray="5 4"/>`:""}<text x="${L}" y="${H-6}" font-size="9" fill="#6FB7FF" font-family="Barlow Condensed,Arial Narrow,sans-serif" dx="-28">ft</text></svg><div style="font-size:11.5px;color:#8FA3C2;margin:-2px 0 4px">Solid: observed · dashed: forecast</div>`; }
+  window.SDR_RIVERCARD=function(g){ const l=lv(g), c=COL[Math.max(0,l)]||"#8FA3C2", d=g.d||{};
+    let imp=""; if(d.impacts&&d.impacts.length){ const top=Math.max(g.o&&g.o.v||0, d.crest?d.crest[1]:0); const hit=d.impacts.filter(x=>x[0]<=top+0.01).sort((a,b)=>b[0]-a[0])[0]; if(hit&&l>=1) imp=`<div class="rvi"><b>AT ${(+hit[0]).toFixed(1)} FT</b>${String(hit[1]).replace(/</g,"&lt;")}</div>`; }
+    return `<div class="rv"><div class="rvh">${nameOf(g).replace(/</g,"&lt;")}</div><div class="rvs" style="color:${l<0?"#A9B6CC":c}">${l<0?"NO CURRENT READING":LAB[l].toUpperCase()}${g.dist!=null?` · ${Math.round(g.dist)} MI AWAY`:""}</div>${graph(g)}<div class="rvn">${sentence(g)}</div>${imp}</div>`; };
+  window.SDR_RIVERS_CARD=function(){ const N=near(40); if(!N.length) return null; const v=venue(); const w=N.reduce((m,g)=>Math.max(m,lv(g)),-1), worst=N.filter(g=>lv(g)===w)[0];
+    const pts=N.map(g=>({lo:g.lo,la:g.la,fill:COL[Math.max(0,lv(g))],r:4.5})).concat([{lo:+v.lo,la:+v.la,fill:"#F28C28",r:5}]);
+    return { id:"rivers", title:"RIVERS", sub:"River levels near you", line: w>=1?`${nameOf(worst)}: ${LAB[w].toLowerCase()}`:`${N.length} gauges within 40 miles · all in their banks`, flag:w>=2, box:[+v.lo-1.1,+v.la-.75,+v.lo+1.1,+v.la+.75], opts:{points:pts}, overlays:[], gauges:N }; };
+  function openCard(g){ const c=window.SDR_RIVERS_CARD(); if(!c||!window.MAPVIEW) return; if(g) c.focus=g.id; window.MAPVIEW.open(c,{}); }
+  function paintAlerts(){ const host=document.querySelector(".p-alerts"); if(!host) return; let box=document.getElementById("rivAlert"); if(!box){ box=document.createElement("div"); box.id="rivAlert"; host.appendChild(box); }
+    const N=near(40); const flood=(window.ALERTS||[]).some(a=>/Flood (Watch|Warning)|Flash Flood/i.test(((a.properties||a).event)||""));
+    let show=N.filter(g=>lv(g)>=1); if(flood&&show.length<3) show=show.concat(N.filter(g=>lv(g)<1&&g.d&&g.d.fc&&g.d.fc.length&&!show.includes(g)).slice(0,3-show.length));
+    show.sort((a,b)=>lv(b)-lv(a)); show=show.slice(0,4);
+    box.innerHTML=show.map((g,i)=>{ const l=lv(g); return `<button type="button" class="rva" data-i="${i}"><i style="background:${COL[Math.max(0,l)]}"></i><div><b style="color:${l>=1?COL[l]:"var(--fg)"}">RIVER · ${nameOf(g).toUpperCase().replace(/</g,"&lt;")}</b><span>${l>=1?LAB[l]+(g.f&&g.f.c>g.o.c?" forecast":" now")+". ":""}${sentence(g).replace(/<[^>]+>/g,"")}</span></div><em>Graph ›</em></button>`; }).join("");
+    box.querySelectorAll(".rva").forEach(b=>b.onclick=()=>openCard(show[+b.dataset.i]));
+    riverCall(N); }
+  // moderate or major flooding (now or forecast) within 40 miles lifts ALL CLEAR to HEADS UP; minor flooding stays a quiet row.
+  // Never overrides HEADS UP or TAKE ACTION set by anything else; steps back down by itself when the river does.
+  let held=null;
+  function riverCall(N){ const call=document.getElementById("call"), h=document.getElementById("st-h"), why=document.getElementById("st-why"); if(!call||!h||!why) return;
+    const big=(N||near(40)).filter(g=>lv(g)>=3).sort((a,b)=>lv(b)-lv(a))[0];
+    if(big&&call.classList.contains("clear")){ held={why:why.textContent}; const l=lv(big), d=big.d||{}, now=big.o&&big.o.c>=3;
+      call.className="call headsup"; h.textContent="HEADS UP";
+      why.textContent=`${nameOf(big)} ${now?"is at":"is forecast to reach"} ${LAB[l].toLowerCase()}${!now&&d.crest?`, cresting near ${(+d.crest[1]).toFixed(1)} ft around ${fmtT(d.crest[0])}`:""}. Low roads and areas along the river flood first.`;
+      const vd=document.querySelector("#venue .dot"); if(vd) vd.style.background="var(--heads)"; call.dataset.river="1"; }
+    else if(!big&&held&&call.dataset.river==="1"&&call.classList.contains("headsup")){ call.className="call clear"; h.textContent="ALL CLEAR"; why.textContent=held.why; held=null; delete call.dataset.river;
+      const vd=document.querySelector("#venue .dot"); if(vd) vd.style.background="var(--clear)"; } }
+  setInterval(()=>{ if(R) riverCall(); },60000);
+  async function load(){ try{ const r=await fetch("../rivers.json?_="+Math.floor(Date.now()/600000),{cache:"no-store"}); if(r.ok) R=await r.json(); }catch(e){} paintAlerts(); window.dispatchEvent(new Event("sdr-rivers")); }
+  window.SDR_RIVERS=()=>R;
+  window.addEventListener("alerts-ready",paintAlerts);
+  load(); setInterval(load,15*60000);
 })();
 </script>
 </body></html>

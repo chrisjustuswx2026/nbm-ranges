@@ -1527,6 +1527,8 @@ body.desk-live #live-flag::before{background:#FF4D4D!important;animation:deskbli
 #rvSheet[hidden]{display:none}
 #rvSheet .rvbox{position:relative;width:min(1100px,100%);max-height:100%;overflow:auto;background:#0E1A33;border:1px solid rgba(160,180,215,.25);border-radius:18px;padding:22px 24px 24px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
 #rvSheet .rvx{position:absolute;top:12px;right:14px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.08);color:#fff;font-size:18px;border:0;cursor:pointer}
+#rvSheet .rvlogo{float:right;height:42px;margin:0 52px 0 12px;background:#fff;border-radius:8px;padding:4px 8px}
+#rvSheet .rvsrc{margin-top:16px;font-size:12px;color:#7385A3}
 #rvSheet .rvhd b{display:block;font-family:var(--display),sans-serif;font-weight:800;font-size:clamp(22px,3.4vw,32px);letter-spacing:.02em;line-height:1.1;margin-right:48px}
 #rvSheet .rvhd span{display:block;margin-top:6px;font-family:var(--display),sans-serif;font-weight:800;letter-spacing:.1em;font-size:15px}
 #rvSheet .rvstats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0 10px}
@@ -4565,13 +4567,21 @@ window.MAPVIEW = (function(){
         x=>{ const lv={TSTM:0,MRGL:1,SLGT:2,ENH:3,MDT:4,HIGH:5}[x.properties.LABEL]; if(lv==null){ const n=SPCN[x.properties.LABEL]||[x.properties.LABEL,""]; return `<b>${n[0]}</b><br>${n[1]}`; } return SDR_RISKCARD("spc",lv,d,x.geometry); });
       leg.innerHTML=["TSTM","MRGL","SLGT","ENH","MDT","HIGH"].filter(k=>f.some(x=>x.properties.LABEL===k)).map(k=>`<span><i style="background:${SPCC[k]}"></i>${SPCN[k][0].split(" ·")[0]}</span>`).join(""); }
     if(card.id==="rivers"&&card.gauges){ const RC=["#22C55E","#F6E05E","#F5A524","#E05252","#C040E0"], cv=window._rvCanvas||(window._rvCanvas=L.canvas({padding:.4})), MK=[];
-      card.gauges.slice().sort((a,b)=>Math.max(a.o.c,a.f.c)-Math.max(b.o.c,b.f.c)).forEach(g=>{ const l=Math.max(g.o.c,g.f.c), nearSite=g.dist!=null&&g.dist<=60;
-        const mk=L.circleMarker([g.la,g.lo],{renderer:cv,radius:l>=2?9:l>=1?8:nearSite?7:5,color:"#0A1428",weight:l>=1||nearSite?2:1,fillColor:l<0?"#8FA3C2":RC[l],fillOpacity:l<0?.55:1}).addTo(over);
-        mk.on("click",e=>{ L.DomEvent.stopPropagation(e); window.SDR_RIVERSHEET(g); }); MK.push([mk,g,l]); });
+      // v153: like the sky cams — zoomed out you see only rivers at or near flood (the red spots); zoom in and every gauge in view appears
+      const ALL=card.gauges.slice().sort((a,b)=>Math.max(a.o.c,a.f.c)-Math.max(b.o.c,b.f.c)); let shown=new Map();
+      const mkOf=g=>{ const l=Math.max(g.o.c,g.f.c), nearSite=g.dist!=null&&g.dist<=60;
+        const mk=L.circleMarker([g.la,g.lo],{renderer:cv,radius:l>=2?9:l>=1?8:nearSite?7:5,color:"#0A1428",weight:l>=1||nearSite?2:1,fillColor:l<0?"#8FA3C2":RC[l],fillOpacity:l<0?.55:1});
+        mk.on("click",e=>{ L.DomEvent.stopPropagation(e); window.SDR_RIVERSHEET(g); }); return [mk,g,l]; };
+      const draw=()=>{ const z=m.getZoom(), bb=m.getBounds().pad(.25), want=new Set();
+        ALL.forEach(g=>{ const l=Math.max(g.o.c,g.f.c); if(l>=1||(z>=7&&bb.contains([g.la,g.lo]))) want.add(g.id); });
+        shown.forEach((v,id)=>{ if(!want.has(id)){ over.removeLayer(v[0]); shown.delete(id); } });
+        ALL.forEach(g=>{ if(want.has(g.id)&&!shown.has(g.id)){ const r=mkOf(g); r[0].addTo(over); shown.set(g.id,r); } });
+        MK.length=0; shown.forEach(v=>MK.push(v)); };
+      m.off("moveend",window._rvDraw||(()=>{})); window._rvDraw=draw; m.on("moveend",draw); draw();
       const labs=()=>{ const z=m.getZoom(), b=m.getBounds(), put=[]; let n=0; MK.slice().sort((x,y)=>y[2]-x[2]||((x[1].dist||1e9)-(y[1].dist||1e9))).forEach(([mk,g,l])=>{ const ll=mk.getLatLng(), pt=m.latLngToContainerPoint(ll);
           let show=(z>=10||(z>=8.5&&(l>=1||(g.dist!=null&&g.dist<=40)))||(l>=2&&z>=6))&&b.contains(ll)&&n<30&&!put.some(q=>Math.abs(q.x-pt.x)<170&&Math.abs(q.y-pt.y)<26); if(show){ n++; put.push(pt); if(!mk.getTooltip()) mk.bindTooltip(window.SDR_RIVERLABEL(g),{permanent:true,direction:"right",offset:[8,0],className:"rvlab"}); else mk.openTooltip(); } else if(mk.getTooltip()) mk.closeTooltip(); }); };
       m.off("zoomend moveend",window._rvLabs||(()=>{})); window._rvLabs=labs; m.on("zoomend moveend",labs);
-      info("Every river gauge in the country. Tap a dot for the full river graph, flood stages and forecast.");
+      info("Zoomed out: rivers near or in flood. Zoom in to see every gauge. Tap a dot for the full river graph.");
       const v0=(window.DASH&&DASH.venue&&DASH.venue())||{}; setTimeout(()=>{ try{ if(card.focus){ const g=card.gauges.find(x=>x.id===card.focus); if(g){ m.setView([g.la,g.lo],10); window.SDR_RIVERSHEET(g); } } else if(v0.la!=null) m.setView([+v0.la,+v0.lo],9); labs(); }catch(e){} },900);
       leg.innerHTML=["In its banks","Near flood stage","Minor","Moderate","Major"].map((t,i)=>`<span><i style="background:${RC[i]}"></i>${t}</span>`).join(""); }
     if(card.view){ const V=card.view; add({type:"FeatureCollection",features:V.features||[]},V.style,V.explain);
@@ -6122,7 +6132,7 @@ window.SDR_GL=(function(){
 
 <script>
 // v125: client chat layer
-(function(){ let wrap=null, fr=null; const CHATV="1793562309";
+(function(){ let wrap=null, fr=null; const CHATV="1793564454";
   function open(){ if(!wrap){ wrap=document.createElement("div"); wrap.id="chatwrap"; wrap.innerHTML='<iframe id="chatfr" title="Message the team" allow="camera"></iframe>'; document.body.appendChild(wrap); fr=wrap.querySelector("iframe"); fr.src="./chat.html?v="+CHATV; fr.addEventListener("load",()=>{ try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }); }
     wrap.hidden=false; document.body.classList.add("chat-on"); if(!(history.state&&history.state.chat)) history.pushState({chat:1},""); try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }
   function close(){ if(wrap){ wrap.hidden=true; } document.body.classList.remove("chat-on"); }
@@ -6253,7 +6263,7 @@ window.SDR_GL=(function(){
     const step=Math.max(1,Math.round((hi-lo)/5)); const yl=[]; for(let v=Math.ceil(lo);v<=hi;v+=step) yl.push(`<line x1="${L}" x2="${R0}" y1="${Y(v)}" y2="${Y(v)}" stroke="rgba(255,255,255,.05)"/><text x="${L-10}" y="${Y(v)+5}" text-anchor="end" font-size="${15*fs}" fill="#A9B6CC" ${F}>${v} ft</text>`);
     const nowX=X(Date.now()/1000), last=d.obs[d.obs.length-1], cr=d.crest;
     const dot=(p,c,t,up)=>`<circle cx="${X(p[0])}" cy="${Y(p[1])}" r="7" fill="${c}" stroke="#0B1730" stroke-width="3"/><text x="${X(p[0])}" y="${Y(p[1])+(up?-16:28)}" text-anchor="middle" font-size="${18*fs}" font-weight="800" fill="#fff" stroke="#0B1730" stroke-width="4" paint-order="stroke" ${F}>${t}</text>`;
-    return `<svg class="rvbig" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">${yl.join("")}${bands}${ax}${nowX>L&&nowX<R0?`<line x1="${nowX}" x2="${nowX}" y1="${T}" y2="${B}" stroke="#fff" stroke-opacity=".45" stroke-width="2"/><text x="${nowX}" y="${T-6}" text-anchor="middle" font-size="${15*fs}" font-weight="800" fill="#fff" ${F}>NOW</text>`:""}
+    return `<svg class="rvbig" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">${yl.join("")}${bands}${ax}${nowX>L&&nowX<R0?`<line x1="${nowX}" x2="${nowX}" y1="${T}" y2="${B}" stroke="#fff" stroke-opacity=".45" stroke-width="2"/><text x="${nowX+6}" y="${B-8}" text-anchor="start" font-size="${15*fs}" font-weight="800" fill="#fff" stroke="#0B1730" stroke-width="4" paint-order="stroke" ${F}>NOW</text>`:""}
       ${d.obs.length?`<path d="${path(d.obs)}" fill="none" stroke="#6FB7FF" stroke-width="4" stroke-linejoin="round"/>`:""}${d.fc.length?`<path d="${path((last?[last]:[]).concat(d.fc))}" fill="none" stroke="#6FB7FF" stroke-width="4" stroke-dasharray="10 7"/>`:""}
       ${last?dot(last,"#6FB7FF",(+last[1]).toFixed(1)+" ft",true):""}${cr&&(!last||cr[1]>last[1]+0.2)?dot(cr,"#FFC857","CREST "+(+cr[1]).toFixed(1)+" ft",true):""}</svg>
       <div class="rvkey"><span><i></i>Observed</span><span><i class="f"></i>Forecast</span></div>`; }
@@ -6263,7 +6273,7 @@ window.SDR_GL=(function(){
     const paint=()=>{ const l=lv(g), c=l<0?"#A9B6CC":COL[Math.max(0,l)], d=g.d, C=(d&&d.cats)||{}, o=g.o||{}, cr=d&&d.crest;
       const top=Math.max(o.v||0, cr?cr[1]:0); const imps=((d&&d.impacts)||[]).slice().sort((a,b)=>a[0]-b[0]);
       el.innerHTML=`<div class="rvbox" role="dialog" aria-label="River level"><button type="button" class="rvx" aria-label="Close">✕</button>
-        <div class="rvhd"><b>${nameOf(g).replace(/</g,"&lt;")}</b><span style="color:${c}">${l<0?"NO CURRENT READING":LAB[l].toUpperCase()}${g.dist!=null?` · ${Math.round(g.dist)} MILES AWAY`:""}</span></div>
+        <div class="rvhd">${(document.querySelector("#brand img")||{}).src?`<img class="rvlogo" alt="SDR Weather Intelligence" src="${document.querySelector("#brand img").src}">`:""}<b>${nameOf(g).replace(/</g,"&lt;")}</b><span style="color:${c}">${l<0?"NO CURRENT READING":LAB[l].toUpperCase()}${g.dist!=null?` · ${Math.round(g.dist)} MILES AWAY`:""}</span></div>
         <div class="rvstats">
           <div><small>RIGHT NOW</small><b>${ft(o.v)}</b><em>${o.t?fmtT(o.t):""}</em></div>
           <div><small>TREND</small><b>${trend(d)||"—"}</b><em>last 6 hours</em></div>
@@ -6271,6 +6281,7 @@ window.SDR_GL=(function(){
           <div><small>FORECAST CREST</small><b>${cr&&(o.v==null||cr[1]>o.v+0.2)?ft(cr[1]):d&&d.fc&&d.fc.length?"Steady or falling":"No forecast"}</b><em>${cr&&(o.v==null||cr[1]>o.v+0.2)?fmtT(cr[0]):""}</em></div></div>
         ${d?bigGraph(g):`<div class="rvload">${g._loading?"Loading the river graph…":"No river graph is available for this spot."}</div>`}
         ${imps.length?`<div class="rvimp"><h4>WHAT HAPPENS AT EACH LEVEL</h4>${imps.map(x=>`<div class="${x[0]<=top+0.01?"hit":""}"><b>${(+x[0]).toFixed(1)} ft</b><span>${String(x[1]).replace(/</g,"&lt;")}</span></div>`).join("")}</div>`:""}
+        <div class="rvsrc">SDR Weather Intelligence · river levels and forecasts from U.S. government river gauges</div>
       </div>`; el.hidden=false; };
     if(!g.d){ g._loading=true; paint(); await detail(g); g._loading=false; } paint(); };
   window.SDR_RIVERCARD=function(g){ const l=lv(g), c=COL[Math.max(0,l)]||"#8FA3C2", d=g.d||{};

@@ -4250,7 +4250,7 @@ window.MAPROOM = (function(){
     const prev=document.getElementById("mrPrev"), full=document.getElementById("mrFull");
     if(prev) prev.innerHTML='<div class="mload">Loading maps…</div>';
     try{ LAST = await window.MAPDATA(); }catch(e){ LAST={}; console.warn("map room",e); }
-    const list=cards(LAST); if(window.SDR_RIVERS_CARD){ const rc=window.SDR_RIVERS_CARD(); if(rc) list.splice(1,0,rc); } CARDS=list;
+    const list=cards(LAST); if(window.SDR_RIVERS_CARD){ const rc=window.SDR_RIVERS_CARD(); if(rc){ if(rc._w>=2) list.splice(1,0,rc); else list.push(rc); } } CARDS=list;
     if(prev) render(prev, list, false); if(full) render(full, list, true);
     const st=document.getElementById("mrStamp"); if(st) st.textContent = (LAST.sample?"SAMPLE · ":"LIVE · ")+new Date().toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
   }
@@ -6132,7 +6132,7 @@ window.SDR_GL=(function(){
 
 <script>
 // v125: client chat layer
-(function(){ let wrap=null, fr=null; const CHATV="1793564454";
+(function(){ let wrap=null, fr=null; const CHATV="1793565394";
   function open(){ if(!wrap){ wrap=document.createElement("div"); wrap.id="chatwrap"; wrap.innerHTML='<iframe id="chatfr" title="Message the team" allow="camera"></iframe>'; document.body.appendChild(wrap); fr=wrap.querySelector("iframe"); fr.src="./chat.html?v="+CHATV; fr.addEventListener("load",()=>{ try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }); }
     wrap.hidden=false; document.body.classList.add("chat-on"); if(!(history.state&&history.state.chat)) history.pushState({chat:1},""); try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }
   function close(){ if(wrap){ wrap.hidden=true; } document.body.classList.remove("chat-on"); }
@@ -6288,8 +6288,12 @@ window.SDR_GL=(function(){
     let imp=""; if(d.impacts&&d.impacts.length){ const top=Math.max(g.o&&g.o.v||0, d.crest?d.crest[1]:0); const hit=d.impacts.filter(x=>x[0]<=top+0.01).sort((a,b)=>b[0]-a[0])[0]; if(hit&&l>=1) imp=`<div class="rvi"><b>AT ${(+hit[0]).toFixed(1)} FT</b>${String(hit[1]).replace(/</g,"&lt;")}</div>`; }
     return `<div class="rv"><div class="rvh">${nameOf(g).replace(/</g,"&lt;")}</div><div class="rvs" style="color:${l<0?"#A9B6CC":c}">${l<0?"NO CURRENT READING":LAB[l].toUpperCase()}${g.dist!=null?` · ${Math.round(g.dist)} MI AWAY`:""}</div>${graph(g)}<div class="rvn">${sentence(g)}</div>${imp}</div>`; };
   window.SDR_RIVERS_CARD=function(){ const N=near(40); if(!N.length) return null; const v=venue(); const w=N.reduce((m,g)=>Math.max(m,lv(g)),-1), worst=N.filter(g=>lv(g)===w)[0];
-    const pts=N.map(g=>({lo:g.lo,la:g.la,fill:COL[Math.max(0,lv(g))],r:4.5})).concat([{lo:+v.lo,la:+v.la,fill:"#F28C28",r:5}]);
-    return { id:"rivers", title:"RIVERS", sub:"River levels near you", line: w>=1?`${nameOf(worst)}: ${LAB[w].toLowerCase()}`:`${N.length} gauges within 40 miles · all in their banks`, flag:w>=2, box:[+v.lo-1.1,+v.la-.75,+v.lo+1.1,+v.la+.75], opts:{points:pts}, overlays:[], gauges:allG() }; };
+    // v155 tile: a wider view with only the gauges that tell the story (any near or in flood, labeled) plus the nearest few, and the site labeled
+    const bad=N.filter(g=>lv(g)>=1).sort((a,b)=>lv(b)-lv(a)).slice(0,4);
+    const cell={}, calm=allG().filter(g=>lv(g)<1&&Math.abs(g.la-v.la)<1&&Math.abs(g.lo-v.lo)<1.5).filter(g=>{ const k=Math.round(g.la*2.5)+"_"+Math.round(g.lo*2.5); if(cell[k]) return false; cell[k]=1; return true; }).slice(0,16);   // spread out, one per ~25 miles
+    const pts=[{lo:+v.lo,la:+v.la,fill:"#F28C28",r:7}].concat(calm.map(g=>({lo:g.lo,la:g.la,fill:COL[0],r:5.5}))).concat(bad.map(g=>({lo:g.lo,la:g.la,fill:COL[lv(g)],r:10,label:window.SDR_RIVERLABEL?SDR_RIVERLABEL(g).split(" · ")[0].toUpperCase():LAB[lv(g)].toUpperCase()})));
+    const n1=N.filter(g=>lv(g)>=1).length;
+    return { id:"rivers", title: w>=2?`RIVERS · ${LAB[w].toUpperCase()} NEARBY`:n1?`RIVERS · ${n1} NEAR FLOOD STAGE`:"RIVERS · ALL IN THEIR BANKS", sub:"River levels near you", _w:w, line: w>=1?`${nameOf(worst)}: ${LAB[w].toLowerCase()}`:`${N.length} gauges within 40 miles · all in their banks`, flag:w>=2, box:[+v.lo-1.6,+v.la-1.05,+v.lo+1.6,+v.la+1.05], opts:{points:pts}, overlays:[], gauges:allG() }; };
   function openCard(g){ const c=window.SDR_RIVERS_CARD(); if(!c||!window.MAPVIEW) return; if(g) c.focus=g.id; window.MAPVIEW.open(c,{}); }
   function paintAlerts(){ const host=document.querySelector(".p-alerts"); if(!host) return; let box=document.getElementById("rivAlert"); if(!box){ box=document.createElement("div"); box.id="rivAlert"; host.appendChild(box); }
     const N=near(40); const flood=(window.ALERTS||[]).some(a=>/Flood (Watch|Warning)|Flash Flood/i.test(((a.properties||a).event)||""));
@@ -6359,5 +6363,62 @@ window.SDR_NOWFIRST=(r,H)=>{ if(!r||/\bnow\b|arriving|moves in|by \d|winding/i.t
   let q=new Set(), on=false; const run=()=>{ on=false; const L=[...q]; q.clear(); L.forEach(walk); };
   new MutationObserver(ms=>{ ms.forEach(m=>{ if(m.type==="characterData") q.add(m.target); else m.addedNodes.forEach(x=>q.add(x)); }); if(!on){ on=true; requestAnimationFrame(run); } }).observe(document.body,{subtree:true,childList:true,characterData:true});
   walk(document.body); })();
+</script>
+
+<style>
+#stMulti{list-style:none;margin:10px 0 2px;padding:0;display:grid;gap:6px}
+#stMulti[hidden]{display:none}
+#stMulti li{display:grid;grid-template-columns:12px 1fr auto;gap:10px;align-items:center;padding:9px 12px;border-radius:10px;background:rgba(0,0,0,.28);cursor:pointer}
+#stMulti li i{width:12px;height:12px;border-radius:3px}
+#stMulti li b{font-family:var(--display);font-weight:800;letter-spacing:.05em;font-size:17px;line-height:1.15;color:#fff;text-transform:uppercase}
+#stMulti li span{display:block;font-size:13px;color:rgba(244,247,251,.75);text-transform:none;letter-spacing:0;font-family:var(--body,inherit);font-weight:500}
+#stMulti li em{font-style:normal;font-size:13px;color:rgba(244,247,251,.7)}
+#status.multi #st-r30{display:none}
+</style>
+<script>
+// ===================== v155 RIGHT NOW: everything that's happening (SDR_MULTI_V155) =====================
+(function(){
+  const $=id=>document.getElementById(id);
+  const inR=(x,y,r)=>{ let o=false; for(let i=0,j=r.length-1;i<r.length;j=i++){ const [xi,yi]=r[i],[xj,yj]=r[j]; if(((yi>y)!==(yj>y))&&(x<(xj-xi)*(y-yi)/(yj-yi)+xi)) o=!o; } return o; };
+  const polys=g=>!g?[]:g.type==="Polygon"?[g.coordinates]:g.type==="MultiPolygon"?g.coordinates:[];
+  const venue=()=>{ try{ return DASH.venue(); }catch(e){ return null; } };
+  const hm=d=>{ d=new Date(d); if(isNaN(d)) return ""; let h=d.getHours(), m=d.getMinutes(); if(!m&&h===12) return "noon"; if(!m&&h===0) return "midnight"; const ap=h>=12?"PM":"AM"; h=h%12||12; return h+(m?":"+String(m).padStart(2,"0"):"")+" "+ap; };
+  const day=d=>{ d=new Date(d); const n=new Date(); if(d.toDateString()===n.toDateString()) return ""; const t=new Date(n); t.setDate(n.getDate()+1); return d.toDateString()===t.toDateString()?" tomorrow":" "+d.toLocaleDateString("en-US",{weekday:"short"}); };
+  let RISK={spc:0,ero:0};
+  async function risk(){ try{ const v=venue(); if(!v||!window.MAPDATA) return; const D=await MAPDATA(); const R={MRGL:1,SLGT:2,ENH:3,MDT:4,HIGH:5};
+      const here=fs=>(fs||[]).filter(x=>polys(x.geometry).some(p=>inR(+v.lo,+v.la,p[0])));
+      RISK.spc=Math.max(0,...here((D.spc||[])[0]).map(x=>R[(x.properties||{}).LABEL]||0));
+      RISK.ero=Math.max(0,...here((D.ero||[])[0]).map(x=>x._lvl||0)); }catch(e){} }
+  function items(){ const v=venue(); if(!v) return []; const out=[];
+    (window.ALERTS||[]).forEach((a,k)=>{ const P=a.properties||{}; const g=polys(a.geometry); const mine=!g.length||g.some(p=>inR(+v.lo,+v.la,p[0])); if(!mine) return;
+      if(/Statement$/.test(P.event||"")&&P.event!=="Special Weather Statement") return;
+      const ev=String(P.event||""), rank=/Emergency/.test(ev)?6:/Warning/.test(ev)?5:/Watch/.test(ev)?3:2;
+      const col=(window.ALERTINFO&&ALERTINFO.COLORS[ev])||(rank>=5?"#E5484D":rank>=3?"#F5B800":"#8A9BB8");
+      out.push({rank,col,h:ev,s:"Until "+hm(P.ends||P.expires)+day(P.ends||P.expires),k}); });
+    const RN=window.RADAR_NEAR; if(RN&&!RN.none&&RN.kind==="storms"&&RN.d<=20) out.push({rank:4,col:"#F5A524",h:"Storms on radar",s:RN.d<3?"At the site now":`${Math.round(RN.d)} miles ${RN.dir}`,k:-1,radar:1});
+    if(window._ltgHold) out.push({rank:5.5,col:"#E5484D",h:"Lightning nearby",s:"All-clear clock running",k:-1});
+    // outlook risks (later today / ahead) belong to What's Next, not RIGHT NOW
+    return out.sort((a,b)=>b.rank-a.rank); }
+  let last="";
+  function paint(){ const st=$("status"), why=$("st-why"); if(!st||!why) return; const L=items();
+    let ul=$("stMulti"); if(!ul){ ul=document.createElement("ul"); ul.id="stMulti"; why.insertAdjacentElement("afterend",ul);
+      ul.onclick=e=>{ const li=e.target.closest("li"); if(!li) return; const k=+li.dataset.k;
+        if(k>=0){ const row=document.querySelector(`#alist .al[data-k="${k}"]`); if(row){ const d=row.querySelector(".det"); if(d) d.hidden=false; row.scrollIntoView({behavior:"smooth",block:"center"}); } }
+        else if(k===-1){ const r=document.getElementById("rmap"); if(r) r.scrollIntoView({behavior:"smooth",block:"center"}); }
+        else { const t=document.querySelector('.tabs button[data-pane="briefing"]'); if(t) t.click(); } }; }
+    if(L.length<2){ if(st.classList.contains("multi")){ st.classList.remove("multi"); ul.hidden=true; if(why.dataset.multi){ why.textContent=why.dataset.multi; delete why.dataset.multi; } } return; }
+    const key=JSON.stringify(L.map(x=>x.h+x.s));
+    if(!st.classList.contains("multi")){ why.dataset.multi=why.textContent; }
+    st.classList.add("multi"); const txt=`${L.length} alerts for your area right now. Tap any for details.`; if(why.textContent!==txt){ if(!why.dataset.multi||why.textContent!==why.dataset.multi) why.dataset.multi=why.textContent; why.textContent=txt; }
+    if(key!==last){ last=key; ul.innerHTML=L.map(x=>`<li data-k="${x.k}"><i style="background:${x.col}"></i><b>${x.h}<span>${x.s}</span></b><em>›</em></li>`).join(""); }
+    ul.hidden=false;
+    // the status word always matches the worst item listed (a warning is never shown under ALL CLEAR or HEADS UP)
+    const top=L[0].rank, call=$("call"), h=$("st-h"); if(call&&h){ const want=top>=5?"action":top>=3?"headsup":null;
+      if(want==="action"&&!call.classList.contains("action")){ call.className="call action"; h.textContent="TAKE ACTION"; }
+      else if(want==="headsup"&&call.classList.contains("clear")){ call.className="call headsup"; h.textContent="HEADS UP"; } } }
+  window.addEventListener("alerts-ready",()=>setTimeout(paint,300));
+  risk(); setInterval(risk,10*60000); setInterval(paint,2500); setTimeout(paint,2000);
+  window.SDR_MULTI={ paint, items };
+})();
 </script>
 </body></html>

@@ -2819,7 +2819,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
        <span class="live">LIVE</span>`;
   }
   function setVenue(key){
-    vkey = key; const v = VENUES[key]; events = v.events.slice();
+    vkey = key; const v = VENUES[key]; events = v.events.slice(); window.SDR_SCHED_UP=0; try{ const up=JSON.parse(localStorage.getItem("sdr-sched-up-"+v.name)||"null"); if(Array.isArray(up)&&up.length){ events=up; window.SDR_SCHED_UP=1; } }catch(e){}
     document.querySelector("#venue span:nth-of-type(2)").textContent = v.name;
     document.getElementById("sched-k").textContent = v.schedK;
     document.getElementById("br-client").textContent = v.client;
@@ -2846,7 +2846,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
     rd.onload = () => {
       const rows = String(rd.result).split(/\r?\n/).map(l=>l.trim()).filter(Boolean)
         .map(l => { const p = l.split(/,|\t/).map(s=>s.trim()); return p.length>1 ? {t:p[0], n:p.slice(1).join(" "), s:"hold", r:"Uploaded · team reviews within the hour"} : {t:"—", n:l, s:"hold", r:"Uploaded · team reviews within the hour"}; });
-      if(rows.length){ events = events.concat(rows); renderSched(); }
+      if(rows.length){ const v0=VENUES[vkey]; events = v0.schedPromo&&!window.SDR_SCHED_UP ? rows : events.concat(rows); window.SDR_SCHED_UP=1; try{ localStorage.setItem("sdr-sched-up-"+v0.name, JSON.stringify(events)); }catch(e){} renderSched(); }
       ev.target.value = "";
     };
     rd.readAsText(f);
@@ -3039,6 +3039,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
   tick(); setInterval(tick, 30000);
 
   setVenue("stadium");
+  window.SDR_SCHED_PROMO=()=>!!(VENUES[vkey]&&VENUES[vkey].schedPromo&&!window.SDR_SCHED_UP);
   window.DASH = { SCENES, setScene, ICO, WORD, CITIES, drawMap, renderGroups, renderNow, setEvents(ev){ events = ev; renderSched(); }, venue(){ return VENUES[vkey]; }, nearby(v){ return NEARBY[vkey]; } };
 })();
 </script>
@@ -6396,7 +6397,7 @@ window.SDR_GL=(function(){
 
 <script>
 // v125: client chat layer
-(function(){ let wrap=null, fr=null; const CHATV="1793659489";
+(function(){ let wrap=null, fr=null; const CHATV="1793660120";
   function open(){ if(!wrap){ wrap=document.createElement("div"); wrap.id="chatwrap"; wrap.innerHTML='<iframe id="chatfr" title="Message the team" allow="camera"></iframe>'; document.body.appendChild(wrap); fr=wrap.querySelector("iframe"); fr.src="./chat.html?v="+CHATV; fr.addEventListener("load",()=>{ try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }); }
     wrap.hidden=false; document.body.classList.add("chat-on"); if(!(history.state&&history.state.chat)) history.pushState({chat:1},""); try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }
   function close(){ if(wrap){ wrap.hidden=true; } document.body.classList.remove("chat-on"); }
@@ -6727,8 +6728,8 @@ window.SDR_NOWFIRST=(r,H)=>{ if(!r||/\bnow\b|arriving|moves in|by \d|winding/i.t
 .pgpill i{flex:none;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:rgba(111,183,255,.12);font-style:normal;font-size:15px}
 .pgpill>div{flex:1;min-width:0}.pgpill b{display:flex;align-items:center;gap:8px;font-family:var(--display);font-weight:800;letter-spacing:.08em;font-size:13px;white-space:nowrap}
 .pgpill .ccn{text-decoration:none;font-weight:800;letter-spacing:.1em;font-size:10px;padding:2px 7px;border-radius:999px;background:#FFC857;color:#0A1428}
-.pgpill span{display:block;font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
-.pgpill em{font-style:normal;color:#6FB7FF;font-weight:700;font-size:13px;white-space:nowrap}
+.pgpill span{display:block;font-size:12.5px;line-height:1.3;color:var(--muted);white-space:normal;margin-top:2px}
+.pgpill em{flex:none;font-style:normal;color:#6FB7FF;font-weight:700;font-size:13px;white-space:nowrap}
 .p-sched.pgempty:not(.pgopen) .pg{display:none}
 .p-sched.pgopen .pg{border-top:1px solid var(--line);padding-top:14px}
 .p-sched.pgopen .pg .pgt{display:none}
@@ -6752,6 +6753,7 @@ window.SDR_NOWFIRST=(r,H)=>{ if(!r||/\bnow\b|arriving|moves in|by \d|winding/i.t
 .pg h3{margin:10px 0 6px;font-family:var(--display);font-weight:800;font-size:25px;line-height:1.08;letter-spacing:.01em;color:#fff}
 .pg p{margin:0 0 12px;font-size:14px;line-height:1.45;color:#C9D3E3}
 .pgs{list-style:none;margin:0 0 14px;padding:0;display:grid;gap:6px}
+.pgtags{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}.pgtags span{font-size:12.5px;font-weight:600;padding:4px 10px;border-radius:999px;background:rgba(111,183,255,.12);border:1px solid rgba(111,183,255,.3);color:#CFE3FF}
 .pgs li{display:grid;grid-template-columns:8px 66px 1fr auto;gap:10px;align-items:center;padding:8px 10px;border-radius:9px;background:rgba(255,255,255,.05);font-size:13.5px}
 .pgs li i{width:8px;height:8px;border-radius:50%}.pgs i.ok{background:var(--clear)}.pgs i.hu{background:var(--heads)}.pgs i.ta{background:var(--action)}
 .pgs li b{font-family:var(--display);font-weight:800;font-size:13px;letter-spacing:.04em}
@@ -6775,15 +6777,16 @@ window.SDR_NOWFIRST=(r,H)=>{ if(!r||/\bnow\b|arriving|moves in|by \d|winding/i.t
   // ---- schedule: one bar ----
   function sched(){ const p=$(".p-sched"); if(!p) return; let bar=p.querySelector(".cxbar");
     if(!bar){ bar=document.createElement("button"); bar.type="button"; bar.className="cxbar"; p.prepend(bar); p.classList.add("cx");
-      bar.onclick=(e)=>{ const n=p.querySelectorAll("#sched .ev").length; if(!n){ if(e&&e.target.closest(".pgb")){ const f=document.getElementById("upl"); if(f) f.click(); return; } p.classList.toggle("pgopen"); sched(); return; } p.classList.toggle("cx"); sched(); }; }
-    const ev=[...p.querySelectorAll("#sched .ev")], hit=ev.filter(e=>/headsup|action/.test(e.className));
+      bar.onclick=(e)=>{ const n=(window.SDR_SCHED_PROMO&&SDR_SCHED_PROMO())?0:p.querySelectorAll("#sched .ev").length; if(!n){ if(e&&e.target.closest(".pgb")){ const f=document.getElementById("upl"); if(f) f.click(); return; } p.classList.toggle("pgopen"); sched(); return; } p.classList.toggle("cx"); sched(); }; }
+    const promo=!!(window.SDR_SCHED_PROMO&&SDR_SCHED_PROMO()); p.classList.toggle("pgpromo",promo); if(promo) p.classList.add("cx");
+    const ev=promo?[]:[...p.querySelectorAll("#sched .ev")], hit=ev.filter(e=>/headsup|action/.test(e.className));
     p.classList.toggle("pgempty",!ev.length);
     const act=hit.some(e=>/action/.test(e.className)), h0=hit[0], nmE=h0&&h0.querySelector(".nm"), nm=nmE?(nmE.firstChild&&nmE.firstChild.nodeType===3?nmE.firstChild.nodeValue:nmE.textContent).replace(/\s+/g," ").trim():"", tmE=h0&&h0.querySelector(".tm"), tm=tmE?(tmE.firstChild?tmE.firstChild.nodeValue||"":"").trim()+" "+((tmE.querySelector("small")||{}).textContent||""):"";
     p.classList.toggle("ccwarn",!!hit.length&&!act); p.classList.toggle("ccact",act);
     bar.innerHTML=ev.length?`<i>${hit.length?(act?"⛔":"⚠️"):"✅"}</i><div><b>SCHEDULE WATCH <u class="ccn">${ev.length} EVENT${ev.length===1?"":"S"}</u></b><span>${hit.length?`<strong>${tm?tm.replace(":00","")+" · ":""}${nm}</strong>${hit.length>1?` +${hit.length-1} more`:""}`:"All clear · our team is watching every one"}</span></div><em>${p.classList.contains("cx")?"Open ›":"Close ▴"}</em>`
-      :`<div class="pgpill"><i>✅</i><div><b>SCHEDULE WATCH <u class="ccn">ONLY ON SDR</u></b><span>Our team watches your schedule for weather.</span></div><em>${p.classList.contains("pgopen")?"Close ▴":"See how ›"}</em></div><div class="pg"><div class="pgt"><span class="pgx">ONLY ON SDR</span><b>✅ SCHEDULE WATCH</b></div><h3>Our team watches your schedule. You don’t have to.</h3><p>Upload your personal or business schedule: games, practices, birthday parties, spray days, job sites. Our meteorologists keep an eye on every one and alert you the moment weather changes your plans, so you never have to go looking.</p>
-        <ul class="pgs"><li><i class="ok"></i><b>Tue 5 PM</b><span>Soccer practice</span><em class="ok">Clear</em></li><li><i class="ta"></i><b>Thu 6 PM</b><span>Soccer game</span><em class="ta">Storms 6–8 PM</em></li><li><i class="hu"></i><b>Sat 2 PM</b><span>Olivia’s 5th birthday</span><em class="hu">Tent it</em></li></ul>
-        <span class="pgb">UPLOAD YOUR SCHEDULE ›</span><small>A spreadsheet or a simple list works: time and what.</small></div>`; }
+      :`<div class="pgpill"><i>✅</i><div><b>SCHEDULE WATCH <u class="ccn">ONLY ON SDR</u></b><span>Upload your schedule. Our team watches the weather for it.</span></div><em>${p.classList.contains("pgopen")?"Close ▴":"See how ›"}</em></div><div class="pg"><div class="pgt"><span class="pgx">ONLY ON SDR</span><b>✅ SCHEDULE WATCH</b></div><h3>Upload your schedule. We’ll watch the weather for it.</h3><p>Our team is proactive. We look for anything that could affect your plans and update you along the way, so you never have to go looking.</p><div class="pgtags"><span>Birthday parties</span><span>Vacations</span><span>Festivals</span><span>Outdoor job sites</span><span>Hunting &amp; fishing</span><span>Baseball games</span><span>Practices</span><span>Weddings</span></div>
+        <ul class="pgs"><li><i class="ok"></i><b>Tue 5 PM</b><span>Soccer practice</span><em class="ok">Clear</em></li><li><i class="ta"></i><b>Thu 6 PM</b><span>Baseball game</span><em class="ta">Storms 6–8 PM</em></li><li><i class="hu"></i><b>Sat 2 PM</b><span>Olivia’s 5th birthday</span><em class="hu">Tent it</em></li></ul>
+        <span class="pgb">UPLOAD YOUR SCHEDULE ›</span><small>This is where you’ll upload it. A spreadsheet or a simple list works: date, time and what.</small></div>`; }
   // ---- around you: one bar ----
   function area(){ const p=$(".p-area"); if(!p) return; let bar=p.querySelector(".cxbar");
     if(!bar){ bar=document.createElement("button"); bar.type="button"; bar.className="cxbar"; p.prepend(bar); p.classList.add("cx"); bar.onclick=()=>{ p.classList.toggle("cx"); area(); const open=!p.classList.contains("cx"), A=window.AREA, m=A&&A.map;

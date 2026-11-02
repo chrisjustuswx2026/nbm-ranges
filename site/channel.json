@@ -2,7 +2,7 @@
  "youtubeLiveLink": "https://youtube.com/live/0kJsmlz95V0",
  "deskLive": false,
  "deskNote": "",
- "aiChatUrl": "https://sdr-chat.raspy-bonus-f476.workers.dev",
+ "aiChatUrl": "",
  "chatMode": "auto",
- "how_to": "youtubeLiveLink: paste the new YouTube Live link when the stream restarts. deskLive: true while a meteorologist is on air. aiChatUrl: the chat server address. chatMode: auto or review. Never paste the stream key here."
+ "how_to": "youtubeLiveLink: when the stream restarts, paste the new YouTube Live link (keep the quotes). deskLive: true while a meteorologist is on air (red flashing LIVE), false when off air. deskNote: optional line shown while live, e.g. Tracking storms west of Greenville. aiChatUrl: the chat server address (https://\u2026.workers.dev) \u2014 leave empty to use the built-in answers. chatMode: auto (answers go out right away, labeled SDR Forecast Desk) or review (a meteorologist sends every answer from desk.html). Commit, and dashboards update within 2 minutes. Never paste the stream key here."
 }

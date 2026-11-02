@@ -3435,7 +3435,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
   // v118: LOOP / LATEST is one play / pause button on the map, bottom-right beside the time stamp (RadarScope style). Default LATEST, remembered.
   const rctl=document.createElement("div"); rctl.className="rctl"; document.getElementById("rmap").appendChild(rctl); stampEl.hidden=true;   // v119: the time lives on the plaque
   const pb=document.createElement("button"); pb.type="button"; pb.className="rplaybtn"; pb.title="Play the last hour"; rctl.appendChild(pb);
-  const paintP=()=>{ const on=!!window._radarLoop&&LOOPS(mode); pb.setAttribute("aria-pressed",on); pb.textContent=on?"■":"▶"; pb.title=on?"Stop (show the latest picture)":"Play the last hour"; pb.hidden=!LOOPS(mode); };
+  const paintP=()=>{ const on=!!window._radarLoop&&LOOPS(mode); pb.setAttribute("aria-pressed",on); pb.innerHTML=on?'<svg viewBox="0 0 16 16" width="14" height="14"><rect x="3" y="3" width="10" height="10" rx="2" fill="currentColor"/></svg><span>STOP</span>':'<svg viewBox="0 0 16 16" width="14" height="14"><path d="M4 2.5v11l9.5-5.5z" fill="currentColor"/></svg><span>PLAY</span>'; pb.title=on?"Stop (show the latest picture)":"Play the last hour"; pb.hidden=!LOOPS(mode); };
   pb.onclick=()=>{ window._radarLoop=!window._radarLoop; try{ localStorage.setItem("sdr-radar-loop",window._radarLoop?"1":"0"); }catch(err){} setMode(mode); paintP(); };
   setInterval(paintP,800);
   const fs=document.createElement("button"); fs.className="rfs"; fs.title="Full screen"; fs.textContent="⛶"; bar.insertAdjacentElement("afterend", fs);
@@ -4958,7 +4958,7 @@ window.SITE_LL = window.__LOC?{lat:__LOC.la,lon:__LOC.lo}:(window.SITE_LL || { l
     return {haz,tags,track,counties,cities,text:[P.headline,desc,P.instruction].filter(Boolean).join("\n\n"),link:(i.wwa&&i.wwa.url)||""}; }
   let hits=[], hi=0, tapLL=null;
   let dragged=false;
-  function placeCard(){ if(dragged) return; const i=hits[hi], W=m.getSize(); card.style.left=card.style.top=card.style.right=card.style.bottom="";
+  function placeCard(){ if(dragged||card.classList.contains("inpop")) return; const i=hits[hi], W=m.getSize(); card.style.left=card.style.top=card.style.right=card.style.bottom="";
     const cw=card.offsetWidth||330, ch=card.offsetHeight||240; let bb=i&&(i.bbox||(i.md&&bboxOf(i.md.geometry))||(i.ov&&i.ov.geometry&&bboxOf(i.ov.geometry)));
     if(!bb&&tapLL) bb=[tapLL.lng,tapLL.lat,tapLL.lng,tapLL.lat];
     if(!bb){ card.style.right="10px"; card.style.top="10px"; return; }
@@ -4981,7 +4981,8 @@ window.SITE_LL = window.__LOC?{lat:__LOC.la,lon:__LOC.lo}:(window.SITE_LL || { l
     const up=()=>{ on=false; };
     card.addEventListener("mousedown",down); card.addEventListener("touchstart",down,{passive:false}); window.addEventListener("mousemove",move); window.addEventListener("touchmove",move,{passive:true}); window.addEventListener("mouseup",up); window.addEventListener("touchend",up); })();
   m.on("moveend zoomend",()=>{ if(!card.hidden) placeCard(); });
-  function render(){ if(!hits.length){ card.hidden=true; dragged=false; if(SEL){ SEL=null; tracks(); } return; } const i=hits[hi];
+  let POP=null;
+  function render(){ if(!hits.length){ card.hidden=true; dragged=false; if(POP){ const pp=POP; POP=null; try{ m.closePopup(pp); }catch(e){} } card.classList.remove("inpop"); if(SEL){ SEL=null; tracks(); } return; } const i=hits[hi];
     if(i.ov){ const f=i.ov, p=f.properties||{}, k=i.kind; let title="", body="", col="#8A9BB8";
       if(/^spc[123]$/.test(k)){ const L=p.LABEL||""; const LV={TSTM:["Thunderstorms possible","Level 0 of 5. General storms, severe weather not expected.","#C1E9C1"],MRGL:["Level 1 of 5 · Marginal","Isolated severe storms possible: a stray strong gust or small hail.","#7FC57F"],SLGT:["Level 2 of 5 · Slight","Scattered severe storms possible: damaging wind, hail, maybe a tornado. Not everyone sees one.","#F6F67F"],ENH:["Level 3 of 5 · Enhanced","Numerous severe storms likely, some strong. Plan the day around it.","#E6C27F"],MDT:["Level 4 of 5 · Moderate","Widespread severe storms, some intense and long-lived.","#E67F7F"],HIGH:["Level 5 of 5 · High","A severe weather outbreak is expected.","#FF7FFF"]}[L]||["Outlook area","",""]; const day={spc1:"today",spc2:"tomorrow",spc3:"day 3"}[k];
         title=`SEVERE OUTLOOK · ${day.toUpperCase()}`; col=LV[2]||col; body=`<div class="ln"><b>${LV[0]}</b></div><div class="ln">${LV[1]}</div><div class="ln" style="margin-top:6px;color:var(--dim)">Our rule: level 2 and up is HEADS UP for the day. TAKE ACTION only comes with a warning or lightning.</div>`; }
@@ -5001,7 +5002,7 @@ window.SITE_LL = window.__LOC?{lat:__LOC.la,lon:__LOC.lo}:(window.SITE_LL || { l
       <div class="bd">
         ${d.haz.length?`<div class="sec">${d.haz.map(([k,v])=>`<div class="ln">${k}: <b>${v}</b></div>`).join("")}</div>`:""}
         ${d.tags.length?`<div class="tags">${d.tags.map(([t,c])=>`<span class="tag ${c}">${t}</span>`).join("")}</div>`:""}
-        ${i.ends?`<div class="ln">Valid until: <b>${fmtT(i.ends)}</b> (${left(i.ends)})</div>`:""}
+        ${i.ends?`<div class="ln">Until <b>${fmtT(i.ends).replace(/\s*E[SD]T$|\s*C[SD]T$/,"")}</b> · ${left(i.ends)} left</div>`:""}
         ${d.track?`<div class="ln">Moving: <b>${d.track.move}</b></div>`:""}
         ${d.counties.length?`<div class="ln">Counties: ${d.counties.join(", ")}</div>`:""}
         ${d.track&&d.track.list.length?`<div class="sec trk"><div class="ln">On its current track: ${d.track.list.join(" · ")} <span style="color:var(--dim)">(if it holds together)</span></div></div>`:""}
@@ -5009,7 +5010,13 @@ window.SITE_LL = window.__LOC?{lat:__LOC.la,lon:__LOC.lo}:(window.SITE_LL || { l
         <div class="txt" hidden>${d.cities.length?`<div class="cities"><b>Cities included</b><br>${d.cities.join(", ")}</div>`:""}${d.text?`<div style="margin-top:8px">${d.text.replace(/</g,"&lt;")}</div>`:""}${d.link&&!d.text?`<a href="${d.link}" target="_blank" rel="noopener">Full alert</a>`:""}</div>
       </div>`; }
     if(hits.length>1) card.insertAdjacentHTML("beforeend",`<div class="nav"><button data-p aria-label="Previous">‹</button><span class="dots">${hits.map((_,k)=>`<i class="${k===hi?"on":""}"></i>`).join("")}</span><button data-n aria-label="Next">›</button></div>`);
-    card.hidden=false; placeCard(); const cur=hits[hi]; const ns=(cur&&cur.motion)?cur:null; if(ns!==SEL){ SEL=ns; tracks(); } }
+    card.hidden=false;
+    { const i=hits[hi]; let ll=tapLL; if(!ll){ const bb=i&&(i.bbox||(i.md&&bboxOf(i.md.geometry))); if(bb) ll=L.latLng((bb[1]+bb[3])/2,(bb[0]+bb[2])/2); }
+      if(ll){ card.classList.add("inpop"); if(!POP){ POP=L.popup({className:"apopw",closeButton:false,autoClose:true,closeOnClick:false,maxWidth:300,minWidth:240,autoPanPaddingTopLeft:L.point(12,70),autoPanPaddingBottomRight:L.point(64,40),offset:L.point(0,-4)});
+          POP.on("remove",()=>{ if(POP){ POP=null; hits=[]; card.hidden=true; card.classList.remove("inpop"); document.getElementById("rmap").appendChild(card); } }); }
+        POP.setLatLng(ll).setContent(card); if(!m.hasLayer(POP)) POP.openOn(m); else POP.update(); }
+      else { card.classList.remove("inpop"); document.getElementById("rmap").appendChild(card); placeCard(); } }
+    const cur=hits[hi]; const ns=(cur&&cur.motion)?cur:null; if(ns!==SEL){ SEL=ns; tracks(); } }
   card.addEventListener("click",e=>{ const t=e.target; if(t.closest("[data-x]")){hits=[];render();} else if(t.closest("[data-n]")){hi=(hi+1)%hits.length;render();} else if(t.closest("[data-p]")){hi=(hi-1+hits.length)%hits.length;render();} else if(t.closest("[data-more]")){ const x=card.querySelector(".txt"); x.hidden=!x.hidden; t.textContent=x.hidden?"More":"Less"; } });
   m.on("click",e=>{ const x=e.latlng.lng, y=e.latlng.lat, seen=new Set(); tapLL=e.latlng;
     hits=ITEMS.filter(visible).filter(i=>x>=i.bbox[0]&&x<=i.bbox[2]&&y>=i.bbox[1]&&y<=i.bbox[3]&&inGeom(x,y,i.geom)).filter(i=>{ const id=i.nws?i.nws.id:(i.wwa&&i.wwa.cap_id)||i.ev+i.ends; if(seen.has(id)) return false; seen.add(id); return true; }).sort((a,b)=>rank(b.ev)-rank(a.ev));
@@ -5095,7 +5102,7 @@ window.SITE_LL = window.__LOC?{lat:__LOC.la,lon:__LOC.lo}:(window.SITE_LL || { l
   const stamp=d=>{ d=new Date(d); return d.toLocaleDateString("en-US",{weekday:"short"}).toUpperCase()+" "+d.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"}); };
   const v=()=>(window.DASH&&DASH.venue&&DASH.venue())||{name:"the site"};
   const KEY="sdr-ibriefs3-"+(v().name||"site");
-  let LIST=[]; try{ LIST=JSON.parse(localStorage.getItem(KEY)||"[]"); }catch(e){}
+  let LIST=[]; try{ LIST=JSON.parse(localStorage.getItem(KEY)||"[]").filter(b=>!/removed|threat is over/i.test((b.title||"")+" "+(b.sub||""))); }catch(e){}   // v172: clear old "removed" briefings
   const save=()=>{ try{ localStorage.setItem(KEY,JSON.stringify(LIST.slice(0,30))); }catch(e){} };
   // v87 rotating wording: picks by day + topic, and never repeats the last pick for that topic
   let VM={}; try{ VM=JSON.parse(localStorage.getItem(KEY+"-vary")||"{}"); }catch(e){}
@@ -5237,7 +5244,7 @@ window.SITE_LL = window.__LOC?{lat:__LOC.la,lon:__LOC.lo}:(window.SITE_LL || { l
       if(c.kind==="watch"){ L.push(`<b>${c.ev} issued</b> for ${s}${c.ends?` until ${hm(c.ends)}`:""}.`); cat="SEVERE"; title=title||`${c.ev} issued`; H({kind:"watch"},3); sub=sub||`Conditions are favorable for ${/Tornado/.test(c.ev)?"tornadoes and severe storms":"severe storms"}${c.ends?` until ${hm(c.ends)}`:""}. Be ready to act if a warning is issued.`; dayIdx=dayIdx??0; }
       if(c.kind==="spc"){ const d=dname(c.day), dd=Math.round((new Date(c.day).setHours(0,0,0,0)-day0())/864e5), NMs=["","Marginal","Slight","Enhanced","Moderate","High"];
         const nNew=c.v==="none"?-1:LV[c.v][0], nOld=(!c.prev||c.prev==="none"||!LV[c.prev])?-1:LV[c.prev][0];
-        if(nNew<=0&&nOld<=0){ /* general thunder only, before and after: not notable */ }
+        if(nNew<=0){ /* v172: removed or general thunder only: no automatic briefing */ }
         else if(nNew<=0){ // v66 removed (or down to general thunderstorms only)
           L.push(`<b>What's changed:</b> the severe risk for ${s} ${d} has been <b>removed</b> (was level ${nOld} of 5, ${NMs[nOld]}).${nNew===0?" General thunderstorms are still possible.":""}`);
           cat="SEVERE"; title=title||`Severe risk removed for ${d}`; sub=sub||`The severe threat for ${s} ${d} is over. ${nNew===0?"A few ordinary thunderstorms are still possible.":"No severe storms expected."}`; H({kind:"spc",d:dd,old:nOld,now:0},2); if(dayIdx==null) dayIdx=dd; }
@@ -5264,7 +5271,7 @@ window.SITE_LL = window.__LOC?{lat:__LOC.la,lon:__LOC.lo}:(window.SITE_LL || { l
     const dIdx=c=>Math.round((new Date(c.day).setHours(0,0,0,0)-day0())/864e5);
     changed.forEach(c=>{
       if(c.kind==="ero"){ const n=c.lvl, o=c.prev==null?0:+c.prev, d=dname(c.day), dd=dIdx(c); if(n===o) return; if(c.prev===undefined&&n===0) return;
-        if(n===0){ L.push(`<b>What's changed:</b> the flooding rain risk for ${city0} ${d} has been <b>removed</b> (was level ${o} of 4).`); title=title||`Flooding rain risk removed for ${d}`; sub=sub||`The flood threat for ${city0} ${d} is over.`; }
+        if(n===0){ return; /* v172: no automatic "risk removed" briefing */ }
         else { const up=o>0&&n>o, dn=o>0&&n<o; if(up||dn) L.push(`<b>What's changed:</b> ${up?"raised":"lowered"} from level ${o} (${EN[o]}) to level ${n} (${EN[n]}) for ${d}.`);
           L.push(`<b>${up?"Upgraded":dn?"Lowered":"New"}:</b> the SDR Weather Intelligence Division is monitoring a <b>level ${n} of 4 (${EN[n]})</b> risk of flooding rain for ${city0} ${d}.`);
           title=title||(up?`Flooding rain risk raised to level ${n} for ${d}`:dn?`Flooding rain risk lowered to level ${n} for ${d}`:`Flooding rain risk ${d}: level ${n} of 4`);
@@ -5385,7 +5392,7 @@ window.SITE_LL = window.__LOC?{lat:__LOC.la,lon:__LOC.lo}:(window.SITE_LL || { l
     if(x.rr&&x.rr[2]>=5){ const q=(x.rr[2]-x.rr[0])/Math.max(x.rr[1],10), c=x.rr[1]<10?(x.rr[2]<10?5:x.rr[2]<30?4:x.rr[2]<60?3:2):(q<=.75?5:q<=1.5?4:q<=2.5?3:q<=4?2:1); out.push(`<b>Model agreement:</b> ${c} out of 5.`); }
     return out; }
   async function hero(b){ await hero0(b); const box=pane.querySelector(".bhero"); if(!box||box.hidden||!b.hero) return; const k=b.hero.kind; let D=window.MAPDATA?await MAPDATA().catch(()=>({})):{}; if(b.hero.snap){ D=Object.assign({},D); if(b.hero.isE){ D.ero=[]; D.ero[b.hero.d]=b.hero.snap; } else { D.spc=[]; D.spc[b.hero.d]=b.hero.snap; } }
-    if(k==="spc"||k==="rspc") brand(box,"Severe weather risk"+(k==="rspc"?" · Southeast":""),dayLab(b.hero.d)+(b.hero.old>0&&b.hero.now!==b.hero.old?(b.hero.now>b.hero.old?" · RISK RAISED":b.hero.now>0?" · RISK LOWERED":" · RISK REMOVED"):""),legOf((D.spc||[])[b.hero.d]));
+    if(k==="card") brand(box,b.hero.title||"",b.hero.sub||"",""); else if(k==="spc"||k==="rspc") brand(box,"Severe weather risk"+(k==="rspc"?" · Southeast":""),dayLab(b.hero.d)+(b.hero.old>0&&b.hero.now!==b.hero.old?(b.hero.now>b.hero.old?" · RISK RAISED":b.hero.now>0?" · RISK LOWERED":" · RISK REMOVED"):""),legOf((D.spc||[])[b.hero.d]));
     else if(k==="md") brand(box,"Storms organizing",(b.hero.prob==null?"WATCH POSSIBLE":b.hero.prob>=50?"WATCH LIKELY SOON":"STRONG STORMS STILL POSSIBLE")+" · SDR WEATHER INTELLIGENCE",'<span class="dash" style="--c:#FF8C1A">Area we\'re monitoring</span>');
     else if(k==="watch") brand(box,"Watch in effect",dayLab(0),'<span style="--c:#FFFF00">Tornado watch</span><span style="--c:#DB7093">Severe thunderstorm watch</span>');
     else if(k==="cpc2") brand(box,"Pattern outlook",(b.title||"").replace(/^Pattern change ahead: /i,""),"");
@@ -5400,7 +5407,9 @@ window.SITE_LL = window.__LOC?{lat:__LOC.la,lon:__LOC.lo}:(window.SITE_LL || { l
       else if(k==="trop") brand(box,"Tropics","WHAT WE'RE WATCHING",'<span class="dash" style="--c:#F5C518">Low chance</span><span class="dash" style="--c:#F28C28">Medium chance</span><span class="dash" style="--c:#E53935">High chance</span><span style="--c:#ffffff">Forecast cone</span>');
       else if(k==="alert") brand(box,((b.hero.a||{}).properties||{}).event||"Alert",dayLab(0),"");
     } }
-  async function hero0(b){ const box=pane.querySelector(".bhero"); if(!box) return; box.innerHTML=""; box.hidden=true; if(!b.hero||!window.MAPROOM||!window.MAPDATA) return;
+  async function hero0(b){ const box=pane.querySelector(".bhero"); if(!box) return; box.innerHTML=""; box.hidden=true;
+    if(b.hero&&b.hero.kind==="card"){ const c=document.querySelector(`#mrPrev .mcard[data-id="${b.hero.id}"] .mimg svg`); if(c){ const cl=c.cloneNode(true); cl.removeAttribute("width"); cl.removeAttribute("height"); cl.setAttribute("style","width:100%;height:auto;display:block"); box.appendChild(cl); box.hidden=false; } return; }
+    if(!b.hero||!window.MAPROOM||!window.MAPDATA) return;
     let D={}; try{ D=await MAPDATA(); }catch(e){ return; }     if(b.hero&&b.hero.snap){ D=Object.assign({},D); if(b.hero.isE){ D.ero=[]; D.ero[b.hero.d]=b.hero.snap; } else { D.spc=[]; D.spc[b.hero.d]=b.hero.snap; } }
 const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[0].toUpperCase()}];
     const SPCC={TSTM:"#C1E9C1",MRGL:"#7FC57F",SLGT:"#F6F67F",ENH:"#E6C27F",MDT:"#E67F7F",HIGH:"#FF7FFF"};
@@ -5431,7 +5440,7 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
     const ul=$q("ul.bul"); if(ul) ul.innerHTML=[...b.lines, ...details(b.dayIdx), ...(b.team&&b.sub&&b.sum?[b.sum]:[])].map(x=>`<li>${x}</li>`).join(""); if(ul&&tm) ul.insertAdjacentElement("afterend",tm);
     let oe=pane.querySelector(".bout"); if(ul){ if(!oe){ oe=document.createElement("p"); oe.className="bout"; } (tm&&!tm.hidden?tm:ul).insertAdjacentElement("afterend",oe); oe.textContent=b.outro||""; oe.hidden=!b.outro; }
     const bt=$q(".bottom"); if(bt) bt.innerHTML=`<span class="k">BOTTOM LINE</span>${b.bottom}<small>${b.team?`Team briefing · issued ${new Date(b.t).toLocaleDateString("en-US",{month:"short",day:"numeric"})}${b.sample?" · sample content":""}`:`SDR Weather Intelligence Division · issued ${stamp(b.t)} · next update ${(()=>{ const d=new Date(b.t), c=[7,13,19].map(h=>{ const x=new Date(d); x.setHours(h,0,0,0); return x; }).find(x=>x>d)||(()=>{ const x=new Date(d); x.setDate(x.getDate()+1); x.setHours(7,0,0,0); return x; })(); return "by "+hm(c)+(c.toDateString()===d.toDateString()?"":" "+c.toLocaleDateString("en-US",{weekday:"short"}))+", sooner if anything changes"; })()}`}</small>`;
-    const iss=pane.querySelector(".ph .sample"); if(iss) iss.textContent=(b.team?(b.sample?"TEAM BRIEFING · SAMPLE":"TEAM BRIEFING"):"UPDATE")+" · "+stamp(b.t); window._curBrief=b; }
+    const iss=pane.querySelector(".ph .sample"); if(iss) iss.textContent=(b.team?(b.sample?"TEAM BRIEFING · SAMPLE":"TEAM BRIEFING"):b.cat==="DAILY"?"TODAY'S BRIEFING":"UPDATE")+" · "+stamp(b.t); window._curBrief=b; }
 
   function library(){ const rows=LIST.map((b,i)=>`<button class="brow ib" data-ib="${i}" data-cat="${b.cat}"><span class="bd">${new Date(b.t).toLocaleDateString("en-US",{month:"short",day:"numeric"})}</span><span class="bt">${b.title}${i===0?" <i>LATEST</i>":""}</span><span class="bc ${({SEVERE:"severe",FLOOD:"tropical",OUTLOOK:"seasonal",TROPICAL:"tropical",WINTER:"winter",FREEZE:"winter",SEASONAL:"seasonal",HEAT:"severe",WIND:"seasonal"})[b.cat]||""}">${b.cat==="UPDATE"?"UPDATE":b.cat}</span><span class="bk">${b.local===false?"REGION":"YOUR AREA"}</span></button>`).join("");
     document.querySelectorAll("#blib, .p-briefs .blist").forEach(el=>{ el.querySelectorAll(".brow.ib").forEach(x=>x.remove()); el.insertAdjacentHTML("afterbegin",rows); if(rows) el.querySelectorAll(".brow:not(.ib) .bt i").forEach(x=>x.remove()); }); }
@@ -5470,18 +5479,18 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
     const wtxt=win?`Most likely ${win.replace("–"," to ")}.`:"";
     const n=h.now||0, up=h.old>0&&n>h.old, down=h.old>0&&n<h.old&&n>0, city=cityName();
     if(h.kind==="spc"){
-      if(n===0){ R.title=`Storm threat is over for ${dn}`; R.sub=`The severe risk for ${city} has been removed. Normal plans are back on.`; return; }
+      if(n===0){ R.title=`Storms still possible ${dn}`; R.sub=`No organized severe storms expected for ${city}, but lightning is still possible. When thunder roars, go indoors.`; return; }
       const head=vary("spch"+n,[[],["A few strong storms possible","Some storms could get strong","Isolated strong storms possible"],["Severe storms possible","Storms could turn severe","Watching for severe storms"],["Severe storms likely","A round of severe storms expected","Severe storms likely to hit"],["Dangerous storms likely","Dangerous severe storms expected"],["Major severe weather outbreak","Major severe weather outbreak expected"]][n]);
       R.title=`${head} ${when}: Level ${n} risk`;
       const lvl=`Level ${n} of 5${up?`, up from ${h.old}`:down?`, down from ${h.old}`:""}. ${wtxt}`;
       const main=(x.gust||0)>=45?"Damaging wind gusts are the main concern.":"Damaging wind gusts and lightning are the main concerns.";
       R.sub=`${lvl} ${main} ${n<=2?vary("spce",["Not everyone gets a storm.","Many places stay dry; the storms that form could be strong.","Coverage is scattered, so have a plan rather than cancel."]):vary("spce3",["Have your plan ready before storms arrive.","Know where you'll shelter and when you'll call it.","Plan to move people indoors quickly."])}`; return; }
-    if(n===0){ R.title=`Flood threat is over for ${dn}`; R.sub=`The flooding rain risk for ${city} has been removed.`; return; }
+    if(n===0){ R.title=`Soaking rain still on the way ${dn}`; R.sub=`Flooding isn't expected for ${city}, but plan around a wet day. Low spots and poor drainage can still pond up.`; return; }
     const head=vary("eroh"+n,[[],["Downpours could flood low spots","Heavy downpours, watch the low spots","Localized flooding possible"],["Flooding rain possible","Flash flooding possible","Heavy rain could cause flooding"],["Flash flooding likely","Flooding rain likely"],["Dangerous flooding","Dangerous flash flooding expected"]][n]);
     R.title=`${head} ${when}: Level ${n} risk`;
     const r=x.rr, amt=r&&r[2]>=5?` About ${(r[1]/100).toFixed(2)}", up to ${(r[2]/100).toFixed(2)}".`:"";
     R.sub=`Level ${n} of 4${up?`, up from ${h.old}`:down?`, down from ${h.old}`:""}. ${wtxt?wtxt+" ":""}${n===1?vary("eros1",["Low roads, creeks and poor drainage flood first under the heaviest rain.","Most spots handle it; the low spots are the concern.","Watch poor-drainage areas and low roads."]):n===2?vary("eros2",["Creeks, low roads and drains flood first; never drive through water on the road.","Flooding is possible where heavy rain repeats; never drive through water on the road.","Low-lying lots and creek-side areas go first."]):"Move people and equipment off low ground and never drive through flooded roads."}${amt}`; }
-  async function run(){ prune();
+  async function run(){ prune(); try{ await daily(); }catch(e){ console.warn("daily",e); }
     const O=window.BRIEF_OVERRIDE; const T=await triggers(); if(!T.length) { library(); if(!O&&!window._briefPinned) show(LIST.find(x=>x.local!==false)||LIST[0]||quiet()); return; }
     let seen={}; try{ seen=JSON.parse(localStorage.getItem(KEY+"-seen")||"{}"); }catch(e){}
     const first=!Object.keys(seen).length;
@@ -5520,6 +5529,40 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
         save(); if(window.STORY) setTimeout(()=>STORY.run(),300); } } }
     library(); if(!O&&!window._briefPinned) show(LIST.find(x=>x.local!==false)||LIST[0]||quiet());
   }
+  // ---------------- v173 DAILY BRIEFING ----------------
+  async function daily(){ const now=new Date(); if(now.getHours()<5) return; const today=now.toDateString();
+    if(LIST.some(x=>x.cat==="DAILY"&&new Date(x.t).toDateString()===today)) return;
+    const D=(window.STRIPS&&STRIPS.days&&STRIPS.days())||[], H=(STRIPS.hours&&STRIPS.hours())||[]; if(D.length<5||H.length<12) return;
+    const nh=((document.getElementById("nx-h")||{}).textContent||"").trim(); if(!nh||/Checking|Loading/.test(nh)) return;
+    const city=cityName(), d0=D[0].d==="TONIGHT"?null:D[0], d1=D[0].d==="TONIGHT"?D[1]:D[1], pp=x=>Math.max(x.pp||0,x.ppN||0), inch=v=>(v/100).toFixed(2)+'"';
+    // biggest thing in the next 7 days
+    let big=null; D.slice(0,7).forEach((x,i)=>{ const r=x.rr?x.rr[1]:0, sc=(x.snowP||0)>=40?90:(x.thunder||0)>=40?80:r>=100?75+r/20:(x.lo!=null&&x.lo<=32&&now.getMonth()>=8)?60:(x.gust||0)>=40?65:(x.hi||0)>=95?55:pp(x)>=60?40:0; if(sc&&(!big||sc>big.sc)) big={x,i,sc}; });
+    const X=window.SDR_PXD?await Promise.race([SDR_PXD(),new Promise(r=>setTimeout(()=>r(null),6000))]):null;
+    // one perspective line, most interesting first
+    let pv=""; if(X){ const rain=big&&big.x.rr&&big.x.rr[1]>=60;
+      if(X.s90>=3) pv=`This is day ${X.s90} in a row at 90° or hotter.`; else if(X.s32>=3) pv=`${X.s32} freezing nights in a row.`;
+      else if(rain&&X.soak!=null&&X.soak>=21) pv=`It's been ${X.soak} days since a 1-inch rain. The ground is hard, so expect runoff early and a lot of the first inch not to soak in.`;
+      else if(X.dry>=10) pv=`${X.dry} dry days in a row${X.soak!=null?`, ${X.soak} since a good soaking`:""}.`;
+      else if(X.F&&X.F.fallAvg&&!X.F.thisFall&&now.getMonth()>=9){ const a=new Date(X.F.sy,0,X.F.fallAvg); pv=`No freeze yet this fall. The average first freeze is ${a.toLocaleDateString("en-US",{month:"short",day:"numeric"})}.`; }
+      else if(X.R&&X.R.hi&&d0&&d0.hi!=null&&d0.hi>=X.R.hi.v-3) pv=`Today's record high is ${Math.round(X.R.hi.v)}°, set in ${X.R.hi.y}. We're close.`;
+      else if(X.R&&X.R.lo&&D[0]&&D[0].lo!=null&&D[0].lo<=X.R.lo.v+3) pv=`Tonight's record low is ${Math.round(X.R.lo.v)}°, set in ${X.R.lo.y}. We'll be close.`;
+      else if(X.R&&X.R.nh!=null&&d0&&d0.hi!=null){ const dd=d0.hi-Math.round(X.R.nh); pv=Math.abs(dd)<=2?`Right about normal for the date (${Math.round(X.R.nh)}°).`:`About ${Math.abs(dd)}° ${dd>0?"warmer":"cooler"} than normal for the date (${Math.round(X.R.nh)}°).`; } }
+    const L=[]; if(d0) L.push(`<b>Today:</b> ${d0.short||""}, high ${d0.hi}°.${pp(d0)>=20?` ${pp(d0)}% chance of rain${d0.rr&&d0.rr[1]>=5?`, about ${inch(d0.rr[1])}`:""}.`:""}`);
+    const tn=D[0]; if(tn&&tn.lo!=null) L.push(`<b>Tonight:</b> low ${tn.lo}°.${tn.ppN>=30?` ${tn.ppN}% chance of rain.`:""}`);
+    if(d1) L.push(`<b>${cap(dname(d1.date))}:</b> ${d1.short||""}, ${d1.hi}° / ${d1.lo}°.${pp(d1)>=30?` ${pp(d1)}% chance of rain.`:""}`);
+    if(big&&big.i>=2) L.push(`<b>Watching ${dname(big.x.date)}:</b> ${big.x.short||"weather"}${big.x.rr&&big.x.rr[1]>=50?`, around ${inch(big.x.rr[1])} of rain`:""}${(big.x.thunder||0)>=30?", thunder possible":""}${big.x.lo!=null&&big.x.lo<=32?`, low ${big.x.lo}°`:""}.`);
+    if(pv) L.push(`<b>Perspective:</b> ${pv}`);
+    // the picture: what best explains the day
+    const has=id=>!!document.querySelector(`#mrPrev .mcard[data-id="${id}"]`); let hero=null;
+    if(big&&big.i<=2&&(big.x.thunder||0)>=40&&has("spc"+(big.i+1))) hero={kind:"card",id:"spc"+(big.i+1),title:"Severe weather outlook",sub:cap(dname(big.x.date)).toUpperCase()};
+    else if(big&&big.x.rr&&big.x.rr[1]>=50&&has("qpf")) hero={kind:"card",id:"qpf",title:"Rain totals",sub:"THE NEXT FEW DAYS"};
+    else if(X&&X.dry>=14&&has("drought")) hero={kind:"card",id:"drought",title:"Drought monitor",sub:"THIS WEEK"};
+    else if(has("cpct610")) hero={kind:"card",id:"cpct610",title:"The pattern ahead",sub:"6–10 DAY TEMPERATURE OUTLOOK"};
+    else if(has("radar")) hero={kind:"card",id:"radar",title:"Live radar",sub:"RIGHT NOW"};
+    const quietDay=!big||big.sc<40, c=context(), e=new Date(now); e.setHours(23,59,0,0);
+    const b={ t:Date.now(), expires:+e, cat:"DAILY", title:quietDay?`${now.toLocaleDateString("en-US",{weekday:"long"})}: ${nh}`:nh,
+      sub:quietDay?`A quiet day for ${city}.${pv?" "+pv:""}`:((document.getElementById("nx-p")||{}).textContent||"").trim(), sum:"", timing:c.timing, bottom:c.bottom, lines:L, hero, daily:1 };
+    LIST=LIST.filter(x=>x.cat!=="DAILY"); LIST.push(b); LIST.sort((a,z)=>z.t-a.t); save(); }
   window.BRIEF={ run, list:()=>LIST, show:b=>{ window._briefPinned=true; show(b); } };
   setTimeout(run,5000); setInterval(run,10*60000);
 })();
@@ -5823,7 +5866,7 @@ function SDR_STORY(H, D, spc, nowMs){
     if(tab){ tab.classList.toggle("hasnew",!!(b&&b.t>seen)); }
     // slim strip under the top cards only for threats
     const host=document.getElementById("status"); let st=document.getElementById("bstrip");
-    const age=b?Date.now()-b.t:1e15; const show=b&&b.cat!=="UPDATE"&&(age<6*3600e3||b.t>seen);   // v149: 6 hours on Home, then until they've opened it
+    const age=b?Date.now()-b.t:1e15; const show=b&&b.cat!=="UPDATE"&&b.cat!=="DAILY"&&(age<6*3600e3||b.t>seen);   // v149: 6 hours on Home, then until they've opened it
     if(!show){ if(st) st.hidden=true; return; }
     if(!st&&host){ st=document.createElement("button"); st.id="bstrip"; st.type="button"; host.insertAdjacentElement("afterend",st); st.onclick=()=>{ if(tab) tab.click(); if(window.BRIEF&&BRIEF.show) BRIEF.show(b); window.scrollTo(0,0); }; }
     if(st){ st.hidden=false; st.innerHTML=`<i></i><span><b>New briefing</b>${b.title}</span><em>Read →</em>`; st.onclick=()=>{ if(tab) tab.click(); if(window.BRIEF&&BRIEF.show) BRIEF.show(b); window.scrollTo(0,0); }; } }
@@ -6214,6 +6257,7 @@ window.SDR_GL=(function(){
   // 2) a new briefing (anything the team or the automation issues for this site)
   setInterval(() => { const L = (window.BRIEF && BRIEF.list && BRIEF.list()) || []; const b = L.find(x => x.local !== false); if (!b) return;
     if (!seen.brief) { remember("brief", b.t); return; } if (b.t <= seen.brief) return; remember("brief", b.t);
+    if (b.cat === "DAILY") { remember("daily", new Date().toDateString() + "am"); notify("daily", `☀️ TODAY'S BRIEFING · ${SITE}`, `${b.title}${b.sub ? " — " + b.sub : ""}`.slice(0, 180), "briefing", "", "daily"); return; }
     notify("brief", `📋 NEW BRIEFING${b.cat && b.cat !== "UPDATE" ? " · " + b.cat : ""} · ${SITE}`, `${b.title || "Weather update"}${b.bottom ? " — " + String(b.bottom).replace(/<[^>]+>/g, "") : ""}`.slice(0, 180), "briefing", "", "brief"); }, 30000);
 
   // 3) twice a day, if the app is open: the What's Next headline
@@ -6246,7 +6290,7 @@ window.SDR_GL=(function(){
 
 <script>
 // v125: client chat layer
-(function(){ let wrap=null, fr=null; const CHATV="1793644843";
+(function(){ let wrap=null, fr=null; const CHATV="1793652970";
   function open(){ if(!wrap){ wrap=document.createElement("div"); wrap.id="chatwrap"; wrap.innerHTML='<iframe id="chatfr" title="Message the team" allow="camera"></iframe>'; document.body.appendChild(wrap); fr=wrap.querySelector("iframe"); fr.src="./chat.html?v="+CHATV; fr.addEventListener("load",()=>{ try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }); }
     wrap.hidden=false; document.body.classList.add("chat-on"); if(!(history.state&&history.state.chat)) history.pushState({chat:1},""); try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }
   function close(){ if(wrap){ wrap.hidden=true; } document.body.classList.remove("chat-on"); }
@@ -6467,10 +6511,10 @@ window.SDR_NOWFIRST=(r,H)=>{ if(!r||/\bnow\b|arriving|moves in|by \d|winding/i.t
   return {level:r.level==="clear"?"clear":r.level, ico:cold?"sn":"rn", h, p:`Then ${r.h.charAt(0).toLowerCase()+r.h.slice(1)}${rest?": "+rest.charAt(0).toLowerCase()+rest.slice(1):"."}`}; };
 
 // v149: say "noon" and "midnight" instead of 12 PM / 12 AM, everywhere on the page
-(function(){ const RX=/\b12(?::00)?\s?(AM|PM|a\.m\.|p\.m\.)/gi, SKIP={SCRIPT:1,STYLE:1,TEXTAREA:1,INPUT:1};
+(function(){ const RX=/(^|[^:\d])12(?::00)?\s?(AM|PM|a\.m\.|p\.m\.)/gi, SKIP={SCRIPT:1,STYLE:1,TEXTAREA:1,INPUT:1};
   const fix=n=>{ const t=n.nodeValue; if(!t||t.indexOf("12")<0) return; RX.lastIndex=0; if(!RX.test(t)) return; RX.lastIndex=0;
     const upper=t===t.toUpperCase()&&/[A-Z]{3}/.test(t.replace(RX,"")), alone=t.trim().replace(RX,"").trim()==="";
-    const v=t.replace(RX,(m,ap)=>{ const w=/^p/i.test(ap)?"noon":"midnight"; return upper?w.toUpperCase():alone?w.charAt(0).toUpperCase()+w.slice(1):w; });
+    const v=t.replace(RX,(m,pre,ap)=>{ const w=/^p/i.test(ap)?"noon":"midnight"; return pre+(upper?w.toUpperCase():alone?w.charAt(0).toUpperCase()+w.slice(1):w); });
     if(v!==t) n.nodeValue=v; };
   const walk=root=>{ if(!root) return; if(root.nodeType===3){ if(!(root.parentNode&&SKIP[root.parentNode.nodeName])) fix(root); return; }
     if(root.nodeType!==1||SKIP[root.nodeName]) return; const tw=document.createTreeWalker(root,NodeFilter.SHOW_TEXT); let n; while((n=tw.nextNode())){ if(!(n.parentNode&&SKIP[n.parentNode.nodeName])) fix(n); } };
@@ -6556,6 +6600,27 @@ window.SDR_NOWFIRST=(r,H)=>{ if(!r||/\bnow\b|arriving|moves in|by \d|winding/i.t
 .p-sched.cx>:not(.cxbar),.p-area.cx>:not(.cxbar){display:none!important}
 .p-sched:not(.cx)>.cxbar .cxx,.p-area:not(.cx)>.cxbar .cxx{display:inline}
 .cxbar .cxx{display:none}
+.p-sched.ccwarn{border-color:rgba(245,184,0,.6)}.p-sched.ccwarn .cxbar i{background:rgba(245,184,0,.16)}.p-sched.ccact{border-color:rgba(229,72,77,.7)}.p-sched.ccact .cxbar i{background:rgba(229,72,77,.18)}.p-sched .cxbar strong{color:var(--fg)}
+/* v178 empty state: a tucked pill that drops down to the full pitch with examples */
+.p-sched.pgempty{background:var(--panel)!important;border-color:rgba(111,183,255,.45)}
+.p-sched.pgempty .cxbar{display:block;padding:0}
+.pgpill{display:flex;align-items:center;gap:10px;padding:11px 14px;text-align:left}
+.pgpill i{flex:none;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:rgba(111,183,255,.12);font-style:normal;font-size:15px}
+.pgpill>div{flex:1;min-width:0}.pgpill b{display:flex;align-items:center;gap:8px;font-family:var(--display);font-weight:800;letter-spacing:.08em;font-size:13px;white-space:nowrap}
+.pgpill .ccn{text-decoration:none;font-weight:800;letter-spacing:.1em;font-size:10px;padding:2px 7px;border-radius:999px;background:#FFC857;color:#0A1428}
+.pgpill span{display:block;font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.pgpill em{font-style:normal;color:#6FB7FF;font-weight:700;font-size:13px;white-space:nowrap}
+.p-sched.pgempty:not(.pgopen) .pg{display:none}
+.p-sched.pgopen .pg{border-top:1px solid var(--line);padding-top:14px}
+.p-sched.pgopen .pg .pgt{display:none}
+/* v177 tucked ClearCall pill */
+.p-sched:not(.pgempty) .cxbar{padding:10px 14px;gap:10px}
+.p-sched:not(.pgempty) .cxbar i{width:30px;height:30px;font-size:15px;border-radius:9px}
+.p-sched:not(.pgempty) .cxbar>div{min-width:0;flex:1}
+.p-sched:not(.pgempty) .cxbar b{font-size:13px;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.p-sched:not(.pgempty) .cxbar .ccn{text-decoration:none;font-family:var(--display);font-weight:800;letter-spacing:.08em;font-size:10.5px;padding:2px 7px;border-radius:999px;background:rgba(111,183,255,.15);color:#9FC8FF}
+.p-sched:not(.pgempty) .cxbar span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12.5px}
+.p-sched:not(.pgempty) .cxbar em{font-size:13px}
 /* v171 PlanGuard feature card */
 .p-sched.pgempty{border-color:rgba(111,183,255,.45);background:linear-gradient(160deg,rgba(47,123,255,.16),rgba(14,26,51,1) 55%)}
 .p-sched.pgempty .cxbar{padding:0}
@@ -6583,21 +6648,23 @@ window.SDR_NOWFIRST=(r,H)=>{ if(!r||/\bnow\b|arriving|moves in|by \d|winding/i.t
   const $=s=>document.querySelector(s);
   // ---- 10-day: first 5 days, then "Show all 10 days" ----
   let allDays=false;
-  function days(){ const el=$("#days"); if(!el) return; const rows=[...el.querySelectorAll(".drow")]; if(rows.length<=6){ const b=$("#cxmore"); if(b) b.remove(); rows.forEach(r=>r.classList.remove("cxh")); return; }
-    rows.forEach((r,i)=>r.classList.toggle("cxh",!allDays&&i>=5&&r.getAttribute("aria-expanded")!=="true"));
+  function days(){ const el=$("#days"); if(!el) return; const rows=[...el.querySelectorAll(".drow")]; if(rows.length<=7){ const b=$("#cxmore"); if(b) b.remove(); rows.forEach(r=>r.classList.remove("cxh")); return; }
+    rows.forEach((r,i)=>r.classList.toggle("cxh",!allDays&&i>=6&&r.getAttribute("aria-expanded")!=="true"));
     let b=$("#cxmore"); if(!b){ b=document.createElement("button"); b.id="cxmore"; b.type="button"; b.className="cxmore"; el.insertAdjacentElement("afterend",b); b.onclick=()=>{ allDays=!allDays; days(); if(!allDays) el.scrollIntoView({block:"nearest"}); }; }
     b.textContent=allDays?"SHOW FEWER ▴":`SHOW ALL ${rows.length} DAYS ▾`; }
   const dEl=$("#days"); if(dEl) new MutationObserver(()=>{ clearTimeout(days.t); days.t=setTimeout(days,30); }).observe(dEl,{childList:true});
   // ---- schedule: one bar ----
   function sched(){ const p=$(".p-sched"); if(!p) return; let bar=p.querySelector(".cxbar");
     if(!bar){ bar=document.createElement("button"); bar.type="button"; bar.className="cxbar"; p.prepend(bar); p.classList.add("cx");
-      bar.onclick=()=>{ const n=p.querySelectorAll("#sched .ev").length; if(!n&&p.classList.contains("cx")){ const f=document.getElementById("upl"); if(f){ f.click(); return; } } p.classList.toggle("cx"); sched(); }; }
+      bar.onclick=(e)=>{ const n=p.querySelectorAll("#sched .ev").length; if(!n){ if(e&&e.target.closest(".pgb")){ const f=document.getElementById("upl"); if(f) f.click(); return; } p.classList.toggle("pgopen"); sched(); return; } p.classList.toggle("cx"); sched(); }; }
     const ev=[...p.querySelectorAll("#sched .ev")], hit=ev.filter(e=>/headsup|action/.test(e.className));
     p.classList.toggle("pgempty",!ev.length);
-    bar.innerHTML=ev.length?`<i>✅</i><div><b>CLEARCALL · ${ev.length} EVENT${ev.length===1?"":"S"} COVERED</b><span>${hit.length?`${hit.length} need${hit.length===1?"s":""} attention. Tap to see which.`:"Nothing in the way. We'll tell you the moment that changes."}</span></div><em>${p.classList.contains("cx")?"Open ›":"Close ▴"}</em>`
-      :`<div class="pg"><div class="pgt"><span class="pgx">ONLY ON SDR</span><b>✅ CLEARCALL</b></div><h3>Put it on the calendar.<br>We'll make the call.</h3><p>Games, practices, birthday parties, spray days, job sites, weddings. Your meteorologist team checks every one around the clock and tells you when weather will get in the way, and what to do. No more checking.</p>
+    const act=hit.some(e=>/action/.test(e.className)), h0=hit[0], nmE=h0&&h0.querySelector(".nm"), nm=nmE?(nmE.firstChild&&nmE.firstChild.nodeType===3?nmE.firstChild.nodeValue:nmE.textContent).replace(/\s+/g," ").trim():"", tmE=h0&&h0.querySelector(".tm"), tm=tmE?(tmE.firstChild?tmE.firstChild.nodeValue||"":"").trim()+" "+((tmE.querySelector("small")||{}).textContent||""):"";
+    p.classList.toggle("ccwarn",!!hit.length&&!act); p.classList.toggle("ccact",act);
+    bar.innerHTML=ev.length?`<i>${hit.length?(act?"⛔":"⚠️"):"✅"}</i><div><b>CLEARCALL <u class="ccn">${ev.length} EVENT${ev.length===1?"":"S"}</u></b><span>${hit.length?`<strong>${tm?tm.replace(":00","")+" · ":""}${nm}</strong>${hit.length>1?` +${hit.length-1} more`:""}`:"All clear · we're watching every one"}</span></div><em>${p.classList.contains("cx")?"Open ›":"Close ▴"}</em>`
+      :`<div class="pgpill"><i>✅</i><div><b>CLEARCALL <u class="ccn">ONLY ON SDR</u></b><span>We watch your plans for weather.</span></div><em>${p.classList.contains("pgopen")?"Close ▴":"See how ›"}</em></div><div class="pg"><div class="pgt"><span class="pgx">ONLY ON SDR</span><b>✅ CLEARCALL</b></div><h3>We make the call for you.</h3><p>Upload your personal or business schedule now. Games, practices, birthday parties, spray days, job sites. Our system watches every one and tells you when weather will get in the way, and what to do.</p>
         <ul class="pgs"><li><i class="ok"></i><b>Tue 5 PM</b><span>Soccer practice</span><em class="ok">Clear</em></li><li><i class="ta"></i><b>Thu 6 PM</b><span>Soccer game</span><em class="ta">Storms 6–8 PM</em></li><li><i class="hu"></i><b>Sat 2 PM</b><span>Olivia’s 5th birthday</span><em class="hu">Tent it</em></li></ul>
-        <span class="pgb">ADD YOUR SCHEDULE ›</span><small>A spreadsheet or a simple list: time and what. Examples above.</small></div>`; }
+        <span class="pgb">UPLOAD YOUR SCHEDULE NOW ›</span><small>A spreadsheet or a simple list: time and what. Examples above.</small></div>`; }
   // ---- around you: one bar ----
   function area(){ const p=$(".p-area"); if(!p) return; let bar=p.querySelector(".cxbar");
     if(!bar){ bar=document.createElement("button"); bar.type="button"; bar.className="cxbar"; p.prepend(bar); p.classList.add("cx"); bar.onclick=()=>{ p.classList.toggle("cx"); area(); if(!p.classList.contains("cx")) setTimeout(()=>window.dispatchEvent(new Event("resize")),60); }; }
@@ -6619,6 +6686,7 @@ window.SDR_NOWFIRST=(r,H)=>{ if(!r||/\bnow\b|arriving|moves in|by \d|winding/i.t
 /* v166 · 10-day timing strip */
 .drow .dsp{display:flex;flex-direction:column;justify-content:center;gap:2px;min-width:0}
 .drow .dsp svg{display:block;width:100%;height:24px}
+.drow .dsp .tbar{display:block;position:relative;height:6px;border-radius:3px;background:rgba(255,255,255,.08)}.drow .dsp .tbar i{position:absolute;top:0;bottom:0;border-radius:3px}
 .drow .dsp small{font-family:var(--display)!important;font-weight:700!important;letter-spacing:.06em!important;font-size:11px!important;color:#9FC8FF!important;text-transform:uppercase!important;white-space:nowrap}
 .drow .dsp small.st{color:#FFC857!important}
 .drow .drain small{color:#9FC8FF}
@@ -6665,7 +6733,7 @@ window.SDR_NOWFIRST=(r,H)=>{ if(!r||/\bnow\b|arriving|moves in|by \d|winding/i.t
   // ---------- 10-day timing strip: 24 little bars, one per hour, so you see WHEN, not just how likely ----------
   window.SDR_DAYSPARK=function(x){ try{ if(!x||!x.date||!window.STRIPS) return ""; const day=new Date(x.date).toDateString();
       const H=(STRIPS.hours()||[]).filter(h=>new Date(h.t).toDateString()===day); if(H.length<6) return "";
-      const P=H.map(h=>h.pop||0), mx=Math.max(...P); if(mx<20) return "";
+      const P=H.map(h=>h.pop||0), mx=Math.max(...P); if(mx<20) return window.SDR_TEMPBAR?SDR_TEMPBAR(x):"";
       const by={}; H.forEach(h=>{ by[new Date(h.t).getHours()]=h; }); const W=144, B=26; let bars="";
       for(let k=0;k<24;k++){ const h=by[k]; if(!h) continue; const v=h.pop||0; if(v<5) continue; const t=(h.thunder||0)>=30, sn=(h.snow||0)>=0.05||/snow|flurr/i.test(h.short||"");
         const c=t?(v>=50?"#F5A524":"#F5D76E"):sn?"#EAF4FF":v>=60?"#2F7BFF":v>=40?"#4FA3FF":v>=20?"#8CC8FF":"#C9E6FF", ht=Math.max(2,(B-4)*v/100);
@@ -6676,6 +6744,11 @@ window.SDR_NOWFIRST=(r,H)=>{ if(!r||/\bnow\b|arriving|moves in|by \d|winding/i.t
       const span=wet.length>=18?"all day":(late&&ah>=10)?`after ${sh(ah)}`:(ah<=5&&!late)?`until ${sh(bh)}`:((ah<12)===(bh<12)&&ah!==12&&bh!==12&&bh!==0)?`${ah%12||12}–${sh(bh)}`:`${sh(ah)}–${sh(bh)}`;
       return `<svg viewBox="0 0 ${W} ${B+4}" preserveAspectRatio="none" aria-hidden="true"><line x1="0" x2="${W}" y1="${B}" y2="${B}" stroke="rgba(255,255,255,.18)"/>${ticks}${bars}</svg><small class="${st?"st":""}">${st?"⚡ ":""}${span}</small>`; }catch(e){ return ""; } };
 
+  // v174: dry days show where the day's temperatures sit in the 10-day range (low to high), colored cool to warm
+  window.SDR_TEMPBAR=function(x){ try{ if(x.hi==null&&x.lo==null) return ""; const D=(STRIPS.days()||[]).filter(d=>d.hi!=null||d.lo!=null); const all=[]; D.forEach(d=>{ if(d.hi!=null) all.push(d.hi); if(d.lo!=null) all.push(d.lo); });
+      const mn=Math.min(...all), mxx=Math.max(...all), sp=Math.max(1,mxx-mn), lo=x.lo!=null?x.lo:x.hi, hi=x.hi!=null?x.hi:x.lo, a=(lo-mn)/sp*100, b=(hi-mn)/sp*100;
+      const col=v=>v>=90?"#E05252":v>=80?"#F5A524":v>=70?"#FFC857":v>=60?"#9BD37A":v>=50?"#5FC9C0":v>=40?"#6FB7FF":"#9C8CFF";
+      return `<span class="tbar"><i style="left:${a}%;width:${Math.max(4,b-a)}%;background:linear-gradient(90deg,${col(lo)},${col(hi)})"></i></span>`; }catch(e){ return ""; } };
   // ---------- warnings bell on the radar ----------
   const SHORT=/^(Tornado|Severe Thunderstorm|Flash Flood|Extreme Wind|Snow Squall|Dust Storm) Warning$/;
   const SKIP=/Gale|Small Craft|Hazardous Seas|Heavy Freezing Spray|^Storm Warning$|Hurricane Force Wind|Special Marine|Brisk Wind|Low Water|Lake Wind|Freeze|Frost/;
@@ -6747,7 +6820,8 @@ window.SDR_NOWFIRST=(r,H)=>{ if(!r||/\bnow\b|arriving|moves in|by \d|winding/i.t
 .alm2 .ad small{display:block;font-family:var(--display);font-weight:800;letter-spacing:.12em;font-size:10.5px;color:var(--muted);margin-bottom:4px}
 .alm2 .ad div{display:flex;justify-content:space-between;font-size:14px;line-height:1.55}
 .alm2 .ad div span{color:var(--muted)}.alm2 .ad div b{font-family:var(--display);font-weight:800;font-size:15.5px}
-.alm2 .ad div b.hi{color:#FFB37A}.alm2 .ad div b.lo{color:#8FC3FF}
+.alm2 .ad div b.hi{color:#FFB37A}.alm2 .ad div b em{font-style:normal;font-size:12px;margin-left:4px;color:var(--muted)}.alm2 .ad div b em.hi{color:#FF8A8E}.alm2 .ad div b em.lo{color:#8FC3FF}.alm2 .ad div b i{font-style:normal;font-size:11px;color:var(--dim);font-weight:600}
+.alm2 .ady{grid-column:1/-1;margin:2px 2px 0;font-size:13px;color:var(--muted)}.alm2 .ady b{color:var(--fg);font-family:var(--display);letter-spacing:.06em;margin-right:6px}.alm2 .ad div b.lo{color:#8FC3FF}
 .almm{display:flex;align-items:center;gap:8px;padding:12px 14px 6px}
 .almm b{font-family:var(--display);font-weight:800;letter-spacing:.12em;font-size:14px;flex:1;text-align:center}
 .almm button{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:transparent;color:#fff;cursor:pointer;font-size:16px}
@@ -6818,7 +6892,11 @@ window.SDR_NOWFIRST=(r,H)=>{ if(!r||/\bnow\b|arriving|moves in|by \d|winding/i.t
     let [td,yd,M]=await Promise.all([obsDay(t0,now),obsDay(y0,t0),month(y0.getFullYear(),y0.getMonth()).catch(()=>null)]);
     const yr=M&&M.rows.find(r=>r.d===ymd(y0)); if(!yd&&yr) yd={g:null}; if(yd&&yr){ if(yr.hi!=null) yd.hi=yr.hi; if(yr.lo!=null) yd.lo=yr.lo; yd.r=yr.p; }
     const box=(t,o,est)=>`<div class="ad"><small>${t}</small><div><span>High</span><b class="hi">${o&&o.hi!=null?o.hi+"°":"—"}</b></div><div><span>Low</span><b class="lo">${o&&o.lo!=null?o.lo+"°":"—"}</b></div><div><span>Rain${est?" (est.)":""}</span><b>${o?inch(o.r):"—"}</b></div><div><span>Peak wind</span><b>${o&&o.g?o.g+" mph":"—"}</b></div></div>`;
-    sec.querySelector(".alm2").innerHTML=box("TODAY SO FAR",td,true)+box("YESTERDAY",yd,false);
+    let N=null; try{ N=window.SDR_RECORDS?await Promise.race([SDR_RECORDS(),new Promise(r=>setTimeout(()=>r(null),6000))]):null; }catch(e){}
+    const dv=(v,n)=>v==null||n==null?"":` <em class="${v-n>=2?"hi":v-n<=-2?"lo":""}">${v-n>0?"+":v-n<0?"−":"±"}${Math.abs(Math.round(v-n))}</em>`;
+    const tbox=`<div class="ad"><small>TODAY SO FAR</small><div><span>High</span><b class="hi">${td&&td.hi!=null?td.hi+"°":"—"}${dv(td&&td.hi,N&&N.nh)}</b></div><div><span>Low</span><b class="lo">${td&&td.lo!=null?td.lo+"°":"—"}${dv(td&&td.lo,N&&N.nl)}</b></div><div><span>Rain (est.)</span><b>${td?inch(td.r):"—"}</b></div><div><span>Peak wind</span><b>${td&&td.g?td.g+" mph":"—"}</b></div></div>`;
+    const nbox=`<div class="ad nrm"><small>NORMAL FOR TODAY</small><div><span>High</span><b class="hi">${N&&N.nh!=null?Math.round(N.nh)+"°":"—"}</b></div><div><span>Low</span><b class="lo">${N&&N.nl!=null?Math.round(N.nl)+"°":"—"}</b></div><div><span>Record high</span><b>${N&&N.hi?Math.round(N.hi.v)+"° <i>"+N.hi.y+"</i>":"—"}</b></div><div><span>Record low</span><b>${N&&N.lo?Math.round(N.lo.v)+"° <i>"+N.lo.y+"</i>":"—"}</b></div></div>`;
+    sec.querySelector(".alm2").innerHTML=tbox+nbox+(yd&&yd.hi!=null?`<p class="ady"><b>Yesterday</b> ${yd.hi}° / ${yd.lo}° · rain ${inch(yd.r)}${yd.g?` · gusts ${yd.g} mph`:""}</p>`:"");
     const bar=sec.querySelector(".cxbar"); if(bar) bar.querySelector("span").textContent=yd&&yd.hi!=null?`Yesterday ${yd.hi}° / ${yd.lo}° · rain ${inch(yd.r)}${yd.g?` · gusts ${yd.g} mph`:""}`:"Highs, lows, rain and wind, day by day."; }
   function mount(){ if(document.querySelector(".p-alm")) return; const after=document.querySelector(".p-bucket")||document.querySelector(".p-days"); if(!after) return;
     const sec=document.createElement("section"); sec.className="panel p-alm cx";
@@ -6927,6 +7005,7 @@ window.SDR_NOWFIRST=(r,H)=>{ if(!r||/\bnow\b|arriving|moves in|by \d|winding/i.t
         x.querySelector(".axf").innerHTML=`<h5>FREEZE DATES</h5><div class="ag"><div class="ac"><small>AVG FIRST FALL FREEZE</small><b>${fa?md(fa):"—"}</b></div><div class="ac"><small>FIRST FREEZE THIS FALL</small><b>${tf}</b></div><div class="ac"><small>AVG LAST SPRING FREEZE</small><b>${sa?md(sa):"—"}</b></div><div class="ac"><small>LAST FREEZE THIS SPRING</small><b>${F.thisSpring?md(F.thisSpring+"T12:00"):"—"}</b></div></div>`; }).catch(()=>{});
     }catch(e){} }
   document.addEventListener("click",e=>{ if(e.target.closest(".p-alm .cxbar")) setTimeout(fill,50); });
+  window.SDR_RECORDS=async()=>{ const st=window.SDR_ALMANAC&&await SDR_ALMANAC.station(); return st?records(st):null; };
   // ---------- v170: the same perspective as plain text, for the chat ----------
   let PX=null, PXat=0;
   window.SDR_PERSPECTIVE=async function(){ if(PX&&Date.now()-PXat<30*60000) return PX; const v=venue()||{}, now=new Date(), S=sun(now,+v.la,+v.lo), S0=sun(new Date(+now-864e5),+v.la,+v.lo), M=moon(now), out=["=== ALMANAC & PERSPECTIVE (official climate records, nearest station) ==="];
@@ -6943,6 +7022,11 @@ window.SDR_NOWFIRST=(r,H)=>{ if(!r||/\bnow\b|arriving|moves in|by \d|winding/i.t
     const bk=[...document.querySelectorAll("#bk .bkt")].map(e=>e.innerText.replace(/\s+/g," ").trim()).filter(Boolean); if(bk.length) out.push("Rain bucket vs normal: "+bk.join(" | "));
     if(window._HF_TXT) out.push(window._HF_TXT);
     PX=out.join("\n"); PXat=Date.now(); return PX; };
+  // v173: the same facts, structured, for the daily briefing
+  window.SDR_PXD=async function(){ try{ const st=window.SDR_ALMANAC&&await SDR_ALMANAC.station(); if(!st) return null; const [R,H]=await Promise.all([records(st).catch(()=>null),hist(st).catch(()=>null)]); if(!H||!H.length) return {R};
+      const L=H.length, ago=f=>{ for(let i=L-1;i>=0;i--) if(f(H[i])) return Math.round((new Date(ymd(new Date())+"T12:00")-new Date(H[i].d+"T12:00"))/864e5); return null; }, run=f=>{ let n=0; for(let i=L-1;i>=0&&f(H[i]);i--) n++; return n; };
+      const now=new Date(), mo=H.filter(r=>r.d.slice(0,7)===ymd(now).slice(0,7)), sm=X=>X.reduce((a,r)=>a+(r.p&&r.p>=0.01?r.p:0),0);
+      return {R,F:freeze(H),soak:ago(r=>r.p!=null&&r.p>=1),wet10:ago(r=>r.p!=null&&r.p>=0.10),frz:ago(r=>r.lo!=null&&r.lo<=32),s90:run(r=>r.hi!=null&&r.hi>=90),s32:run(r=>r.lo!=null&&r.lo<=32),dry:run(r=>r.p!=null&&r.p<0.01),y:H[L-1],station:st.name}; }catch(e){ return null; } };
 
   // ---------- HUNT & FISH ----------
   async function press(){ try{ const st=(window.NWS_STATIONS&&NWS_STATIONS.features||[])[0]; if(!st) return null; const a=new Date(Date.now()-7*3600e3);
@@ -6970,7 +7054,7 @@ window.SDR_NOWFIRST=(r,H)=>{ if(!r||/\bnow\b|arriving|moves in|by \d|winding/i.t
       <div class="hc"><small>FISHING</small><b class="${fc}">${fw}</b><ul>${fr.slice(0,3).map(x=>`<li>${x}</li>`).join("")||"<li>Typical day</li>"}</ul></div></div>
       <div class="hft"><div><small>FIRST LIGHT</small><b>${tm(S.rise-30*60000)}</b></div><div><small>LAST LIGHT</small><b>${tm(S.set+30*60000)}</b></div>
       ${majors.map(t=>`<div><small>MAJOR FEEDING</small><b>${win(t,1)}</b></div>`).join("")}${minors.slice(0,2).map(t=>`<div><small>MINOR FEEDING</small><b>${win(t,.5)}</b></div>`).join("")}</div>
-      <div class="hfn">${moonSvg(M)}${M.name}, ${Math.round(M.f*100)}% lit · wind today up to ${wmax!=null?wmax+" mph":"—"}${gmax?`, gusts ${gmax}`:""}${P?` · pressure ${P.now.toFixed(2)}" ${P.d3<=-0.02?"falling":P.d3>=0.02?"rising":"steady"}`:""}. Feeding times are estimated from the moon's position. Always check your state's legal shooting hours.</div>`;
+      <div class="hfn">${moonSvg(M)}${M.name}, ${Math.round(M.f*100)}% lit · wind today up to ${wmax!=null?wmax+" mph":"—"}${gmax?`, gusts ${gmax}`:""}${P?` · pressure ${P.now.toFixed(2)}" ${P.d3<=-0.02?"falling":P.d3>=0.02?"rising":"steady"}`:""}. Feeding times follow solunar timing: major periods are when the moon is overhead or underfoot, minor ones when it rises or sets (estimated). Always check your state's legal shooting hours.</div>`;
     const bar=sec.querySelector(".cxbar span"); if(bar) bar.textContent=`Deer movement: ${dw} · Fishing: ${fw}${majors[0]?` · best ${win(majors[0],1)}`:""}`;
     window._HF_TXT=`=== HUNT & FISH (today; feeding times are estimates from the moon's position) ===\nDeer movement: ${dw} (${dr.join("; ")||"typical day"}). Fishing: ${fw} (${fr.join("; ")||"typical day"}). Major feeding: ${majors.map(t=>win(t,1)).join(", ")||"none today"}. Minor feeding: ${minors.slice(0,2).map(t=>win(t,.5)).join(", ")||"none"}. Wind today up to ${wmax!=null?wmax+" mph":"n/a"}${gmax?`, gusts ${gmax}`:""}${P?`; pressure ${P.now.toFixed(2)} in, ${P.d3<=-0.02?"falling":P.d3>=0.02?"rising":"steady"}`:""}. Hunters must check their state's legal shooting hours.`; }
   function mount(){ if(document.querySelector(".p-hf")) return; const after=document.querySelector(".p-alm")||document.querySelector(".p-bucket"); if(!after) return;
@@ -6980,4 +7064,40 @@ window.SDR_NOWFIRST=(r,H)=>{ if(!r||/\bnow\b|arriving|moves in|by \d|winding/i.t
   setTimeout(mount,6500); setInterval(()=>{ if(!document.querySelector(".p-hf")) mount(); else hf(); },20*60000);
 })();
 </script>
+
+<style>
+/* v174 tighter home */
+.big h1{font-size:clamp(38px,10vw,64px)!important}
+.next h2{font-size:clamp(21px,5.2vw,27px)!important}
+@media (max-width:760px){
+  #pane-overview .radar .map{min-height:300px!important}
+  .call .big{margin-bottom:2px}
+}
+.rctl{border-radius:999px!important;background:rgba(10,20,40,.92)!important;border:1px solid rgba(160,180,215,.35)!important}
+.rctl .rplaybtn{width:auto!important;border-radius:999px!important;border:0!important;padding:0 14px 0 12px;height:36px;display:flex!important;align-items:center;gap:7px;font-family:var(--display);font-weight:800;letter-spacing:.12em;font-size:12.5px!important;color:#fff!important}
+.rctl .rplaybtn[aria-pressed="true"]{background:var(--heads)!important;color:#0A1428!important}
+.rctl .rplaybtn[hidden]{display:none!important}
+.p-days>.ph{flex-wrap:nowrap!important;padding-top:10px!important;padding-bottom:10px!important}
+#days-conf{white-space:nowrap;font-size:10px!important;letter-spacing:.08em!important;flex:none;margin-left:auto}
+.p-days>.ph .k:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.drow .dsp small{font-size:10px!important;letter-spacing:.03em!important;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:420px){#days-conf{font-size:0!important}#days-conf>*{font-size:11px}}
+</style>
+<script>
+// v174: on phones the shorter radar opens a half-step wider so the 30-mile ring still fits
+(function(){ const go=()=>{ const m=window.SDR_RMAP; if(!m){ setTimeout(go,800); return; } if(innerWidth<760&&!document.querySelector(".radar.rfull")){ try{ m.invalidateSize(); m.setZoom(8.5,{animate:false}); }catch(e){} } }; setTimeout(go,1500); })();
+</script>
+
+<style>
+/* v175 radar tap bubble */
+.apopw .leaflet-popup-content-wrapper{background:#0E1A33;color:var(--fg);padding:0;border-radius:12px;overflow:hidden;border:1px solid rgba(160,180,215,.35);box-shadow:0 10px 28px rgba(0,0,0,.55)}
+.apopw .leaflet-popup-content{margin:0;width:auto!important;min-width:240px;max-width:300px}
+.apopw .leaflet-popup-tip{background:#0E1A33;border:1px solid rgba(160,180,215,.35)}
+.acard.inpop{position:static!important;width:auto!important;max-height:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;display:block!important;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important}
+.acard.inpop .hd{font-size:15px;padding:7px 10px 7px 12px}
+.acard.inpop .hd button{font-size:22px;padding:0 2px}
+.acard.inpop .bd{max-height:150px;font-size:12.5px;padding:7px 12px 9px}
+.acard.inpop .tags{display:none}
+.acard.inpop .ln{line-height:1.45}
+</style>
 </body></html>

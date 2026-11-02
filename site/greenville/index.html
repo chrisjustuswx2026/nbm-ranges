@@ -1,4 +1,5 @@
 <!doctype html><html lang="en"><head>
+<meta name="robots" content="noindex,nofollow">
 <script>
 // v54 location switch: ?place=lat,lon,Name,ST views the whole dashboard for another spot (travel, away games)
 (function(){ try{ const q=new URLSearchParams(location.search).get("place"); if(!q) return; const [la,lo,name,st]=q.split(","); if(isFinite(+la)&&isFinite(+lo)) window.__LOC={la:+la,lo:+lo,name:decodeURIComponent(name||"Selected location"),st:(st||"").toUpperCase()}; }catch(e){} })();
@@ -2418,10 +2419,10 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
     </section>
 
     <section class="panel p-sched">
-      <div class="ph"><span class="k" id="sched-k">YOUR SCHEDULE · SATURDAY</span><span class="k" style="color:var(--muted)">WE WATCH EVERY LINE</span></div>
+      <div class="ph"><span class="k" id="sched-k">YOUR SCHEDULE · SATURDAY</span><span class="k" style="color:var(--muted)">OUR TEAM IS WATCHING</span></div>
       <div class="sched" id="sched"></div>
       <div class="upl">
-        <p>Upload a run-of-show or job list (CSV or text, one item per line: time, what). Every item gets a status and the team gets notified when one moves.</p>
+        <p>Add to your schedule anytime: a spreadsheet or a simple list (time and what). Our team watches every item and alerts you the moment the weather changes it.</p>
         <label class="btn">UPLOAD SCHEDULE<input type="file" id="upl" accept=".csv,.txt,text/plain,text/csv"></label>
       </div>
     </section>
@@ -3194,7 +3195,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
       const s = storm&&pop>=50 ? "action" : (pop>=50||storm) ? "headsup" : "clear";
       return { t:hhmm(when), n, s, r:`${h.shortForecast} · ${h.temperature}° · ${pop}% · wind ${h.windSpeed}` }; });
     D.setEvents(evs);
-    $("sched-k").textContent = "YOUR JOBS & EVENTS · NEXT 24 HOURS · SCORED FROM THE HOURLY";
+    $("sched-k").textContent = "YOUR JOBS & EVENTS · NEXT 24 HOURS";
 
     // ---- around you: SC cities scored from point alerts (free) ----
     const until = a => { const d=new Date(a.properties.ends||a.properties.expires); const t=new Date(); const same=d.toDateString()===t.toDateString(); return hhmm(d)+(same?"":" "+d.toLocaleDateString("en-US",{weekday:"short"})); };
@@ -6363,7 +6364,7 @@ window.SDR_GL=(function(){
 
 <script>
 // v125: client chat layer
-(function(){ let wrap=null, fr=null; const CHATV="1793656086";
+(function(){ let wrap=null, fr=null; const CHATV="1793657239";
   function open(){ if(!wrap){ wrap=document.createElement("div"); wrap.id="chatwrap"; wrap.innerHTML='<iframe id="chatfr" title="Message the team" allow="camera"></iframe>'; document.body.appendChild(wrap); fr=wrap.querySelector("iframe"); fr.src="./chat.html?v="+CHATV; fr.addEventListener("load",()=>{ try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }); }
     wrap.hidden=false; document.body.classList.add("chat-on"); if(!(history.state&&history.state.chat)) history.pushState({chat:1},""); try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }
   function close(){ if(wrap){ wrap.hidden=true; } document.body.classList.remove("chat-on"); }
@@ -6737,10 +6738,10 @@ window.SDR_NOWFIRST=(r,H)=>{ if(!r||/\bnow\b|arriving|moves in|by \d|winding/i.t
     p.classList.toggle("pgempty",!ev.length);
     const act=hit.some(e=>/action/.test(e.className)), h0=hit[0], nmE=h0&&h0.querySelector(".nm"), nm=nmE?(nmE.firstChild&&nmE.firstChild.nodeType===3?nmE.firstChild.nodeValue:nmE.textContent).replace(/\s+/g," ").trim():"", tmE=h0&&h0.querySelector(".tm"), tm=tmE?(tmE.firstChild?tmE.firstChild.nodeValue||"":"").trim()+" "+((tmE.querySelector("small")||{}).textContent||""):"";
     p.classList.toggle("ccwarn",!!hit.length&&!act); p.classList.toggle("ccact",act);
-    bar.innerHTML=ev.length?`<i>${hit.length?(act?"⛔":"⚠️"):"✅"}</i><div><b>CLEARCALL <u class="ccn">${ev.length} EVENT${ev.length===1?"":"S"}</u></b><span>${hit.length?`<strong>${tm?tm.replace(":00","")+" · ":""}${nm}</strong>${hit.length>1?` +${hit.length-1} more`:""}`:"All clear · we're watching every one"}</span></div><em>${p.classList.contains("cx")?"Open ›":"Close ▴"}</em>`
-      :`<div class="pgpill"><i>✅</i><div><b>CLEARCALL <u class="ccn">ONLY ON SDR</u></b><span>We watch your plans for weather.</span></div><em>${p.classList.contains("pgopen")?"Close ▴":"See how ›"}</em></div><div class="pg"><div class="pgt"><span class="pgx">ONLY ON SDR</span><b>✅ CLEARCALL</b></div><h3>We make the call for you.</h3><p>Upload your personal or business schedule now. Games, practices, birthday parties, spray days, job sites. Our system watches every one and tells you when weather will get in the way, and what to do.</p>
+    bar.innerHTML=ev.length?`<i>${hit.length?(act?"⛔":"⚠️"):"✅"}</i><div><b>SCHEDULE WATCH <u class="ccn">${ev.length} EVENT${ev.length===1?"":"S"}</u></b><span>${hit.length?`<strong>${tm?tm.replace(":00","")+" · ":""}${nm}</strong>${hit.length>1?` +${hit.length-1} more`:""}`:"All clear · our team is watching every one"}</span></div><em>${p.classList.contains("cx")?"Open ›":"Close ▴"}</em>`
+      :`<div class="pgpill"><i>✅</i><div><b>SCHEDULE WATCH <u class="ccn">ONLY ON SDR</u></b><span>Our team watches your schedule for weather.</span></div><em>${p.classList.contains("pgopen")?"Close ▴":"See how ›"}</em></div><div class="pg"><div class="pgt"><span class="pgx">ONLY ON SDR</span><b>✅ SCHEDULE WATCH</b></div><h3>Our team watches your schedule. You don’t have to.</h3><p>Upload your personal or business schedule: games, practices, birthday parties, spray days, job sites. Our meteorologists keep an eye on every one and alert you the moment weather changes your plans, so you never have to go looking.</p>
         <ul class="pgs"><li><i class="ok"></i><b>Tue 5 PM</b><span>Soccer practice</span><em class="ok">Clear</em></li><li><i class="ta"></i><b>Thu 6 PM</b><span>Soccer game</span><em class="ta">Storms 6–8 PM</em></li><li><i class="hu"></i><b>Sat 2 PM</b><span>Olivia’s 5th birthday</span><em class="hu">Tent it</em></li></ul>
-        <span class="pgb">UPLOAD YOUR SCHEDULE NOW ›</span><small>A spreadsheet or a simple list: time and what. Examples above.</small></div>`; }
+        <span class="pgb">UPLOAD YOUR SCHEDULE ›</span><small>A spreadsheet or a simple list works: time and what.</small></div>`; }
   // ---- around you: one bar ----
   function area(){ const p=$(".p-area"); if(!p) return; let bar=p.querySelector(".cxbar");
     if(!bar){ bar=document.createElement("button"); bar.type="button"; bar.className="cxbar"; p.prepend(bar); p.classList.add("cx"); bar.onclick=()=>{ p.classList.toggle("cx"); area(); const open=!p.classList.contains("cx"), A=window.AREA, m=A&&A.map;

@@ -32,6 +32,7 @@ main{max-width:860px;margin:0 auto;padding:14px 14px 40px;display:grid;gap:14px}
 .ev{padding:0 14px 6px;color:#CFE4FF;font-size:14px}
 .ev:before{content:"◷ ";color:var(--dim)}
 .issue{margin:6px 14px 10px;padding:9px 12px;border-radius:10px;background:rgba(255,255,255,.04);font-weight:600;font-size:15px}
+.persp{margin:-4px 14px 10px;padding:8px 12px;border-radius:10px;background:rgba(111,183,255,.08);border-left:3px solid #6FB7FF;font-size:14px;color:#DCEBFF}
 .brief{margin:0 14px 10px;padding:0;list-style:none;display:grid;gap:4px}
 .brief li{font-size:13.5px;color:#C9D3E3;line-height:1.4;padding-left:14px;position:relative}
 .brief li:before{content:"";position:absolute;left:2px;top:8px;width:5px;height:5px;border-radius:50%;background:var(--dim)}
@@ -84,6 +85,7 @@ textarea:focus{border-color:var(--blue)}
     c.innerHTML=`<div class="ch"><span class="lv ${lv}">${lv==="concern"?"CONCERN":lv==="clear"?"ROUTINE":"WATCH"}</span><b>${esc(it.client||it.site)}</b><span class="age" data-t="${it.t}">${age(it.t)}</span></div>
       <div class="q">“${esc(it.question)}”</div>${it.event?`<div class="ev">${esc(it.event)}</div>`:""}
       ${it.issue?`<div class="issue">${esc(it.issue)}</div>`:""}
+      ${it.perspective?`<div class="persp">💡 ${esc(it.perspective)}</div>`:""}
       ${(it.briefing||[]).length?`<div class="k">BRIEFING</div><ul class="brief">${it.briefing.map(b=>`<li>${esc(b)}</li>`).join("")}</ul>`:""}
       ${(it.history||[]).length?`<details class="hist"><summary>Earlier in this conversation</summary>${it.history.map(h=>`<p><b>${h.role==="user"?"Client":"Team"}:</b> ${esc(h.content)}</p>`).join("")}</details>`:""}
       <div class="k">DRAFT — EDIT FREELY</div><textarea>${esc(it.draft)}</textarea>

@@ -16,7 +16,9 @@
   color-scheme:dark;
 }
 *{box-sizing:border-box}
-html,body{height:100%}
+html,body{height:100%;overflow:hidden}
+.app{height:100dvh!important;overflow:hidden}
+.pin{position:relative;z-index:2}
 body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:17px;line-height:1.3;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -44,7 +46,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
 .pin .go{color:var(--heads);font-weight:700;font-size:13px}
 
 /* thread */
-.msgs{overflow-y:auto;padding:10px 12px 8px;display:flex;flex-direction:column;gap:2px;overscroll-behavior:contain}
+.msgs{min-height:0;overflow-y:auto;padding:10px 12px 8px;display:flex;flex-direction:column;gap:2px;overscroll-behavior:contain}
 .ts{text-align:center;font-size:11.5px;color:var(--dim);margin:12px 0 6px;font-weight:600}
 .ts b{color:var(--muted);font-weight:700}
 .who-l{font-size:11.5px;color:var(--dim);margin:6px 0 2px 14px}
@@ -623,7 +625,9 @@ var SDR_ENGINE=(function(){
         (m.attach||[]).forEach(function(a,i){ setTimeout(function(){ var c=null; try{ if(LASTASKED) SDR_ENGINE.answer(LASTASKED); c=SDR_ENGINE.attachNamed(a); }catch(e){} if(c){ imageSvg(c.svg,c.title); POSTED[c.title]=1; } },700+i*700); }); }); }).catch(function(){}); },8000); }
   function aiReply(text,done){ var url=aiUrl(); if(!url) return false;
     var ctl=new AbortController(), timer=setTimeout(function(){ ctl.abort(); },45000);
-    fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},signal:ctl.signal,body:JSON.stringify({site:siteName(),client:siteName(),question:text,history:AIHIST.slice(-12),dashboard:aiData(),schedule:schedText(),met:lastMet,location:aiLoc(),mode:chatMode(),thread:THREAD})})
+    // v170: almanac, records, freeze dates, days since, sun & moon, hunt & fish go with every question (at most 5 s to gather)
+    var persp=new Promise(function(res){ var t=setTimeout(function(){ res(""); },5000); try{ var f=window.parent.SDR_PERSPECTIVE; if(!f){ clearTimeout(t); res(""); return; } f().then(function(x){ clearTimeout(t); res(x||""); },function(){ clearTimeout(t); res(""); }); }catch(e){ clearTimeout(t); res(""); } });
+    persp.then(function(px){ return fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},signal:ctl.signal,body:JSON.stringify({site:siteName(),client:siteName(),question:text,history:AIHIST.slice(-12),dashboard:aiData()+(px?"\n\n"+px:""),schedule:schedText(),met:lastMet,location:aiLoc(),mode:chatMode(),thread:THREAD})}); })
       .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,j:j}; }); })
       .then(function(x){ clearTimeout(timer); if(x.ok&&x.j&&x.j.queued){ done({queued:true}); return; } if(!x.ok||!x.j||!x.j.text) throw new Error((x.j&&x.j.error)||"no reply"); done({text:x.j.text,from:x.j.from||"SDR Forecast Desk"}); })
       .catch(function(){ clearTimeout(timer); done(null); });

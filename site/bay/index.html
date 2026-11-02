@@ -6364,7 +6364,7 @@ window.SDR_GL=(function(){
 
 <script>
 // v125: client chat layer
-(function(){ let wrap=null, fr=null; const CHATV="1793657238";
+(function(){ let wrap=null, fr=null; const CHATV="1793658933";
   function open(){ if(!wrap){ wrap=document.createElement("div"); wrap.id="chatwrap"; wrap.innerHTML='<iframe id="chatfr" title="Message the team" allow="camera"></iframe>'; document.body.appendChild(wrap); fr=wrap.querySelector("iframe"); fr.src="./chat.html?v="+CHATV; fr.addEventListener("load",()=>{ try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }); }
     wrap.hidden=false; document.body.classList.add("chat-on"); if(!(history.state&&history.state.chat)) history.pushState({chat:1},""); try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }
   function close(){ if(wrap){ wrap.hidden=true; } document.body.classList.remove("chat-on"); }
@@ -6546,7 +6546,17 @@ window.SDR_GL=(function(){
     else if(!big&&held&&call.dataset.river==="1"&&call.classList.contains("headsup")){ call.className="call clear"; h.textContent="ALL CLEAR"; why.textContent=held.why; held=null; delete call.dataset.river;
       const vd=document.querySelector("#venue .dot"); if(vd) vd.style.background="var(--clear)"; } }
   setInterval(()=>{ if(R) riverCall(); },60000);
-  async function load(){ try{ const r=await fetch("../rivers.json?_="+Math.floor(Date.now()/600000),{cache:"no-store"}); if(r.ok) R=await r.json(); }catch(e){} paintAlerts(); window.dispatchEvent(new Event("sdr-rivers")); }
+  // v184: if the hourly data job hasn't left a good rivers.json (failed run, still running, upload replaced it), pull the gauges
+  // straight from the river service for our region so the rivers never just vanish. Tapping a gauge already loads its graph live.
+  async function liveList(){ const v=venue(); if(!v||v.la==null) return null; const x0=+v.lo-9, x1=+v.lo+9, y0=+v.la-6, y1=+v.la+6, CAT={no_flooding:0,action:1,minor:2,moderate:3,major:4};
+    const n=x=>{ x=parseFloat(x); return isFinite(x)&&x>-900?Math.round(x*100)/100:null; }, c=x=>{ const k=String(x||"").toLowerCase(); return k in CAT?CAT[k]:-1; };
+    const r=await fetch(`https://api.water.noaa.gov/nwps/v1/gauges?bbox.xmin=${x0}&bbox.ymin=${y0}&bbox.xmax=${x1}&bbox.ymax=${y1}&srid=EPSG_4326`); if(!r.ok) return null; const j=await r.json(), raw=Array.isArray(j)?j:(j.gauges||[]);
+    const gauges=raw.map(g=>{ const la=n(g.latitude), lo=n(g.longitude); if(la==null||lo==null) return null; const st=g.status||{}, o=st.observed||{}, f=st.forecast||{};
+      return {id:g.lid,n:g.name,la,lo,o:{v:n(o.primary),u:o.primaryUnit,t:o.validTime,c:c(o.floodCategory)},f:{v:n(f.primary),u:f.primaryUnit,t:f.validTime,c:c(f.floodCategory)}}; }).filter(Boolean);
+    return gauges.length?{generated:new Date().toISOString(),count:gauges.length,detail:0,gauges,live:1}:null; }
+  async function load(){ let ok=false; try{ const r=await fetch("../rivers.json?_="+Math.floor(Date.now()/600000),{cache:"no-store"}); if(r.ok){ const j=await r.json(); if(j&&Array.isArray(j.gauges)&&j.gauges.length){ R=j; ok=true; } } }catch(e){}
+    if(!ok&&!(R&&R.gauges&&R.gauges.length)){ try{ const L=await liveList(); if(L) R=L; }catch(e){ console.warn("rivers live",e); } }
+    paintAlerts(); window.dispatchEvent(new Event("sdr-rivers")); }
   window.SDR_RIVERS=()=>R;
   window.addEventListener("alerts-ready",paintAlerts);
   load(); setInterval(load,15*60000);
@@ -6767,6 +6777,14 @@ window.SDR_NOWFIRST=(r,H)=>{ if(!r||/\bnow\b|arriving|moves in|by \d|winding/i.t
 /* v166 · 10-day timing strip */
 .drow .dsp{display:flex;flex-direction:column;justify-content:center;gap:2px;min-width:0}
 .drow .dsp svg{display:block;width:100%;height:24px}
+.drow .dsk{position:relative;width:100%;min-width:0}
+.drow .dskb{position:relative;display:grid;grid-template-columns:repeat(24,1fr);align-items:end;gap:2px;height:28px;border-bottom:1px solid rgba(255,255,255,.22)}
+.drow .dskb i{display:block;border-radius:2px 2px 0 0;min-width:0}
+.drow .dskb u{position:absolute;top:2px;bottom:0;width:0;border-left:1px solid rgba(255,255,255,.12);text-decoration:none}
+.drow .dskb em{position:absolute;top:-3px;bottom:-4px;width:0;border-left:2px dashed #FFC857;z-index:1}
+.drow .dska{position:relative;height:14px;margin-top:2px;font-family:var(--display);font-weight:700;font-size:10px;letter-spacing:.06em;color:#7F93B3}
+.drow .dska span{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap}
+#days .drow .dska span.mk{display:block!important;color:#FFC857;font-weight:800}
 .drow .dsp .tbar{display:block;position:relative;height:6px;border-radius:3px;background:rgba(255,255,255,.08)}.drow .dsp .tbar i{position:absolute;top:0;bottom:0;border-radius:3px}
 .drow .dsp small{font-family:var(--display)!important;font-weight:700!important;letter-spacing:.06em!important;font-size:11px!important;color:#9FC8FF!important;text-transform:uppercase!important;white-space:nowrap}
 .drow .dsp small.st{color:#FFC857!important}
@@ -6822,15 +6840,17 @@ window.SDR_NOWFIRST=(r,H)=>{ if(!r||/\bnow\b|arriving|moves in|by \d|winding/i.t
   window.SDR_DAYSPARK=function(x){ try{ if(!x||!x.date||!window.STRIPS) return ""; const day=new Date(x.date).toDateString();
       const H=(STRIPS.hours()||[]).filter(h=>new Date(h.t).toDateString()===day); if(H.length<6) return "";
       const P=H.map(h=>h.pop||0), mx=Math.max(...P); if(mx<20) return `<b class="dsky">${String(x.short||"").replace(/^(Slight Chance|Chance|Isolated)\s+/i,"").replace(/\s+then.*$/i,"").slice(0,22)}</b>`;
-      const by={}; H.forEach(h=>{ by[new Date(h.t).getHours()]=h; }); const W=144, B=26; let bars="";
-      for(let k=0;k<24;k++){ const h=by[k]; if(!h) continue; const v=h.pop||0; if(v<5) continue; const t=(h.thunder||0)>=30, sn=(h.snow||0)>=0.05||/snow|flurr/i.test(h.short||"");
-        const c=t?(v>=50?"#F5A524":"#F5D76E"):sn?"#EAF4FF":v>=60?"#2F7BFF":v>=40?"#4FA3FF":v>=20?"#8CC8FF":"#C9E6FF", ht=Math.max(2,(B-4)*v/100);
-        bars+=`<rect x="${k*6+1}" y="${B-ht}" width="4.4" height="${ht}" rx="1.4" fill="${c}"/>`; }
-      const ticks=[6,12,18].map(k=>`<line x1="${k*6}" x2="${k*6}" y1="${B-3}" y2="${B+3}" stroke="rgba(255,255,255,.35)" stroke-width="1"/>`).join("");
+      // v184: real time axis (6 AM · noon · 6 PM) under the bars, and a marker where the rain starts — HTML, so nothing stretches on wide screens
+      const by={}; H.forEach(h=>{ by[new Date(h.t).getHours()]=h; }); let bars="";
+      for(let k=0;k<24;k++){ const h=by[k], v=h?(h.pop||0):0; if(!h||v<5){ bars+="<i></i>"; continue; } const t=(h.thunder||0)>=30, sn=(h.snow||0)>=0.05||/snow|flurr/i.test(h.short||"");
+        const c=t?(v>=50?"#F5A524":"#F5D76E"):sn?"#EAF4FF":v>=60?"#2F7BFF":v>=40?"#4FA3FF":v>=20?"#8CC8FF":"#C9E6FF";
+        bars+=`<i style="height:${Math.max(8,v)}%;background:${c}" title="${k===0?"12 AM":k===12?"Noon":(k%12)+(k<12?" AM":" PM")} · ${v}%"></i>`; }
       const thr=mx>=50?40:Math.max(20,mx-15), wet=H.filter(h=>(h.pop||0)>=thr), a=new Date(wet[0].t), b=new Date(+new Date(wet[wet.length-1].t)+3600e3), st=H.some(h=>(h.thunder||0)>=30);
       const ah=a.getHours(), bh=b.getHours(), late=b.toDateString()!==a.toDateString()||bh===0, sh=h=>h===0?"12 AM":h===12?"noon":(h%12)+(h<12?" AM":" PM");
       const span=wet.length>=18?"all day":(late&&ah>=10)?`after ${sh(ah)}`:(ah<=5&&!late)?`until ${sh(bh)}`:((ah<12)===(bh<12)&&ah!==12&&bh!==12&&bh!==0)?`${ah%12||12}–${sh(bh)}`:`${sh(ah)}–${sh(bh)}`;
-      return `<svg viewBox="0 0 ${W} ${B+4}" preserveAspectRatio="none" aria-hidden="true"><line x1="0" x2="${W}" y1="${B}" y2="${B}" stroke="rgba(255,255,255,.18)"/>${ticks}${bars}</svg><small class="${st?"st":""}">${st?"⚡ ":""}${span}${x.rr&&x.rr[1]>=5?` · ${(x.rr[1]/100).toFixed(2)}"`:""}</small>`; }catch(e){ return ""; } };
+      const sm=innerWidth<700, mk=wet.length<18&&ah>0?ah:null, mkL=mk==null?"":(mk===12?(sm?"12P":"NOON"):(mk%12)+(sm?(mk<12?"A":"P"):(mk<12?" AM":" PM")));
+      const ax=(sm?[[6,"6A"],[12,"12P"],[18,"6P"]]:[[6,"6 AM"],[12,"NOON"],[18,"6 PM"]]).filter(([k])=>mk==null||Math.abs(k-mk)>=3).map(([k,l])=>`<span style="left:${k/24*100}%">${l}</span>`).join("");
+      return `<div class="dsk" aria-hidden="true"><div class="dskb"><u style="left:25%"></u><u style="left:50%"></u><u style="left:75%"></u>${mk!=null?`<em style="left:${mk/24*100}%"></em>`:""}${bars}</div><div class="dska">${ax}${mk!=null?`<span class="mk" style="left:${mk/24*100}%">${mkL}</span>`:""}</div></div><small class="${st?"st":""}">${st?"⚡ ":""}${span}${x.rr&&x.rr[1]>=5?` · ${(x.rr[1]/100).toFixed(2)}"`:""}</small>`; }catch(e){ return ""; } };
 
   // v174: dry days show where the day's temperatures sit in the 10-day range (low to high), colored cool to warm
   window.SDR_TEMPBAR=function(x){ try{ if(x.hi==null&&x.lo==null) return ""; const D=(STRIPS.days()||[]).filter(d=>d.hi!=null||d.lo!=null); const all=[]; D.forEach(d=>{ if(d.hi!=null) all.push(d.hi); if(d.lo!=null) all.push(d.lo); });

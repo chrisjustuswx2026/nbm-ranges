@@ -6582,7 +6582,7 @@ window.SDR_GL=(function(){
 
 <script>
 // v125: client chat layer
-(function(){ let wrap=null, fr=null; const CHATV="1793721929";
+(function(){ let wrap=null, fr=null; const CHATV="1793722428";
   function open(){ if(!wrap){ wrap=document.createElement("div"); wrap.id="chatwrap"; wrap.innerHTML='<iframe id="chatfr" title="Message the team" allow="camera"></iframe>'; document.body.appendChild(wrap); fr=wrap.querySelector("iframe"); fr.src="./chat.html?v="+CHATV; fr.addEventListener("load",()=>{ try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }); }
     wrap.hidden=false; document.body.classList.add("chat-on"); if(!(history.state&&history.state.chat)) history.pushState({chat:1},""); try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }
   function close(){ if(wrap){ wrap.hidden=true; } document.body.classList.remove("chat-on"); }
@@ -7713,4 +7713,16 @@ window.SDR_NOWFIRST=(r,H)=>{ if(!r||/\bnow\b|arriving|moves in|by \d|winding/i.t
   window.addEventListener("resize",()=>{ merge(); order(); });
 })();
 </script>
+
+<style id="sdr-desk2">
+/* v206 desktop: the 10-day takes the left two-thirds; the team, schedule and map room stack beside it */
+@media (min-width:900px){
+ #pane-overview{grid-template-columns:minmax(0,1.45fr) minmax(0,1fr)!important;grid-template-areas:"radar chan" "radar alerts" "hours hours" "days latest" "days sched" "days maproom" "days area" "days bucket" "alm hf" "notes notes"!important;align-items:start}
+ #pane-overview>.p-briefs{display:none!important}
+ #pane-overview>.p-latest{grid-area:latest}
+ #pane-overview>.p-bucket{grid-area:bucket}#pane-overview>.p-alm{grid-area:alm}#pane-overview>.p-hf{grid-area:hf}
+ #pane-overview>.p-days{align-self:stretch}
+ #days .drow .dsp,#days .drow .dsk{max-width:420px}
+}
+</style>
 </body></html>

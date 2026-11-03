@@ -795,7 +795,8 @@ body.rfull-on{overflow:hidden}
 .bkey span::before{content:"";display:inline-block;width:11px;height:11px;margin-right:5px;vertical-align:-1px;background:var(--c);border-radius:2px}
 .bhero{position:relative}
 /* v182 one-page daily briefing sheet */
-.bdaily-on .bhero.bhx{display:block!important}.bsev{margin:0 16px;border:1px solid #D5DBE3;border-top:0}.bsev .bhx{margin:0;border:0;border-radius:0}.bsev .bssec{border-top:1px solid #D5DBE3}
+.bdaily-on .bhero.bhx{display:block!important}.bhx svg{display:block;width:100%;height:auto;max-height:420px}.bhx .bkey,.bhx .tvleg{position:static!important;display:flex;flex-wrap:wrap;gap:4px 12px;justify-content:center;padding:6px 8px;font-size:11.5px;color:#4A5668;background:#fff!important;border:0!important;box-shadow:none!important}
+.bsht p{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}.bsev{margin:0 16px;border:1px solid #D5DBE3;border-top:0}.bsev .bhx{margin:0;border:0;border-radius:0}.bsev .bssec{border-top:1px solid #D5DBE3}
 @media(max-width:520px){.bsev{margin:0 10px}}
 .bdx .bsheet+.bsheet{margin-top:18px}
 .bshd.sm{padding-bottom:6px}.bshd.sm h2{font-size:18px}.bshd.sm img{width:72px}
@@ -5518,7 +5519,7 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
   document.addEventListener("click",e=>{ const r=e.target.closest(".brow.ib"); if(!r) return; e.stopPropagation(); window._briefPinned=true; show(LIST[+r.dataset.ib]); const t=document.querySelector('.tabs button[data-pane="briefing"],[data-go="briefing"]'); if(t) t.click(); },true);
 
   const quiet=()=>{ const c=context(); return { t:Date.now(), title:(document.getElementById("nx-h")||{}).textContent||"Forecast update", cat:"UPDATE", sum:c.sum, timing:c.timing, bottom:c.bottom, lines:[`No new outlooks, watches or discussions for ${v().name.split(" · ")[0]}.`] }; };
-  const prune=()=>{ const n=LIST.length; LIST=LIST.filter(b=>!b.expires||b.expires>Date.now()); if(LIST.length!==n) save(); };
+  const prune=()=>{ const n=LIST.length; LIST=LIST.filter(b=>(!b.expires||b.expires>Date.now())&&(b.team||!(b.hero&&/^cpc/.test(b.hero.kind||"")))); if(LIST.length!==n) save(); };
   // v80 extras for local threat briefings: 1-5 threat meters, "heat first, storms later", and a look at the next day
   async function extras(i,said,keep1){ const out={meters:[],lines:[]}; if(!window.STRIPS||!STRIPS.days) return out; const s=v(); const D=STRIPS.days()||[], x=D[i]||{};
     const H=((STRIPS.hours&&STRIPS.hours())||[]).filter(h=>new Date(h.t).toDateString()===new Date(x.date||Date.now()).toDateString());
@@ -5562,7 +5563,7 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
     const r=x.rr, amt=r&&r[2]>=5?` About ${(r[1]/100).toFixed(2)}", up to ${(r[2]/100).toFixed(2)}".`:"";
     R.sub=`Level ${n} of 4${up?`, up from ${h.old}`:down?`, down from ${h.old}`:""}. ${wtxt?wtxt+" ":""}${n===1?vary("eros1",["Low roads, creeks and poor drainage flood first under the heaviest rain.","Most spots handle it; the low spots are the concern.","Watch poor-drainage areas and low roads."]):n===2?vary("eros2",["Creeks, low roads and drains flood first; never drive through water on the road.","Flooding is possible where heavy rain repeats; never drive through water on the road.","Low-lying lots and creek-side areas go first."]):"Move people and equipment off low ground and never drive through flooded roads."}${amt}`; }
   async function run(){ prune(); try{ await daily(); }catch(e){ console.warn("daily",e); }
-    const O=window.BRIEF_OVERRIDE; const T=await triggers(); if(!T.length) { library(); if(!O&&!window._briefPinned) show(LIST.find(x=>x.local!==false)||LIST[0]||quiet()); return; }
+    const O=window.BRIEF_OVERRIDE; const T=(await triggers()).filter(t=>t.kind!=="cpc"); if(!T.length) { library(); if(!O&&!window._briefPinned) show(lead()||quiet()); return; }
     let seen={}; try{ seen=JSON.parse(localStorage.getItem(KEY+"-seen")||"{}"); }catch(e){}
     const first=!Object.keys(seen).length;
     const changed=T.filter(t=>seen[t.k]!==t.v && !(t.v==="none"&&seen[t.k]===undefined) && !(t.kind==="cpc"&&t.v==="normal"&&seen[t.k]===undefined)&&!((t.v==="0"||t.v==="{}"||t.v==="none")&&seen[t.k]===undefined)).filter(t=>!(t.kind==="cpc"&&seen[t.k]!==undefined&&String(seen[t.k]).split(":")[0]===String(t.v).split(":")[0]&&(Date.now()-(+seen["cpc@"]||0))<7*864e5)).map(t=>Object.assign({prev:seen[t.k]},t));
@@ -5598,8 +5599,10 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
         const today=new Date().toDateString(), key=x=>[x.cat,x.dayIdx==null?"":x.dayIdx,x.local===false?"R":"L",x.local===false?x.title.replace(/ (raised|lowered|ends|changes) /," "):""].join("|");
         const dup=LIST.find(x=>new Date(x.t).toDateString()===today&&key(x)===key(b)); if(dup) LIST.splice(LIST.indexOf(dup),1); LIST.unshift(b);
         save(); if(window.STORY) setTimeout(()=>STORY.run(),300); } } }
-    library(); if(!O&&!window._briefPinned) show(LIST.find(x=>x.local!==false)||LIST[0]||quiet());
+    library(); if(!O&&!window._briefPinned) show(lead()||quiet());
   }
+  function lead(){ const fresh=x=>Date.now()-x.t<12*3600e3;
+    return LIST.find(x=>!x.team&&x.cat!=="DAILY"&&x.local!==false&&fresh(x)&&/SEVERE|FLOOD|WINTER|TROPICAL|HEAT|WIND|FREEZE/.test(x.cat||"")) || LIST.find(x=>x.team&&!x.sample&&fresh(x)) || LIST.find(x=>x.cat==="DAILY") || LIST.find(x=>x.local!==false) || LIST[0]; }
   // ---------------- v173 DAILY BRIEFING ----------------
   async function daily(){ const now=new Date(); if(now.getHours()<5) return; const today=now.toDateString();
     const slot=now.getHours()>=15?"pm":"am";   // v188: a morning briefing and an afternoon update, never more (changes get their own briefings)
@@ -5654,7 +5657,7 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
   const _in=v=>v>=0.995?v.toFixed(1)+'"':v>=0.05?v.toFixed(2).replace(/^0/,"")+'"':v>0?"Trace":'0"';
   const _r10=n=>Math.round((n||0)/10)*10;
   const _emo=k=>({sun:"☀️",clearnight:"🌙",pc:"⛅",pcn:"☁️",rn:"🌧️",ts:"⛈️",tsn:"⛈️",sn:"🌨️",mix:"🌨️",ice:"🧊",frost:"❄️",wind:"💨"})[k]||"⛅";
-  const _word=x=>{ const k=x.ico, p=Math.max(x.pp||0,x.ppN||0); return k==="ts"||k==="tsn"?["STORMS","r"]:k==="sn"?["SNOW","n"]:k==="mix"||k==="ice"?["WINTRY MIX","n"]:k==="rn"?[p>=60?"RAIN":"SHOWERS","n"]:k==="frost"?["FROST","n"]:k==="wind"?["WINDY","n"]:k==="pc"||k==="pcn"?[p>=30?"SHOWERS?":"PARTLY SUNNY","g"]:["DRY","g"]; };
+  const _word=x=>{ const k=x.ico, p=Math.max(x.pp||0,x.ppN||0), nt=x.d==="TONIGHT"||k==="pcn"||k==="clearnight"; if(nt&&(k==="pc"||k==="pcn")) return [p>=30?"SHOWERS?":"PARTLY CLOUDY","g"]; if(nt&&(k==="sun"||k==="clearnight")) return ["CLEAR","g"]; return k==="ts"||k==="tsn"?["STORMS","r"]:k==="sn"?["SNOW","n"]:k==="mix"||k==="ice"?["WINTRY MIX","n"]:k==="rn"?[p>=60?"RAIN":"SHOWERS","n"]:k==="frost"?["FROST","n"]:k==="wind"?["WINDY","n"]:k==="pc"||k==="pcn"?[p>=30?"SHOWERS?":"PARTLY SUNNY","g"]:["DRY","g"]; };
   // light-page charts
   const _tag=(xx,yy,t,f,c)=>`<text x="${xx}" y="${yy}" font-family="var(--display),Arial,sans-serif" font-size="${f||13}" font-weight="800" fill="${c||"#1B2433"}" text-anchor="middle" stroke="#fff" stroke-width="3.5" paint-order="stroke">${t}</text>`;
   function hourChart(x,H,W){ const day=new Date(x.date).toDateString(), night=x.d==="TONIGHT";
@@ -5798,7 +5801,7 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
     h+=`<div class="bspad"></div>${foot}</div>`; h=`<div class="bsprint"><button type="button" onclick="SDR_PRINTBRIEF()">PRINT / SAVE AS PDF</button></div>`+h;
     if(tok!==_rdTok) return; let box=pane.querySelector(".bdx"); if(!box){ box=document.createElement("div"); box.className="bdx"; const anchor=pane.querySelector(".bsub")||pane.querySelector(".hl"); if(!anchor) throw new Error("no anchor"); anchor.insertAdjacentElement("afterend",box); }
     box.innerHTML=h; box.classList.toggle("wide",wide);
-    if(!b.daily){ let n=0; const cp=()=>{ const src=pane.querySelector(".bhero:not(.bhx)"), dst=box.querySelector(".bhx"); if(!dst) return; if(src&&src.innerHTML.trim()){ dst.innerHTML=src.innerHTML; } else if(++n<20) setTimeout(cp,400); else dst.remove(); }; cp(); } box.dataset.w=box.clientWidth;
+    if(!b.daily){ let n=0; const cp=()=>{ const src=pane.querySelector(".bhero:not(.bhx)"), dst=box.querySelector(".bhx"); if(!dst) return; if(src&&src.innerHTML.trim()){ dst.innerHTML=src.innerHTML; dst.querySelectorAll(".tvb,.tvc,.bcap").forEach(x=>x.remove()); } else if(++n<20) setTimeout(cp,400); else dst.remove(); }; cp(); } box.dataset.w=box.clientWidth;
     if(!window._bsRO&&window.ResizeObserver){ window._bsRO=new ResizeObserver(()=>{ const x=pane.querySelector(".bdx"); if(!x||!window._curBrief||!pane.classList.contains("bdaily-on")) return; const w=x.clientWidth; if(w>0&&Math.abs(w-(+x.dataset.w||0))>40){ x.dataset.w=w; richDaily(window._curBrief).catch(()=>{}); } }); window._bsRO.observe(pane); }
     if(aiOn&&!_aiCached(b)) _aiFetch(b).then(j=>{ if(j&&tok===_rdTok&&window._curBrief&&window._curBrief.daily) richDaily(window._curBrief).catch(()=>{}); });
     // the maps, zoomed to our region, in labeled panels
@@ -6497,7 +6500,7 @@ window.SDR_GL=(function(){
 
 <script>
 // v125: client chat layer
-(function(){ let wrap=null, fr=null; const CHATV="1793675698";
+(function(){ let wrap=null, fr=null; const CHATV="1793680535";
   function open(){ if(!wrap){ wrap=document.createElement("div"); wrap.id="chatwrap"; wrap.innerHTML='<iframe id="chatfr" title="Message the team" allow="camera"></iframe>'; document.body.appendChild(wrap); fr=wrap.querySelector("iframe"); fr.src="./chat.html?v="+CHATV; fr.addEventListener("load",()=>{ try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }); }
     wrap.hidden=false; document.body.classList.add("chat-on"); if(!(history.state&&history.state.chat)) history.pushState({chat:1},""); try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }
   function close(){ if(wrap){ wrap.hidden=true; } document.body.classList.remove("chat-on"); }

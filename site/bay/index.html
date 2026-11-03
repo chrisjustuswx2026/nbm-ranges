@@ -6501,7 +6501,7 @@ window.SDR_GL=(function(){
 
 <script>
 // v125: client chat layer
-(function(){ let wrap=null, fr=null; const CHATV="1793713206";
+(function(){ let wrap=null, fr=null; const CHATV="1793721930";
   function open(){ if(!wrap){ wrap=document.createElement("div"); wrap.id="chatwrap"; wrap.innerHTML='<iframe id="chatfr" title="Message the team" allow="camera"></iframe>'; document.body.appendChild(wrap); fr=wrap.querySelector("iframe"); fr.src="./chat.html?v="+CHATV; fr.addEventListener("load",()=>{ try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }); }
     wrap.hidden=false; document.body.classList.add("chat-on"); if(!(history.state&&history.state.chat)) history.pushState({chat:1},""); try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }
   function close(){ if(wrap){ wrap.hidden=true; } document.body.classList.remove("chat-on"); }
@@ -7190,6 +7190,10 @@ window.SDR_NOWFIRST=(r,H)=>{ if(!r||/\bnow\b|arriving|moves in|by \d|winding/i.t
 .hft small{display:block;font-family:var(--display);font-weight:800;letter-spacing:.1em;font-size:10px;color:var(--muted)}
 .hft b{display:block;font-family:var(--display);font-weight:800;font-size:15px;margin-top:1px}
 .hfn{font-size:12px;color:var(--dim);line-height:1.4}
+.hfk{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;margin:0 0 10px;gap:2px}
+.hfk button{border:0;background:transparent;color:var(--muted);font:inherit;font-weight:700;font-size:13px;padding:6px 14px;border-radius:999px;cursor:pointer}
+.hfk button[aria-pressed="true"]{background:#2F7CF6;color:#fff}
+.hfnote{font-size:12px;color:var(--dim);margin:6px 0 10px}
 .hfgrid{display:grid;border:1px solid var(--line);border-radius:10px;overflow:hidden}
 .hfh,.hfd{display:grid;grid-template-columns:6.4em 4.2em 4.2em 1fr;gap:8px;align-items:center;padding:8px 12px;text-align:left;border:0;background:transparent;color:inherit;font:inherit;width:100%}
 .hfh{background:rgba(255,255,255,.04)}.hfh b,.hfh span,.hfh em{font-family:var(--display);font-weight:800;letter-spacing:.1em;font-size:10px;color:var(--muted);font-style:normal}
@@ -7339,20 +7343,37 @@ window.SDR_NOWFIRST=(r,H)=>{ if(!r||/\bnow\b|arriving|moves in|by \d|winding/i.t
       const m=o.majors.find(t=>t+3600e3>fl&&t-3600e3<ll&&t+3600e3>nw&&dry(t-3600e3,t+3600e3)); if(m) return win(m,1);
       if(fl>nw&&dry(fl,fl+2*3600e3)) return `First light ${tm(fl)}`; if(ll>nw&&dry(ll-2*3600e3,ll)) return `Last light ${tm(ll)}`;
       if(ll<=nw) return "Done for today"; return o.rain>=50?"Wet: little dry time":"Midday"; };
-    // hour-by-hour timeline, 5 AM to 9 PM
-    const T0=h=>{ const d=new Date(out[HFSEL].dt); d.setHours(h,0,0,0); return +d; }, a=T0(5), z=T0(21), pc=t=>Math.max(0,Math.min(100,(t-a)/(z-a)*100));
-    const o=out[HFSEL], seg=(t0,t1,c,l)=>{ const L=pc(t0), R=pc(t1); return R>L?`<i class="${c}" style="left:${L}%;width:${R-L}%" title="${l}"></i>`:""; };
-    const tl=`<div class="hftl"><div class="hftb"><i class="nt" style="left:0;width:${pc(o.S.rise-30*60000)}%"></i><i class="nt" style="left:${pc(o.S.set+30*60000)}%;width:${100-pc(o.S.set+30*60000)}%"></i>
-      ${seg(o.S.rise-30*60000,o.S.rise+90*60000,"dawn","First light")}${seg(o.S.set-90*60000,o.S.set+30*60000,"dawn","Last light")}${o.minors.map(t=>seg(t-.5*3600e3,t+.5*3600e3,"mn","Minor feeding")).join("")}${o.majors.map(t=>seg(t-3600e3,t+3600e3,"mj","Major feeding")).join("")}</div>
-      <div class="hfax">${[6,9,12,15,18].map(h=>`<span style="left:${pc(T0(h))}%">${h===12?"NOON":(h%12)+(h<12?"A":"P")}</span>`).join("")}</div>
-      <div class="hflg"><span><i class="mj"></i>Major feeding</span><span><i class="mn"></i>Minor feeding</span><span><i class="dawn"></i>First & last light</span></div></div>`;
-    const rows=out.map((d,i)=>`<button type="button" class="hfd${i===HFSEL?" on":""}" data-i="${i}"><b>${lab(d,i)}</b><span class="${d.deer[1]}">${d.deer[0]}</span><span class="${d.fish[1]}">${d.fish[0]}</span><em>${best(d)}</em></button>`).join("");
-    sec.querySelector(".hfb").innerHTML=`<div class="hfgrid"><div class="hfh"><b>DAY</b><span>DEER</span><span>FISH</span><em>BEST WINDOW</em></div>${rows}</div>
-      <div class="hfday"><h5>${lab(o,HFSEL)} · HOUR BY HOUR</h5>${tl}
-      <div class="hfr"><div class="hc"><small>DEER MOVEMENT</small><b class="${o.deer[1]}">${o.deer[0]}</b><ul>${o.dr.slice(0,3).map(x=>`<li>${x}</li>`).join("")||"<li>Typical day</li>"}</ul></div>
+    // v202: the day opens like Outdoor Work: hour by hour, every hour graded with the reason, best sits first
+    const o=out[HFSEL], fl=o.S.rise-30*60000, ll=o.S.set+30*60000, d0=new Date(o.dt); d0.setHours(0,0,0,0);
+    const hrsD=o.H.filter(h=>{ const t=+new Date(h.t); return new Date(h.t).toDateString()===o.dt.toDateString()&&t>=fl-3600e3&&t<=ll; });
+    const hh=t=>{ const d=new Date(t), a=d.getHours(); return a===0?"12 AM":a===12?"Noon":(a%12)+(a<12?" AM":" PM"); };
+    const near=(t,list,w)=>list.some(m=>Math.abs(m-t)<=w*3600e3);
+    const gradeH=(h,kind)=>{ const t=+new Date(h.t)+1800e3, p=h.pop||0, th=h.thunder||0, g=h.gust||0, w=(String(h.wind||"").match(/(\d+)(?!.*\d)/)||[])[1]|0, why=[], bad=[];
+      if(th>=30) bad.push(kind==="fish"?"Lightning: off the water":"Lightning risk"); if(p>=60) bad.push(`Rain ${Math.round(p/10)*10}%`); if(g>=30) bad.push(`Gusts ${Math.ceil(g/5)*5} mph`);
+      if(bad.length) return ["r",bad.join(" · ")];
+      let sc=0; const dawn=t>=fl&&t<=fl+2*3600e3, dusk=t>=ll-2*3600e3&&t<=ll+1800e3;
+      if(kind==="deer"){ if(dawn){ sc+=2; why.push("First light"); } if(dusk){ sc+=2; why.push("Last light"); } }
+      else { if(dawn||dusk){ sc+=1; why.push(dawn?"Early bite":"Evening bite"); } }
+      if(near(t,o.majors,1)){ sc+=2; why.push("Major feeding"); } else if(near(t,o.minors,.5)){ sc+=1; why.push("Minor feeding"); }
+      const hr=new Date(h.t).getHours(); if(kind==="deer"&&hr>=11&&hr<=14&&!why.length) { sc-=1; why.push("Midday lull"); }
+      if(w<=8&&g<18) { sc+=1; if(kind==="fish") why.push("Calm water"); } else if(w>=13||g>=22){ sc-=1; why.push(`Breezy ${w} mph`); }
+      if(p>=30){ sc-=1; why.push(`Rain ${Math.round(p/10)*10}%`); }
+      return sc>=3?["g",why.join(" · ")||"Good"]:sc>=1?["y",why.join(" · ")||"Fair"]:["y",why.join(" · ")||"Slow"]; };
+    const KIND=window._HFK||"deer";
+    const rows=hrsD.map(h=>{ const [c,why]=gradeH(h,KIND); return {t:hh(h.t),c,why}; });
+    const rowsHtml=R=>{ const G=[]; for(let k=0;k<R.length;k+=5) G.push(R.slice(k,k+5)); const rng=g=>`${g[0].t}–${g[g.length-1].t}`;
+      return `<div class="fgrp">${G.map(g=>`<div class="fbox"><small>${rng(g)}</small>${g.map(r=>`<span class="fr ${r.c}"><i></i><b>${r.t}</b><em>${r.why}</em></span>`).join("")}</div>`).join("")}</div>`; };
+    const bestG=(()=>{ const gs=rows.filter(r=>r.c==="g"); return gs.length?`${gs[0].t}${gs.length>1?"–"+gs[gs.length-1].t:""}`:""; })();
+    const dayDetail=hrsD.length>=4?`<div class="hfk"><button type="button" data-k="deer" aria-pressed="${KIND==="deer"}">Deer</button><button type="button" data-k="fish" aria-pressed="${KIND==="fish"}">Fishing</button></div>${rowsHtml(rows)}<p class="hfnote">Green: best hours. Yellow: workable. Red: rain, lightning or strong wind.</p>`
+      :`<p class="hfnote">Hour-by-hour detail fills in within the next week. For now: ${(KIND==="deer"?o.deer:o.fish)[0]}, best ${bestG||"around first and last light"}.</p>`;
+    const rowsD=out.map((d,i)=>`<button type="button" class="hfd${i===HFSEL?" on":""}" data-i="${i}"><b>${lab(d,i)}</b><span class="${d.deer[1]}">${d.deer[0]}</span><span class="${d.fish[1]}">${d.fish[0]}</span><em>${best(d)}</em></button>`).join("");
+    sec.querySelector(".hfb").innerHTML=`<div class="hfgrid"><div class="hfh"><b>DAY</b><span>DEER</span><span>FISH</span><em>BEST WINDOW</em></div>${rowsD}</div>
+      <div class="hfday"><h5>${lab(o,HFSEL)} · HOUR BY HOUR</h5>${dayDetail}
+      <div class="hft"><div><small>FIRST LIGHT</small><b>${tm(fl)}</b></div><div><small>LAST LIGHT</small><b>${tm(ll)}</b></div>${o.majors.slice(0,2).map(t=>`<div><small>MAJOR FEEDING</small><b>${win(t,1)}</b></div>`).join("")}</div>
+      <div class="hfr"><div class="hc"><small>DEER</small><b class="${o.deer[1]}">${o.deer[0]}</b><ul>${o.dr.slice(0,3).map(x=>`<li>${x}</li>`).join("")||"<li>Typical day</li>"}</ul></div>
       <div class="hc"><small>FISHING</small><b class="${o.fish[1]}">${o.fish[0]}</b><ul>${o.fr.slice(0,3).map(x=>`<li>${x}</li>`).join("")||"<li>Typical day</li>"}</ul></div></div>
-      <div class="hft"><div><small>FIRST LIGHT</small><b>${tm(o.S.rise-30*60000)}</b></div><div><small>LAST LIGHT</small><b>${tm(o.S.set+30*60000)}</b></div>${o.majors.slice(0,2).map(t=>`<div><small>MAJOR FEEDING</small><b>${win(t,1)}</b></div>`).join("")}${o.minors.slice(0,2).map(t=>`<div><small>MINOR FEEDING</small><b>${win(t,.5)}</b></div>`).join("")}</div>
-      <div class="hfn">${moonSvg(o.M)}${o.M.name}, ${Math.round(o.M.f*100)}% lit · wind up to ${o.wmax!=null?o.wmax+" mph":"—"}${o.gmax?`, gusts ${g5r(o.gmax)}`:""}. Feeding times follow solunar timing (estimated). Always check your state's legal shooting hours.</div></div>`;
+      <div class="hfn">${moonSvg(o.M)}${o.M.name}, ${Math.round(o.M.f*100)}% lit. Feeding times follow solunar timing (estimated). Always check your state's legal shooting hours.</div></div>`;
+    sec.querySelectorAll(".hfk button").forEach(b=>b.onclick=e=>{ e.stopPropagation(); window._HFK=b.dataset.k; hf(); });
     sec.querySelectorAll(".hfd").forEach(btn=>btn.onclick=()=>{ HFSEL=+btn.dataset.i; hf(); });
     const t0=out[0], bar=sec.querySelector(".cxbar span"); if(bar) bar.textContent=`Today: deer ${t0.deer[0].toLowerCase()} · fishing ${t0.fish[0].toLowerCase()} · best ${best(t0)}`;
     window._HF_TXT=`=== HUNT & FISH, NEXT 10 DAYS (feeding times are estimates from the moon's position) ===\n`+out.map((d,i)=>`${lab(d,i)}: deer ${d.deer[0]} (${d.dr.join("; ")||"typical"}), fishing ${d.fish[0]} (${d.fr.join("; ")||"typical"}). Major feeding ${d.majors.map(t=>win(t,1)).join(", ")||"none"}; minor ${d.minors.map(t=>win(t,.5)).join(", ")||"none"}; first light ${tm(d.S.rise-30*60000)}, last light ${tm(d.S.set+30*60000)}.`).join("\n")+`\nHunters must check their state's legal shooting hours.`; }
@@ -7483,6 +7504,69 @@ window.SDR_NOWFIRST=(r,H)=>{ if(!r||/\bnow\b|arriving|moves in|by \d|winding/i.t
 /* hour by hour: quieter side labels, wind stays */
 .hr-row .hlab{font-size:10px!important;letter-spacing:.08em!important;opacity:.75}
 .hr-row.v.wind .hv b{font-size:20px!important}.hr-row.v.wind .hv small{font-size:10.5px!important}
+
+/* round 3: conditions beside the status word; What's Next is a calm strip, not a box in a box */
+@media (max-width:899px){
+ #call.merged{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;column-gap:12px!important;row-gap:4px!important;align-items:center!important}
+ #call.merged>*{grid-column:1/-1}
+ #call.merged>#st-k{grid-column:1!important;grid-row:1!important}
+ #call.merged>.big{grid-column:1!important;grid-row:2!important}
+ #call.merged>#now{grid-column:2!important;grid-row:1/span 2!important;display:grid!important;grid-template-columns:auto!important;gap:0!important;justify-items:end!important;align-self:center!important;margin:0!important;padding:0!important;border:0!important}
+ #call.merged #now .temp{grid-column:1/-1!important;gap:6px!important;align-items:center!important}
+ #call.merged #now .temp svg{width:34px!important;height:34px!important}
+ #call.merged #now .temp b{font-size:46px!important;line-height:1!important}
+ #call.merged #now .temp sup{font-size:18px!important}
+ #call.merged #now dl.v{display:flex!important;flex-direction:row!important;align-items:baseline!important;gap:4px!important;margin:2px 0 0!important}
+ #call.merged #now dt{font-size:11px!important;opacity:.75}
+ #call.merged #now dd,#call.merged #now dd *{font-size:14px!important}
+ #call.merged #now dd small{font-size:11px!important}
+ #call.merged #st-h{font-size:26px!important;white-space:nowrap}
+ #call.merged>.big{min-width:0;gap:8px!important}
+ #call.merged>.big .dot{width:28px!important;height:28px!important;flex:none}
+ #call.merged>.big .dot svg{width:16px!important;height:16px!important}
+ #call.merged #now dl.v{justify-content:flex-end}
+ #call.merged #next,#call.merged #next *{animation:none!important}
+ #call.merged #next{margin:12px -18px 0!important;padding:11px 18px 13px!important;border:0!important;border-top:1px solid rgba(255,255,255,.1)!important;border-left:0!important;border-radius:0!important;background:rgba(0,0,0,.22)!important;box-shadow:none!important;grid-template-columns:26px 1fr!important;width:calc(100% + 36px)!important;max-width:none!important;box-sizing:border-box!important}
+ #call.merged #next #nx-i svg{width:24px!important;height:24px!important}
+ #call.merged #next .k,#call.merged #next .k b{color:rgba(255,255,255,.65)!important}
+ #call.merged #next.headsup .k b{color:#F5C518!important}#call.merged #next.action .k b{color:#FF6B6F!important}
+ #call.merged #nx-h{color:#fff!important;font-size:17px!important}
+}
+
+/* round 4: What's Next reads like Right Now: label + headline left, icon right, 2-3 bullets below */
+@media (max-width:899px){
+ #call.merged #next{grid-template-columns:minmax(0,1fr) auto!important;row-gap:6px!important;column-gap:12px!important;align-items:center!important}
+ #call.merged #next>div{grid-column:1!important;grid-row:1!important;min-width:0}
+ #call.merged #next>#nx-i{grid-column:2!important;grid-row:1!important;justify-self:end}
+ #call.merged #next #nx-i svg{width:40px!important;height:40px!important}
+ #call.merged #next.hasb #nx-p{display:none!important}
+ #call.merged #nxb{grid-column:1/-1!important;grid-row:2!important}
+}
+#nxb{list-style:none;margin:2px 0 0;padding:0;display:grid;gap:5px}
+#nxb li{position:relative;padding-left:16px;font-size:14px;line-height:1.3;color:rgba(255,255,255,.88)}
+#nxb li::before{content:"";position:absolute;left:2px;top:.5em;width:7px;height:7px;border-radius:50%;background:#F5C518}
+#nxb li.r::before{background:#FF6B6F}#nxb li.b::before{background:#6FB7FF}#nxb li.g::before{background:#3DDC84}
+#nxb li b{font-weight:700;color:#fff}
+
+/* v204: What's Next is its own card in its own color, laid out like Right Now */
+@media (max-width:899px){
+ #next.nxcard{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;column-gap:12px!important;row-gap:8px!important;align-items:center!important;margin:0!important;padding:16px 18px!important;border-radius:var(--r)!important;border:1px solid rgba(255,255,255,.08)!important;border-left:6px solid #22C55E!important;box-shadow:none!important;animation:none!important;height:auto!important}
+ #next.nxcard *{animation:none!important}
+ #next.nxcard{background:linear-gradient(90deg,rgba(255,255,255,.035),rgba(255,255,255,0)) ,#142650!important;border-left-width:6px!important}
+ #next.nxcard.clear{border-left-color:#22C55E!important}
+ #next.nxcard.headsup{border-left-color:#F5C518!important;background:linear-gradient(90deg,rgba(245,197,24,.10),rgba(245,197,24,0) 60%),#142650!important}
+ #next.nxcard.action{border-left-color:#FF4D55!important;background:linear-gradient(90deg,rgba(255,77,85,.12),rgba(255,77,85,0) 60%),#142650!important}
+ #next.nxcard>div{grid-column:1!important;grid-row:1!important;min-width:0}
+ #next.nxcard>#nx-i{grid-column:2!important;grid-row:1!important;justify-self:end}
+ #next.nxcard #nx-i svg{width:44px!important;height:44px!important}
+ #next.nxcard .k,#next.nxcard .k b{font-size:12px!important;letter-spacing:.16em!important;color:rgba(255,255,255,.72)!important}
+ #next.nxcard #nx-h{font-size:24px!important;line-height:1.1!important}
+ #next.nxcard.clear #nx-h{color:#3DDC84!important}#next.nxcard.headsup #nx-h{color:#F5C518!important}#next.nxcard.action #nx-h{color:#FF6B6F!important}
+ #next.nxcard #nx-p{font-size:14px!important;color:rgba(255,255,255,.75)!important}
+ #next.nxcard.hasb #nx-p{display:none!important}
+ #next.nxcard #nxb{grid-column:1/-1!important;grid-row:2!important}
+ #call.merged{padding-bottom:16px!important}
+}
 </style>
 <script>
 (function(){
@@ -7521,9 +7605,29 @@ window.SDR_NOWFIRST=(r,H)=>{ if(!r||/\bnow\b|arriving|moves in|by \d|winding/i.t
     seq.forEach(e=>o.appendChild(e)); [".p-chat",".notes"].map(q).filter(Boolean).forEach(e=>o.appendChild(e)); }
   // one hero card on phones: What's Next folds into the status card
   function merge(){ const call=document.getElementById("call"), nx=document.getElementById("next"); if(!call||!nx) return;
-    if(innerWidth<900){ if(nx.parentElement!==call){ nx._home=nx._home||nx.parentElement; call.appendChild(nx); call.classList.add("merged"); if(nx._home) nx._home.classList.add("emptied"); } }
-    else if(nx._home&&nx.parentElement===call){ nx._home.appendChild(nx); call.classList.remove("merged"); nx._home.classList.remove("emptied"); } }
-  function all(){ try{ merge(); icons(); latest(); order(); }catch(e){ console.warn("design",e); } }
+    // v204: two distinct cards, each in its own color; the status card keeps conditions beside the word
+    if(nx._home&&nx.parentElement===call){ nx._home.appendChild(nx); nx._home.classList.remove("emptied"); }
+    call.classList.toggle("merged",innerWidth<900); nx.classList.toggle("nxcard",innerWidth<900); }
+  // What's Next bullets: upcoming alerts first, then the notable days (storms, heavy rain, snow/ice, freeze, wind)
+  function bullets(){ const nx=document.getElementById("next"); if(!nx) return; const out=[], now=Date.now(), H=(window.STRIPS&&STRIPS.hours&&STRIPS.hours())||[], D=(window.STRIPS&&STRIPS.days&&STRIPS.days())||[];
+    const dn=d=>{ const x=new Date(d), t=new Date(); t.setHours(0,0,0,0); const k=Math.round((new Date(x).setHours(0,0,0,0)-t)/864e5); return k===0?"today":k===1?"tomorrow":x.toLocaleDateString("en-US",{weekday:"long"}); };
+    const hm=t=>{ const d=new Date(t), h=d.getHours(); return h===0?"midnight":h===12?"noon":(h%12)+(h<12?" AM":" PM"); };
+    try{ (window.ALERTS||[]).map(a=>a.properties||a).filter(a=>a.onset&&+new Date(a.onset)>now&&+new Date(a.onset)<now+72*3600e3).sort((x,y)=>+new Date(x.onset)-+new Date(y.onset)).slice(0,2)
+      .forEach(a=>out.push([/Warning/.test(a.event)?"r":"y",`<b>${a.event}</b> starts ${dn(a.onset)} ${hm(a.onset)}`])); }catch(e){}
+    const first=(d,f)=>{ const k=new Date(d).toDateString(); const h=H.find(q=>new Date(q.t).toDateString()===k&&f(q)); return h?h.t:null; };
+    D.slice(0,6).forEach((x,i)=>{ if(!x||!x.date||out.length>=3) return; if(i===0&&x.d!=="TONIGHT"&&new Date().getHours()>=20) return;
+      const day=x.d==="TONIGHT"?"tonight":dn(x.date), pp=Math.max(x.pp||0,x.ppN||0), r=x.rr?x.rr[1]/100:(x.qpf||0);
+      if((x.snowP||0)>=40||(x.sr&&x.sr[1]>=50)){ out.push(["b",`<b>Snow ${day}</b>${x.sr&&x.sr[1]>=10?`, about ${(x.sr[1]/100).toFixed(1)}"`:""}`]); return; }
+      if((x.iceP||0)>=30){ out.push(["r",`<b>Ice possible ${day}</b>`]); return; }
+      if((x.thunder||0)>=30){ const t=first(x.date,q=>(q.thunder||0)>=30||(q.pop||0)>=50); out.push([(x.thunder||0)>=60?"r":"y",`<b>Storms ${day}</b>${t?(new Date(t).getHours()<5?" early morning":` after ${hm(t)}`):""} · ${Math.round(pp/10)*10}%${r>=0.25?` · about ${r.toFixed(2)}"`:""}`]); return; }
+      if(r>=0.5){ out.push(["y",`<b>Soaking rain ${day}</b>, about ${r.toFixed(2)}"`]); return; }
+      if(x.lo!=null&&x.lo<=32&&i<=3){ out.push(["b",`<b>Freeze ${day==="today"?"tonight":day+" night"}</b>, low ${x.lo}°`]); return; }
+      if((x.gust||0)>=35){ out.push(["y",`<b>Gusts to ${Math.ceil(x.gust/5)*5} mph</b> ${day}`]); return; }
+      if(pp>=50&&i<=2){ out.push(["y",`<b>Rain ${day}</b> · ${Math.round(pp/10)*10}%`]); } });
+    let ul=nx.querySelector("#nxb"); const html=out.slice(0,3).map(([c,t])=>`<li class="${c}">${t}</li>`).join("");
+    if(!html){ if(ul) ul.remove(); nx.classList.remove("hasb"); return; }
+    if(!ul){ ul=document.createElement("ul"); ul.id="nxb"; nx.appendChild(ul); } if(ul.innerHTML!==html) ul.innerHTML=html; nx.classList.add("hasb"); }
+  function all(){ try{ merge(); bullets(); icons(); latest(); order(); }catch(e){ console.warn("design",e); } }
   [600,1500,3000,5000,7000,10000,15000].forEach(t=>setTimeout(all,t)); setInterval(all,30000);
   window.addEventListener("resize",()=>{ merge(); order(); });
 })();

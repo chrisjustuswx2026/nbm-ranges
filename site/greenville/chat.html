@@ -558,7 +558,7 @@ var SDR_ENGINE=(function(){
   var BODY_RADAR=["Pulling up the radar for you now.","Let me take a look at what's headed your way."];
   var BYE=["Happy to help. I hope it goes well.","Any time. Reach out if anything changes.","Glad to help. Have a good day.","Glad to help — we'll be watching it.","Of course. We'll keep watching it for you.","Any time. We're watching it closely."];
   function pick(pool,last){var p=pool.filter(function(b){return b!==last;});return p[Math.floor(Math.random()*p.length)];}
-  function firstName(s){var r=s.match(/\b(?:this is|it's|it is|i'm|i am)\s+([A-Z][a-z]+)\b/i)||s.match(/\b([A-Z][a-z]+)\s+here\b/);return r?r[1].charAt(0).toUpperCase()+r[1].slice(1):"";}
+  function firstName(s){var r=s.match(/\b(?:[Tt]his is|[Ii]t's|[Ii]t is|[Ii]'m|[Ii] am)\s+([A-Z][a-z]{1,15})\b/)||s.match(/^([A-Z][a-z]{1,15})\s+here\b/);var n=r?r[1]:"";return /^(And|The|At|In|On|Going|Taking|Trying|Wondering|Looking|Not|So|Just|Headed|Heading|Out|Here|Still|Planning|With|From|Coach|Glad|Good|Fine|Okay|Ok|Sure|Sorry|Back|Asking)$/.test(n)?"":n;}
   function isThanks(t){return /\b(thank|thanks|thx|ty|appreciate|got it|perfect|awesome|great)\b/i.test(t)&&t.length<60;}
 
   function ts(label){var d=document.createElement("div");d.className="ts";d.innerHTML=label;M.appendChild(d);lastSide="";}
@@ -595,7 +595,7 @@ var SDR_ENGINE=(function(){
 
   // ===================== v145: AI replies through the SDR chat server (address in channel.json → aiChatUrl) =====================
   var AIHIST=[];
-  function aiUrl(){ try{ var C=window.parent&&window.parent.CHANNEL; return C&&C.aiChatUrl?String(C.aiChatUrl):""; }catch(e){ return ""; } }
+  function aiUrl(){ var D="https://sdr-chat.raspy-bonus-f476.workers.dev"; try{ var C=window.parent&&window.parent.CHANNEL; if(C&&C.aiChatUrl==="off") return ""; return C&&C.aiChatUrl?String(C.aiChatUrl):D; }catch(e){ return D; } }
   function aiLoc(){ try{ var v=window.parent.DASH.venue(); var n=String(v.name||""), m=n.match(/^(.*?),\s*([A-Z]{2})$/); var ST={SC:"South Carolina",NC:"North Carolina",GA:"Georgia",FL:"Florida",AL:"Alabama",TN:"Tennessee",VA:"Virginia",MS:"Mississippi",LA:"Louisiana",TX:"Texas"};
     var city=v.city||(m?m[1].replace(/ County$/,""):""), st=v.state||(m?m[2]:""); if(!city&&/clemson|memorial stadium/i.test(n)){ city="Clemson"; st="SC"; } return {city:city,region:ST[st]||st,timezone:"America/New_York"}; }catch(e){ return {}; } }
   function aiData(){ var P=window.parent, out=[], g=function(id){ try{ var e=P.document.getElementById(id); return e?e.textContent.replace(/\s+/g," ").trim():""; }catch(x){ return ""; } };

@@ -3840,10 +3840,10 @@ window.STRIPS = (function(){
     const lite=(r,unit)=>{ const hi=r[2]/unit; return hi<0.08?5:hi<0.2?4:hi<0.4?3:hi<0.7?2:1; };
     const a=x.rr&&x.rr[1]<10&&x.rr[2]>=5 ? lite(x.rr,100) : rs(x.rr,5,10), b=x.sr&&x.sr[1]<50&&x.sr[2]>=10 ? lite(x.sr,500) : rs(x.sr,10,50); if(a) sc.push(a); if(b) sc.push(b);
     if(x.sd!=null){ const s=x.sd/10; sc.push(s<=2?5:s<=3?4:s<=4.5?3:s<=6?2:1); }
-    return sc.length?Math.min(...sc):null; };
+    return sc.length?Math.max(1,Math.min(...sc)-(x.agreePen||0)):null; };
   // v56: what is driving low confidence, in plain words (also fed to the chat via window.SDR_CONF)
   const confWhy = x => { const parts=[]; const rs=r=>r&&r[2]>=5?(r[2]-r[0])/Math.max(r[1],10):0;
-    if(x.rr&&rs(x.rr)>1.5) parts.push("rain amounts"); if(x.sr&&x.sr[2]>=10&&(x.sr[2]-x.sr[0])/Math.max(x.sr[1],50)>1.5) parts.push("snow amounts"); if(x.sd!=null&&x.sd/10>4.5) parts.push("temperatures");
+    if((x.rr&&rs(x.rr)>1.5)||x.agreePen) parts.push("rain amounts"); if(x.sr&&x.sr[2]>=10&&(x.sr[2]-x.sr[0])/Math.max(x.sr[1],50)>1.5) parts.push("snow amounts"); if(x.sd!=null&&x.sd/10>4.5) parts.push("temperatures");
     return parts.join(" and ")||"the details"; };
   const confWord = c => c==null?"":c>=5?"Strong":c>=4?"Good":c>=3?"Fair":c>=2?"Weak":"Poor";
   const gdu = x => (x.hi==null||x.lo==null)?null:Math.max(0,Math.round((Math.min(x.hi,86)+Math.max(x.lo,50))/2-50));
@@ -4832,7 +4832,11 @@ window.SITE_LL = window.__LOC?{lat:__LOC.la,lon:__LOC.lo}:(window.SITE_LL || { l
   const S = (f,i)=>{ const a=T&&T[f]; if(!a) return null; const v=a[r]&&a[r][c]&&a[r][c][i]; return (v==null||v===-999)?null:v; };
   const R = (f,i)=>{ const a=T&&T[f]; if(!a) return f==="rain"?null:[0,0,0]; const v=a[r]&&a[r][c]&&a[r][c][i]; return (!v||v[0]<0)?null:v; };
   const DIRS=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
-  function attach(x,i){ x.rr=R("rain",i); x.sr=R("snow",i); x.ir=R("ice",i); x.snowP=S("snowP",i); x.iceP=S("iceP",i); x.soil=S("soil",i); x.sd=S("tmaxsd",i);
+  function attach(x,i){ x.rr=R("rain",i);
+    if(x.rr&&x.qpf!=null&&x.date&&(+new Date(x.date)-Date.now())<60*3600e3){ const L=Math.round(x.qpf*100), m=x.rr[1];
+      if(L<=0) x.rr=[0,0,Math.min(x.rr[2],m>0?Math.round(x.rr[2]*0.25):0)];
+      else if(m>0){ const k=L/m; x.rr=[Math.min(L,Math.round(x.rr[0]*k)),L,Math.max(L,Math.round(x.rr[2]*k))]; } else x.rr=[0,L,Math.max(L,x.rr[2])];
+      x.rrSrc="official"; x.agreePen=(Math.max(L,m)>=10&&Math.max(L,m)>2*Math.max(Math.min(L,m),1))?1:0; } x.sr=R("snow",i); x.ir=R("ice",i); x.snowP=S("snowP",i); x.iceP=S("iceP",i); x.soil=S("soil",i); x.sd=S("tmaxsd",i);
     if(x.ppN==null) x.ppN=S("popN",i); if(x.dew==null) x.dew=S("dpt",i); return x; }
   function blendDay(d,i){ const pp=S("popD",i)||0, sn=S("snowP",i)||0, hi=S("tmax",i), lo=S("tmin",i), wd=S("wdir",i), w=S("wind",i);
     const word = sn>=50?"Snow likely":sn>=30?"Chance of snow":pp>=60?"Rain likely":pp>=30?"Chance of rain":pp>=20?"Slight chance of rain":"Mostly dry";
@@ -5732,46 +5736,44 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
       return {headline:head,subhead:sub,sections:sec}; }
     const k=kind(kx), part=hc&&hc.start?(()=>{ const h=+String(hc.start).replace(/\D.*$/,"")||0, pm=/PM/.test(hc.start); const H24=pm&&h!==12?h+12:h; return H24<12?"Morning":H24<17?"Afternoon":"Evening"; })():"";
     const ok=t=>t&&!/checking|loading|…|\.\.\./i.test(t), nh0=(((document.getElementById("nx-h")||{}).textContent||"").trim()), head=ok(b.title)?b.title:ok(nh0)?nh0:`${cap(k)} ${kName}${part?" "+part:""}`;
-    const sub=`${odds(pk)} ${k} ${kName.toLowerCase()==="today"||kName.toLowerCase()==="tonight"?kName.toLowerCase():kName}${hc&&hc.start?` after ${hc.start}`:""}.${(kx.thunder||0)>=30?" Lightning is the main concern.":""}${ki>0?" Dry until then.":""}`;
+    const sub=`${odds(pk)} ${k} ${kName.toLowerCase()==="today"||kName.toLowerCase()==="tonight"?kName.toLowerCase():kName}${hc&&hc.win?`, mainly ${hc.win}`:hc&&hc.start?` after ${hc.start}`:""}.${(kx.thunder||0)>=30?" Lightning is the main concern.":""}${ki>0?" Dry until then.":""}`;
     // the setup + perspective
-    const su=[`${cap(k)} ${kName}${hc&&hc.win?`, most likely ${hc.win}`:""}.`];
-    if(wet.length){ const top=wet.reduce((a,o)=>o.v>a.v?o:a,wet[0]); su.push(`Wettest day: ${dn(top.x)} (${_in(top.v)})${wet.filter(o=>o!==top).slice(0,2).map(o=>`; ${dn(o.x)} ${o.v>=0.05?_in(o.v):"a trace"}`).join("")}.`); }
+    const su=hc?[]:[`${cap(k)} ${kName}.`];
+    if(wet.length>=2){ const top=wet.reduce((a,o)=>o.v>a.v?o:a,wet[0]); su.push(`Wettest day: ${dn(top.x)} (${_in(top.v)})${wet.filter(o=>o!==top).slice(0,2).map(o=>`; ${dn(o.x)} ${o.v>=0.05?_in(o.v):"a trace"}`).join("")}.`); }
     const before=Math.max(...D.slice(0,ki+1).map(x=>x.hi).filter(v=>v!=null)), after=D.slice(ki+1,ki+5).filter(x=>x.hi!=null); if(after.length){ const lo=after.reduce((a,x)=>x.hi<a.hi?x:a,after[0]); if(before-lo.hi>=8) su.push(`Cooler behind it: highs drop from ${before}° to ${lo.hi}° by ${dn(lo)}.`); }
-    _where(MD,ki,s).forEach(t=>su.push(t)); sec.push({title:"THE SETUP",bullets:su.slice(0,4)});
+    _where(MD,ki,s).forEach(t=>su.push(t)); sec.push({title:"THE SETUP",bullets:su.slice(0,3)});
     // timing
     const ti=[]; if(ki>0) ti.push(`Dry until ${kName}${hc&&hc.start?` around ${hc.start}`:""}.`); else if(hc&&hc.start) ti.push(`Arrives around ${hc.start}.`);
     if(hc&&hc.win) ti.push(`Most likely: ${hc.win}.`); if(hc&&hc.twin) ti.push(`Thunder: ${hc.twin}.`);
     const kd=new Date(kx.date); kd.setHours(12,0,0,0); const lastWet=H.filter(h=>{ const t=new Date(h.t); return t>=kd&&t<+kd+30*3600e3&&(h.pop||0)>=30; }).pop(); if(lastWet) ti.push(`Drying out by ${_h12(+new Date(lastWet.t)+3600e3)} ${new Date(+new Date(lastWet.t)+3600e3).toLocaleDateString("en-US",{weekday:"long"})}.`);
-    sec.push({title:"TIMING",bullets:ti.slice(0,3)});
+    /* timing lives beside the hour-by-hour chart */
     // impacts
     const im=[]; if((kx.thunder||0)>=30) im.push(`Lightning delays likely for outdoor work, practices and events${hc&&hc.twin?` (${hc.twin})`:""}.`);
     if(rn(kx)>=1||(kx.rr&&kx.rr[2]>=150)) im.push(`Heavy rain at times: ponding on roads, low spots and poor drainage.`); else if(rn(kx)>=0.5) im.push(`A good soaking: fields and job sites stay wet into the next morning.`);
     if((kx.gust||0)>=35) im.push(`Gusts to ${Math.ceil(kx.gust/5)*5} mph: secure tents, signs and loose items.`);
     const frz=D.slice(ki,ki+3).find(x=>x.lo!=null&&x.lo<=32); if(frz) im.push(`Freeze ${dn(frz)} night (${frz.lo}°): protect pipes, plants and outdoor water lines.`);
     if(!im.length) im.push(ki>0?`Normal operations until ${kName}.`:`Plan around the wet hours; otherwise normal operations.`);
-    sec.push({title:"IMPACTS",bullets:im.slice(0,3)});
+    sec.push({title:"IMPACTS",bullets:im.slice(0,2)});
     const ma=[]; if(conf!=null) ma.push(`Model agreement ${conf} of 5${conf>=4?": confident in the timing.":conf<=2?": expect this to change.":"."}`); if(kx.rr&&kx.rr[2]>kx.rr[0]) ma.push(`Rain range ${_in(kx.rr[0]/100)} to ${_in(kx.rr[2]/100)}, most likely ${_in(kx.rr[1]/100)}.`);
-    if(ma.length) sec.push({title:"MODEL AGREEMENT",bullets:ma});
+    /* model agreement lives beside the chart */
     return {headline:head,subhead:sub,sections:sec}; }
   async function richDaily(b){ const tok=++_rdTok; if(!window.STRIPS||!STRIPS.days) throw new Error("no data"); const D=STRIPS.days()||[], H=(STRIPS.hours&&STRIPS.hours())||[]; if(D.length<3) throw new Error("no days");
     const s=v(), city=cityName(), big=keyDay(D), quiet=!big||big.sc<40, ki=quiet?0:big.i, kx=D[ki], kName=ki===0?(D[0].d==="TONIGHT"?"Tonight":"Today"):(ki===1&&D[0].d!=="TONIGHT"?"Tomorrow":new Date(kx.date).toLocaleDateString("en-US",{weekday:"long"}));
     const bw0=(pane.querySelector(".brief")||pane).clientWidth, pw=Math.max(300,Math.min(816,(bw0>200?bw0:Math.min(innerWidth,1200)-(innerWidth>900?120:24))-28)), wide=pw>=700, cw=Math.round(wide?pw*.6-40:pw-(pw<=520?24:36)), now=new Date(b.t||Date.now());
     const logo=(document.querySelector('img[alt="SDR Weather Intelligence"]')||{}).src||"";
-    const nxt=(()=>{ const c=[7,13,19].map(h=>{ const x=new Date(now); x.setHours(h,0,0,0); return x; }).find(x=>x>now); return c?_h12(c).toUpperCase():"TOMORROW 5 AM"; })();
+    const nxt=!b.daily?"AS NEEDED":new Date().getHours()<15?"3 PM":"TOMORROW MORNING";
     const bar=(t,c,r)=>`<div class="bsbar ${c||"g"}"><b>${t}</b>${r?`<span>${r}</span>`:""}</div>`;
     const aiOn=!!(window.CHANNEL&&CHANNEL.aiBrief); let MD0={}; try{ MD0=window.MAPDATA?await Promise.race([MAPDATA(),new Promise(r=>setTimeout(()=>r({}),4000))]):{}; }catch(e){}
     const hc0=hourChart(kx,H,cw)||(ki===0&&D[1]?hourChart(D[1],H,cw):null);
     const AI=(aiOn&&_aiCached(b))||(b.daily?_smart(b,D,H,ki,kx,quiet,kName,hc0,MD0||{},s,city):null); if(AI){ if(AI.headline) b=Object.assign({},b,{title:AI.headline}); if(AI.subhead) b=Object.assign({},b,{sub:AI.subhead}); if(AI.bottom_line) b=Object.assign({},b,{bottom:AI.bottom_line}); }
     let h=`<div class="bsheet">`;
     // header
-    h+=`<div class="bshd">${logo?`<img src="${logo}" alt="SDR Weather Intelligence">`:""}<div class="bsht"><small>${!b.daily?`${String(b.cat||"WEATHER").toUpperCase()} UPDATE`:b.slot==="pm"?"AFTERNOON UPDATE":"DAILY BRIEFING"} — PAGE 1 OF 2 · ${now.toLocaleDateString("en-US",pw<=520?{weekday:"short",month:"short",day:"numeric"}:{weekday:"long",month:"long",day:"numeric"}).toUpperCase()}</small><h2>${b.title}</h2>${b.sub?`<p>${b.sub}</p>`:""}<span class="bsiss">ISSUED: ${now.toLocaleDateString("en-US",pw<=520?{month:"short",day:"numeric"}:{weekday:"long",month:"long",day:"numeric",year:"numeric"}).toUpperCase()} · ${now.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"})} ET</span></div><small class="bstg">SDR<br>BRIEFING</small></div><div class="bsrule"></div>`;
+    h+=`<div class="bshd">${logo?`<img src="${logo}" alt="SDR Weather Intelligence">`:""}<div class="bsht"><small>${!b.daily?`${String(b.cat||"WEATHER").toUpperCase()} UPDATE`:b.slot==="pm"?"AFTERNOON UPDATE":"DAILY BRIEFING"} · ${now.toLocaleDateString("en-US",pw<=520?{weekday:"short",month:"short",day:"numeric"}:{weekday:"long",month:"long",day:"numeric"}).toUpperCase()}</small><h2>${b.title}</h2>${b.sub?`<p>${b.sub}</p>`:""}<span class="bsiss">ISSUED: ${now.toLocaleDateString("en-US",pw<=520?{month:"short",day:"numeric"}:{weekday:"long",month:"long",day:"numeric",year:"numeric"}).toUpperCase()} · ${now.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"})} ET</span></div><small class="bstg">SDR<br>BRIEFING</small></div><div class="bsrule"></div>`;
     if(!b.daily) h+=bar("WHAT'S NEW","t")+`<div class="bsev"><div class="bhero bhx"></div>${(b.lines||[]).length?`<div class="bssec"><ul>${b.lines.slice(0,4).map(l=>`<li>${l}</li>`).join("")}</ul></div>`:""}</div>`;
     h+=`<!--status-->`;
     // the week at a glance
     const picks=[0,1,(!quiet&&ki>=2?ki:2)].filter((x,i,a)=>D[x]&&a.indexOf(x)===i);
     const lab=i=>i===0?(D[0].d==="TONIGHT"?"TONIGHT":"TODAY"):(i===1&&D[0].d!=="TONIGHT"?"TOMORROW":new Date(D[i].date).toLocaleDateString("en-US",{weekday:"long"}).toUpperCase());
-    h+=bar("AT A GLANCE","n")+`<div class="bsgl">${picks.map(i=>{ const x=D[i], [w,c]=_word(x), p=Math.max(x.pp||0,x.ppN||0), r=_rain(x);
-      return `<div class="${!quiet&&i===ki?"key":""}"><small>${lab(i)}</small><span class="bsgi">${((window.DASH&&DASH.ICO)||{})[x.ico]||""}</span><b class="${c}">${w}</b><span>${x.hi!=null?(()=>{ const m=window.SDR_MLO?SDR_MLO(i):x.lo; return m!=null?`${x.hi}° / ${m}°`:`High ${x.hi}°`; })():`Low ${x.lo}°`}${p>=20?` · ${_r10(p)}%${r>=0.05?` · ${_in(r)}`:""}`:""}</span></div>`; }).join("")}</div>`;
     // the day we're watching
     let hc=hourChart(kx,H,cw), hx=kx, hn=kName; if(!hc&&ki===0&&D[1]){ hc=hourChart(D[1],H,cw); hx=D[1]; hn=lab(1).toLowerCase().replace(/^./,m=>m.toUpperCase()); }
     let M=[]; if(!quiet){ try{ M=(await extras(ki,"",true)).meters.slice(); }catch(e){} const rh=kx.rr?kx.rr[2]/100:_rain(kx), hr=rh>=3?5:rh>=2?4:rh>=1?3:rh>=0.5?2:rh>=0.2?1:0;
@@ -5780,26 +5782,19 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
     if(hc){ const r=_rain(hx), rr=hx.rr, pts=[];
       if(hc.start) pts.push(`<b>Rain moves in:</b> around ${hc.start}`); if(hc.win) pts.push(`<b>Most likely:</b> ${hc.win}`);
       if(hc.pk>=20) pts.push(`<b>Peak chance:</b> ${_r10(hc.pk)}%`); if(hc.twin) pts.push(`<b>Thunder:</b> ${hc.twin}`);
-      pts.push(`<b>Temps:</b> ${hc.lo}° to ${hc.hi}°`); if(hc.gust>=25) pts.push(`<b>Gusts:</b> to ${Math.round(hc.gust/5)*5} mph`);
+      pts.push(`<b>Temps:</b> ${hc.lo}° to ${hc.hi}°`); if(hx.conf!=null) pts.push(`<b>Model agreement:</b> ${hx.conf} of 5`); if(hc.gust>=25) pts.push(`<b>Gusts:</b> to ${Math.round(hc.gust/5)*5} mph`);
       const big2=r>=0.05?`<small>RAIN EXPECTED</small><b class="bsbig">${_in(r)}</b>${rr&&rr[2]>rr[0]?`<small class="rg">likely range ${_in(rr[0]/100)}–${_in(rr[2]/100)}</small>`:""}`:`<small>RAIN EXPECTED</small><b class="bsbig g">None</b>`;
       h+=bar(`${hn.toUpperCase()} · HOUR BY HOUR`,quiet?"n":"t")+`<div class="bspan"><div class="bsch">${hc.svg}<div class="bslg"><span><i style="background:#3B82F6"></i>Rain chance</span>${hc.twin?`<span><i style="background:#E8920C"></i>Thunder ⚡</span>`:""}<span><i class="ln"></i>Temperature</span>${hc.start?`<span><i class="dl"></i>Rain moves in</span>`:""}</div></div>
         <div class="bsside">${big2}<ul>${pts.map(p=>`<li>${p}</li>`).join("")}</ul></div></div>`; }
     // v191: printable pages. Page 1 = the call (risks, glance, hour by hour, the team's write-up, bottom line). Page 2 = the maps and the numbers.
     const kind=!b.daily?`${String(b.cat||"WEATHER").toUpperCase()} UPDATE`:b.slot==="pm"?"AFTERNOON UPDATE":"DAILY BRIEFING", foot=`<div class="bsft"><span>${kind}</span><span>SDR WEATHER INTELLIGENCE DIVISION</span><span>NEXT UPDATE: ${nxt}</span></div>`;
     h+=`<div class="bsdet"${AI&&AI.sections?"":" hidden"}>${AI?_secs(AI):""}</div>`;
-    h+=`<div class="bsbl"><small>BOTTOM LINE</small><p>${b.bottom||""}</p></div>${foot}</div>`;
-    h+=`<div class="bsheet p2"><div class="bshd sm">${logo?`<img src="${logo}" alt="SDR Weather Intelligence">`:""}<div class="bsht"><small>${kind} — PAGE 2 OF 2</small><h2>${b.title}</h2></div><small class="bstg">SDR<br>BRIEFING</small></div><div class="bsrule"></div><div class="bsmaps"></div>`;
+    h+=`<div class="bsmaps"></div>`;
     // rain by day
-    const wb=weekBars(D,cw); if(wb) h+=bar("RAIN BY DAY · NEXT 7 DAYS","n")+`<div class="bspan"><div class="bsch">${wb.svg}</div><div class="bsside"><div class="bsst"><div><small>THIS WEEK</small><b>${_in(wb.tot)}</b></div><div><small>WETTEST DAY</small><b>${new Date(wb.wet.date).toLocaleDateString("en-US",{weekday:"short"}).toUpperCase()}</b></div><div><small>DRY DAYS</small><b>${wb.dry} of ${wb.n}</b></div></div></div></div>`;
-    // looking ahead
-    const rest=D.slice(ki+1,7); if(rest.length>=2){ const wet=rest.filter(x=>Math.max(x.pp||0,x.ppN||0)>=40), hs=rest.map(x=>x.hi).filter(x=>x!=null), ls=rest.map(x=>x.lo).filter(x=>x!=null);
-      const nm=x=>new Date(x.date).toLocaleDateString("en-US",{weekday:"long"}), first=rest[0], last=rest[rest.length-1];
-      const txt=`${wet.length?`${wet.map(nm).join(" and ")}: ${wet.length===1?(wet[0].short||"rain").toLowerCase():"more rain chances"}. `:`Dry from ${nm(first)} through ${nm(last)}. `}Highs ${Math.min(...hs)}°–${Math.max(...hs)}°, lows ${Math.min(...ls)}°–${Math.max(...ls)}°.${wet.length&&wet.length<rest.length?` Otherwise dry.`:""}`;
-      h+=`<div class="bsla"><div><small>LOOKING AHEAD</small><b>${nm(first).toUpperCase()}–${nm(last).toUpperCase()}</b></div><p>${AI&&AI.looking_ahead?_esc(AI.looking_ahead):txt}</p></div>`; }
+    const wb=weekBars(D,cw); if(wb&&D.slice(0,7).filter(x=>_rain(x)>=0.25).length>=2) h+=bar("RAIN BY DAY · NEXT 7 DAYS","n")+`<div class="bspan"><div class="bsch">${wb.svg}</div><div class="bsside"><div class="bsst"><div><small>THIS WEEK</small><b>${_in(wb.tot)}</b></div><div><small>WETTEST DAY</small><b>${new Date(wb.wet.date).toLocaleDateString("en-US",{weekday:"short"}).toUpperCase()}</b></div><div><small>DRY DAYS</small><b>${wb.dry} of ${wb.n}</b></div></div></div></div>`;
     // by the numbers (the perspective line)
     const pv=(b.lines||[]).find(l=>/^<b>Perspective:<\/b>/.test(l)), pvt=AI&&AI.perspective?_esc(AI.perspective):pv?pv.replace(/^<b>Perspective:<\/b>\s*/,""):""; if(pvt) h+=`<div class="bsbox"><b>BY THE NUMBERS:</b> ${pvt}</div>`;
-    h+=`<div class="bspart">SDR Weather Intelligence Division is watching ${_esc(city)} hour by hour. SDR stands ready to serve.</div>`;
-    h+=`<div class="bspad"></div>${foot}</div>`; h=`<div class="bsprint"><button type="button" onclick="SDR_PRINTBRIEF()">PRINT / SAVE AS PDF</button></div>`+h;
+    h+=`<div class="bsbl"><small>BOTTOM LINE</small><p>${(b.bottom||"").replace(/\s*SDR stands ready to (serve|help)\.?\s*$/i,"")} SDR stands ready to serve.</p></div>${foot}</div>`; h=`<div class="bsprint"><button type="button" onclick="SDR_PRINTBRIEF()">PRINT / SAVE AS PDF</button></div>`+h;
     if(tok!==_rdTok) return; let box=pane.querySelector(".bdx"); if(!box){ box=document.createElement("div"); box.className="bdx"; const anchor=pane.querySelector(".bsub")||pane.querySelector(".hl"); if(!anchor) throw new Error("no anchor"); anchor.insertAdjacentElement("afterend",box); }
     box.innerHTML=h; box.classList.toggle("wide",wide);
     if(!b.daily){ let n=0; const cp=()=>{ const src=pane.querySelector(".bhero:not(.bhx)"), dst=box.querySelector(".bhx"); if(!dst) return; if(src&&src.innerHTML.trim()){ dst.innerHTML=src.innerHTML; dst.querySelectorAll(".tvb,.tvc,.bcap").forEach(x=>x.remove()); } else if(++n<20) setTimeout(cp,400); else dst.remove(); }; cp(); } box.dataset.w=box.clientWidth;
@@ -5818,11 +5813,11 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
     const mds=(PR.mds||[]).filter(f=>near(f.geometry)); if(mds.length) fig.push(map("STORMS ORGANIZING","t","WHAT WE'RE WATCHING",[{features:mds,style:()=>({fill:"#FF8C1A",stroke:"#FF8C1A",w:2.5,dash:"7 5",fo:.15})}],'<span><i style="background:#FF8C1A"></i>Area we\'re watching</span>',[`<b>Storms organizing</b> near ${city}.`,`We're watching it closely and will update you.`],0,0,"organizing"));
     const wt=(PR.watches||[]).filter(f=>near(f.geometry)); if(wt.length) fig.push(map(wt.some(w=>(w.properties||{}).event==="Tornado Watch")?"TORNADO WATCH":"SEVERE STORM WATCH","t","IN EFFECT",[{features:wt,style:f=>({fill:(f.properties||{}).event==="Tornado Watch"?"#FFFF00":"#DB7093",stroke:(f.properties||{}).event==="Tornado Watch"?"#C9A800":"#DB7093",w:2,fo:.3})}],"",[at(wt[0].geometry,s)?`<b>${city} is inside the watch.</b>`:`<b>A watch is in effect</b> near ${city}.`,`Have your shelter plan ready.`],0,0,"watch"));
     if(!quiet&&ki<=2){ const F=((MD.spc||[])[ki])||[]; let n=0, ts=false; F.forEach(f=>{ const L=(f.properties||{}).LABEL; if(!at(f.geometry,s)) return; if(L==="TSTM") ts=true; const l=LV[L]; if(l) n=Math.max(n,l[0]); });
-      if(F.length&&(n>=1||ts||(kx.thunder||0)>=30)){ const has=new Set(F.map(f=>(f.properties||{}).LABEL)), NM={TSTM:"Thunder",MRGL:"1 Marginal",SLGT:"2 Slight",ENH:"3 Enhanced",MDT:"4 Moderate",HIGH:"5 High"};
+      if(F.length&&n>=1&&!(b.hero&&/^(spc|rspc|rst)$/.test(b.hero.kind||"")&&b.hero.prod!=="ero")){ const has=new Set(F.map(f=>(f.properties||{}).LABEL)), NM={TSTM:"Thunder",MRGL:"1 Marginal",SLGT:"2 Slight",ENH:"3 Enhanced",MDT:"4 Moderate",HIGH:"5 High"};
         fig.push(map("SEVERE STORM RISK","r",kName.toUpperCase(),[{features:F,style:f=>({fill:(f.properties||{}).fill||SPCC[(f.properties||{}).LABEL]||"#C1E9C1",stroke:"#333",w:1,fo:.72})}],Object.keys(NM).filter(k=>has.has(k)).map(k=>`<span><i style="background:${SPCC[k]}"></i>${NM[k]}</span>`).join(""),
           [n?`<b>Level ${n} of 5</b> for ${city} ${dN}.`:`<b>Thunderstorms possible</b>, severe storms not expected.`, hcx.twin?`<b>Storm window:</b> ${hcx.twin}.`:hcx.win?`<b>Most likely:</b> ${hcx.win}.`:"", (kx.gust||0)>=40?`<b>Damaging gusts</b> are the main concern.`:`<b>Lightning</b> is the main concern.`],0,0,"severe")); } }
     if(!quiet&&ki<=3){ const F=((MD.ero||[])[ki])||[]; let n=0; F.forEach(f=>{ if(f._lvl&&at(f.geometry,s)) n=Math.max(n,f._lvl); });
-      if(n>=1){ const EC=["","#6BBF6B","#F6E05E","#E05252","#E05AE0"], EN=["","Marginal","Slight","Moderate","High"];
+      if(n>=1&&!(b.hero&&(b.hero.kind==="ero"||b.hero.prod==="ero"))){ const EC=["","#6BBF6B","#F6E05E","#E05252","#E05AE0"], EN=["","Marginal","Slight","Moderate","High"];
         fig.push(map("FLOODING RAIN RISK","r",kName.toUpperCase(),[{features:F,style:f=>({fill:EC[f._lvl],stroke:"#333",w:1,fo:.7})}],[1,2,3,4].filter(k=>F.some(f=>f._lvl===k)).map(k=>`<span><i style="background:${EC[k]}"></i>${k} ${EN[k]}</span>`).join(""),[`<b>Level ${n} of 4</b> flooding rain risk for ${city}.`, hcx.win?`<b>Heaviest rain:</b> ${hcx.win}.`:"", `Low roads, creeks and poor drainage flood first.`],0,0,"flooding")); } }
     const TR=MD.tropics||{}; if((TR.cones||[]).length) fig.push(map("THE TROPICS","n","WHAT WE'RE WATCHING",[{features:TR.areas||[],style:f=>({fill:{Low:"#FFFF00",Medium:"#FF9900",High:"#FF0000"}[f._risk]||"#FFFF00",stroke:"#000",w:1,fo:.4})},{features:TR.cones,style:()=>({fill:"#FFFFFF",stroke:"#1B2433",w:1.2,fo:.45})}],'<span><i style="background:#FFFFFF;border:1px solid #999"></i>Forecast cone</span><span><i style="background:#FF9900"></i>Development area</span>',[`<b>${TR.cones.length} active system${TR.cones.length>1?"s":""}</b> in the tropics.`,`We're tracking every update for you.`],[-100,10,-60,38],[{lo:s.lo,la:s.la,fill:"#F28C28",r:6}],"tropics"));
     if(Array.isArray(MD.winter)&&MD.winter.some(f=>at(f.geometry,s))) fig.push(map("WINTER IMPACTS","n",kName.toUpperCase(),[{features:MD.winter,style:()=>({fill:"#5BA8FF",stroke:"none",fo:.6})}],"",[`<b>${city}</b> is in the winter impact area.`,`Plan for slick roads and travel delays.`],0,0,"winter"));
@@ -5830,7 +5825,7 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
       fig.push(map("RAIN TOTALS","n","NEXT 7 DAYS",[{features:Q,style:f=>({fill:MAPROOM.qcol(f._v||0),stroke:"none",fo:.72})}],[0.1,0.5,1,2,3,5].map(v=>`<span><i style="background:${MAPROOM.qcol(v)}"></i>${v}"</span>`).join(""),[sv>=0.05?`<b>About ${_in(sv)}</b> for ${city}.`:"", wb?`<b>Wettest day:</b> ${new Date(wb.wet.date).toLocaleDateString("en-US",{weekday:"long"})}.`:"", wb&&wb.dry?`<b>${wb.dry} dry days</b> out of ${wb.n}.`:""],0,0,"rain")); }
     if(fig.length<2&&MD.cpc&&MD.cpc.t610&&window.MRX){ const F=MD.cpc.t610, inF=f=>at(f.geometry,s), a=F.filter(inF).sort((x,y)=>(+(y.properties||{}).prob||0)-(+(x.properties||{}).prob||0))[0];
       fig.push(map("THE PATTERN AHEAD","g","6–10 DAYS",[{features:F,style:f=>({fill:MRX.cpcCol(f,"t"),stroke:"none",fo:.85})}],'<span><i style="background:#2563EB"></i>Cooler than normal</span><span><i style="background:#BFBFBF"></i>Near normal</span><span><i style="background:#D9480F"></i>Warmer than normal</span>',[a?`<b>${MRX.cpcSay(a,"t").replace(/^./,m=>m.toUpperCase())}</b> for ${city}.`:`<b>Near normal</b> for ${city}.`,`Looking 6 to 10 days out.`],[-125,24,-66,50],[{lo:s.lo,la:s.la,fill:"#F28C28",r:6}],"pattern")); }
-    fig.splice(4); const mb=box.querySelector(".bsmaps"); if(mb&&fig.length) mb.innerHTML=`<div class="bsmg n${fig.length}">${fig.join("")}</div>`; }
+    fig.splice(2); const mb=box.querySelector(".bsmaps"); if(mb&&fig.length) mb.innerHTML=`<div class="bsmg n${fig.length}">${fig.join("")}</div>`; }
   window.BRIEF={ run, list:()=>LIST, show:b=>{ window._briefPinned=true; show(b); } };
   setTimeout(run,5000); setInterval(run,10*60000);
 })();
@@ -5907,7 +5902,7 @@ function SDR_STORY(H, D, spc, nowMs){
     if(last){ last.end=e.i; last.endDate=e.date; if(e.score>last.score){ last.score=e.score; last.fact=e.fact; last.type=e.rank>last.rank?e.type:last.type; last.ico=e.rank>last.rank?e.ico:last.ico; last.rank=Math.max(e.rank,last.rank); } }
     else merged.push(Object.assign({end:e.i,endDate:e.date},e)); });
   const when=m=>{ if(m.end>m.i) return `${dns(m.date)}–${dns(m.endDate)}`;
-    const hrs=(H||[]).filter(h=>idxOf(h.t)===m.i&&(h.pop||0)>=rainT); return hrs.length&&m.wet&&m.i<=2 ? `${dn(m.date)} ${part(hrs[0].t)}`.replace("today evening","this evening").replace("today afternoon","this afternoon").replace("today morning","this morning").replace("today night","tonight") : dn(m.date); };
+    const hrs=(H||[]).filter(h=>idxOf(h.t)===m.i&&(h.pop||0)>=rainT); const mx=hrs.length?Math.max(...hrs.map(h=>h.pop||0)):0, core=hrs.find(h=>(h.pop||0)>=mx-15)||hrs[0]; return hrs.length&&m.wet&&m.i<=2 ? `${dn(m.date)} ${part(core.t)}`.replace("today evening","this evening").replace("today afternoon","this afternoon").replace("today morning","this morning").replace("today night","tonight") : dn(m.date); };
   const label=m=>({severe:"Severe storms",storms:"Storms",rain:"Rain","heavy rain":"Heavy rain",snow:"Snow",ice:"Ice","hard freeze":"Hard freeze",freeze:"Freeze",heat:"Heat",wind:"Windy","much colder":"Much colder","much warmer":"Much warmer","bitter cold":"Bitter cold"})[m.type];
   const phrase=m=>`${label(m)} ${when(m)}`;
 
@@ -6501,7 +6496,7 @@ window.SDR_GL=(function(){
 
 <script>
 // v125: client chat layer
-(function(){ let wrap=null, fr=null; const CHATV="1793722429";
+(function(){ let wrap=null, fr=null; const CHATV="1793735946";
   function open(){ if(!wrap){ wrap=document.createElement("div"); wrap.id="chatwrap"; wrap.innerHTML='<iframe id="chatfr" title="Message the team" allow="camera"></iframe>'; document.body.appendChild(wrap); fr=wrap.querySelector("iframe"); fr.src="./chat.html?v="+CHATV; fr.addEventListener("load",()=>{ try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }); }
     wrap.hidden=false; document.body.classList.add("chat-on"); if(!(history.state&&history.state.chat)) history.pushState({chat:1},""); try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }
   function close(){ if(wrap){ wrap.hidden=true; } document.body.classList.remove("chat-on"); }
@@ -7190,6 +7185,40 @@ window.SDR_NOWFIRST=(r,H)=>{ if(!r||/\bnow\b|arriving|moves in|by \d|winding/i.t
 .hft small{display:block;font-family:var(--display);font-weight:800;letter-spacing:.1em;font-size:10px;color:var(--muted)}
 .hft b{display:block;font-family:var(--display);font-weight:800;font-size:15px;margin-top:1px}
 .hfn{font-size:12px;color:var(--dim);line-height:1.4}
+
+/* v208 Hunt & Fish module */
+.p-hf .hfb{padding:12px 16px 16px;display:flex;flex-direction:column;gap:12px}
+.hfintro{margin:0;color:var(--muted);font-size:14.5px}
+.hfch{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media (max-width:420px){.hfch{grid-template-columns:1fr}}
+.hfpick{display:flex;flex-direction:column;gap:6px;text-align:left;padding:14px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.03);color:inherit;font:inherit;cursor:pointer}
+.hfpick b{font-family:var(--display);font-weight:800;font-size:21px;letter-spacing:.03em;text-transform:uppercase}
+.hfpick span{font-size:13.5px;color:var(--muted);line-height:1.35}.hfpick span b{font-family:inherit;font-size:13.5px;text-transform:none;letter-spacing:0;color:#fff}
+.hfpick em{font-style:normal;font-family:var(--display);font-weight:700;letter-spacing:.08em;font-size:12.5px;color:#4f8cff;text-transform:uppercase}
+.hfbar{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.hfback{border:0;background:none;color:#4f8cff;font-family:var(--display);font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-size:13px;cursor:pointer;padding:4px 0}
+.hfseg{display:flex;border:1px solid var(--line);border-radius:999px;padding:3px}.hfseg button{border:0;background:none;color:var(--muted);font:inherit;font-weight:600;font-size:14px;padding:5px 13px;border-radius:999px;cursor:pointer}.hfseg button[aria-pressed="true"]{background:#2F7CF6;color:#fff}
+.hfdays{border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.hfday{border-top:1px solid var(--line)}.hfday:first-child{border-top:0}
+.hfrow{width:100%;display:grid;grid-template-columns:52px 44px minmax(0,1fr) 14px;gap:10px;align-items:center;padding:10px 12px;text-align:left;border:0;background:none;color:inherit;font:inherit;cursor:pointer}
+.hfday.open .hfrow{background:rgba(255,255,255,.04)}
+.hfdn{font-family:var(--display);font-weight:800;font-size:16px;letter-spacing:.04em;text-transform:uppercase;line-height:1.05}.hfdn small{display:block;font-size:12px;color:var(--dim);font-weight:600}
+.hfsc{width:42px;height:42px;border-radius:11px;display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:21px;color:#0b1630}
+.hfrt b{display:block;font-weight:600;font-size:14px;line-height:1.3}.hfrt small{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+.hfcv{font-style:normal;color:var(--dim);font-size:16px}
+.hfx{padding:4px 12px 14px;display:flex;flex-direction:column;gap:12px;background:rgba(255,255,255,.04)}
+.hfper{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.hfper>div{border:1px solid var(--line);border-radius:10px;padding:8px;display:flex;flex-direction:column;gap:2px;min-width:0;background:rgba(0,0,0,.15)}.hfper>div.on{border-color:#fff}
+.hfper small{font-size:12px;color:var(--muted);font-weight:600}.hfper b{font-family:var(--display);font-weight:800;font-size:23px;line-height:1}.hfper b i{font-style:normal;font-size:12px;color:var(--dim)}.hfper span{font-size:11.5px;color:var(--muted)}
+.hfpk{border:1px solid var(--line);border-radius:10px;padding:9px 12px;background:rgba(0,0,0,.15)}.hfpk small{display:block;font-size:12px;color:var(--muted)}.hfpk b{font-family:var(--display);font-weight:800;font-size:20px}
+.hfs{width:100%;height:auto;display:block}
+.hfwhy{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}.hfwhy li{display:grid;grid-template-columns:40px 1fr;gap:8px;font-size:14px;line-height:1.35}
+.hfwhy li>span:first-child{font-family:ui-monospace,Menlo,monospace;font-size:12px;border-radius:6px;text-align:center;padding:2px 0;align-self:start}
+.hfwhy .p{background:rgba(60,207,122,.16);color:#3ccf7a}.hfwhy .m{background:rgba(255,138,107,.16);color:#ff8a6b}
+.hfplay{border-left:3px solid #4f8cff;padding:3px 0 3px 10px;font-size:14px}.hfplay b{display:block;font-family:var(--display);text-transform:uppercase;letter-spacing:.06em;font-size:12px;color:var(--muted)}
+.hfcond{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12.5px;color:var(--muted)}.hfcond b{color:#fff;font-weight:600}
+.hfest,.hflegal{margin:0;font-size:12px;color:var(--dim)}
+.hfleg{display:flex;flex-wrap:wrap;gap:6px}.hfleg span{font-family:var(--display);font-weight:700;font-size:12px;letter-spacing:.05em;text-transform:uppercase;padding:3px 9px;border-radius:999px;color:#0b1630}
+.hflearn{border:1px solid var(--line);border-radius:12px;padding:0 12px}.hflearn summary{cursor:pointer;padding:11px 0;font-family:var(--display);font-weight:800;text-transform:uppercase;letter-spacing:.05em;font-size:14px}
+.hflearn div{padding:0 0 10px;display:flex;flex-direction:column;gap:8px;font-size:14px}.hflearn p{margin:0;color:var(--muted)}.hflearn p b{color:#fff}
 .hfk{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;margin:0 0 10px;gap:2px}
 .hfk button{border:0;background:transparent;color:var(--muted);font:inherit;font-weight:700;font-size:13px;padding:6px 14px;border-radius:999px;cursor:pointer}
 .hfk button[aria-pressed="true"]{background:#2F7CF6;color:#fff}
@@ -7302,84 +7331,123 @@ window.SDR_NOWFIRST=(r,H)=>{ if(!r||/\bnow\b|arriving|moves in|by \d|winding/i.t
       const j=await (await fetch(`${st.id}/observations?start=${a.toISOString()}`,{headers:{Accept:"application/geo+json"}})).json();
       const P=(j.features||[]).map(f=>f.properties).filter(p=>p.barometricPressure&&p.barometricPressure.value).map(p=>({t:+new Date(p.timestamp),v:p.barometricPressure.value/3386.39})).sort((x,y)=>x.t-y.t);
       if(P.length<2) return null; const L=P[P.length-1], F=P.find(p=>p.t>=L.t-3.5*3600e3)||P[0]; return {now:L.v, d3:L.v-F.v}; }catch(e){ return null; } }
-  // v192: a 10-day outlook, not just today. Each day gets a deer and a fishing rating with the reasons, the best windows,
-  // and an hour-by-hour timeline (first light, major and minor feeding, last light). Tap a day for its timeline.
-  let HFSEL=0;
-  async function hf(){ const sec=document.querySelector(".p-hf"); if(!sec) return; const v=venue()||{}, now=new Date();
-    const H=(window.STRIPS&&STRIPS.hours&&STRIPS.hours())||[], D=(window.STRIPS&&STRIPS.days&&STRIPS.days())||[];
-    const wn=h=>{ const m=String(h.wind||"").match(/(\d+)(?!.*\d)/); return m?+m[1]:0; };
-    const dayOf=dt=>D.find(x=>x.date&&new Date(x.date).toDateString()===dt.toDateString()&&x.d!=="TONIGHT")||null;
-    const P=await press(); const out=[];
-    for(let k=0;k<10;k++){ const dt=new Date(now); dt.setDate(dt.getDate()+k); dt.setHours(12,0,0,0); const S=sun(dt,+v.la,+v.lo); if(!S) continue; const M=moon(dt);
-      const hrs=H.filter(h=>{ const t=new Date(h.t); return t.toDateString()===dt.toDateString()&&t.getHours()>=5&&t.getHours()<=20; });
-      const wmax=hrs.length?Math.max(...hrs.map(wn)):null, gmax=hrs.length?Math.max(...hrs.map(h=>h.gust||0)):0, rain=hrs.length?Math.max(...hrs.map(h=>h.pop||0)):0, thun=hrs.length?Math.max(...hrs.map(h=>h.thunder||0)):0;
-      const x=dayOf(dt), prev=dayOf(new Date(+dt-864e5)), next=dayOf(new Date(+dt+864e5));
-      const cool=x&&prev&&x.hi!=null&&prev.hi!=null?prev.hi-x.hi:0, ahead=x&&next&&x.hi!=null&&next.hi!=null?x.hi-next.hi:0;
-      const transit=S.noon+M.age/29.530588853*864e5, inDay=t=>new Date(t).toDateString()===dt.toDateString();
-      const majors=[transit,transit+12.42*3600e3,transit-12.42*3600e3,transit+24.84*3600e3,transit-24.84*3600e3].filter(inDay).sort((a,b)=>a-b);
-      const minors=[transit-6.21*3600e3,transit+6.21*3600e3,transit+18.63*3600e3,transit-18.63*3600e3].filter(inDay).sort((a,b)=>a-b);
-      let deer=1, fish=1; const dr=[], fr=[];
-      if(k===0&&P){ if(P.d3<=-0.04){ deer+=1; fish+=2; dr.push("Pressure falling: deer feed before the weather"); fr.push("Falling pressure: fish often feed hard"); } else if(P.d3>=0.04){ deer+=1; fish-=1; dr.push("Pressure rising behind a front"); fr.push("Rising pressure: fishing slows a bit"); } }
-      if(cool>=8){ deer+=2; fish-=1; dr.push(`Cold front: ${cool}° cooler, deer on the move`); fr.push("Day after a front: fish go deep and slow"); }
-      else if(ahead>=8&&rain>=40&&rain<70){ deer+=1; fish+=2; dr.push("Ahead of a front: feeding picks up"); fr.push("Ahead of a front: often a strong bite"); }
-      if(wmax!=null){ if(wmax<=10&&gmax<20){ deer+=1; fish+=1; dr.push(`Light wind (${wmax} mph)`); fr.push(`Light wind (${wmax} mph): easy boat control`); } else if(wmax>=15||gmax>=25){ deer-=1; fish-=1; dr.push(`Windy (${gmax>=25?"gusts "+g5r(gmax):wmax} mph): deer bed down`); fr.push("Windy: rough water"); } }
-      if(M.age<2.5||M.age>27||Math.abs(M.age-14.77)<2.5){ deer+=1; fish+=1; dr.push(`${M.name}: stronger feeding periods`); fr.push(`${M.name}: stronger feeding periods`); }
-      // v198: rain and thunder weigh by WHEN they hit: the dawn and dusk sits matter most. Day values fill in past the hourly range.
-      const fl=S.rise-30*60000, ll=S.set+30*60000, popAt=(t0,t1)=>{ const q=H.filter(h=>{ const t=+new Date(h.t); return t>=t0&&t<t1; }); return q.length?Math.max(...q.map(h=>h.pop||0)):null; };
-      const dawnP=popAt(fl,fl+3*3600e3), duskP=popAt(ll-3*3600e3,ll), dayP=Math.max(rain, x?Math.max(x.pp||0,x.ppN||0):0), thunT=Math.max(thun, x?(x.thunder||0):0);
-      const r10=v=>Math.round(v/10)*10, wetHrs=H.filter(h=>{ const t=new Date(h.t); return t.toDateString()===dt.toDateString()&&(h.pop||0)>=50; });
-      const when=wetHrs.length?(()=>{ const a=new Date(wetHrs[0].t), z=new Date(+new Date(wetHrs[wetHrs.length-1].t)+3600e3); const f=d=>{ const h=d.getHours(); return h===0?"midnight":h===12?"noon":(h%12)+(h<12?" AM":" PM"); }; return wetHrs.length>=18?"most of the day":z.toDateString()!==a.toDateString()||z.getHours()===0?`after ${f(a)}`:a.getHours()<=5?`until ${f(z)}`:`${f(a)}–${f(z)}`; })():"";
-      if(dayP>=50){ const both=dawnP!=null&&duskP!=null, dawnWet=dawnP!=null&&dawnP>=50, duskWet=duskP!=null&&duskP>=50;
-        const pen=dayP>=70?2:1, hit=both?(dawnWet&&duskWet?pen:dawnWet||duskWet?Math.max(1,pen-1):1):pen;
-        deer-=hit; fish-=hit; const t=`Rain ${dayP>=70?"likely":"possible"} (${r10(dayP)}%)${when?", "+when:""}`;
-        dr.push(t+(both&&!dawnWet&&duskWet?"; morning sit stays dry":both&&dawnWet&&!duskWet?"; evening sit looks better":"")); fr.push(t); }
-      if(thunT>=30){ fish-=2; deer-=1; fr.push("Lightning possible: off the water at the first rumble"); dr.push("Lightning possible: avoid metal stands when storms are near"); }
-      const prevR=prev?(prev.rr?prev.rr[1]/100:(prev.qpf||0)):0; if(prevR>=0.4&&(dawnP==null||dawnP<40)&&dayP<50){ deer+=1; dr.push("Rain clears out: deer get up and move after a soaking"); }
-      const rate=n=>n>=3?["Good","g"]:n>=1?["Fair","f"]:["Slow","s"];
-      out.push({dt,S,M,majors,minors,wmax,gmax,rain:dayP,dawnP,duskP,H,deer:rate(deer),fish:rate(fish),dr,fr}); }
-    if(!out.length) return; if(HFSEL>=out.length) HFSEL=0;
-    const win=(t,h)=>`${tm(t-h*3600e3)}–${tm(t+h*3600e3)}`, lab=(o,i)=>i===0?"TODAY":o.dt.toLocaleDateString("en-US",{weekday:"short"}).toUpperCase()+" "+(o.dt.getMonth()+1)+"/"+o.dt.getDate();
-    const best=o=>{ const fl=o.S.rise-30*60000, ll=o.S.set+30*60000, nw=Date.now(), dry=(t0,t1)=>{ const q=o.H.filter(h=>{ const t=+new Date(h.t); return t>=t0&&t<t1; }); return !q.length||Math.max(...q.map(h=>h.pop||0))<50; };
-      const m=o.majors.find(t=>t+3600e3>fl&&t-3600e3<ll&&t+3600e3>nw&&dry(t-3600e3,t+3600e3)); if(m) return win(m,1);
-      if(fl>nw&&dry(fl,fl+2*3600e3)) return `First light ${tm(fl)}`; if(ll>nw&&dry(ll-2*3600e3,ll)) return `Last light ${tm(ll)}`;
-      if(ll<=nw) return "Done for today"; return o.rain>=50?"Wet: little dry time":"Midday"; };
-    // v202: the day opens like Outdoor Work: hour by hour, every hour graded with the reason, best sits first
-    const o=out[HFSEL], fl=o.S.rise-30*60000, ll=o.S.set+30*60000, d0=new Date(o.dt); d0.setHours(0,0,0,0);
-    const hrsD=o.H.filter(h=>{ const t=+new Date(h.t); return new Date(h.t).toDateString()===o.dt.toDateString()&&t>=fl-3600e3&&t<=ll; });
-    const hh=t=>{ const d=new Date(t), a=d.getHours(); return a===0?"12 AM":a===12?"Noon":(a%12)+(a<12?" AM":" PM"); };
-    const near=(t,list,w)=>list.some(m=>Math.abs(m-t)<=w*3600e3);
-    const gradeH=(h,kind)=>{ const t=+new Date(h.t)+1800e3, p=h.pop||0, th=h.thunder||0, g=h.gust||0, w=(String(h.wind||"").match(/(\d+)(?!.*\d)/)||[])[1]|0, why=[], bad=[];
-      if(th>=30) bad.push(kind==="fish"?"Lightning: off the water":"Lightning risk"); if(p>=60) bad.push(`Rain ${Math.round(p/10)*10}%`); if(g>=30) bad.push(`Gusts ${Math.ceil(g/5)*5} mph`);
-      if(bad.length) return ["r",bad.join(" · ")];
-      let sc=0; const dawn=t>=fl&&t<=fl+2*3600e3, dusk=t>=ll-2*3600e3&&t<=ll+1800e3;
-      if(kind==="deer"){ if(dawn){ sc+=2; why.push("First light"); } if(dusk){ sc+=2; why.push("Last light"); } }
-      else { if(dawn||dusk){ sc+=1; why.push(dawn?"Early bite":"Evening bite"); } }
-      if(near(t,o.majors,1)){ sc+=2; why.push("Major feeding"); } else if(near(t,o.minors,.5)){ sc+=1; why.push("Minor feeding"); }
-      const hr=new Date(h.t).getHours(); if(kind==="deer"&&hr>=11&&hr<=14&&!why.length) { sc-=1; why.push("Midday lull"); }
-      if(w<=8&&g<18) { sc+=1; if(kind==="fish") why.push("Calm water"); } else if(w>=13||g>=22){ sc-=1; why.push(`Breezy ${w} mph`); }
-      if(p>=30){ sc-=1; why.push(`Rain ${Math.round(p/10)*10}%`); }
-      return sc>=3?["g",why.join(" · ")||"Good"]:sc>=1?["y",why.join(" · ")||"Fair"]:["y",why.join(" · ")||"Slow"]; };
-    const KIND=window._HFK||"deer";
-    const rows=hrsD.map(h=>{ const [c,why]=gradeH(h,KIND); return {t:hh(h.t),c,why}; });
-    const rowsHtml=R=>{ const G=[]; for(let k=0;k<R.length;k+=5) G.push(R.slice(k,k+5)); const rng=g=>`${g[0].t}–${g[g.length-1].t}`;
-      return `<div class="fgrp">${G.map(g=>`<div class="fbox"><small>${rng(g)}</small>${g.map(r=>`<span class="fr ${r.c}"><i></i><b>${r.t}</b><em>${r.why}</em></span>`).join("")}</div>`).join("")}</div>`; };
-    const bestG=(()=>{ const gs=rows.filter(r=>r.c==="g"); return gs.length?`${gs[0].t}${gs.length>1?"–"+gs[gs.length-1].t:""}`:""; })();
-    const dayDetail=hrsD.length>=4?`<div class="hfk"><button type="button" data-k="deer" aria-pressed="${KIND==="deer"}">Deer</button><button type="button" data-k="fish" aria-pressed="${KIND==="fish"}">Fishing</button></div>${rowsHtml(rows)}<p class="hfnote">Green: best hours. Yellow: workable. Red: rain, lightning or strong wind.</p>`
-      :`<p class="hfnote">Hour-by-hour detail fills in within the next week. For now: ${(KIND==="deer"?o.deer:o.fish)[0]}, best ${bestG||"around first and last light"}.</p>`;
-    const rowsD=out.map((d,i)=>`<button type="button" class="hfd${i===HFSEL?" on":""}" data-i="${i}"><b>${lab(d,i)}</b><span class="${d.deer[1]}">${d.deer[0]}</span><span class="${d.fish[1]}">${d.fish[0]}</span><em>${best(d)}</em></button>`).join("");
-    sec.querySelector(".hfb").innerHTML=`<div class="hfgrid"><div class="hfh"><b>DAY</b><span>DEER</span><span>FISH</span><em>BEST WINDOW</em></div>${rowsD}</div>
-      <div class="hfday"><h5>${lab(o,HFSEL)} · HOUR BY HOUR</h5>${dayDetail}
-      <div class="hft"><div><small>FIRST LIGHT</small><b>${tm(fl)}</b></div><div><small>LAST LIGHT</small><b>${tm(ll)}</b></div>${o.majors.slice(0,2).map(t=>`<div><small>MAJOR FEEDING</small><b>${win(t,1)}</b></div>`).join("")}</div>
-      <div class="hfr"><div class="hc"><small>DEER</small><b class="${o.deer[1]}">${o.deer[0]}</b><ul>${o.dr.slice(0,3).map(x=>`<li>${x}</li>`).join("")||"<li>Typical day</li>"}</ul></div>
-      <div class="hc"><small>FISHING</small><b class="${o.fish[1]}">${o.fish[0]}</b><ul>${o.fr.slice(0,3).map(x=>`<li>${x}</li>`).join("")||"<li>Typical day</li>"}</ul></div></div>
-      <div class="hfn">${moonSvg(o.M)}${o.M.name}, ${Math.round(o.M.f*100)}% lit. Feeding times follow solunar timing (estimated). Always check your state's legal shooting hours.</div></div>`;
-    sec.querySelectorAll(".hfk button").forEach(b=>b.onclick=e=>{ e.stopPropagation(); window._HFK=b.dataset.k; hf(); });
-    sec.querySelectorAll(".hfd").forEach(btn=>btn.onclick=()=>{ HFSEL=+btn.dataset.i; hf(); });
-    const t0=out[0], bar=sec.querySelector(".cxbar span"); if(bar) bar.textContent=`Today: deer ${t0.deer[0].toLowerCase()} · fishing ${t0.fish[0].toLowerCase()} · best ${best(t0)}`;
-    window._HF_TXT=`=== HUNT & FISH, NEXT 10 DAYS (feeding times are estimates from the moon's position) ===\n`+out.map((d,i)=>`${lab(d,i)}: deer ${d.deer[0]} (${d.dr.join("; ")||"typical"}), fishing ${d.fish[0]} (${d.fr.join("; ")||"typical"}). Major feeding ${d.majors.map(t=>win(t,1)).join(", ")||"none"}; minor ${d.minors.map(t=>win(t,.5)).join(", ")||"none"}; first light ${tm(d.S.rise-30*60000)}, last light ${tm(d.S.set+30*60000)}.`).join("\n")+`\nHunters must check their state's legal shooting hours.`; }
+  // v208 HUNT & FISH: its own section. Choose Deer Hunting or Fishing -> 10 days scored out of 10 from this site's hourly forecast
+  // (rain timing, the dry spell after rain, temperature drops, wind, clouds, muddy water, fronts, the rut; the moon is only a tiebreaker).
+  // Tap a day: morning / midday / evening scores, the peak window, an hour-by-hour bar chart, every reason with how much it moved the score,
+  // and how to play it. No pressure feed on the hourly forecast, so fronts are read from rain timing and the temperature drop behind it.
+  let HFK=null, HFOPEN=-1;
+  const hfTier=s=>s>=8?["Great","#22c55e"]:s>=6?["Good","#86d94a"]:s>=4?["Fair","#f5b400"]:["Poor","#7d8bad"];
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)), gauss=(x,mu,sd)=>Math.exp(-(((x-mu)/sd)**2));
+  const fmtT=t=>{ const d=new Date(t); let h=d.getHours(), m=d.getMinutes(); const ap=h>=12?"PM":"AM"; h=h%12||12; return m?`${h}:${String(m).padStart(2,"0")} ${ap}`:`${h} ${ap}`; };
+  const fmtH=h=>{ h=((h%24)+24)%24; return h===0?"12 AM":h===12?"Noon":(h%12)+(h<12?" AM":" PM"); };
+  function rutFor(la,dt){ const md=(dt.getMonth()+1)*100+dt.getDate(), R=la<31.5?{seek:105,peak:120,peakEnd:210,post:225}:{seek:1020,peak:1101,peakEnd:1120,post:1205};
+    const inR=(a,b)=>a<=b?md>=a&&md<=b:(md>=a||md<=b); return inR(R.peak,R.peakEnd)?"peak":inR(R.seek,R.peak-1)?"seek":inR(R.peakEnd+1,R.post)?"post":null; }
+  function hfHours(){ const H=((window.STRIPS&&STRIPS.hours&&STRIPS.hours())||[]).slice().sort((a,b)=>+new Date(a.t)-+new Date(b.t)), D=(window.STRIPS&&STRIPS.days&&STRIPS.days())||[];
+    const dayRain=dt=>{ const x=D.find(d=>d.date&&new Date(d.date).toDateString()===dt.toDateString()); return x?(x.rr?x.rr[1]/100:(x.qpf||0)):0; };
+    const byDay={}; H.forEach(h=>{ const k=new Date(h.t).toDateString(); (byDay[k]=byDay[k]||[]).push(h); });
+    const out=H.map(h=>{ const t=+new Date(h.t), w=+((String(h.wind||"").match(/(\d+)(?!.*\d)/)||[])[1]||0);
+      return {t, temp:h.temp, pop:h.pop||0, wind:w, gust:h.gust||0, cloud:h.sky!=null?h.sky:(h.pop>=50?90:30), thunder:(h.thunder||0)>=30, precip:0}; });
+    // spread each day's expected rain over its wet hours (weighted by chance), so "how much fell" is honest
+    Object.keys(byDay).forEach(k=>{ const tot=dayRain(new Date(k)); if(tot<=0) return; const hs=out.filter(o=>new Date(o.t).toDateString()===k&&o.pop>=30); const wsum=hs.reduce((a,o)=>a+o.pop*o.pop,0); if(!wsum) return; hs.forEach(o=>o.precip=tot*o.pop*o.pop/wsum); });
+    // context: hours since rain, the storm total, 24 h rain, the temperature 24 h earlier, hours since a front (rain ended + cooler)
+    let lastWet=-1e15, storm=0; return out.map((o,i)=>{ if(o.precip>=0.02||o.pop>=60){ if(o.t-lastWet>6*3600e3) storm=0; storm+=o.precip; lastWet=o.t; }
+      let r24=0, prev=null; for(let k=i-1;k>=0&&o.t-out[k].t<=24*3600e3;k--){ r24+=out[k].precip; if(o.t-out[k].t>=23*3600e3) prev=out[k]; }
+      const sinceRain=(o.t-lastWet)/3600e3; let ahead=null; for(let k=i+1;k<out.length&&out[k].t-o.t<=12*3600e3;k++){ if(out[k].pop>=60){ ahead=(out[k].t-o.t)/3600e3; break; } }
+      return Object.assign(o,{sinceRain, storm, r24, prev, ahead, frontAgo: storm>=0.2&&sinceRain>0&&sinceRain<=48&&prev&&o.temp<=prev.temp-4?sinceRain:null}); }); }
+  function deerHour(o,day){ const hr=new Date(o.t).getHours()+.5, f=[], add=(k,v,t)=>{ if(v) f.push({k,v,t}); };
+    let v=3+4*gauss(hr,day.rise+.4,1.4)+4*gauss(hr,day.set-.4,1.4);
+    if(o.thunder) add("storm",-4,"Thunderstorms: deer bed down and it isn't safe on a metal stand.");
+    else if(o.pop>=60||o.precip>=.04) add("rain",-3,"Steady rain: deer hold tight and you'll sit wet for little movement.");
+    else if(o.pop>=40) add("rain",-1.2,"Rain chances climbing: a shower or two possible.");
+    if(o.pop<30&&o.storm>=.25&&o.sinceRain>0&&o.sinceRain<=36) add("after",o.sinceRain<=24?1.8:1.2,`First dry stretch after ${o.storm.toFixed(1)}" of rain: deer that held tight through the storm get up and feed hard.`);
+    if(o.prev){ const dT=o.temp-o.prev.temp; if(dT<=-8) add("cool",1.5,`${Math.abs(dT)}° cooler than the same time yesterday: a temperature drop gets deer moving in daylight.`); else if(dT<=-4) add("cool",.8,"A few degrees cooler than yesterday: helps daylight movement."); else if(dT>=8) add("warm",-.8,`${dT}° warmer than yesterday: deer move less when it warms up fast.`); }
+    if(o.temp>=72) add("heat",-1,`Warm (${o.temp}°): unusually warm air keeps deer bedded in daylight.`); else if(o.temp<=45) add("crisp",.7,`Crisp ${o.temp}° air: cold mornings are prime this time of year.`);
+    if(o.wind>15||o.gust>=25) add("wind",-2,`Wind ${o.wind} mph${o.gust>=25?`, gusts ${Math.ceil(o.gust/5)*5}`:""}: deer get nervous because they can't hear or smell danger.`); else if(o.wind>=10) add("wind",-1,`Breezy at ${o.wind} mph: movement drops some.`); else if(o.wind<=7&&o.pop<30) add("calm",.5,`Light wind (${o.wind} mph): good for stand hunting and scent control.`);
+    if(o.frontAgo!=null&&o.pop<30) add("front",.8,"Weather settling behind the front: deer tend to move as it clears.");
+    else if(o.ahead!=null&&o.ahead<=8&&o.pop<40) add("ahead",.5,"Rain on the way: deer often feed before weather arrives.");
+    const rs=rutFor(day.la,day.dt); if(rs==="peak"){ add("rut",1,"Peak rut window for this area: bucks are cruising for does."); if(hr>day.rise+3&&hr<day.set-3) add("rutmid",1,"During the rut, bucks move midday too. Don't leave the stand at 9."); }
+    else if(rs==="seek") add("rut",.5,"Pre-rut: bucks are scraping and starting to search."); else if(rs==="post") add("rut",.3,"Post-rut: some does still cycling; food sources matter most.");
+    if(day.majors.some(m=>Math.abs(m-o.t)<=3600e3)) add("moon",.5,"Moon overhead or underfoot (solunar major): a small bump in activity.");
+    f.forEach(x=>v+=x.v); return {v:clamp(v,0,10),f,o}; }
+  function fishHour(o,day){ const hr=new Date(o.t).getHours()+.5, f=[], add=(k,v,t)=>{ if(v) f.push({k,v,t}); };
+    let v=4+2*gauss(hr,day.rise+.5,1.6)+2*gauss(hr,day.set-.3,1.6);
+    if(o.ahead!=null&&o.ahead<=10&&o.pop<50) add("fall",o.ahead<=5?2:1,"Ahead of the front: fish feed hard before the weather changes.");
+    if(o.frontAgo!=null&&o.frontAgo<=48&&o.cloud<35&&o.pop<30) add("blue",-2,"Bright day right behind the front: the bite slows and fish tuck in tight.");
+    if(o.r24>=.75) add("mud",-2,`Muddy, rising water after ${o.r24.toFixed(1)}" of rain: fish can't see baits well.`); else if(o.r24>=.3) add("stain",-1,"Stained water from recent rain: slow down and use darker baits.");
+    if(o.cloud>=70&&hr>day.rise+2&&hr<day.set-2&&o.pop<40) add("cloud",1,"Overcast: low light keeps fish roaming shallow longer.");
+    if(o.pop>=40&&o.pop<60&&!o.thunder) add("light",.5,"Light rain: dimples the surface and can trigger a topwater bite."); else if(o.pop>=60&&!o.thunder) add("heavy",-1,"Heavy rain: tough to fish and the water starts to muddy.");
+    if(o.wind>18||o.gust>=28) add("wind",-2,`${o.gust>=28?`Gusts near ${Math.ceil(o.gust/5)*5} mph`:`Wind ${o.wind} mph`}: rough water, hard boat control.`); else if(o.wind>=5&&o.wind<=12) add("chop",1,`A ${o.wind} mph breeze puts a chop on the water: fish feed on windblown banks.`);
+    if(o.frontAgo==null&&o.ahead==null&&o.temp>=55&&o.temp<=75&&o.pop<30) add("stable",.5,"Stable, mild weather: fish settle into a pattern.");
+    if(day.majors.some(m=>Math.abs(m-o.t)<=3600e3)) add("moon",.7,"Moon overhead or underfoot (solunar major): fish activity often peaks.");
+    f.forEach(x=>v+=x.v); if(o.thunder){ f.unshift({k:"bolt",v:-9,t:"Lightning: get off the water. No fish is worth it."}); v=.5; } return {v:clamp(v,0,10),f,o}; }
+  function hfDay(dt,kind,HH,la,lo){ const S=sun(dt,la,lo); if(!S) return null; const M=moon(dt), transit=S.noon+M.age/29.530588853*864e5;
+    const day={dt,la,rise:new Date(S.rise).getHours()+new Date(S.rise).getMinutes()/60,set:new Date(S.set).getHours()+new Date(S.set).getMinutes()/60,S,M,majors:[transit-24.84*3600e3,transit-12.42*3600e3,transit,transit+12.42*3600e3,transit+24.84*3600e3]};
+    const pad=kind==="deer"?.5:1, a=Math.floor(day.rise-pad), b=Math.ceil(day.set+pad), fn=kind==="deer"?deerHour:fishHour;
+    const hrs=HH.filter(o=>{ const d=new Date(o.t); return d.toDateString()===dt.toDateString()&&d.getHours()>=a&&d.getHours()<b; }).map(o=>Object.assign({hr:new Date(o.t).getHours()},fn(o,day)));
+    if(hrs.length<4) return null;
+    const per=[["Morning",a,Math.round(day.rise+3)],["Midday",Math.round(day.rise+3),Math.round(day.set-3)],["Evening",Math.round(day.set-3),b]].map(([n,s0,e])=>{
+      const hs=hrs.filter(x=>x.hr>=s0&&x.hr<e); if(!hs.length) return {n,s:s0,e,score:0,avg:0,reasons:[],wet:false,thunder:false,hs};
+      const avg=hs.reduce((t,x)=>t+x.v,0)/hs.length, agg={}; hs.forEach(x=>x.f.forEach(q=>{ const g=agg[q.k]||(agg[q.k]={k:q.k,sum:0,best:q}); g.sum+=q.v; if(Math.abs(q.v)>Math.abs(g.best.v)) g.best=q; }));
+      const reasons=Object.values(agg).map(r=>({k:r.k,v:r.sum/hs.length,t:r.best.t})).filter(r=>Math.abs(r.v)>=.35).sort((x,y)=>Math.abs(y.v)-Math.abs(x.v));
+      return {n,s:s0,e,score:clamp(Math.round(avg),1,10),avg,reasons,wet:hs.some(x=>x.o.pop>=60||x.o.thunder),thunder:hs.some(x=>x.o.thunder),hs}; }).filter(p=>p.hs.length);
+    const best=per.reduce((x,y)=>y.avg>x.avg?y:x); let pk=null; for(let k=0;k<hrs.length-1;k++){ if(hrs[k].hr<best.s||hrs[k+1].hr>=best.e) continue; const sc=(hrs[k].v+hrs[k+1].v)/2; if(!pk||sc>pk.s) pk={s:sc,from:hrs[k].hr,to:hrs[k+1].hr+1}; }
+    if(!pk) pk={from:best.s,to:best.e}; const second=per.map(p=>p.avg).sort((x,y)=>y-x)[1]; const score=clamp(Math.round(best.avg*(second!=null?.8:1)+(second!=null?second*.2:0)),1,10);
+    const stormH=hrs.find(x=>x.o.thunder); return {dt,kind,day,per,best,peak:pk,hrs,score,est:hrs.some(x=>x.o.est),headline:hfHead(kind,per,best,hrs,stormH),play:hfPlay(kind,best,day)}; }
+  function hfHead(kind,per,best,hrs,stormH){ const firstWet=hrs.find(x=>x.o.pop>=30), lastWet=[...hrs].reverse().find(x=>x.o.pop>=50), anyWet=per.some(p=>p.wet), allWet=per.every(p=>p.wet), has=k=>best.reasons.some(r=>r.k===k&&r.v>0), P=best.n.toLowerCase();
+    if(kind==="fish"&&stormH) return best.thunder?"Storms on the water. Stay off the lake.":`Fish the ${P} ahead of the front, then get off the water. Storms arrive about ${fmtH(stormH.hr)}.`;
+    if(allWet) return kind==="deer"?"Rain most of the day. Better days are coming.":"Rain most of the day. Fish slow and stay safe.";
+    if(anyWet&&!best.wet){ if(best.n==="Morning"&&firstWet) return `Go early: dry until about ${fmtH(firstWet.hr)}, then rain moves in.`; if(lastWet) return `Rain clears by ${fmtH(lastWet.hr+1)}. The ${P} could be the best of the day.`; }
+    if(kind==="deer"){ if(has("after")) return `First dry ${P} after the rain. Deer should be on their feet.`; if(best.reasons.some(r=>r.k==="wind"&&r.v<=-1.5)) return "Windy all day. Tough day on stand.";
+      if(has("cool")&&has("rut")) return `Cooler air plus the rut: a strong ${P} sit.`; if(best.reasons.some(r=>r.k==="heat")) return `Warm day slows things down. Hunt the ${P}.`;
+      const adj=[]; if(has("crisp")) adj.push("crisp"); else if(has("cool")) adj.push("cooler"); if(has("calm")) adj.push("calm"); const a=adj.length?adj.join(", "):"seasonable";
+      return `${a[0].toUpperCase()+a.slice(1)} ${P}${has("rut")?(best.reasons.some(r=>r.k==="rut"&&r.v>=1)?" during the peak rut":" with the rut building"):""}.`; }
+    if(has("fall")) return "Ahead of the front. Fish should feed."; if(best.reasons.some(r=>r.k==="mud")) return "Muddy water after the rain. Slow, tough bite.";
+    if(per.some(p=>p.reasons.some(r=>r.k==="blue"))) return "Bluebird day behind the front. Slow down and fish deeper.";
+    const adj=[]; if(has("cloud")) adj.push("overcast skies"); if(has("chop")) adj.push("a light chop"); if(has("stable")) adj.push("stable weather"); return adj.length?`Good ${P} bite with ${adj.join(" and ")}.`:`Best bite in the ${P}.`; }
+  function hfPlay(kind,best,day){ const R=best.reasons.map(x=>x.k);
+    if(kind==="deer"){ if(best.n==="Morning") return `Be settled in the stand by ${fmtT(day.S.rise-30*60000)}, 30 minutes before sunrise, and stay until at least ${fmtT(day.S.rise+3*3600e3)}.`;
+      if(best.n==="Evening") return `Get in by ${fmtT(day.S.set-3*3600e3)} and hunt until legal light ends (${fmtT(day.S.set+30*60000)}). Watch the field edges as the light fades.`;
+      return "Midday sit: hunt travel corridors between bedding and food. Bucks cruising for does won't wait for dusk."; }
+    if(R.includes("bolt")) return "If you hear thunder, you're close enough to be struck. Head in."; if(R.includes("mud")) return "Fish slack water near clearer creek inflows. Dark or noisy baits help fish find them.";
+    if(R.includes("blue")) return "Slow down: finesse baits, deeper water, tight to cover. Fish don't chase after a front."; if(R.includes("fall")) return "Cover water with moving baits on windblown points and banks.";
+    if(R.includes("chop")) return "Work the wind-blown side of points and banks; baitfish get pushed there and fish follow.";
+    return best.n==="Morning"?`Start at first light (${fmtT(day.S.rise)}) shallow, then work deeper as the sun gets up.`:`Fish the last two hours of daylight shallow; the bite often turns on near sunset (${fmtT(day.S.set)}).`; }
+  function hfStrip(r){ const W=600,Hh=86,pad=20,hs=r.hrs,bw=(W-8)/hs.length; let s=`<svg class="hfs" viewBox="0 0 ${W} ${Hh+pad}" role="img" aria-label="Hour by hour">`;
+    [2.5,5,7.5].forEach(y=>s+=`<line x1="0" x2="${W}" y1="${Hh-y/10*Hh}" y2="${Hh-y/10*Hh}" stroke="rgba(255,255,255,.08)"/>`);
+    hs.forEach((x,k)=>{ const h=Math.max(3,x.v/10*Hh), col=hfTier(Math.round(x.v))[1], inPk=x.hr>=r.peak.from&&x.hr<r.peak.to;
+      s+=`<rect x="${4+k*bw+2}" y="${Hh-h}" width="${bw-4}" height="${h}" rx="3" fill="${col}" opacity="${inPk?1:.5}"/>`; if(x.o.pop>=40) s+=`<circle cx="${4+k*bw+bw/2}" cy="5" r="3" fill="#4f8cff"/>`;
+      if(k%2===0) s+=`<text x="${4+k*bw+bw/2}" y="${Hh+15}" text-anchor="middle" font-size="12" fill="#8FA0BC" font-family="Barlow,system-ui">${fmtH(x.hr).replace(" ","").toLowerCase()}</text>`; });
+    return s+"</svg>"; }
+  function hfDetail(r){ const best=r.best, top=[], seen=new Set(); for(const p of [best,...r.per.filter(p=>p!==best)]) for(const q of p.reasons){ if(!seen.has(q.k)&&top.length<5){ seen.add(q.k); top.push(q); } }
+    const T=r.hrs.map(x=>x.o.temp), pop=Math.max(...r.hrs.map(x=>x.o.pop)), wmax=Math.max(...r.hrs.map(x=>x.o.wind));
+    return `<div class="hfx"><div class="hfper">${r.per.map(p=>{ const c=hfTier(p.score)[1]; return `<div class="${p===best?"on":""}"><small>${p.n}</small><b style="color:${c}">${p.score}<i>/10</i></b><span>${fmtH(p.s)}–${fmtH(p.e)}${p.wet?" · rain":""}</span></div>`; }).join("")}</div>
+      <div class="hfpk"><small>${r.kind==="deer"?"Peak deer movement":"Peak feeding"}</small><b>${fmtH(r.peak.from)} – ${fmtH(r.peak.to)}</b></div>${hfStrip(r)}
+      <ul class="hfwhy">${top.map(q=>`<li><span class="${q.v>0?"p":"m"}">${q.v>0?"+":"−"}${Math.abs(q.v).toFixed(1)}</span><span>${q.t}</span></li>`).join("")}</ul>
+      <div class="hfplay"><b>How to play it</b>${r.play}</div>
+      <div class="hfcond"><span>Temps <b>${Math.min(...T)}°–${Math.max(...T)}°</b></span><span>Rain chance <b>${Math.round(pop/10)*10}%</b></span><span>Wind up to <b>${wmax} mph</b></span><span>Sunrise <b>${fmtT(r.day.S.rise)}</b></span><span>Sunset <b>${fmtT(r.day.S.set)}</b></span><span>Moon <b>${r.day.M.name}, ${Math.round(r.day.M.f*100)}%</b></span></div>
+      ${r.est?`<p class="hfest">Past about a week the hours come from the 3-hourly model blend, so this day's detail is rougher.</p>`:""}</div>`; }
+  async function hf(){ const sec=document.querySelector(".p-hf"); if(!sec) return; const v=venue()||{}, la=+v.la, lo=+v.lo; if(!isFinite(la)) return; const HH=hfHours(); if(HH.length<12) return;
+    const RES={deer:[],fish:[]}; for(let k=0;k<10;k++){ const dt=new Date(); dt.setDate(dt.getDate()+k); dt.setHours(12,0,0,0); ["deer","fish"].forEach(kind=>{ const r=hfDay(dt,kind,HH,la,lo); if(r) RES[kind].push(r); }); }
+    if(!RES.deer.length) return; const lab=(r,i)=>i===0&&r.dt.toDateString()===new Date().toDateString()?"Today":r.dt.toLocaleDateString("en-US",{weekday:"short"});
+    const bestOf=kind=>RES[kind].reduce((x,y)=>y.score>x.score?y:x), bl=kind=>{ const b=bestOf(kind), i=RES[kind].indexOf(b); return `Best day: <b>${lab(b,i)} ${b.dt.getMonth()+1}/${b.dt.getDate()} · ${b.score}/10</b><br>${b.headline}`; };
+    const body=sec.querySelector(".hfb"); let h="";
+    if(!HFK){ h=`<p class="hfintro">Scores out of 10 for the next 10 days, built from the forecast: rain timing, fronts, wind, temperature, the rut and the moon. Pick one.</p>
+      <div class="hfch"><button type="button" class="hfpick" data-k="deer"><b>Deer Hunting</b><span>${bl("deer")}</span><em>See the 10-day →</em></button><button type="button" class="hfpick" data-k="fish"><b>Fishing</b><span>${bl("fish")}</span><em>See the 10-day →</em></button></div>`; }
+    else { const L=RES[HFK]; if(HFOPEN<0) HFOPEN=L.indexOf(bestOf(HFK));
+      h=`<div class="hfbar"><button type="button" class="hfback">← Hunt &amp; Fish</button><div class="hfseg"><button type="button" data-k="deer" aria-pressed="${HFK==="deer"}">Deer</button><button type="button" data-k="fish" aria-pressed="${HFK==="fish"}">Fishing</button></div></div>
+        <div class="hfdays">${L.map((r,i)=>{ const [w,c]=hfTier(r.score); return `<div class="hfday${i===HFOPEN?" open":""}"><button type="button" class="hfrow" data-i="${i}"><span class="hfdn">${lab(r,i)}<small>${r.dt.getMonth()+1}/${r.dt.getDate()}</small></span><span class="hfsc" style="background:${c}">${r.score}</span><span class="hfrt"><b>${r.headline}</b><small>${w} · best ${r.best.n.toLowerCase()} · peak ${fmtH(r.peak.from)}–${fmtH(r.peak.to)}</small></span><i class="hfcv">${i===HFOPEN?"−":"+"}</i></button>${i===HFOPEN?hfDetail(r):""}</div>`; }).join("")}</div>
+        <div class="hfleg"><span style="background:#22c55e">8–10 Great</span><span style="background:#86d94a">6–7 Good</span><span style="background:#f5b400">4–5 Fair</span><span style="background:#7d8bad">1–3 Poor</span></div>
+        <details class="hflearn"><summary>New to this? How the score works</summary><div>${HFK==="deer"?`<p><b>The day after a rain.</b> Deer bed down and wait out steady rain. The first dry, calm stretch afterward is often the best sit of the week.</p><p><b>A temperature drop.</b> A morning clearly cooler than the day before gets deer moving in daylight. Unusually warm days keep them bedded.</p><p><b>Wind.</b> Over about 15 mph deer get nervous and move less, and your scent swirls.</p><p><b>Rain and storms during your hunt.</b> Light drizzle is fine. Steady rain or thunder drops the score hard.</p><p><b>The rut.</b> During the rut bucks search for does at all hours, even midday.</p><p><b>The moon.</b> A small tiebreaker, not the main driver.</p>`:`<p><b>Ahead of a front.</b> Fish often feed hard in the hours before the weather changes.</p><p><b>The bluebird day after a front.</b> Clear skies behind a front usually mean a slow bite. Fish tuck into cover.</p><p><b>Muddy water.</b> After heavy rain, rising, muddy water makes baits hard to find for a day or two.</p><p><b>Clouds, chop and low light.</b> Overcast skies, a light breeze and the first and last hours of daylight keep fish feeding shallow.</p><p><b>Lightning.</b> Any thunder sets the score to the bottom. Get off the water.</p>`}<p>Each hour gets a score, grouped into morning, midday and evening. The day's score leans on its best period, so a rainy afternoon won't hide a great morning.</p></div></details>`; }
+    h+=`<p class="hflegal">Always check your state's legal shooting hours. Rut timing is an estimate for this area.</p>`;
+    body.innerHTML=h;
+    body.querySelectorAll(".hfpick,.hfseg button").forEach(b=>b.onclick=e=>{ e.stopPropagation(); if(HFK!==b.dataset.k) HFOPEN=-1; HFK=b.dataset.k; hf(); });
+    const bk=body.querySelector(".hfback"); if(bk) bk.onclick=e=>{ e.stopPropagation(); HFK=null; HFOPEN=-1; hf(); };
+    body.querySelectorAll(".hfrow").forEach(b=>b.onclick=e=>{ e.stopPropagation(); const i=+b.dataset.i; HFOPEN=HFOPEN===i?-2:i; hf(); });
+    const bd=bestOf("deer"), bf=bestOf("fish"), bar=sec.querySelector(".cxbar span"); if(bar) bar.textContent=`Deer: best ${lab(bd,RES.deer.indexOf(bd))} ${bd.score}/10 · Fishing: best ${lab(bf,RES.fish.indexOf(bf))} ${bf.score}/10`;
+    window._HF_TXT=`=== HUNT & FISH, NEXT 10 DAYS (scores out of 10 from the forecast) ===\n`+["deer","fish"].map(k=>`${k==="deer"?"DEER":"FISHING"}: `+RES[k].map((r,i)=>`${lab(r,i)} ${r.dt.getMonth()+1}/${r.dt.getDate()} ${r.score}/10 (best ${r.best.n.toLowerCase()}, peak ${fmtH(r.peak.from)}-${fmtH(r.peak.to)}): ${r.headline}`).join("; ")).join("\n")+`\nHunters must check their state's legal shooting hours.`; }
   const g5r=n=>Math.ceil(n/5)*5;
   function mount(){ if(document.querySelector(".p-hf")) return; const after=document.querySelector(".p-alm")||document.querySelector(".p-bucket"); if(!after) return;
-    const sec=document.createElement("section"); sec.className="panel p-hf cx"; sec.innerHTML=`<button type="button" class="cxbar"><i>🦌</i><div><b>HUNT & FISH</b><span>Deer movement, fishing and the best times, next 10 days.</span></div><em>Open ›</em></button><div class="hfb"></div>`;
+    const sec=document.createElement("section"); sec.className="panel p-hf cx"; sec.innerHTML=`<button type="button" class="cxbar"><i>🦌</i><div><b>HUNT & FISH</b><span>Deer hunting and fishing, scored for the next 10 days.</span></div><em>Open ›</em></button><div class="hfb"></div>`;
     after.insertAdjacentElement("afterend",sec); sec.querySelector(".cxbar").onclick=()=>{ sec.classList.toggle("cx"); sec.querySelector(".cxbar em").textContent=sec.classList.contains("cx")?"Open ›":"Close ▴"; };
     hf(); }
   setTimeout(mount,6500); setInterval(()=>{ if(!document.querySelector(".p-hf")) mount(); else hf(); },20*60000);

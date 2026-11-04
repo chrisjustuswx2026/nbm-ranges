@@ -618,7 +618,8 @@ var SDR_ENGINE=(function(){
   function chatMode(){ try{ var C=window.parent.CHANNEL; return C&&C.chatMode==="review"?"review":"auto"; }catch(e){ return "auto"; } }
   function siteName(){ try{ return window.parent.DASH.venue().name; }catch(e){ return ""; } }
   var THREAD=(function(){ var k="sdr-thread-"+siteName(); try{ var v=localStorage.getItem(k); if(v) return v; v=Date.now().toString(36)+Math.random().toString(36).slice(2,8); localStorage.setItem(k,v); return v; }catch(e){ return Date.now().toString(36)+Math.random().toString(36).slice(2,8); } })();
-  function schedText(){ try{ return [].slice.call(window.parent.document.querySelectorAll("#sched .ev")).map(function(e){ var tm=e.querySelector(".tm"), nm=e.querySelector(".nm"); return (tm?tm.textContent.replace(/\s+/g," ").trim():"")+" · "+(nm?nm.textContent.replace(/\s+/g," ").trim():""); }).join("\n"); }catch(e){ return ""; } }
+  // v216: only a schedule the client actually uploaded (never the sample events shown in the Schedule Watch ad)
+  function schedText(){ try{ if(window.parent.SDR_SCHED_PROMO&&window.parent.SDR_SCHED_PROMO()) return ""; return [].slice.call(window.parent.document.querySelectorAll("#sched .ev")).map(function(e){ var tm=e.querySelector(".tm"), nm=e.querySelector(".nm"); return (tm?tm.textContent.replace(/\s+/g," ").trim():"")+" · "+(nm?nm.textContent.replace(/\s+/g," ").trim():""); }).join("\n"); }catch(e){ return ""; } }
   // review mode: the team's replies arrive on the thread
   var POLL=null, SINCE=Date.now()-60000, LASTASKED="";
   function pollThread(){ var url=aiUrl(); if(!url||POLL) return; var n=0;

@@ -4459,7 +4459,7 @@ window.MAPROOM = (function(){
     out+=land.map(f=>`<path d="${path(f.geometry)}" fill="none" stroke="#000" stroke-width="${W>500?1.1:.8}"/>`).join("");
     const placed=[]; [...(opts.points||[])].reverse().forEach(p=>{ const [x,y]=P(p.lo,p.la); const w=(p.label||"").length*6.6+10;
       const lab = p.label && !placed.some(q=>Math.abs(q.y-y)<13 && +x+w>q.x-3 && +x<q.x+q.w+3); if(lab||!p.label) placed.push({x:+x,y:+y,w:p.label?w:20});
-      out+=`<circle cx="${x}" cy="${y}" r="${p.r||4}" fill="${p.fill||"#F28C28"}" stroke="#000" stroke-width="1.5"/>${lab?`<text x="${+x+7}" y="${+y+4}" class="mrt">${p.label}</text>`:""}`; });
+      if(lab||!p.label||p.fill==="#F28C28") out+=`<circle cx="${x}" cy="${y}" r="${p.r||4}" fill="${p.fill||"#F28C28"}" stroke="#000" stroke-width="1.5"/>${lab?`<text x="${+x+7}" y="${+y+4}" class="mrt">${p.label}</text>`:""}`; });
     return out+"</svg>";
   }
   const dayName=(d)=>{ const t=new Date(); t.setDate(t.getDate()+d); const lab=d===0?"TODAY":d===1?"TOMORROW":t.toLocaleDateString("en-US",{weekday:"long"}).toUpperCase(); return lab+" · "+t.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}).toUpperCase(); };
@@ -4854,9 +4854,10 @@ window.MAPVIEW = (function(){
   const add = (fc, style, explain) => L.geoJSON(fc,{style, onEachFeature:(f,l)=>l.on("click",e=>{ L.DomEvent.stopPropagation(e); query(e.latlng, explain(f), f); })}).addTo(over);
   function priority(d){
     const P=d.priority||{};
-    if((P.mds||[]).length) add({type:"FeatureCollection",features:P.mds},()=>({color:"#FF8C1A",weight:2.5,dashArray:"7 5",fillColor:"#FF8C1A",fillOpacity:.12}),
-      f=>`<b style="color:#FF8C1A">STORMS ORGANIZING</b> · an area we're watching for severe storms or a watch.${f._towns&&f._towns.length?`<br>Inside: ${f._towns.join(", ")}`:""}${f._url?`<br><a href="${f._url}" target="_blank" rel="noopener" style="color:#A9B6CC">Read the discussion</a>`:""}`);
-    if((P.watches||[]).length) add({type:"FeatureCollection",features:P.watches},f=>({color:f.properties.event==="Tornado Watch"?"#FFFF00":"#DB7093",weight:2.5,fillOpacity:.10,fillColor:f.properties.event==="Tornado Watch"?"#FFFF00":"#DB7093"}),
+    const _stormMap=!!CUR&&/^(md|watch|radar|spc1|torn1)$/.test(String(CUR.id||""));
+    if((P.mds||[]).length&&_stormMap) add({type:"FeatureCollection",features:P.mds},()=>({color:"#FF8C1A",weight:2.5,dashArray:"7 5",fillColor:"#FF8C1A",fillOpacity:.12}),
+      f=>window.SDR_MDHTML?SDR_MDHTML(f):`<b style="color:#FF8C1A">STORMS ORGANIZING</b>`); try{ (P.mds||[]).forEach(f=>{ if(f._num&&window._mdInfo) window._mdInfo(f._num); }); }catch(e){}
+    if((P.watches||[]).length&&_stormMap) add({type:"FeatureCollection",features:P.watches},f=>({color:f.properties.event==="Tornado Watch"?"#FFFF00":"#DB7093",weight:2.5,fillOpacity:.10,fillColor:f.properties.event==="Tornado Watch"?"#FFFF00":"#DB7093"}),
       f=>{ const a=window.ALERTINFO; return a?a.html(a.info(f)):f.properties.event; });
     if((P.tropWarn||[]).length) add({type:"FeatureCollection",features:P.tropWarn},f=>({color:"#B22222",weight:4,fill:false}),
       f=>{ const p=f.properties||{}; return `<b style="color:#FF6B6F">${(p.tcww||p.TCWW||"TROPICAL WATCH / WARNING").toString().replace("TWR","Tropical Storm Warning").replace("TWA","Tropical Storm Watch").replace("HWR","Hurricane Warning").replace("HWA","Hurricane Watch")}</b>${p.stormname?` · ${p.stormname}`:""}`; });
@@ -4902,7 +4903,7 @@ window.MAPVIEW = (function(){
       add({type:"FeatureCollection",features:t.cones},()=>({color:"#fff",weight:1.5,fillColor:"#fff",fillOpacity:.3}), x=>{ const p=x.properties||{}; return `<b>${p.stormname||p.STORMNAME||"Active storm"}</b> · forecast cone${p.advisnum||p.ADVISNUM?` · advisory ${p.advisnum||p.ADVISNUM}`:""}<br>The center is expected to stay inside the cone about two-thirds of the time. Impacts reach well outside it.`; });
       leg.innerHTML='<span><i style="background:#FFFF00"></i>Low</span><span><i style="background:#FF9900"></i>Medium</span><span><i style="background:#FF0000"></i>High</span><span><i style="background:#fff"></i>Forecast cone</span>'; }
     priority(data);
-    const pr=data.priority||{}; if((pr.mds||[]).length) leg.innerHTML+='<span><i style="background:transparent;border:2px dashed #FF8C1A"></i>Storms organizing</span>'; if((pr.watches||[]).length) leg.innerHTML+='<span><i style="background:#FFFF00"></i>Tornado watch</span><span><i style="background:#DB7093"></i>Severe T-storm watch</span>';
+    const pr=/^(md|watch|radar|spc1|torn1)$/.test(String(card.id||""))?(data.priority||{}):{}; if((pr.mds||[]).length) leg.innerHTML+='<span><i style="background:transparent;border:2px dashed #FF8C1A"></i>Storms organizing</span>'; if((pr.watches||[]).length) leg.innerHTML+='<span><i style="background:#FFFF00"></i>Tornado watch</span><span><i style="background:#DB7093"></i>Severe T-storm watch</span>';
     if(/^(tropics|torn)/.test(card.id)&&Array.isArray(card.box)&&!card.focus) card.focus=[[card.box[1],card.box[0]],[card.box[3],card.box[2]]]; const bx=SDR_FPBOX(); BOX=(card.id!=="rivers"&&card.focus)||[[bx[1],bx[0]],[bx[3],bx[2]]]; const wide=!card.focus&&innerWidth>=700&&card.id!=="rivers";   // phones open on the region (the whole U.S. is too small to read there)
     setTimeout(()=>{ zoomTo(wide?"us":"r"); placeTowns(); },50);
   }
@@ -5900,8 +5901,8 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
   const _tag=(xx,yy,t,f,c)=>`<text x="${xx}" y="${yy}" font-family="var(--display),Arial,sans-serif" font-size="${f||13}" font-weight="800" fill="${c||"#1B2433"}" text-anchor="middle" stroke="#fff" stroke-width="3.5" paint-order="stroke">${t}</text>`;
   function hourChart(x,H,W){ const day=new Date(x.date).toDateString(), night=x.d==="TONIGHT", eve=day===new Date().toDateString()&&new Date().getHours()>=15;
     const L=eve?H.filter(h=>{ const t=+new Date(h.t); return t>=Date.now()-3600e3&&t<Date.now()+16*3600e3; }):H.filter(h=>{ const t=new Date(h.t); return t.toDateString()===day&&t.getHours()>=(night?16:6); }); if(L.length<4) return null;
-    const N=L.length, sm=W<520, Ht=sm?252:282, top=sm?84:94, bot=Ht-50, col=(W-8)/N, X=i=>4+col*i+col/2, bw=Math.min(26,col*.68), Y=v=>bot-(bot-top)*v/100;
-    const T=L.map(h=>h.temp), tl=Math.min(...T), th=Math.max(...T), ty=v=>54-36*((v-tl)/Math.max(1,th-tl));
+    const N=L.length, sm=W<520, Ht=sm?240:270, top=sm?88:98, bot=Ht-30, col=(W-8)/N, X=i=>4+col*i+col/2, bw=Math.min(26,col*.68), Y=v=>bot-(bot-top)*v/100;
+    const T=L.map(h=>h.temp), tl=Math.min(...T), th=Math.max(...T), ty=v=>62-34*((v-tl)/Math.max(1,th-tl));
     const every=sm?(N>12?3:2):N>14?2:1; let g="";
     [25,50,75].forEach(v=>g+=`<line x1="0" x2="${W}" y1="${Y(v)}" y2="${Y(v)}" stroke="rgba(27,36,51,.08)"/>`); g+=`<line x1="0" x2="${W}" y1="${bot}" y2="${bot}" stroke="rgba(27,36,51,.3)"/>`;
     const pk=Math.max(0,...L.map(h=>h.pop||0)), first=L.findIndex(h=>(h.pop||0)>=Math.min(40,Math.max(20,pk-20))), fr=L.findIndex(q=>(q.pop||0)>=10);
@@ -5911,10 +5912,10 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
         g+=`<rect x="${X(i)-bw/2}" y="${bot-bh}" width="${bw}" height="${bh}" rx="3" fill="${c}"/>`;
         if(v>=10&&showP) g+=_tag(X(i),bot-bh-6,v+"%",sm?11:12);
         if(st&&(showP||!sm)) g+=_tag(X(i),bot-bh-(v>=10&&showP?20:6),"⚡",11,"#E8920C"); }
-      if(i%every===0) g+=`<text x="${X(i)}" y="${bot+18}" font-size="11.5" font-weight="700" fill="#5A6B80" text-anchor="middle">${_ax(h.t)}</text><text x="${X(i)}" y="${bot+38}" font-size="12.5" font-weight="800" fill="${h.temp===th?"#C2410C":h.temp===tl?"#1F5FBF":"#1B2433"}" text-anchor="middle">${h.temp}°</text>`; });
+      if(i%every===0) g+=`<text x="${X(i)}" y="${bot+18}" font-size="11.5" font-weight="700" fill="#5A6B80" text-anchor="middle">${_ax(h.t)}</text>`; });
     const P=L.map((h,i)=>[X(i),ty(h.temp)]); g+=`<polyline points="${P.map(p=>p.join(",")).join(" ")}" fill="none" stroke="#E07B00" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>`;
-    L.forEach((h,i)=>{ if(i%every===0) g+=`<circle cx="${P[i][0]}" cy="${P[i][1]}" r="3" fill="#E07B00"/>`; }); g+=`<line x1="0" x2="${W}" y1="${bot+26}" y2="${bot+26}" stroke="rgba(27,36,51,.07)"/>`;
-    let win=""; if(pk>=30){ const core=L.filter(h=>(h.pop||0)>=pk-10); win=`${_h12(core[0].t)}–${_h12(+new Date(core[core.length-1].t)+3600e3)}`; }
+    L.forEach((h,i)=>{ if(i%every===0) g+=`<circle cx="${P[i][0]}" cy="${P[i][1]}" r="3.2" fill="#E07B00"/><text x="${P[i][0]}" y="${P[i][1]-9}" font-size="12.5" font-weight="800" fill="${h.temp===th?"#C2410C":h.temp===tl?"#1F5FBF":"#1B2433"}" text-anchor="middle">${h.temp}°</text>`; });
+    let win=""; if(pk>=30){ const thr=Math.max(Math.min(40,pk),pk-30), core=L.filter(h=>(h.pop||0)>=thr); win=`${_h12(core[0].t)}–${_h12(+new Date(core[core.length-1].t)+3600e3)}`; }
     const TH=L.filter(h=>(h.thunder||0)>=30), twin=TH.length?`${_h12(TH[0].t)}–${_h12(+new Date(TH[TH.length-1].t)+3600e3)}`:"";
     return { svg:`<svg viewBox="0 0 ${W} ${Ht}" role="img" aria-label="Hour by hour">${g}</svg>`, start:first>0&&pk>=30?_h12(L[first].t):"", win, pk, twin, hi:th, lo:tl,
       gust:Math.max(0,...L.map(h=>h.gust||0)) }; }
@@ -5976,7 +5977,7 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
   const _mainLine=T=>T.main==="tornado"?"Damaging gusts and a tornado or two are possible.":T.main==="flood"?"Flooding rain is the main concern.":T.main==="wind"?`${T.g>=58?"Damaging":"Strong"} gusts to ${T.G} mph are the main concern.`:T.main==="snow"?"Slick roads are the main concern.":T.main==="lightning"?"Lightning is the main concern.":"";
   // the bottom line: one action that fits the threat on this page
   function _bottom(HZ,b,T,city,tw,wn){ const txt=[b.title,b.sub,...(b.lines||[])].join(" ");
-    if(HZ==="severe") return T.torW||T.svW?`${T.torW?"Tornado Watch":"Severe Thunderstorm Watch"} in effect. Know where you'll shelter, and move people right away if a warning is issued.`:/organizing|watch likely/i.test(txt)?"A watch is likely soon. Know where you'll shelter now.":/Level [3-5]/.test(txt)?`Have shelter plans ready${tw?` for ${tw}`:""}.`:`Plan outdoor activities around ${tw||"the storms"}; move people indoors at the first thunder.`;
+    if(HZ==="severe") return T.torW||T.svW?`${T.torW?"Tornado Watch":"Severe Thunderstorm Watch"} in effect. Know where you'll shelter, and move people right away if a warning is issued.`:/organizing|watch likely/i.test(txt)?"A watch is likely soon. Know where you'll shelter now.":/Level [3-5]/.test(txt)?`Have shelter plans ready${tw?` for ${tw}`:""}.`:`${tw?`Rain and storms on and off ${tw}`:"Storms possible"}; move indoors at the first thunder and stay off flooded roads.`;
     if(HZ==="flood") return T.flW?"Flooding is happening or expected. Avoid low roads and creek crossings, and never drive through water on the road.":`Avoid low roads and creek crossings${tw?` ${tw}`:""}; never drive through water on the road.`;
     if(HZ==="winter") return "Decide on delays and closures tonight; pre-treat walkways and entrances.";
     if(HZ==="freeze") return "Protect pipes, irrigation and tender plants tonight.";
@@ -6108,7 +6109,7 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
       // v225: frame the map on what matters (the area + the site), with the bigger towns labeled
       const zbox=(F,minW,minH)=>{ let w=s.lo,e=s.lo,so=s.la,n=s.la; const walk=c=>{ if(typeof c[0]==="number"){ w=Math.min(w,c[0]); e=Math.max(e,c[0]); so=Math.min(so,c[1]); n=Math.max(n,c[1]); } else c.forEach(walk); }; (F||[]).forEach(f=>{ try{ walk(f.geometry.coordinates); }catch(x){} });
         w-=.8; e+=.8; so-=.6; n+=.6; const cx=(w+e)/2, cy=(so+n)/2, k=Math.cos(cy*Math.PI/180); let hw=Math.max((e-w)/2,minW/2), hh=Math.max((n-so)/2,minH/2); const R=(720/_mh); if(hw*k/hh<R) hw=hh*R/k; else hh=hw*k/R; return [cx-hw,cy-hh,cx+hw,cy+hh]; };
-      const cities=bx=>{ const S=window.SDR_CITY_OK||(()=>true); return (window.GEO_PLACES||[]).filter(r=>r[2]>=40000&&r[4]>bx[0]+.3&&r[4]<bx[2]-.3&&r[3]>bx[1]+.2&&r[3]<bx[3]-.2&&S(r)).sort((a,b)=>b[2]-a[2]).slice(0,12).map(r=>({lo:r[4],la:r[3],fill:"#FFFFFF",r:2.6,label:r[0]})); };
+      const cities=bx=>{ const S=window.SDR_CITY_OK||(()=>true); return (window.GEO_PLACES0||window.GEO_PLACES||[]).filter(r=>r[2]>=40000&&r[4]>bx[0]+.3&&r[4]<bx[2]-.3&&r[3]>bx[1]+.2&&r[3]<bx[3]-.2&&S(r)).sort((a,b)=>b[2]-a[2]).slice(0,12).map(r=>({lo:r[4],la:r[3],fill:"#FFFFFF",r:2.6,label:r[0]})); };
       const _mh=pw<=520?470:340, zpts=bx=>cities(bx).concat([{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:city.toUpperCase()}]);
       const d=HD!=null?HD:ki, PR=M.priority||{}, nr=g=>{ try{ const P=g.type==="Polygon"?[g.coordinates]:g.type==="MultiPolygon"?g.coordinates:[]; return P.some(p=>p[0].some(([x,y])=>Math.abs(x-s.lo)<=4&&Math.abs(y-s.la)<=3)); }catch(e){ return false; } };
       if(HK==="md"&&(PR.mds||[]).some(f=>nr(f.geometry))){ const MF=(PR.mds||[]).filter(f=>nr(f.geometry)), zb=zbox(MF,4.6,2.3); return SDR_BMAP(zb,720,_mh,[{features:MF,style:()=>({fill:"#FF8C1A",stroke:"#E0700A",w:2.5,dash:"7 5",fo:.2})}],{points:zpts(zb),title:"STORMS ORGANIZING",sub:"Where we're watching"})+`<div class="bslg"><span><i style="background:#FF8C1A"></i>Where storms are organizing</span></div>`; }
@@ -6864,7 +6865,7 @@ window.SDR_GL=(function(){
 
 <script>
 // v125: client chat layer
-(function(){ let wrap=null, fr=null; const CHATV="1793848632";
+(function(){ let wrap=null, fr=null; const CHATV="1793849672";
   function open(){ if(!wrap){ wrap=document.createElement("div"); wrap.id="chatwrap"; wrap.innerHTML='<iframe id="chatfr" title="Message the team" allow="camera"></iframe>'; document.body.appendChild(wrap); fr=wrap.querySelector("iframe"); fr.src="./chat.html?v="+CHATV; fr.addEventListener("load",()=>{ try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }); }
     wrap.hidden=false; document.body.classList.add("chat-on"); if(!(history.state&&history.state.chat)) history.pushState({chat:1},""); try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }
   function close(){ if(wrap){ wrap.hidden=true; } document.body.classList.remove("chat-on"); }
@@ -7081,7 +7082,7 @@ window.SDR_ROADS=(x,hs,hi)=>{ const sn=Math.max(hs||0,x.sr?x.sr[1]/100:0), ic=Ma
   else return ""; return `<div class="roads ${c}"><small>ROADS</small><span>${t}</span></div>`; };
 
 // v149: What's Next never skips showers happening now or in the next few hours
-window.SDR_NOWFIRST=(r,H)=>{ if(!r||/\bnow\b|arriving|moves in|by \d|winding/i.test(r.h)) return r;
+window.SDR_NOWFIRST=(r,H)=>{ if(!r||/moves in|by \d|winding/i.test(r.h)) return r;
   const now=Date.now(), hm=d=>{ d=new Date(d); let h=d.getHours(); return h===12?"noon":h===0?"midnight":(h%12)+" "+(h>=12?"PM":"AM"); };
   const H6=(H||[]).filter(h=>+new Date(h.t)>now-3600e3&&+new Date(h.t)<now+6*3600e3), wet=H6.filter(h=>(h.pop||0)>=20);
   const RN=window.RADAR_NEAR, radar=RN&&!RN.none&&!RN.light&&RN.d<=20, obs=window.OBS_WET&&OBS_WET.wet;
@@ -7091,7 +7092,7 @@ window.SDR_NOWFIRST=(r,H)=>{ if(!r||/\bnow\b|arriving|moves in|by \d|winding/i.t
   const first=wet[0], start=first?+new Date(first.t):now, nowish=radar||obs||start-now<60*60e3;
   const end=(H||[]).filter(h=>+new Date(h.t)>Math.max(now,start)).find(h=>(h.pop||0)<20);
   const dl=t=>{ const d=new Date(t), k=Math.round((new Date(d).setHours(0,0,0,0)-new Date().setHours(0,0,0,0))/864e5); return k<=0?"":k===1?" tomorrow":" "+d.toLocaleDateString("en-US",{weekday:"long"}); };
-  const h=nowish?(end&&+new Date(end.t)-now<30*3600e3?`${W} until ${hm(end.t)}${new Date(end.t).getHours()>=4||+new Date(end.t)-now>12*3600e3?dl(end.t):""}`:`${W} on and off for a while`):`${W} after ${hm(start)}`;
+  const h=nowish?(end&&+new Date(end.t)-now<30*3600e3?`${W} until ${hm(end.t)}${new Date(end.t).getHours()>=8||+new Date(end.t)-now>12*3600e3?dl(end.t):""}`:`${W} on and off for a while`):`${W} after ${hm(start)}`;
   const rest=String(r.p||"").replace(/\s*Dry until then\.?/i,"").trim();
   const same=/\b(tonight|today|this (morning|afternoon|evening)|now)\b/i.test(r.h||"");
   return {level:r.level==="clear"?"clear":r.level, ico:cold?"sn":"rn", h, p:same?(rest&&!/^dry/i.test(rest)?rest.charAt(0).toUpperCase()+rest.slice(1):""):`Then ${r.h.charAt(0).toLowerCase()+r.h.slice(1)}${rest?": "+rest.charAt(0).toLowerCase()+rest.slice(1):"."}`}; };
@@ -8126,7 +8127,7 @@ window.SDR_BMAP=function(box,W,H,lay,o){ o=o||{}; if(!window.MAPROOM||!MAPROOM.s
   const pw=window._bsPW||720, wide=!!window._bsWide, disp=Math.max(280,o.disp||(wide?pw*.6:pw-40)), k=Math.max(.8,W/disp);
   const F='font-family="Inter,Helvetica Neue,Arial,sans-serif"', esc=t=>String(t||"").replace(/&/g,"&amp;").replace(/</g,"&lt;");
   const PTS=o.points||[], site=PTS.find(p=>p.fill==="#F28C28"); let C=PTS.filter(p=>p!==site&&p.label);
-  if(o.cities||!C.length){ const ok=window.SDR_CITY_OK||(()=>true); C=(window.GEO_PLACES||[]).filter(r=>r[2]>=40000&&r[4]>lo0&&r[4]<lo1&&r[3]>la0&&r[3]<la1&&ok(r)).sort((a,b)=>b[2]-a[2]).slice(0,40).map(r=>({lo:r[4],la:r[3],label:r[0]})); }
+  if(o.cities||!C.length){ const ok=window.SDR_CITY_OK||(()=>true); C=(window.GEO_PLACES0||window.GEO_PLACES||[]).filter(r=>r[2]>=40000&&r[4]>lo0&&r[4]<lo1&&r[3]>la0&&r[3]<la1&&ok(r)).sort((a,b)=>b[2]-a[2]).slice(0,40).map(r=>({lo:r[4],la:r[3],label:r[0]})); }
   const used=[], hit=(x,y,w,h)=>x<2||y<2||x+w>W-2||y+h>H-2||used.some(u=>x<u.x+u.w&&x+w>u.x&&y<u.y+u.h&&y+h>u.y), take=(x,y,w,h)=>used.push({x,y,w,h});
   let out="";
   // title plaque (logo + title), top-left, like the Map Room
@@ -8218,4 +8219,11 @@ window.SDR_READER=card=>{ try{
 html.sdr-reading,html.sdr-reading body{overflow:hidden}
 @media(min-width:900px){#sdr-reader{padding-top:40px}#sdr-reader .rdh h3{font-size:32px}}
 </style>
+<script>
+window.SDR_MDHTML=f=>{ const inf=(window._MDINFO||{})[f._num], C=inf&&window.SDR_MDCHIPS2?SDR_MDCHIPS2(inf):[], tf=t=>new Date(t).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
+  const lk=inf&&inf.prob!=null?(inf.prob>=80?"<b>A watch is likely soon.</b>":inf.prob>=40?"<b>A watch is possible.</b>":"<b>A watch is not expected right now</b>, but these storms can still be strong."):"";
+  const T=f._towns||[];
+  return `<div class="mdpop"><b style="color:#FF8C1A;font-size:15px;letter-spacing:.04em">STORMS ORGANIZING</b>${C.length?`<div class="mdch">${C.map(([k,v])=>`<span><em>${k}</em>${v}</span>`).join("")}</div>`:""}${inf&&inf.to?`<div>${inf.from?"From <b>"+tf(inf.from)+"</b> to ":"Through "}<b>${tf(inf.to)}</b></div>`:""}${lk?`<div>${lk}</div>`:""}${T.length?`<div style="color:#A9B6CC">Towns inside: ${T.slice(0,4).join(", ")}${T.length>4?` and ${T.length-4} more`:""}</div>`:""}</div>`; };
+</script>
+<style>.mdpop{display:grid;gap:5px;min-width:230px;max-width:320px;font-size:14px;line-height:1.4;white-space:normal}.mdpop .mdch{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0}.mdpop .mdch span{display:inline-flex;gap:5px;align-items:baseline;background:rgba(255,255,255,.08);border-radius:7px;padding:4px 8px;font-weight:700;color:#fff;white-space:nowrap}.mdpop .mdch em{font-style:normal;font-size:10.5px;letter-spacing:.1em;color:#A9B6CC}</style>
 </body></html>

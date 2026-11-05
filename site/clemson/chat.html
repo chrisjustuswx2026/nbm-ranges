@@ -470,36 +470,37 @@ var SDR_ENGINE=(function(){
   function tableCard(title,rows,hl){ var Wd=320, rh=22, Hh=30+rows.length*rh+8; var y=26; var body=rows.map(function(r,i){ var yy=30+i*rh; return '<rect x="0" y="'+(yy-2)+'" width="'+Wd+'" height="'+rh+'" fill="'+(i===hl?"rgba(79,163,255,.22)":i%2?"rgba(255,255,255,.03)":"transparent")+'"/>'+r.map(function(cell,j){ var x=j===0?10:j===1?120:j===2?200:270; var anchor=j===0?"start":"end"; var xx=j===0?10:(j===1?170:j===2?245:310); return '<text x="'+xx+'" y="'+(yy+13)+'" text-anchor="'+anchor+'" font-size="12" font-weight="'+(j===0?700:600)+'" fill="'+(j===0?"#F4F7FB":"#DCE6F5")+'" '+FONT+'>'+cell+'</text>'; }).join(""); }).join("");
     return '<svg viewBox="0 0 '+Wd+' '+Hh+'" style="width:100%;height:auto;display:block;background:#0E1A33"><text x="10" y="16" font-size="11" font-weight="800" letter-spacing=".08em" fill="#fff" '+FONT+'>'+title+'</text>'+body+'</svg>'; }
   function weekTable(hi){ var D=days().slice(0,7); var rows=[["DAY","CHANCE","LIKELY","HIGH END"]].concat(D.map(function(d){ var pp=Math.max(d.pp||0,d.ppN||0); return [(d.d||"").toUpperCase(), pp?pp+"%":"dry", d.rr&&d.rr[1]!=null?(d.rr[1]<1?"trace":(d.rr[1]/100).toFixed(2)+'"'):"—", d.rr&&d.rr[2]!=null?(d.rr[2]<1?"trace":(d.rr[2]/100).toFixed(2)+'"'):"—"]; })); return {svg:tableCard("RAIN THIS WEEK · "+siteName().toUpperCase(),rows,hi!=null&&hi<7?hi+1:null),title:"Rain by day · middle half of the models"}; }
-  function hourlyCard(W){ var H=dayHours(W.day); if(H.length<6) return null;   // v150: two panels — temperature line, then rain-chance bars with the % on them
+  function hourlyCard(W){ var H=dayHours(W.day); if(H.length<6) return null;   // v231: clean layout. Nothing floats over anything: temps and times sit in their own rows under the chart.
     var wnum=function(h){ var w=h.wind; if(typeof w==="number") return w; var m=String(w||"").match(/(\d+)(?!.*\d)/); return m?+m[1]:0; };
     var WS=H.map(wnum), GS=H.map(function(h){ return Math.max(h.gust||0,wnum(h)); }), gmax=Math.max.apply(null,GS), windy=gmax>=20||Math.max.apply(null,WS)>=12;
-    var Wd=360,Hh=windy?372:280,L=16,R=Wd-16,tT=62,tB=124,rT=150,rB=244,wT=272,wB=336; var hrs=H.map(function(h){ return hrOf(h.t); }); var k0=Math.min.apply(null,hrs), span=Math.max(1,Math.max.apply(null,hrs)-k0); var X=function(k){ return L+10+(R-L-20)*(k-k0)/span; };
+    var Wd=360,L=16,R=Wd-16, tH=58, tT=74, tB=tT+44, rT=tB+30, rB=rT+92, wT=rB+30, wB=wT+56, axY=(windy?wB:rB)+20, tmY=axY+18, Hh=tmY+16;
+    var hrs=H.map(function(h){ return hrOf(h.t); }); var k0=Math.min.apply(null,hrs), span=Math.max(1,Math.max.apply(null,hrs)-k0); var X=function(k){ return L+12+(R-L-24)*(k-k0)/span; };
     var T=H.map(function(h){ return h.temp; }), tl=Math.min.apply(null,T), th=Math.max.apply(null,T); var ty=function(v){ return tB-(tB-tT)*((v-tl)/Math.max(1,th-tl)); };
     var pts=H.map(function(h){ return X(hrOf(h.t))+","+ty(h.temp); }).join(" ");
-    var lab=function(x,y,t,sz,c){ return '<text x="'+x+'" y="'+y+'" text-anchor="middle" font-size="'+(sz||12)+'" font-weight="800" fill="'+(c||"#fff")+'" '+FONT+' stroke="#0E1A33" stroke-width="3.5" paint-order="stroke">'+t+'</text>'; };
-    var hiI=T.indexOf(th), loI=T.indexOf(tl);
-    var tl0=-9; var tlab=H.map(function(h,i){ var k=hrOf(h.t); var want=i===hiI||i===loI||k%3===0; if(!want||k-tl0<2) return ""; tl0=k; return lab(X(k),ty(h.temp)-8,h.temp+"°",i===hiI||i===loI?13:11); }).join("");
+    var lab=function(x,y,t,sz,c){ return '<text x="'+x+'" y="'+y+'" text-anchor="middle" font-size="'+(sz||12)+'" font-weight="800" fill="'+(c||"#fff")+'" '+FONT+'>'+t+'</text>'; };
+    var hd=function(y,t,c,r,rc){ return '<text x="'+L+'" y="'+y+'" font-size="9.5" font-weight="800" letter-spacing=".12em" fill="'+c+'" '+FONT+'>'+t+'</text>'+(r?'<text x="'+R+'" y="'+y+'" text-anchor="end" font-size="9.5" font-weight="800" letter-spacing=".08em" fill="'+(rc||c)+'" '+FONT+'>'+r+'</text>':""); };
     var bw=Math.max(6,Math.min(13,(R-L)/H.length*0.72)), P=H.map(function(h){ return h.pop||0; }), pk=Math.max.apply(null,P);
     var rcol=function(v,t){ return t>=30?(v>=50?"#F5A524":"#F5D76E"):v>=60?"#2F7BFF":v>=40?"#4FA3FF":v>=20?"#8CC8FF":"#C9E6FF"; };
-    var bars=H.map(function(h,i){ var v=h.pop||0, k=hrOf(h.t), t=h.thunder||0; var hgt=Math.max(v?3:0,(rB-rT-16)*v/100); var x=X(k);
-      var prev=i?(H[i-1].pop||0):-1, nxt=i<H.length-1?(H[i+1].pop||0):-1, runStart=v!==prev; var runLen=0; for(var j=i;j<H.length&&(H[j].pop||0)===v;j++) runLen++;
-      var mid=runStart?Math.min(H.length-1,i+Math.floor((runLen-1)/2)):-1; var mx=mid>=0?X(hrOf(H[mid].t)):x;
+    var lastLab=-99, bars=H.map(function(h,i){ var v=h.pop||0, k=hrOf(h.t), t=h.thunder||0; var hgt=Math.max(v?3:0,(rB-rT-18)*v/100); var x=X(k);
       var out=v?'<rect x="'+(x-bw/2)+'" y="'+(rB-hgt)+'" width="'+bw+'" height="'+hgt+'" rx="3" fill="'+rcol(v,t)+'"/>':"";
-      if(runStart&&v>=10&&(runLen>=2||k%3===0||v===pk)) out+=lab(mx,rB-hgt-6,v+"%",v===pk?14:11.5,v===pk?"#fff":"#DCE6F5");
-      var tprev=i?(H[i-1].thunder||0):0; if(t>=30&&tprev<30){ var tl2=0; for(var q=i;q<H.length&&(H[q].thunder||0)>=30;q++) tl2++; var tm=X(hrOf(H[Math.min(H.length-1,i+Math.floor((tl2-1)/2))].t)); out+=lab(tm,rB-hgt-24,"⚡ THUNDER",11,"#FFC857"); } return out; }).join("");
-    var guide=[20,40,60].map(function(v){ var y=rB-(rB-rT-16)*v/100; return '<line x1="'+L+'" x2="'+R+'" y1="'+y+'" y2="'+y+'" stroke="rgba(255,255,255,.08)" stroke-dasharray="3 4"/>'; }).join("");
-        var wind="";
+      var prev=i?(H[i-1].pop||0):-1; if(v>=10&&(v!==prev||v===pk&&i===P.indexOf(pk))&&x-lastLab>=26){ out+=lab(x,rB-hgt-5,v+"%",v===pk?12.5:10.5,v===pk?"#fff":"#C9D6EA"); lastLab=x; } return out; }).join("");
+    var guide=[25,50,75].map(function(v){ var y=rB-(rB-rT-18)*v/100; return '<line x1="'+L+'" x2="'+R+'" y1="'+y+'" y2="'+y+'" stroke="rgba(255,255,255,.07)" stroke-dasharray="3 4"/>'; }).join("");
+    var TW=H.filter(function(h){ return (h.thunder||0)>=30; }), twin=TW.length?(function(a,b){ var f=function(k){ return k===0?"12A":k===12?"NOON":(k%12)+(k<12?"A":"P"); }; return f(a)+"–"+f((b+1)%24); })(hrOf(TW[0].t),hrOf(TW[TW.length-1].t)):"";
+    var wind="";
     if(windy){ var wmx=Math.max(30,gmax+5), wy=function(v){ return wB-(wB-wT)*Math.min(1,v/wmx); }, wc=function(v){ return v>=45?"#FF6B6F":v>=35?"#F5A524":v>=25?"#F5D76E":"#7FD6C2"; };
-      wind='<text x="'+L+'" y="'+(wT-6)+'" font-size="9.5" font-weight="800" letter-spacing=".12em" fill="#7FD6C2" '+FONT+'>WIND · GUSTS (MPH)</text>'
+      wind=hd(wT-12,"WIND · GUSTS (MPH)","#7FD6C2","PEAK GUST "+gmax)
         +H.map(function(h,i){ var x=X(hrOf(h.t)), w=WS[i], g=GS[i]; return '<rect x="'+(x-bw/2)+'" y="'+wy(g)+'" width="'+bw+'" height="'+(wB-wy(g))+'" rx="3" fill="'+wc(g)+'" opacity=".35"/><rect x="'+(x-bw/2)+'" y="'+wy(w)+'" width="'+bw+'" height="'+(wB-wy(w))+'" rx="3" fill="'+wc(w)+'"/>'; }).join("")
-        +(function(){ var gi=GS.indexOf(gmax); return lab(X(hrOf(H[gi].t)),wy(gmax)-6,"GUSTS "+gmax,12.5,"#fff"); })()
         +'<line x1="'+L+'" x2="'+R+'" y1="'+wB+'" y2="'+wB+'" stroke="rgba(255,255,255,.25)"/>'; }
-    var ax=[0,3,6,9,12,15,18,21].filter(function(k){ return k>=k0&&k<=k0+span; }).map(function(k){ return '<text x="'+X(k)+'" y="'+(Hh-12)+'" font-size="11" font-weight="700" fill="#A9B6CC" text-anchor="middle" '+FONT+'>'+(k===0?"12A":k===12?"NOON":(k%12)+(k<12?"A":"P"))+'</text>'; }).join("");
+    var step=H.length<=10?1:H.length<=16?2:3, nm=function(k){ return k===0?"12A":k===12?"NOON":(k%12)+(k<12?"A":"P"); };
+    var cols=H.filter(function(h){ return (hrOf(h.t)-k0)%step===0; });
+    var ax=cols.map(function(h){ var x=X(hrOf(h.t)); return '<text x="'+x+'" y="'+axY+'" font-size="10.5" font-weight="700" fill="#A9B6CC" text-anchor="middle" '+FONT+'>'+nm(hrOf(h.t))+'</text><text x="'+x+'" y="'+tmY+'" font-size="11.5" font-weight="800" fill="#FFC857" text-anchor="middle" '+FONT+'>'+h.temp+'°</text>'; }).join("")
+      +'<line x1="'+L+'" x2="'+R+'" y1="'+(axY-14)+'" y2="'+(axY-14)+'" stroke="rgba(255,255,255,.08)"/>';
+    var dots=cols.map(function(h){ return '<circle cx="'+X(hrOf(h.t))+'" cy="'+ty(h.temp)+'" r="2.6" fill="#FFC857"/>'; }).join("");
     var mt=Math.max.apply(null,H.map(function(h){ return h.thunder||0; })), g=Math.max.apply(null,H.map(function(h){ return h.gust||0; }));
-    var sub=pk?("Rain chance up to "+pk+"%"+(mt>=30?" · ⚡ thunder possible":"")):"Dry"; if(g>=25&&!windy) sub+=" · gusts to "+g;
-    return {svg:'<svg viewBox="0 0 '+Wd+' '+Hh+'" style="width:100%;height:auto;display:block;background:#0E1A33"><text x="'+L+'" y="20" font-size="13" font-weight="800" letter-spacing=".08em" fill="#fff" '+FONT+'>'+(W.label||dname(W.day,W.idx)).toUpperCase()+' SNAPSHOT · HOUR BY HOUR</text><text x="'+L+'" y="38" font-size="11.5" fill="#A9B6CC" '+FONT+'>'+sub+'</text>'
-      +'<text x="'+L+'" y="'+(tT-4)+'" font-size="9.5" font-weight="800" letter-spacing=".12em" fill="#FFC857" '+FONT+'>TEMPERATURE</text><polyline points="'+pts+'" fill="none" stroke="#FFC857" stroke-width="3" stroke-linejoin="round"/>'+tlab
-      +'<text x="'+L+'" y="'+(rT-2)+'" font-size="9.5" font-weight="800" letter-spacing=".12em" fill="#6FB7FF" '+FONT+'>CHANCE OF RAIN</text>'+guide+bars+'<line x1="'+L+'" x2="'+R+'" y1="'+rB+'" y2="'+rB+'" stroke="rgba(255,255,255,.25)"/>'+wind+ax+'</svg>',title:cap(W.label||dname(W.day,W.idx))+" snapshot"}; }
+    var sub=pk?("Rain chance up to "+pk+"%"+(mt>=30?" · thunder possible":"")):"Dry"; if(g>=25&&!windy) sub+=" · gusts to "+g;
+    return {svg:'<svg viewBox="0 0 '+Wd+' '+Hh+'" style="width:100%;height:auto;display:block;background:#0E1A33"><text x="'+L+'" y="22" font-size="13" font-weight="800" letter-spacing=".08em" fill="#fff" '+FONT+'>'+(W.label||dname(W.day,W.idx)).toUpperCase()+' · HOUR BY HOUR</text><text x="'+L+'" y="40" font-size="11.5" fill="#A9B6CC" '+FONT+'>'+sub+'</text>'
+      +hd(tH,"TEMPERATURE","#FFC857",tl+"° TO "+th+"°")+'<polyline points="'+pts+'" fill="none" stroke="#FFC857" stroke-width="3" stroke-linejoin="round"/>'+dots
+      +hd(rT-12,"CHANCE OF RAIN","#6FB7FF",twin?"⚡ THUNDER "+twin:"","#FFC857")+guide+bars+'<line x1="'+L+'" x2="'+R+'" y1="'+rB+'" y2="'+rB+'" stroke="rgba(255,255,255,.25)"/>'+wind+ax+'</svg>',title:cap(W.label||dname(W.day,W.idx))+" hour by hour"}; }
   // v156: the next 10 days of highs and lows, one bar per day (low at the bottom, high at the top)
   function tenDayCard(){ var D=days().filter(function(d){ return d.hi!=null||d.lo!=null; }).slice(0,10); if(D.length<4) return null;
     var Wd=360,Hh=250,L=16,R=Wd-16,T=58,B=Hh-44, n=D.length, cw=(R-L)/n;

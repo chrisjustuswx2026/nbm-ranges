@@ -2457,10 +2457,10 @@ html body .bdx.wide .bsheet .bsmg.n2{gap:12px}
 html body .bdx .bsheet .bsbl{border-radius:0}
 /* a phone screen always gets the one-column layout, whatever happened before */
 @media screen and (max-width:680px){
- html body .bdx.wide .bsev,html body .bdx.wide .bsev:has(.bsdraw),html body .bdx.wide .bspan,html body .bdx.wide .bsdet,html body .bdx.wide .bsmg,html body .bdx.wide .bssn{display:grid!important;grid-template-columns:1fr!important}
- html body .bdx.wide .bsev:has(.bsdraw)>.bsdraw{grid-row:auto!important}
- html body .bdx.wide .bsev:has(.bsdraw)>.bssec,html body .bdx.wide .bsside,html body .bdx.wide .bssec:nth-child(even),html body .bdx.wide .bssn p{border-left:0!important;border-top:1px solid #DDE3EA!important}
- html body .bdx.wide .bsheet .bsht h2{font-size:19px!important}
+ html body :not(#sdr-printroot)>.bdx.wide .bsev,html body :not(#sdr-printroot)>.bdx.wide .bsev:has(.bsdraw),html body :not(#sdr-printroot)>.bdx.wide .bspan,html body :not(#sdr-printroot)>.bdx.wide .bsdet,html body :not(#sdr-printroot)>.bdx.wide .bsmg,html body :not(#sdr-printroot)>.bdx.wide .bssn{display:grid!important;grid-template-columns:1fr!important}
+ html body :not(#sdr-printroot)>.bdx.wide .bsev:has(.bsdraw)>.bsdraw{grid-row:auto!important}
+ html body :not(#sdr-printroot)>.bdx.wide .bsev:has(.bsdraw)>.bssec,html body :not(#sdr-printroot)>.bdx.wide .bsside,html body :not(#sdr-printroot)>.bdx.wide .bssec:nth-child(even),html body :not(#sdr-printroot)>.bdx.wide .bssn p{border-left:0!important;border-top:1px solid #DDE3EA!important}
+ html body :not(#sdr-printroot)>.bdx.wide .bsheet .bsht h2{font-size:19px!important}
 }
 @media(max-width:520px){ html body .bdx .bsheet .bshd{padding:14px 14px 16px!important} html body .bdx .bsheet .bshd>img{height:28px!important} html body .bdx .bsheet .bsht h2{font-size:17.5px!important} html body .bdx .bsheet .bsht p{font-size:13.5px!important} }
 /* print: true letter width, no zoom; compact mode trims chart heights when a sheet runs long */
@@ -2473,6 +2473,9 @@ html body .bdx .bsheet .bsbl{border-radius:0}
 }
 .bsheet.cmp .bsch svg{max-height:210px}.bsheet.cmp .bsdraw svg,.bsheet.cmp .bsmap svg{max-height:230px}.bsheet.cmp .bssec li{font-size:12.5px!important;margin-bottom:3px!important}.bsheet.cmp .bsbar{margin-top:10px!important;padding:6px 12px!important}
 .bsheet.cmp .bsht p{font-size:13px!important}.bsheet.cmp .bshd{padding:12px 20px 14px!important}
+#sdr-printroot .bsheet.cmp .bssec li,#sdr-printroot .bsheet.cmp .bsside li{font-size:12px!important;line-height:1.35!important;margin-bottom:2px!important}#sdr-printroot .bsheet.cmp .bssec{padding:7px 12px!important}#sdr-printroot .bsheet.cmp .bsside{padding:8px 12px!important}
+#sdr-printroot .bsheet.cmp .bsch svg{max-height:185px}#sdr-printroot .bsheet.cmp .bsbar{margin-top:9px!important;padding:6px 12px!important}#sdr-printroot .bsheet.cmp .bsbl{margin-top:10px!important;padding:9px 20px!important}#sdr-printroot .bsheet.cmp .bsbl p{font-size:13.5px!important}
+#sdr-printroot .bsheet.cmp .bsstat{padding:7px 10px!important}#sdr-printroot .bsheet.cmp .bsmap svg{max-height:300px}#sdr-printroot .bsheet.cmp .bsbig{font-size:26px!important}
 .bsheet.cmp2 .bsch svg{max-height:135px}.bsheet.cmp2 .bsdraw svg,.bsheet.cmp2 .bsmap svg{max-height:190px}.bsheet.cmp2 .bsbar{margin-top:8px!important}.bsheet.cmp2 .bssec{padding:6px 12px!important}.bsheet.cmp2 .bsside{padding:8px 12px!important}.bsheet.cmp2 .bsside ul{margin-top:4px!important;font-size:12px!important}.bsheet.cmp2 .bsbl{margin-top:10px!important;padding:10px 22px!important}.bsheet.cmp2 .bsbig{font-size:26px!important}
 .bsheet.cmp3 .bsch .bslg{display:none!important}.bsheet.cmp3 .bsht p{-webkit-line-clamp:2!important;display:-webkit-box!important;-webkit-box-orient:vertical;overflow:hidden}.bsheet.cmp3 .bshd>img{height:26px!important}.bsheet.cmp3 .bsch svg{max-height:115px}.bsheet.cmp3 .bsdraw svg,.bsheet.cmp3 .bsmap svg{max-height:165px}
 </style>
@@ -5271,7 +5274,7 @@ window.SITE_LL = window.__LOC?{lat:__LOC.la,lon:__LOC.lo}:(window.SITE_LL || { l
       <div class="bd">${body}${f._towns&&f._towns.length?`<div class="ln">Towns inside: ${f._towns.slice(0,4).join(", ")}${f._towns.length>4?` and ${f._towns.length-4} more`:""}</div>`:""}${f._url?`<a class="more" href="${f._url}" target="_blank" rel="noopener">Full text</a>`:""}</div>`;
       if(!inf&&window._mdInfo) window._mdInfo(f._num).then(()=>{ if(!card.hidden&&hits[hi]&&hits[hi].md===f) render(); }); }
     else { const col=COLORS[i.ev]||"#8A9BB8", d=details(i);
-      const P0=(i.nws&&i.nws.properties)||{}, t0=+new Date(P0.effective||P0.sent||P0.onset||Date.now()), t1=i.ends?+new Date(i.ends):0, pct=t1>t0?Math.max(2,Math.min(100,Math.round((t1-Date.now())/(t1-t0)*100))):0;
+      const P0=(i.nws&&i.nws.properties)||{}, t0=+new Date(P0.effective||P0.sent||P0.onset||Date.now()), t1=i.ends?+new Date(i.ends):0, pct=t1>t0?Math.max(3,Math.min(100,Math.round((Date.now()-t0)/(t1-t0)*100))):0;
       card.style.setProperty("--wcol",col); card.innerHTML=`<div class="wch" style="--wc:${col}"><span class="wcev">${i.ev}</span><button data-x aria-label="Close">×</button></div>
       ${i.ends?`<div class="wct" style="--wc:${col}"><i style="width:${pct}%"></i></div><div class="wcl"><b>${left(i.ends)} left</b><span>until ${fmtT(i.ends).replace(/\s*E[SD]T$|\s*C[SD]T$/,"").replace(/^\w+,?\s*/,"")}</span></div>`:""}
       <div class="bd">
@@ -5292,7 +5295,7 @@ window.SITE_LL = window.__LOC?{lat:__LOC.la,lon:__LOC.lo}:(window.SITE_LL || { l
     const cur=hits[hi]; const ns=(cur&&cur.motion)?cur:null; if(ns!==SEL){ SEL=ns; tracks(); } }
   window.SDR_ACARD=(a,ll)=>{ try{ if(!a||!a.properties) return false; let it=ITEMS.find(x=>x.nws&&x.nws.id===a.id); const g=a.geometry||(it&&it.geom); if(!it){ if(!g) return false; it={ev:a.properties.event,geom:g,nws:a,ends:a.properties.ends||a.properties.expires,bbox:bboxOf(g)}; }
       tapLL=ll||null; hits=[it]; hi=0; render(); return true; }catch(e){ return false; } };
-  card.addEventListener("click",e=>{ const t=e.target; if(t.closest("[data-x]")){hits=[];render();} else if(t.closest("[data-n]")){hi=(hi+1)%hits.length;render();} else if(t.closest("[data-p]")){hi=(hi-1+hits.length)%hits.length;render();} else if(t.closest("[data-more]")){ const x=card.querySelector(".txt"); x.hidden=!x.hidden; t.textContent=x.hidden?"More":"Less"; } });
+  card.addEventListener("click",e=>{ const t=e.target; if(t.closest("[data-x]")){hits=[];render();} else if(t.closest("[data-n]")){hi=(hi+1)%hits.length;render();} else if(t.closest("[data-p]")){hi=(hi-1+hits.length)%hits.length;render();} else if(t.closest("[data-more]")){ if(window.SDR_READER&&SDR_READER(card)) return; const x=card.querySelector(".txt"); x.hidden=!x.hidden; t.textContent=x.hidden?"More":"Less"; } });
   m.on("click",e=>{ const x=e.latlng.lng, y=e.latlng.lat, seen=new Set(); tapLL=e.latlng;
     hits=ITEMS.filter(visible).filter(i=>x>=i.bbox[0]&&x<=i.bbox[2]&&y>=i.bbox[1]&&y<=i.bbox[3]&&inGeom(x,y,i.geom)).filter(i=>{ const id=i.nws?i.nws.id:(i.wwa&&i.wwa.cap_id)||i.ev+i.ends; if(seen.has(id)) return false; seen.add(id); return true; }).sort((a,b)=>rank(b.ev)-rank(a.ev));
     if(ON.md) (window._MDS_ALL||[]).filter(f=>inGeom(x,y,f.geometry)).forEach(f=>hits.push({md:f}));
@@ -5860,14 +5863,21 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
     try{ if(window._curBrief){ window._bsPrintW=722; await richDaily(window._curBrief); await new Promise(r=>setTimeout(r,250)); sh=document.querySelector(".bdx .bsheet")||sh; } }catch(e){}
     let pr=document.getElementById("sdr-printroot"); if(!pr){ pr=document.createElement("div"); pr.id="sdr-printroot"; document.body.appendChild(pr); }
     pr.innerHTML=`<div class="bdx wide">${sh.outerHTML}</div>`; pr.classList.add("measure"); pr.style.width=""; pr.style.height="";
+    const _real=pr; let _fr=null; try{ _fr=document.createElement("iframe"); _fr.setAttribute("aria-hidden","true"); _fr.style.cssText="position:absolute;left:-12000px;top:0;width:800px;height:4000px;border:0;visibility:hidden"; document.body.appendChild(_fr);
+      const fd=_fr.contentDocument; fd.open(); fd.write(`<!doctype html><html><head><meta charset="utf-8">${[...document.querySelectorAll("style, link[rel=stylesheet]")].map(e=>e.outerHTML).join("")}</head><body style="margin:0;background:#fff"><div id="sdr-printroot" class="measure">${_real.innerHTML}</div><\/body><\/html>`); fd.close();
+      await new Promise(r=>setTimeout(r,400)); try{ await fd.fonts.ready; }catch(e){} const fp=fd.getElementById("sdr-printroot"); if(fp&&fp.getBoundingClientRect().height>50) pr=fp; }catch(e){ pr=_real; }
     // v220: one page when it fits. If not, page 2 is "MAPS & DETAILS" with its own header, and both pages say PAGE x OF 2.
-    const s1=pr.querySelector(".bsheet"); if(s1.getBoundingClientRect().height>990) s1.classList.add("cmp"); if(s1.getBoundingClientRect().height>990){ const mv=[]; const mp=s1.querySelector(".bsmaps"); if(mp&&mp.innerHTML.trim()) mv.push(mp);
-      [...s1.querySelectorAll(".bsbar")].forEach(x=>{ if(/RAIN BY DAY/.test(x.textContent)){ const nx=x.nextElementSibling; mv.push(x); if(nx&&nx.classList.contains("bspan")) mv.push(nx); } });
-      s1.querySelectorAll(".bsbox").forEach(x=>mv.push(x));
-      if(mv.length){ const s2=document.createElement("div"); s2.className="bsheet bsp2"; const hd=s1.querySelector(".bshd").cloneNode(true); hd.querySelectorAll(".bsht p,.bsiss").forEach(x=>x.remove()); hd.classList.add("sm");
-        const k0=s1.querySelector(".bsht small"), k2=hd.querySelector(".bsht small"); if(k2) k2.textContent=(k0?k0.textContent:"")+" · PAGE 2 OF 2 · MAPS & DETAILS"; if(k0) k0.textContent+=" · PAGE 1 OF 2";
-        s2.appendChild(hd); const rl=s1.querySelector(".bsrule"); if(rl) s2.appendChild(rl.cloneNode(true)); mv.forEach(e=>s2.appendChild(e)); const ft=s1.querySelector(".bsft"); if(ft) s2.appendChild(ft.cloneNode(true)); s1.after(s2); } }
-    pr.querySelectorAll(".bsheet").forEach(el=>{ el.style.zoom=""; el.style.transform=""; el.style.width=""; el.style.maxWidth="none"; if(el.getBoundingClientRect().height>985) el.classList.add("cmp"); const h=el.getBoundingClientRect().height; if(h>985) el.style.zoom=String(Math.max(.78,Math.floor(975/h*100)/100)); }); pr.classList.remove("measure");
+    const s1=pr.querySelector(".bsheet"), LIM=960, tall=()=>s1.getBoundingClientRect().height>LIM;
+    s1.classList.add("cmp");
+    if(tall()){ const C=[]; const mp=s1.querySelector(".bsmaps"); if(mp&&mp.innerHTML.trim()) C.push([mp]);
+      [...s1.querySelectorAll(".bsbar")].forEach(x=>{ if(/RAIN BY DAY/.test(x.textContent)){ const nx=x.nextElementSibling; C.push(nx&&nx.classList.contains("bspan")?[x,nx]:[x]); } });
+      s1.querySelectorAll(".bsbox").forEach(x=>C.push([x])); const dt=s1.querySelector(".bsdet:not([hidden])"); if(dt) C.push([dt]);
+      [...s1.querySelectorAll(".bsbar")].forEach(x=>{ if(/HOUR BY HOUR/.test(x.textContent)){ const nx=x.nextElementSibling; C.push(nx&&nx.classList.contains("bspan")?[x,nx]:[x]); } });
+      const moved=[]; const ph=document.createElement("div"); for(const g of C){ if(!tall()) break; g.forEach(e=>{ const m=document.createComment("mv"); e.before(m); moved.push([e,m]); ph.appendChild(e); }); }
+      if(moved.length){ const all=[...s1.querySelectorAll("*")]; const s2=document.createElement("div"); s2.className="bsheet bsp2"; const hd=s1.querySelector(".bshd").cloneNode(true); hd.querySelectorAll(".bsht p,.bsiss").forEach(x=>x.remove()); hd.classList.add("sm");
+        const k0=s1.querySelector(".bsht small"), k2=hd.querySelector(".bsht small"); if(k2) k2.textContent=(k0?k0.textContent:"")+" · PAGE 2 OF 2 · DETAILS"; if(k0) k0.textContent+=" · PAGE 1 OF 2";
+        s2.appendChild(hd); moved.forEach(([e,m])=>{ s2.appendChild(e); m.remove(); }); const ft=s1.querySelector(".bsft"); if(ft) s2.appendChild(ft.cloneNode(true)); s1.after(s2); } }
+    pr.querySelectorAll(".bsheet").forEach(el=>{ el.style.zoom=""; el.style.transform=""; el.style.width=""; el.style.maxWidth="none"; if(el.getBoundingClientRect().height>985) el.classList.add("cmp"); const h=el.getBoundingClientRect().height; if(h>985) el.style.zoom=String(Math.max(.78,Math.floor(975/h*100)/100)); }); pr.classList.remove("measure"); if(pr!==_real){ _real.innerHTML=pr.innerHTML; pr=_real; } _real.classList.remove("measure"); try{ if(_fr) _fr.remove(); }catch(e){}
     window._bsPrintW=null; try{ if(window._curBrief) richDaily(window._curBrief); }catch(e){} if(btn) btn.textContent="PRINT / SAVE AS PDF";
     document.documentElement.classList.add("sdr-printing"); const done=()=>{ document.documentElement.classList.remove("sdr-printing"); pr.innerHTML=""; pr.style.height=""; window.removeEventListener("afterprint",done); };
     window.addEventListener("afterprint",done); setTimeout(()=>{ try{ window.print(); }catch(e){} setTimeout(()=>{ if(document.documentElement.classList.contains("sdr-printing")) done(); },120000); },60); };
@@ -5975,7 +5985,7 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
     if(HZ==="trop") return /cone|Tropical Storm (Watch|Warning)|Hurricane (Watch|Warning)/i.test(txt+b.title)?"Use the time before it arrives to prepare: secure equipment and clear drains.":/high chance/i.test(txt)?"Too early to know any impact here. We'll update as it organizes.":`No changes for ${city}. We're tracking it in case it shifts.`;
     if(HZ==="regional") return b.bottom||`No changes for ${city}.`;
     if(T&&T.A.length){ const c=T.A[0].cat, hz=c==="SEVERE"?"severe":c==="FLOOD"?"flood":c==="WINTER"?"winter":c==="FREEZE"?"freeze":c==="HEAT"?"heat":c==="WIND"?"wind":c==="TROPICAL"?"trop":""; if(hz) return _bottom(hz,T.A[0],T,city,tw,wn); }
-    return tw?`Plan outdoor work around ${tw} ${wn}.`:"Normal operations.";
+    return tw?`${(T&&T.tor)||/storm|thunder/i.test(txt)?"Storms most likely":"Rain most likely"} ${tw} ${wn}${/storm|thunder/i.test(txt)?"; move indoors at the first thunder":""}.`:"Normal operations.";
   }
   // ---------------- v215 WHAT IT MEANS, BY THREAT (severe, winter, freeze, heat, wind, regional) ----------------
   // the night a cold hour belongs to: 3 AM Wednesday is "tonight" when it's Tuesday evening
@@ -6064,7 +6074,7 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
     const s=v(), city=cityName(), big=keyDay(D), quiet=!big||big.sc<40, ki=quiet?0:big.i, kx=D[ki], kName=ki===0?(D[0].d==="TONIGHT"||new Date().getHours()>=17?"Tonight":"Today"):(ki===1&&D[0].d!=="TONIGHT"?"Tomorrow":new Date(kx.date).toLocaleDateString("en-US",{weekday:"long"}));
     const bw0=(pane.querySelector(".brief")||pane).clientWidth, pw=window._bsPrintW||Math.max(300,Math.min(816,(bw0>200?bw0:Math.min(innerWidth,1200)-(innerWidth>900?120:24))-28)), wide=pw>=700, cw=Math.round(wide?pw*.6-40:pw-(pw<=520?24:36)), now=new Date(b.t||Date.now());
     const logo=(document.querySelector('img[alt="SDR Weather Intelligence"]')||{}).src||""; window._bsPW=pw; window._bsWide=wide;
-    const nxt=!b.daily?"AS NEEDED":new Date().getHours()<15?"3 PM":"TOMORROW MORNING";
+    const nxt=!b.daily?"AS NEEDED":new Date().getHours()<15?"BY 3 PM":"BY 7 AM TOMORROW";
     const bar=(t,c,r)=>`<div class="bsbar ${c||"g"}"><b>${t}</b>${r?`<span>${r}</span>`:""}</div>`;
     const aiOn=!!(window.CHANNEL&&CHANNEL.aiBrief); let MD0={}; try{ MD0=window.MAPDATA?await Promise.race([MAPDATA(),new Promise(r=>setTimeout(()=>r({}),4000))]):{}; }catch(e){}
     const hc0=hourChart(kx,H,cw)||(ki===0&&D[1]?hourChart(D[1],H,cw):null);
@@ -6082,6 +6092,7 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
     if(b.daily&&TH.A.length&&AI){ const a=TH.A[0]; AI.headline=a.title; b=Object.assign({},b,{title:a.title}); }
     const MEANS=quiet?[]:/tornado|wind/.test(TH.main)||TH.torW||TH.svW?_meansHZ("severe",Object.assign({},b,{lines:(b.lines||[]).concat(TH.A.map(a=>a.title))}),kx,H,kName,city,hc0):_means(kx,hc0,H,kName,city,FL>=1||TH.main==="flood",TH); if(AI&&!AI.map_notes&&!AI._hz&&MEANS.length){ const su=(AI.sections||[]).find(x=>x.title==="THE SETUP"); AI.sections=[{title:"WHAT IT MEANS FOR YOU",bullets:MEANS,html:true}].concat(su&&su.bullets.length?[{title:"THE SETUP",bullets:su.bullets.slice(0,2)}]:[]); } if(AI){ if(AI.headline) b=Object.assign({},b,{title:AI.headline}); if(AI.subhead) b=Object.assign({},b,{sub:AI.subhead}); if(AI.bottom_line) b=Object.assign({},b,{bottom:AI.bottom_line}); }
     if(b0.daily&&b.title&&b0.title!==b.title){ b0.title=b.title; b0.sub=b.sub; try{ save(); library(); }catch(e){} }   // the library tile matches the sheet
+    { const W0=hc0&&(hc0.twin||hc0.win), kn=/^(today|tonight|tomorrow)$/i.test(kName)?kName.toLowerCase():kName; if(b.daily&&W0&&/ (by|after) (\d{1,2}(:\d\d)? ?(AM|PM)|noon|midnight)\b/i.test(b.title||"")) b=Object.assign({},b,{title:String(b.title).replace(/ (by|after) (\d{1,2}(:\d\d)? ?(AM|PM)|noon|midnight)\b/i,` ${kn}, mainly ${W0}`)}); }
     if(hc0&&hc0.win&&b.sub&&/Most likely /.test(b.sub)) b=Object.assign({},b,{sub:String(b.sub).replace(/Most likely [^.]*?\./,"Most likely "+hc0.win.replace("–"," to ")+".")});
     let h=`<div class="bsheet">`;
     // header
@@ -6139,13 +6150,13 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
       h+=bar(`${hn.toUpperCase()} · HOUR BY HOUR`,quiet?"n":"t")+`<div class="bspan"><div class="bsch">${hc.svg}<div class="bslg"><span><i style="background:#3B82F6"></i>${HZ==="winter"?"Precip chance":"Rain chance"}</span>${hc.twin?`<span><i style="background:#E8920C"></i>Thunder ⚡</span>`:""}<span><i class="ln"></i>Temperature</span>${hc.start?`<span><i class="dl"></i>Rain moves in</span>`:""}</div></div>
         <div class="bsside">${big2}<ul>${pts.map(p=>`<li>${p}</li>`).join("")}</ul></div></div>`; }
     // v191: printable pages. Page 1 = the call (risks, glance, hour by hour, the team's write-up, bottom line). Page 2 = the maps and the numbers.
-    const kind=!b.daily?`${String(b.cat||"WEATHER").toUpperCase()} UPDATE`:b.slot==="pm"?(new Date(b.t||Date.now()).getHours()>=17?"EVENING UPDATE":"AFTERNOON UPDATE"):"DAILY BRIEFING", foot=`<div class="bsft"><span>${kind}</span><span>SDR WEATHER INTELLIGENCE DIVISION</span><span>NEXT UPDATE: ${nxt}</span></div>`;
+    const kind=!b.daily?`${String(b.cat||"WEATHER").toUpperCase()} UPDATE`:b.slot==="pm"?(new Date(b.t||Date.now()).getHours()>=17?"EVENING UPDATE":"AFTERNOON UPDATE"):"DAILY BRIEFING", foot=`<div class="bsft"><span>${kind}</span><span>SDR WEATHER INTELLIGENCE DIVISION</span><span>NEXT BRIEFING: ${nxt}</span></div>`;
     h+=`<div class="bsdet"${AI&&AI.sections?"":" hidden"}>${AI?_secs(AI):""}</div>`;
     h+=`<div class="bsmaps"></div>`;
     // rain by day
     const wb=TROP?null:weekBars(D,cw); if(wb&&D.slice(0,7).filter(x=>_rain(x)>=0.25).length>=2) h+=bar("RAIN BY DAY · NEXT 7 DAYS","n")+`<div class="bspan"><div class="bsch">${wb.svg}</div><div class="bsside"><div class="bsst"><div><small>THIS WEEK</small><b>${_in(wb.tot)}</b></div><div><small>WETTEST DAY</small><b>${new Date(wb.wet.date).toLocaleDateString("en-US",{weekday:"short"}).toUpperCase()}</b></div><div><small>DRY DAYS</small><b>${wb.dry} of ${wb.n}</b></div></div></div></div>`;
     // by the numbers (the perspective line)
-    const pv=(b.lines||[]).find(l=>/^<b>Perspective:<\/b>/.test(l)), pvt=AI&&AI.perspective?_esc(AI.perspective):pv?pv.replace(/^<b>Perspective:<\/b>\s*/,""):""; if(pvt) h+=`<div class="bsbox"><b>BY THE NUMBERS:</b> ${pvt}</div>`;
+    const pv=(b.lines||[]).find(l=>/^<b>Perspective:<\/b>/.test(l)), pvt=AI&&AI.perspective?_esc(AI.perspective):pv?pv.replace(/^<b>Perspective:<\/b>\s*/,""):""; if(pvt&&(quiet||HZ==="flood"||TH.main==="flood"||_rain(kx)>=1)) h+=`<div class="bsbox"><b>BY THE NUMBERS:</b> ${pvt}</div>`;
     const twB=(hc&&hc.win)||(_dayHrs(kx||D[0],H).length?_win(_dayHrs(kx||D[0],H),h=>(h.pop||0)>=50||(h.thunder||0)>=30):"")||"", wnB=/^(today|tonight|tomorrow)$/i.test(kName)?kName.toLowerCase():kName;
     const BL=b.team?(b.bottom||""):quiet&&b.daily&&!TH.A.length?"Normal operations.":_bottom(HZ==="daily"&&TH.main==="flood"?"flood":HZ,b,TH,city,twB,wnB);
     h+=`<div class="bsbl"><small>BOTTOM LINE</small><p>${(BL||"").replace(/\s*SDR stands ready to (serve|help)\.?\s*$/i,"")} SDR stands ready to serve.</p></div>${foot}</div>`; h=`<div class="bsprint"><button type="button" onclick="SDR_PRINTBRIEF()">PRINT / SAVE AS PDF</button></div>`+h;
@@ -6161,16 +6172,17 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
     const area=[Math.min(-95,s.lo-7),Math.min(24,s.la-4.5),Math.max(-74,s.lo+7),Math.max(38.5,s.la+4.5)], pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:city.toUpperCase()}], fig=[];
     // v190: every map carries 2-3 short snippets under it (the team's words when written, otherwise from the data)
     const map=(t,c,sub,lay,leg,note,ar,ptx,key)=>{ const an=AI&&AI.map_notes&&key&&Array.isArray(AI.map_notes[key])&&AI.map_notes[key].length?AI.map_notes[key].map(_esc):null; const sn=(an||(Array.isArray(note)?note:[note])).filter(Boolean).slice(0,3);
-      return `<figure class="bsmap">${SDR_BMAP(ar||area,720,ar?400:420,lay,{points:ptx||pt,cities:!ar,title:t,sub,col:c})}${leg?`<div class="bslg">${leg}</div>`:""}${sn.length?`<div class="bssn n${sn.length}">${sn.map(x=>`<p>${x}</p>`).join("")}</div>`:""}</figure>`; };
+      return `<figure class="bsmap">${SDR_BMAP(ar||(()=>{ const H0=pw<=520?470:400, kx=Math.cos(s.la*Math.PI/180), hh=3.1, hw=hh*(720/H0)/kx; return [s.lo-hw,s.la-hh,s.lo+hw,s.la+hh]; })(),720,ar?400:(pw<=520?470:400),lay,{points:ptx||pt,cities:!ar,title:t,sub,col:c})}${leg?`<div class="bslg">${leg}</div>`:""}${sn.length?`<div class="bssn n${sn.length}">${sn.map(x=>`<p>${x}</p>`).join("")}</div>`:""}</figure>`; };
     const hcx=hc||{}, dN=kName;
     const SPCC={TSTM:"#C1E9C1",MRGL:"#7FC57F",SLGT:"#F6F67F",ENH:"#E6C27F",MDT:"#E67F7F",HIGH:"#FF7FFF"};
     const PR=MD.priority||{}, near=g=>{ try{ const b=[]; (g.type==="Polygon"?[g.coordinates]:g.type==="MultiPolygon"?g.coordinates:[]).forEach(p=>p[0].forEach(c=>b.push(c))); return b.some(([x,y])=>Math.abs(x-s.lo)<=5&&Math.abs(y-s.la)<=4); }catch(e){ return false; } };
     const mds=(PR.mds||[]).filter(f=>near(f.geometry)); if(mds.length&&HK!=="md") fig.push(map("STORMS ORGANIZING","t","WHAT WE'RE WATCHING",[{features:mds,style:()=>({fill:"#FF8C1A",stroke:"#FF8C1A",w:2.5,dash:"7 5",fo:.15})}],'<span><i style="background:#FF8C1A"></i>Area we\'re watching</span>',[`<b>Storms organizing</b> near ${city}.`,`We're watching it closely and will update you.`],0,0,"organizing"));
     const wt=(PR.watches||[]).filter(f=>near(f.geometry)); if(wt.length&&HK!=="watch") fig.push(map(wt.some(w=>(w.properties||{}).event==="Tornado Watch")?"TORNADO WATCH":"SEVERE STORM WATCH","t","IN EFFECT",[{features:wt,style:f=>({fill:(f.properties||{}).event==="Tornado Watch"?"#FFFF00":"#DB7093",stroke:(f.properties||{}).event==="Tornado Watch"?"#C9A800":"#DB7093",w:2,fo:.3})}],"",[at(wt[0].geometry,s)?`<b>${city} is inside the watch.</b>`:`<b>A watch is in effect</b> near ${city}.`,`Have your shelter plan ready.`],0,0,"watch"));
     if(!quiet&&ki<=2){ const F=((MD.spc||[])[ki])||[]; let n=0, ts=false; F.forEach(f=>{ const L=(f.properties||{}).LABEL; if(!at(f.geometry,s)) return; if(L==="TSTM") ts=true; const l=LV[L]; if(l) n=Math.max(n,l[0]); });
-      if(F.length&&n>=1&&!(b.cat==="SEVERE")&&!(b.hero&&/^(spc|rspc|rst)$/.test(b.hero.kind||"")&&b.hero.prod!=="ero")){ const has=new Set(F.map(f=>(f.properties||{}).LABEL)), NM={TSTM:"Thunder",MRGL:"1 Marginal",SLGT:"2 Slight",ENH:"3 Enhanced",MDT:"4 Moderate",HIGH:"5 High"};
+      const _nr=F.reduce((m,f)=>{ const l=LV[(f.properties||{}).LABEL]; if(!l||l[0]<1) return m; const d=window.SDR_NEARMI?SDR_NEARMI(f.geometry,s):{mi:999}; return d.mi<m.mi?Object.assign({lv:l[0]},d):m; },{mi:999});
+      if(F.length&&(n>=1||(_nr.mi<=80&&(kx.thunder||0)>=30))&&!(b.cat==="SEVERE")&&!(b.hero&&/^(spc|rspc|rst)$/.test(b.hero.kind||"")&&b.hero.prod!=="ero")){ const has=new Set(F.map(f=>(f.properties||{}).LABEL)), NM={TSTM:"Thunder",MRGL:"1 Marginal",SLGT:"2 Slight",ENH:"3 Enhanced",MDT:"4 Moderate",HIGH:"5 High"};
         fig.push(map("SEVERE STORM RISK","r",kName.toUpperCase(),[{features:F,style:f=>({fill:(f.properties||{}).fill||SPCC[(f.properties||{}).LABEL]||"#C1E9C1",stroke:"#333",w:1,fo:.72})}],Object.keys(NM).filter(k=>has.has(k)).map(k=>`<span><i style="background:${SPCC[k]}"></i>${NM[k]}</span>`).join(""),
-          [n?`<b>Level ${n} of 5</b> for ${city} ${/^(today|tonight|tomorrow)$/i.test(dN)?dN.toLowerCase():dN}.`:`<b>Thunderstorms possible</b>, severe storms not expected.`, hcx.twin?`<b>Storm window:</b> ${hcx.twin}.`:hcx.win?`<b>Most likely:</b> ${hcx.win}.`:"", `<b>Main concern:</b> ${(_mainLine(TH)||"Lightning.").replace(/ (is|are) the main concern\./,".").replace(/^Damaging gusts and a tornado or two are possible\./,"Strong gusts and a tornado or two.")}`],0,0,"severe")); } }
+          [n?`<b>Level ${n} of 5</b> for ${city} ${/^(today|tonight|tomorrow)$/i.test(dN)?dN.toLowerCase():dN}.`:_nr.mi<=80?`<b>Just outside the risk area.</b> Level ${_nr.lv} of 5 starts about ${Math.max(5,Math.round(_nr.mi/5)*5)} miles ${_nr.dir}.`:`<b>Thunderstorms possible</b>, severe storms not expected.`, hcx.twin?`<b>Storm window:</b> ${hcx.twin}.`:hcx.win?`<b>Most likely:</b> ${hcx.win}.`:"", `<b>Main concern:</b> ${(_mainLine(TH)||"Lightning.").replace(/ (is|are) the main concern\./,".").replace(/^Damaging gusts and a tornado or two are possible\./,"Strong gusts and a tornado or two.")}`],0,0,"severe")); } }
     if(!quiet&&ki<=3){ const F=((MD.ero||[])[ki])||[]; let n=0; F.forEach(f=>{ if(f._lvl&&at(f.geometry,s)) n=Math.max(n,f._lvl); });
       if(n>=1&&b.cat!=="FLOOD"&&!(b.hero&&(b.hero.kind==="ero"||b.hero.prod==="ero"))){ const EC=["","#6BBF6B","#F6E05E","#E05252","#E05AE0"], EN=["","Marginal","Slight","Moderate","High"];
         fig.push(map("FLOODING RAIN RISK","r",kName.toUpperCase(),[{features:F,style:f=>({fill:EC[f._lvl],stroke:"#333",w:1,fo:.7})}],[1,2,3,4].filter(k=>F.some(f=>f._lvl===k)).map(k=>`<span><i style="background:${EC[k]}"></i>${k} ${EN[k]}</span>`).join(""),[`<b>Level ${n} of 4</b> flooding rain risk for ${city}.`, hcx.win?`<b>Heaviest rain:</b> ${hcx.win}.`:"", `Low roads, creeks and poor drainage flood first.`],0,0,"flooding")); } }
@@ -6852,7 +6864,7 @@ window.SDR_GL=(function(){
 
 <script>
 // v125: client chat layer
-(function(){ let wrap=null, fr=null; const CHATV="1793839280";
+(function(){ let wrap=null, fr=null; const CHATV="1793848632";
   function open(){ if(!wrap){ wrap=document.createElement("div"); wrap.id="chatwrap"; wrap.innerHTML='<iframe id="chatfr" title="Message the team" allow="camera"></iframe>'; document.body.appendChild(wrap); fr=wrap.querySelector("iframe"); fr.src="./chat.html?v="+CHATV; fr.addEventListener("load",()=>{ try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }); }
     wrap.hidden=false; document.body.classList.add("chat-on"); if(!(history.state&&history.state.chat)) history.pushState({chat:1},""); try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }
   function close(){ if(wrap){ wrap.hidden=true; } document.body.classList.remove("chat-on"); }
@@ -8159,4 +8171,51 @@ window.SDR_MDCHIPS2=inf=>{ if(!inf) return []; const C=[], hz=inf.haz||[], iso=i
 (function(){ const o=window.SDR_MDLINE; if(typeof o!=="function") return; window.SDR_MDLINE=inf=>{ let t=o(inf); if(t&&inf&&inf.prob!=null&&inf.prob<40) t=t.replace("a brief tornado","an isolated, brief tornado"); return t; }; })();
 </script>
 <style>.acard:has(.mdb) .bd{max-height:none!important;overflow:visible!important}.acard .mdb .wcc{margin:2px 0 6px}.acard .mdb .ln{margin:3px 0}</style>
+<script>
+window.SDR_NEARMI=(g,s)=>{ let best=1e9, at=null; const P=!g?[]:g.type==="Polygon"?[g.coordinates]:g.type==="MultiPolygon"?g.coordinates:[]; P.forEach(p=>(p[0]||[]).forEach(([a,b])=>{ const dx=(a-s.lo)*69*Math.cos(s.la*Math.PI/180), dy=(b-s.la)*69, d=Math.hypot(dx,dy); if(d<best){ best=d; at=[dx,dy]; } }));
+  return {mi:best, dir:at?["north","northeast","east","southeast","south","southwest","west","northwest"][Math.round(((Math.atan2(at[0],at[1])*180/Math.PI)+360)%360/45)%8]:""}; };
+</script>
+<style id="sdr-brief-v236">
+/* a slimmer masthead */
+html body .bdx .bsheet .bshd{padding:12px 18px 14px!important;gap:8px 12px!important;border-top-width:5px}
+html body .bdx .bsheet .bshd>img{height:26px!important;padding:5px 8px!important;border-radius:7px}
+html body .bdx .bsheet .bsht small{font-size:10px!important;letter-spacing:.18em!important}
+html body .bdx .bsheet .bsht h2{font-size:17px!important;margin:4px 0 4px!important}
+html body .bdx.wide .bsheet .bsht h2{font-size:21px!important}
+html body .bdx .bsheet .bsht p{font-size:13.5px!important;margin:0 0 8px!important;-webkit-line-clamp:2}
+html body .bdx .bsheet .bsiss{font-size:9px!important;padding:4px 10px!important;letter-spacing:.14em!important}
+html body .bdx .bsheet .bshd>.bstg{font-size:9px!important}
+@media screen and (max-width:680px){ html body :not(#sdr-printroot)>.bdx.wide .bsheet .bsht h2{font-size:17px!important} }
+</style>
+<script>
+window.SDR_READER=card=>{ try{
+  const ev=(card.querySelector(".wcev")||card.querySelector(".hd span")||{}).textContent||"Alert", wc=getComputedStyle(card.querySelector(".wch")||card).getPropertyValue("--wc").trim()||"#F5C518";
+  const meta=card.querySelector(".wcl"), chips=card.querySelector(".wcc"), lines=[...card.querySelectorAll(".bd > .ln, .bd .sec .ln")].map(e=>e.innerHTML), tx=card.querySelector(".txt");
+  const cities=tx&&tx.querySelector(".cities"); let raw=""; if(tx){ const d=[...tx.children].find(e=>!e.classList.contains("cities")&&e.tagName!=="A"); raw=d?d.textContent:""; }
+  const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
+  raw=raw.replace(/\s+by NWS [^\n]*/gi,"").replace(/\bThe National Weather Service in [^\n]*? has (issued|extended|continued)\s*/gi,"").replace(/\bNational Weather Service\b/gi,"the forecast office").replace(/\bNWS\b/g,"");
+  raw=raw.replace(/\s\*?\s*(HAZARD|SOURCE|IMPACT|WHAT|WHERE|WHEN|IMPACTS|ADDITIONAL DETAILS|LOCATIONS IMPACTED INCLUDE)\.\.\./g,"\n\n$1...");
+  const paras=raw.split(/\n\s*\n/).map(p=>p.replace(/\n/g," ").replace(/\s{2,}/g," ").trim()).filter(Boolean).filter(p=>p.toLowerCase()!==ev.toLowerCase());
+  const body=paras.map(p=>{ const m=p.match(/^\*?\s*([A-Z][A-Z /&]{2,30})\.{3}\s*(.*)$/); if(m) return `<p><b>${esc(m[1].charAt(0)+m[1].slice(1).toLowerCase())}:</b> ${esc(m[2])}</p>`;
+    if(/^(PRECAUTIONARY|&&|\$\$|LAT\.\.\.LON|TIME\.\.\.MOT)/i.test(p)) return ""; const caps=p===p.toUpperCase()&&/[A-Z]{4}/.test(p); return `<p>${esc(caps?p.charAt(0)+p.slice(1).toLowerCase().replace(/(^|[.!?]\s+)([a-z])/g,(a,b,c)=>b+c.toUpperCase()).replace(/\b(i)\b/g,"I"):p)}</p>`; }).join("");
+  let ov=document.getElementById("sdr-reader"); if(!ov){ ov=document.createElement("div"); ov.id="sdr-reader"; document.body.appendChild(ov); ov.addEventListener("click",e=>{ if(e.target===ov||e.target.closest("[data-rx]")){ ov.classList.remove("on"); document.documentElement.classList.remove("sdr-reading"); } }); }
+  ov.innerHTML=`<div class="rd" style="--wc:${wc}"><div class="rdh"><h3>${esc(ev)}</h3><button data-rx aria-label="Close">CLOSE</button></div>${meta?`<div class="rdm">${meta.innerHTML}</div>`:""}${chips?`<div class="rdc">${chips.innerHTML}</div>`:""}${lines.length?`<div class="rdl">${lines.map(l=>`<p>${l}</p>`).join("")}</div>`:""}${cities?`<div class="rdl"><p>${cities.innerHTML}</p></div>`:""}${body?`<div class="rdb">${body}</div>`:""}</div>`;
+  ov.classList.add("on"); document.documentElement.classList.add("sdr-reading"); ov.scrollTop=0; return true; }catch(e){ return false; } };
+</script>
+<style id="sdr-reader-css">
+#sdr-reader{display:none;position:fixed;inset:0;z-index:100000;background:rgba(5,10,22,.72);overflow:auto;-webkit-overflow-scrolling:touch;padding:max(14px,env(safe-area-inset-top)) 12px 24px}
+#sdr-reader.on{display:block}
+#sdr-reader .rd{max-width:720px;margin:0 auto;background:#0E1A33;border-radius:16px;border-left:7px solid var(--wc);box-shadow:0 18px 50px rgba(0,0,0,.6);padding:18px 20px 22px;color:#EAF0F8;font-family:"Inter","Helvetica Neue",Arial,sans-serif}
+#sdr-reader .rdh{display:flex;align-items:flex-start;gap:12px;justify-content:space-between}
+#sdr-reader .rdh h3{margin:0;font-family:var(--display);font-weight:800;text-transform:uppercase;letter-spacing:.03em;font-size:26px;line-height:1.08;color:var(--wc)}
+#sdr-reader .rdh button{flex:none;background:#fff;color:#0E1A33;border:0;border-radius:999px;padding:9px 16px;font-family:var(--display);font-weight:800;letter-spacing:.12em;font-size:13px;cursor:pointer}
+#sdr-reader .rdm{display:flex;justify-content:space-between;gap:10px;margin:12px 0 4px;font-size:16px;color:#A9B6CC}#sdr-reader .rdm b{color:#fff}
+#sdr-reader .rdc{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}#sdr-reader .rdc .wchip{display:inline-flex;align-items:baseline;gap:6px;font-size:15px;font-weight:700;padding:6px 10px;border-radius:8px;background:rgba(255,255,255,.08);color:#fff;white-space:nowrap}
+#sdr-reader .rdc .wchip em{font-style:normal;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#A9B6CC}#sdr-reader .rdc .wtag{border:1px solid currentColor;color:#F5C518}#sdr-reader .rdc .wtag.pds{color:#E9D5FF;border-color:#C084FC}#sdr-reader .rdc .wtag.obs{color:#FECACA;border-color:#F87171}
+#sdr-reader .rdl p{margin:6px 0;font-size:17px;line-height:1.45}
+#sdr-reader .rdb{margin-top:14px;border-top:1px solid rgba(255,255,255,.12);padding-top:12px}
+#sdr-reader .rdb p{margin:0 0 12px;font-size:17px;line-height:1.55;color:#DCE4F0}#sdr-reader .rdb b{color:#fff}
+html.sdr-reading,html.sdr-reading body{overflow:hidden}
+@media(min-width:900px){#sdr-reader{padding-top:40px}#sdr-reader .rdh h3{font-size:32px}}
+</style>
 </body></html>

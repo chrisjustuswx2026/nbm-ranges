@@ -2865,7 +2865,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
       </ul>
       <div class="bottom"><span class="k">BOTTOM LINE</span>Keep the schedule. Shift team arrival or stage under cover. We'll call the all-clear the moment the line passes.<small>Next update: 1:30 PM or sooner</small></div>
       <div class="prev"><span class="k">LIBRARY</span></div>
-      <div class="bfilter" id="bfilter"><button aria-pressed="true" data-c="">ALL</button><button aria-pressed="false" data-c="SEVERE">SEVERE</button><button aria-pressed="false" data-c="FLOOD">FLOOD</button><button aria-pressed="false" data-c="TROPICAL">TROPICAL</button><button aria-pressed="false" data-c="WINTER">WINTER</button><button aria-pressed="false" data-c="OUTLOOK">OUTLOOK</button><button aria-pressed="false" data-c="SEASONAL">SEASONAL</button></div>
+      <div class="bfilter" id="bfilter"><button aria-pressed="true" data-c="">ALL</button><button aria-pressed="false" data-c="SEVERE">SEVERE</button><button aria-pressed="false" data-c="FLOOD">FLOOD</button><button aria-pressed="false" data-c="FIRE">FIRE</button><button aria-pressed="false" data-c="TROPICAL">TROPICAL</button><button aria-pressed="false" data-c="WINTER">WINTER</button><button aria-pressed="false" data-c="OUTLOOK">OUTLOOK</button><button aria-pressed="false" data-c="SEASONAL">SEASONAL</button></div>
       <div class="blist" id="blib" style="max-height:none"><button class="brow" data-cat="SEVERE"><span class="bd">Oct 22</span><span class="bt">Severe weather threat · Saturday <i>LATEST</i></span><span class="bc severe">SEVERE</span><span class="bk">▶ VIDEO</span></button><button class="brow" data-cat="TROPICAL"><span class="bd">Oct 20</span><span class="bt">Tropics: what we're watching</span><span class="bc tropical">TROPICAL</span><span class="bk">▶ VIDEO</span></button><button class="brow" data-cat="SEASONAL"><span class="bd">Oct 15</span><span class="bt">November outlook</span><span class="bc seasonal">SEASONAL</span><span class="bk">▶ VIDEO</span></button><button class="brow" data-cat="WINTER"><span class="bd">Oct 8</span><span class="bt">Winter weather outlook 2026–27</span><span class="bc winter">WINTER</span><span class="bk">▶ VIDEO</span></button><button class="brow" data-cat="SEASONAL"><span class="bd">Oct 3</span><span class="bt">Fall pattern change</span><span class="bc seasonal">SEASONAL</span><span class="bk">WRITTEN</span></button><button class="brow" data-cat="SEVERE"><span class="bd">Sep 26</span><span class="bt">After-action: Sept. 24 wind event</span><span class="bc severe">SEVERE</span><span class="bk">WRITTEN</span></button></div>
     </div>
   </section>
@@ -4576,6 +4576,12 @@ window.MAPROOM = (function(){
       let here=0; P.forEach(f=>{ try{ if(pl(f.geometry).some(p=>ip(site.lo,site.la,p[0]))) here=Math.max(here,f._p); }catch(e){} });
       C.push({ id:"torn"+(di+1), title:`TORNADO RISK · ${di===0?"TODAY":"TOMORROW"}`, sub:"Tornado outlook", line: here?`${here}% chance of a tornado within 25 miles here · level ${SDR_TORLV(here)} of 5`:`Up to ${mx}% in the region · not at ${site.name||"your site"}`, flag:here>=5, box:(()=>{ let w=Math.min(-95,site.lo-9),so=Math.min(24,site.la-6),e=Math.max(-74,site.lo+9),n=Math.max(39,site.la+6); const wk=c=>{ if(typeof c[0]==="number"){ w=Math.min(w,c[0]-1); e=Math.max(e,c[0]+1); so=Math.min(so,c[1]-1); n=Math.max(n,c[1]+1); } else c.forEach(wk); }; P.forEach(f=>{ try{ wk(f.geometry.coordinates); }catch(x){} }); return [Math.max(w,-126),Math.max(so,23),Math.min(e,-66),Math.min(n,50)]; })(), focus:null, opts:{points:[{lo:site.lo,la:site.la,fill:"#F28C28",r:6}]},
         overlays:[{features:P.slice().sort((a,b)=>a._p-b._p),style:f=>({fill:SDR_TORCOL(f._p),stroke:"#000",w:1,fo:.55})},{features:sig,style:()=>({fill:"none",stroke:"#000",w:1.5,dash:"4 3",fo:0})}] }); });
+    (data.fire||[]).forEach((F,di)=>{ const P=(F||[]).filter(f=>!f._dry); const DR=(F||[]).filter(f=>f._dry); if(!P.length&&!DR.length) return;
+      const pl=g=>!g?[]:g.type==="Polygon"?[g.coordinates]:g.type==="MultiPolygon"?g.coordinates:[], ip=(x,y,r)=>{ let k=false; for(let i=0,j=r.length-1;i<r.length;j=i++){ const [xi,yi]=r[i],[xj,yj]=r[j]; if(((yi>y)!==(yj>y))&&(x<(xj-xi)*(y-yi)/(yj-yi)+xi)) k=!k; } return k; };
+      let here=0; P.forEach(f=>{ try{ if(pl(f.geometry).some(p=>ip(site.lo,site.la,p[0]))) here=Math.max(here,f._lvl); }catch(e){} }); const mx=Math.max(0,...P.map(f=>f._lvl));
+      C.push({ id:"fire"+(di+1), title:`FIRE WEATHER · ${di===0?"TODAY":"TOMORROW"}`, sub:"Fire weather outlook", line: here?`${site.name||"Your site"}: ${SDR_FIRENM(here)} fire weather risk`:mx?`${SDR_FIRENM(mx)} risk in the region · not at ${site.name||"your site"}`:"Dry thunderstorms possible in the region", flag:here>=2,
+        box:(()=>{ let w=Math.min(-95,site.lo-9),so=Math.min(24,site.la-6),e=Math.max(-74,site.lo+9),n=Math.max(39,site.la+6); const wk=c=>{ if(typeof c[0]==="number"){ w=Math.min(w,c[0]-1); e=Math.max(e,c[0]+1); so=Math.min(so,c[1]-1); n=Math.max(n,c[1]+1); } else c.forEach(wk); }; P.concat(DR).forEach(f=>{ try{ wk(f.geometry.coordinates); }catch(x){} }); return [Math.max(w,-126),Math.max(so,23),Math.min(e,-66),Math.min(n,50)]; })(), focus:null, opts:{points:[{lo:site.lo,la:site.la,fill:"#F28C28",r:6}]},
+        overlays:[{features:P.slice().sort((a,b)=>a._lvl-b._lvl),style:f=>({fill:SDR_FIRECOL(f._lvl),stroke:"#1B2433",w:1,fo:.6})},{features:DR,style:()=>({fill:"none",stroke:"#8B5A2B",w:2,dash:"5 4",fo:0})}] }); });
     const tro=data.tropics||{areas:[],cones:[]}; const hi=tro.areas.map(a=>a._risk).sort((a,b)=>["Low","Medium","High"].indexOf(b)-["Low","Medium","High"].indexOf(a))[0];
     C.push({ id:"tropics", title:"TROPICS · 7-DAY OUTLOOK", sub:"Tropical outlook", line: data.tropics==null?"Tropical outlook didn't load": tro.cones.length?`${tro.cones.length} active system${tro.cones.length>1?"s":""} with a forecast cone`: tro.areas.length?`${tro.areas.length} area${tro.areas.length>1?"s":""} to watch · highest chance ${hi||"low"}`:"Nothing expected in the next 7 days",
       flag: tro.cones.length>0, box:SDR_TROPBOX(tro,[-100,7,-45,38]), opts:{points:[{lo:site.lo,la:site.la,fill:"#F28C28",r:5}]},
@@ -4940,13 +4946,17 @@ window.MAPVIEW = (function(){
     else if(card.id==="qpf"){ add({type:"FeatureCollection",features:data.qpf||[]},x=>({stroke:false,fillColor:window.MAPROOM.qcol(x._v||0),fillOpacity:.65}), x=>`<b>${x._v>=1?x._v.toFixed(1):x._v.toFixed(2)}" or more of rain</b> expected over the next 7 days.`); }
     if(/^torn/.test(card.id)){ (card.overlays||[]).forEach(o=>add({type:"FeatureCollection",features:o.features},x=>{ const st=o.style(x); return {color:"#000",weight:st.w||1,fillColor:st.fill==="none"?"transparent":st.fill,fillOpacity:st.fill==="none"?0:(st.fo||.5),dashArray:st.dash||null}; }, x=>x._sig?`<b>Significant tornadoes possible</b><br>Strong (EF2+) tornadoes possible in this area.`:`<b>${x._p}% chance of a tornado</b> within 25 miles of any spot here · level ${window.SDR_TORLV?SDR_TORLV(x._p):""} of 5`));
       leg.innerHTML=[[2,"2%"],[5,"5%"],[10,"10%"],[15,"15%"],[30,"30%+"]].map(([p,t])=>`<span><i style="background:${SDR_TORCOL(p)}"></i>${t}</span>`).join("")+'<span><i style="background:transparent;border:2px dashed #000"></i>Strong tornadoes</span>'; }
+    if(/^fire\d$/.test(card.id)){ const F=((data.fire||[])[+card.id.slice(4)-1])||[];
+      add({type:"FeatureCollection",features:F.filter(f=>!f._dry).sort((a,b)=>a._lvl-b._lvl)},x=>({color:"#1B2433",weight:1,fillColor:SDR_FIRECOL(x._lvl),fillOpacity:.5}),x=>`<b style="color:${SDR_FIRECOL(x._lvl)}">${SDR_FIRENM(x._lvl).toUpperCase()} FIRE WEATHER RISK</b><br>${x._lvl>=3?"Extremely dry air and strong wind: fires can spread explosively.":x._lvl>=2?"Very dry air and strong, gusty wind: fires can spread quickly.":"Dry air and breezy wind: fires can spread more easily than usual."}`);
+      add({type:"FeatureCollection",features:F.filter(f=>f._dry)},()=>({color:"#8B5A2B",weight:2,dashArray:"5 4",fill:false}),()=>`<b>DRY THUNDERSTORMS</b><br>Lightning with little rain can start new fires.`);
+      leg.innerHTML=[1,2,3].map(l=>`<span><i style="background:${SDR_FIRECOL(l)}"></i>${SDR_FIRENM(l)}</span>`).join("")+'<span><i style="background:transparent;border:2px dashed #8B5A2B"></i>Dry thunderstorms</span>'; }
     if(card.id==="tropics"){ const t=data.tropics||{areas:[],cones:[]};
       add({type:"FeatureCollection",features:t.areas},x=>({color:"#000",weight:1,fillColor:{Low:"#FFFF00",Medium:"#FF9900",High:"#FF0000"}[x._risk],fillOpacity:.45}), x=>{ const p=x.properties||{}; return `<b>${x._risk} chance of development in 7 days</b>${p.prob2day||p.PROB2DAY?` · 2-day: ${p.prob2day||p.PROB2DAY}`:""}${p.prob7day||p.PROB7DAY?` · 7-day: ${p.prob7day||p.PROB7DAY}`:""}<br>National Hurricane Center tropical weather outlook.`; });
       add({type:"FeatureCollection",features:t.cones},()=>({color:"#fff",weight:1.5,fillColor:"#fff",fillOpacity:.3}), x=>{ const p=x.properties||{}; return `<b>${p.stormname||p.STORMNAME||"Active storm"}</b> · forecast cone${p.advisnum||p.ADVISNUM?` · advisory ${p.advisnum||p.ADVISNUM}`:""}<br>The center is expected to stay inside the cone about two-thirds of the time. Impacts reach well outside it.`; });
       leg.innerHTML='<span><i style="background:#FFFF00"></i>Low</span><span><i style="background:#FF9900"></i>Medium</span><span><i style="background:#FF0000"></i>High</span><span><i style="background:#fff"></i>Forecast cone</span>'; }
     priority(data);
     const pr=/^(md|watch|radar|spc1|torn1)$/.test(String(card.id||""))?(data.priority||{}):{}; if((pr.mds||[]).length) leg.innerHTML+='<span><i style="background:transparent;border:2px dashed #FF8C1A"></i>Storms organizing</span>'; if((pr.watches||[]).length) leg.innerHTML+='<span><i style="background:#FFFF00"></i>Tornado watch</span><span><i style="background:#DB7093"></i>Severe T-storm watch</span>';
-    if(/^(tropics|torn)/.test(card.id)&&Array.isArray(card.box)&&!card.focus) card.focus=[[card.box[1],card.box[0]],[card.box[3],card.box[2]]]; const bx=SDR_FPBOX(); BOX=(card.id!=="rivers"&&card.focus)||[[bx[1],bx[0]],[bx[3],bx[2]]]; const wide=!card.focus&&innerWidth>=700&&card.id!=="rivers";   // phones open on the region (the whole U.S. is too small to read there)
+    if(/^(tropics|torn|fire)/.test(card.id)&&Array.isArray(card.box)&&!card.focus) card.focus=[[card.box[1],card.box[0]],[card.box[3],card.box[2]]]; const bx=SDR_FPBOX(); BOX=(card.id!=="rivers"&&card.focus)||[[bx[1],bx[0]],[bx[3],bx[2]]]; const wide=!card.focus&&innerWidth>=700&&card.id!=="rivers";   // phones open on the region (the whole U.S. is too small to read there)
     setTimeout(()=>{ zoomTo(wide?"us":"r"); placeTowns(); },50);
   }
   function close(){ box.hidden=true; document.body.style.overflow=""; }
@@ -5533,7 +5543,7 @@ window.SITE_LL = window.__LOC?{lat:__LOC.la,lon:__LOC.lo}:(window.SITE_LL || { l
       out.push({k:"trop", v:JSON.stringify([near.map(x=>x.r).sort().join(""),cones.length,mine]), kind:"trop", near, cones, mine}); }
     // e) official alerts at the site: flood, heat, freeze/frost, winter, wind, tropical
     try{ const j=await (await fetch(`https://api.weather.gov/alerts/active?point=${s.la.toFixed(4)},${s.lo.toFixed(4)}&status=actual`,{headers:{Accept:"application/geo+json"}})).json();
-      (j.features||[]).forEach(a=>{ const P=a.properties||{}, ev=P.event||""; const cat=/flood/i.test(ev)?"FLOOD":/heat/i.test(ev)?"HEAT":/freeze|frost/i.test(ev)?"FREEZE":/winter|ice storm|blizzard|snow/i.test(ev)?"WINTER":/wind/i.test(ev)&&!/chill/i.test(ev)?"WIND":/hurricane|tropical|storm surge/i.test(ev)?"TROPICAL":null;
+      (j.features||[]).forEach(a=>{ const P=a.properties||{}, ev=P.event||""; const cat=/flood/i.test(ev)?"FLOOD":/heat/i.test(ev)?"HEAT":/freeze|frost/i.test(ev)?"FREEZE":/winter|ice storm|blizzard|snow/i.test(ev)?"WINTER":/wind/i.test(ev)&&!/chill/i.test(ev)?"WIND":/hurricane|tropical|storm surge/i.test(ev)?"TROPICAL":/red flag|fire weather/i.test(ev)?"FIRE":null;
         if(!cat) return; out.push({k:"al-"+ev, v:"on", kind:"alert", ev, cat, ends:P.ends||P.expires, onset:P.onset||P.effective, a}); }); }catch(e){}
     // f) from our forecast (National Blend based): first frost/freeze, heat, winter signal, high wind
     if(window.STRIPS&&STRIPS.days){ const DD=(STRIPS.days()||[]).slice(0,7), HH=(STRIPS.hours&&STRIPS.hours())||[]; const first=(fn)=>DD.find(fn);
@@ -5626,7 +5636,7 @@ window.SITE_LL = window.__LOC?{lat:__LOC.la,lon:__LOC.lo}:(window.SITE_LL || { l
         const hr=eh===12?"noon":eh===0?"midnight":(eh%12||12)+(eh<12?" AM":" PM"), soon=ee&&ee-Date.now()<24*3600e3;
         const end=ee?(sameDay?` until ${hr}`:soon?` until ${hr} ${ee.toLocaleDateString("en-US",{weekday:"long"})}`:` until ${ee.toLocaleDateString("en-US",{weekday:"long"})} ${part}`):"";
         L.push(`<b>${c.ev}</b> in effect for ${city0}${end}.`); title=title||`${c.ev} for ${city0}${end?end.replace(/^ until /," until "):""}`;
-        const S={FLOOD:/Warning/.test(c.ev)?"Flooding is happening or expected. Stay off low roads and creek crossings.":"Heavy rain could cause flooding. Avoid low spots and creek crossings.",HEAT:"Dangerous heat. Plan shade, water and breaks for anyone working or attending outdoors.",FREEZE:"Temperatures drop below freezing. Protect pipes, irrigation and tender plants.",WINTER:/Warning/.test(c.ev)?"Snow and ice will make roads slick. Plan for delays.":"Winter weather could make roads slick. Plan for delays.",WIND:"Strong gusts could topple tents, signs and loose equipment. Secure them.",TROPICAL:/Warning/.test(c.ev)?"Tropical storm conditions are expected. Follow our updates and your local officials.":"Tropical storm conditions are possible within about 48 hours."};
+        const S={FLOOD:/Warning/.test(c.ev)?"Flooding is happening or expected. Stay off low roads and creek crossings.":"Heavy rain could cause flooding. Avoid low spots and creek crossings.",HEAT:"Dangerous heat. Plan shade, water and breaks for anyone working or attending outdoors.",FREEZE:"Temperatures drop below freezing. Protect pipes, irrigation and tender plants.",WINTER:/Warning/.test(c.ev)?"Snow and ice will make roads slick. Plan for delays.":"Winter weather could make roads slick. Plan for delays.",WIND:"Strong gusts could topple tents, signs and loose equipment. Secure them.",FIRE:/Red Flag/.test(c.ev)?"Dry air and gusty wind: any fire can spread quickly.":"Dry, windy conditions possible that could let fires spread quickly.",TROPICAL:/Warning/.test(c.ev)?"Tropical storm conditions are expected. Follow our updates and your local officials.":"Tropical storm conditions are possible within about 48 hours."};
         sub=sub||S[c.cat]||""; if(cat==="UPDATE"||cat==="OUTLOOK") cat=c.cat; H({kind:"alert",a:c.a},c.cat==="TROPICAL"?3.5:1.5); }
       if(c.kind==="blend"&&c.v!=="none"){ const x=c.x, d=x&&x.date?dname(x.date):(c.h&&c.h[0]?dname(c.h[0].t):"");
         if(c.what==="freeze"){ const yr=new Date().getFullYear()-(new Date().getMonth()<6?1:0), key="sdr-firstfreeze-"+yr; let firstOne=false; try{ firstOne=!localStorage.getItem(key); localStorage.setItem(key,"1"); }catch(e){}
@@ -6084,7 +6094,8 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
     const kind=x=>(x.snowP||0)>=40?"snow":(x.thunder||0)>=30?"storms":rn(x)>=1?"soaking rain":pp(x)>=40?"rain":"showers";
     const sec=[], wet=D.slice(0,7).map(x=>({x,v:rn(x)})).filter(o=>o.v>=0.05);
     if(quiet){ const nextWet=D.slice(1,10).find(x=>pp(x)>=30), hs=D.slice(0,5).map(x=>x.hi).filter(v=>v!=null), adj=h=>h>=88?"hot":h>=76?"warm":h>=60?"mild":"cool";
-      const head=nextWet?`Dry until ${dn(nextWet)}`:`Dry stretch continues`, sub=`${cap(adj(Math.max(...hs)))} and dry${nextWet?`; the next rain chance is ${dn(nextWet)} (${r10(pp(nextWet))}%)`:" for the week ahead"}.`;
+      const _wetNow=(()=>{ try{ const RN=window.RADAR_NEAR, H0=((window.STRIPS&&STRIPS.hours&&STRIPS.hours())||[]).filter(h=>Math.abs(+new Date(h.t)-Date.now())<3*3600e3); return (RN&&!RN.none&&RN.d<=10)||(window.OBS_WET&&OBS_WET.wet)||H0.some(h=>(h.pop||0)>=50); }catch(e){ return false; } })();
+      const head=nextWet?`Dry until ${dn(nextWet)}`:_wetNow?`Drying out, dry stretch ahead`:`Dry stretch ahead`, sub=`${cap(adj(Math.max(...hs)))} and dry${nextWet?`; the next rain chance is ${dn(nextWet)} (${r10(pp(nextWet))}%)`:" for the week ahead"}.`;
       sec.push({title:"THE SETUP",bullets:[`Quiet weather for ${city}.`,`Highs ${Math.min(...hs)}° to ${Math.max(...hs)}° over the next five days.`]});
       sec.push({title:"NEXT RAIN CHANCE",bullets:[nextWet?`${dn(nextWet)}: ${r10(pp(nextWet))}% chance${rn(nextWet)>=0.05?`, about ${_in(rn(nextWet))}`:""}.`:"Nothing meaningful in the next 10 days."]});
       sec.push({title:"IMPACTS",bullets:["Normal operations."]});
@@ -6186,7 +6197,7 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
     h=h.replace("<!--status-->",M.length?bar(/^(today|tonight)$/i.test(kName)?`${kName.toUpperCase()}'S RISKS`:`RISKS · ${kName.toUpperCase()}`,"g","0 = NONE · 5 = EXTREME")+`<div class="bsstat">${_meters(M)}</div>`:"");
     const tc=/freeze|heat/.test(HZ)?tempChart(H,cw):null;
     if(tc) h+=bar(`TEMPERATURE · NEXT 36 HOURS`,"n")+`<div class="bspan"><div class="bsch">${tc.svg}<div class="bslg"><span><i class="ln"></i>Temperature</span>${HZ==="freeze"?`<span><i style="background:rgba(31,95,191,.25)"></i>At or below freezing</span>`:""}</div></div><div class="bsside"><small>${HZ==="freeze"?"COLDEST":"HOTTEST"}</small><b class="bsbig" style="color:${HZ==="freeze"?"#1F5FBF":"#C2410C"}">${HZ==="freeze"?tc.lo:tc.hi}°</b><ul>${tc.frz?`<li><b>Below freezing:</b> ${tc.frz}</li>`:""}<li><b>Range:</b> ${tc.lo}° to ${tc.hi}°</li></ul></div></div>`;
-    else if(quiet&&b.daily&&!TROP){ const wt=weekTemps(D,cw), nw=D.slice(1,10).find(x=>Math.max(x.pp||0,x.ppN||0)>=30); if(wt) h+=bar("THE WEEK AHEAD","n")+`<div class="bspan"><div class="bsch">${wt}</div><div class="bsside"><small>NEXT RAIN CHANCE</small><b class="bsbig g">${nw?new Date(nw.date).toLocaleDateString("en-US",{weekday:"short"}).toUpperCase():"None"}</b><ul>${nw?`<li><b>Chance:</b> ${_r10(Math.max(nw.pp||0,nw.ppN||0))}%</li>`:`<li>Nothing meaningful in the next 10 days.</li>`}<li><b>Highs:</b> ${Math.min(...D.slice(0,7).map(x=>x.hi))}° to ${Math.max(...D.slice(0,7).map(x=>x.hi))}°</li></ul></div></div>`; }
+    else if(quiet&&b.daily&&!TROP){ const wt=weekTemps(D,cw), nw=D.slice(1,10).find(x=>Math.max(x.pp||0,x.ppN||0)>=30); if(wt) h+=bar("THE WEEK AHEAD","n")+`<div class="bspan"><div class="bsch">${wt}</div><div class="bsside"><small>NEXT RAIN CHANCE</small><b class="bsbig g">${nw?new Date(nw.date).toLocaleDateString("en-US",{weekday:"short"}).toUpperCase():"None"}</b><ul>${nw?`<li><b>Chance:</b> ${_r10(Math.max(nw.pp||0,nw.ppN||0))}%</li>`:`<li>Nothing meaningful in the next 10 days.</li>`}<li><b>Highs:</b> ${Math.min(...D.slice(0,7).map(x=>x.hi))}° to ${Math.max(...D.slice(0,7).map(x=>x.hi))}°</li>${window.SDR_CPCLINE?SDR_CPCLINE(MD0||{},s):""}</ul></div></div>`; }
     if(hc&&!TROP&&!tc&&HZ!=="regional"&&!(quiet&&b.daily)){ const r=_rain(hx), rr=hx.rr, pts=[];
       if(hc.start) pts.push(`<b>Rain moves in:</b> around ${hc.start}`); if(hc.win&&!(b.sub||"").includes(hc.win)) pts.push(`<b>Most likely:</b> ${hc.win}`);
       if(hc.pk>=20) pts.push(`<b>Peak chance:</b> ${_r10(hc.pk)}%`); if(hc.twin) pts.push(`<b>Thunder:</b> ${hc.twin}`);
@@ -6533,7 +6544,7 @@ function SDR_STORY(H, D, spc, nowMs){
   const k=document.getElementById("st-k"); const fix=()=>{ if(!k) return; const t=k.textContent; const m=t.match(/^(.*?)\s*·\s*RIGHT NOW$/i); if(m) k.innerHTML=`<b>Right now</b><span>${m[1].toLowerCase().replace(/(^|\s)\S/g,c=>c.toUpperCase()).replace(/,\s*([A-Za-z]{2})$/,(x,st)=>", "+st.toUpperCase())}</span>`; };
   if(k){ fix(); new MutationObserver(()=>{ if(!k.querySelector("b")) fix(); }).observe(k,{childList:true,characterData:true,subtree:true}); }
   const nk=document.querySelector("#next .k"); if(nk) nk.innerHTML="<b>What's next</b>";
-  const URG=["SEVERE","FLOOD","TROPICAL","HEAT","WINTER","WIND","FREEZE"];
+  const URG=["SEVERE","FLOOD","TROPICAL","HEAT","WINTER","WIND","FREEZE","FIRE"];
   const tab=document.querySelector('.tabs button[data-pane="briefing"]'); const SEEN="sdr-brief-seen";
   let seen=0; try{ seen=+localStorage.getItem(SEEN)||0; }catch(e){}
   if(tab) tab.addEventListener("click",()=>{ seen=Date.now(); try{ localStorage.setItem(SEEN,String(seen)); }catch(e){} paint(); });
@@ -6966,7 +6977,7 @@ window.SDR_GL=(function(){
 
 <script>
 // v125: client chat layer
-(function(){ let wrap=null, fr=null; const CHATV="1793886625";
+(function(){ let wrap=null, fr=null; const CHATV="1793902865";
   function open(){ if(!wrap){ wrap=document.createElement("div"); wrap.id="chatwrap"; wrap.innerHTML='<iframe id="chatfr" title="Message the team" allow="camera"></iframe>'; document.body.appendChild(wrap); fr=wrap.querySelector("iframe"); fr.src="./chat.html?v="+CHATV; fr.addEventListener("load",()=>{ try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }); }
     wrap.hidden=false; document.body.classList.add("chat-on"); if(!(history.state&&history.state.chat)) history.pushState({chat:1},""); try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }
   function close(){ if(wrap){ wrap.hidden=true; } document.body.classList.remove("chat-on"); }
@@ -7355,8 +7366,8 @@ window.SDR_NOWFIRST=(r,H)=>{ if(!r||/moves in|by \d|winding/i.test(r.h)) return 
     const act=hit.some(e=>/action/.test(e.className)), h0=hit[0], nmE=h0&&h0.querySelector(".nm"), nm=nmE?(nmE.firstChild&&nmE.firstChild.nodeType===3?nmE.firstChild.nodeValue:nmE.textContent).replace(/\s+/g," ").trim():"", tmE=h0&&h0.querySelector(".tm"), tm=tmE?(tmE.firstChild?tmE.firstChild.nodeValue||"":"").trim()+" "+((tmE.querySelector("small")||{}).textContent||""):"";
     p.classList.toggle("ccwarn",!!hit.length&&!act); p.classList.toggle("ccact",act);
     bar.innerHTML=ev.length?`<i>${hit.length?(act?"⛔":"⚠️"):"✅"}</i><div><b>SCHEDULE WATCH <u class="ccn">${ev.length} EVENT${ev.length===1?"":"S"}</u></b><span>${hit.length?`<strong>${tm?tm.replace(":00","")+" · ":""}${nm}</strong>${hit.length>1?` +${hit.length-1} more`:""}`:"All clear · our team is watching every one"}</span></div><em>${p.classList.contains("cx")?"Open ›":"Close ▴"}</em>`
-      :`<div class="pgpill"><i>✅</i><div><b>SCHEDULE WATCH <u class="ccn">ONLY ON SDR</u></b><span>Upload your schedule. Our team watches the weather for it.</span></div><em>${p.classList.contains("pgopen")?"Close ▴":"See how ›"}</em></div><div class="pg"><div class="pgt"><span class="pgx">ONLY ON SDR</span><b>✅ SCHEDULE WATCH</b></div><h3>Upload your schedule. We’ll watch the weather for it.</h3><p>Our team is proactive. We look for anything that could affect your plans and update you along the way, so you never have to go looking.</p><div class="pgtags"><span>Birthday parties</span><span>Vacations</span><span>Festivals</span><span>Outdoor job sites</span><span>Hunting &amp; fishing</span><span>Baseball games</span><span>Practices</span><span>Weddings</span></div>
-        <ul class="pgs"><li><i class="ok"></i><b>Tue 5 PM</b><span>Soccer practice</span><em class="ok">Clear</em></li><li><i class="ta"></i><b>Thu 6 PM</b><span>Baseball game</span><em class="ta">Storms 6–8 PM</em></li><li><i class="hu"></i><b>Sat 2 PM</b><span>Olivia’s 5th birthday</span><em class="hu">Tent it</em></li></ul>
+      :`<div class="pgpill"><i>✅</i><div><b>SCHEDULE WATCH <u class="ccn">ONLY ON SDR</u></b><span>Upload your schedule. Our team watches the weather for it.</span></div><em>${p.classList.contains("pgopen")?"Close ▴":"See how ›"}</em></div><div class="pg"><div class="pgt"><span class="pgx">ONLY ON SDR</span><b>✅ SCHEDULE WATCH</b></div><h3>Upload your schedule. We’ll watch the weather for it.</h3><p>Our team is proactive. We look for anything that could affect your plans and update you along the way, so you never have to go looking.</p><div class="pgtags"><span>Festivals</span><span>Parades</span><span>Road crews</span><span>Debris crews</span><span>Football games</span><span>Outdoor events</span><span>School dismissal</span><span>Shelters</span></div>
+        <ul class="pgs"><li><i class="hu"></i><b>Sat 10 AM</b><span>Fall Festival</span><em class="hu">High winds</em></li><li><i class="ta"></i><b>Fri 7 PM</b><span>Football game</span><em class="ta">Storms 6–8 PM</em></li><li><i class="ok"></i><b>Tue 7 AM</b><span>Road crews</span><em class="ok">Clear</em></li></ul>
         <span class="pgb">UPLOAD YOUR SCHEDULE ›</span><small>This is where you’ll upload it. A spreadsheet or a simple list works: date, time and what.</small></div>`; }
   // ---- around you: one bar ----
   function area(){ const p=$(".p-area"); if(!p) return; let bar=p.querySelector(".cxbar");
@@ -8522,10 +8533,12 @@ window.SDR_ALERTGO=a=>{ try{ const g=a&&a.geometry; const m=window.SDR_RMAP; if(
   async function buildSki(sec){ const body=sec.querySelector(".hfb"), v=venue(); const def=RES.slice().sort((a,b)=>mi(+v.la||35,+v.lo||-82,a[2],a[3])-mi(+v.la||35,+v.lo||-82,b[2],b[3]))[0][0]; const pick=ld("sdr-ski",def), R=RES.find(r=>r[0]===pick)||RES[0];
     if(!body.innerHTML.trim()) body.innerHTML='<p class="hfintro">Loading the mountain forecast…</p>'; let L=[]; try{ L=await skiDays(R); }catch(e){ body.innerHTML='<p class="hfintro">The mountain forecast didn\'t load. Try again in a minute.</p>'; return; }
     if(SKO===-1) SKO=-2;
-    body.innerHTML=`<select class="hfsel" aria-label="Ski resort">${[...new Set(RES.map(r=>r[6]))].map(g=>`<optgroup label="${g}">${RES.filter(r=>r[6]===g).map(r=>`<option value="${r[0]}"${r[0]===R[0]?" selected":""}>${r[0]}, ${r[1]}</option>`).join("")}</optgroup>`).join("")}</select>
+    const _mk=body.querySelector(".xmap"); body.innerHTML=`<select class="hfsel" aria-label="Ski resort">${[...new Set(RES.map(r=>r[6]))].map(g=>`<optgroup label="${g}">${RES.filter(r=>r[6]===g).map(r=>`<option value="${r[0]}"${r[0]===R[0]?" selected":""}>${r[0]}, ${r[1]}</option>`).join("")}</optgroup>`).join("")}</select>
+<div class="xmap" data-k="ski"></div>
       <p class="hfintro">${R[0]}, ${R[1]} · summit forecast. Tap a day for details.</p>
       <div class="hfdays">${L.map((r,i)=>row(r,i,i===SKO)).join("")}</div>${legend}
       <p class="hfnote">Southeast resorts run mostly on made snow. Open trails, base depth and lift status come from the resort: <a href="${R[5]||`https://www.google.com/search?q=${encodeURIComponent(R[0]+" "+R[1]+" snow report")}`}" target="_blank" rel="noopener">${R[0]} conditions ›</a></p>${spons("ski")}`;
+    if(window.SDR_SKIMAP) SDR_SKIMAP(body.querySelector(".xmap"),R,RES,_mk);
     body.querySelector(".hfsel").onchange=e=>{ sv("sdr-ski",e.target.value); SKO=-1; buildSki(sec); };
     body.querySelectorAll(".hfrow").forEach(b=>b.onclick=e=>{ e.stopPropagation(); const i=+b.dataset.i; SKO=SKO===i?-2:i; buildSki(sec); });
     const bar=sec.querySelector(".cxbar span"), best=L.reduce((a,b)=>b.score>a.score?b:a,L[0]); if(bar&&best) bar.textContent=`${R[0]}: best ${dlab(best.d,L.indexOf(best))} ${best.score}/10 · ${best.head}`; }
@@ -8548,4 +8561,119 @@ window.SDR_ALERTGO=a=>{ try{ const g=a&&a.geometry; const m=window.SDR_RMAP; if(
   window.SDR_OUTDOOR={buildSki,buildBeach};
 })();
 </script>
+<script>
+/* v249 fire weather outlook (today, tomorrow) on the map data: _lvl 1 Elevated, 2 Critical, 3 Extreme; _dry = dry thunderstorms */
+(function(){ const o=window.MAPDATA; if(typeof o!=="function") return; const SVC="https://mapservices.weather.noaa.gov/vector/rest/services/fire_weather/SPC_firewx/MapServer"; let FC=null, at=0;
+  const lv=p=>{ const n=+(p.dn??p.DN); if(n>=10) return 3; if(n>=8) return 2; if(n>=5) return 1; const t=Object.values(p).filter(v=>typeof v==="string").join(" ").toLowerCase(); return /extreme|extm/.test(t)?3:/critical|crit/.test(t)?2:/elevated|elev/.test(t)?1:0; };
+  const q=async id=>{ try{ const j=await (await fetch(`${SVC}/${id}/query?where=1%3D1&outFields=*&returnGeometry=true&outSR=4326&f=geojson`)).json(); return (j.features||[]).filter(f=>f.geometry); }catch(e){ return []; } };
+  const load=async()=>{ if(FC&&Date.now()-at<15*60000) return FC; const [a,b,c,d]=await Promise.all([q(1),q(2),q(4),q(5)]);
+    const mk=(F,dry)=>F.map(f=>{ f._lvl=lv(f.properties||{}); f._dry=dry; if(dry&&!f._lvl) f._lvl=1; return f; }).filter(f=>f._lvl>0);
+    FC=[mk(a,false).concat(mk(b,true)),mk(c,false).concat(mk(d,true))]; at=Date.now(); return FC; };
+  window.MAPDATA=async function(){ const d=await o.apply(this,arguments); try{ if(d&&!d.fire) d.fire=await load(); }catch(e){} return d; };
+  window.SDR_FIRECOL=l=>["","#E8A33D","#E5484D","#C026D3"][l]||"#E8A33D"; window.SDR_FIRENM=l=>["","Elevated","Critical","Extreme"][l]||"";
+})();
+</script>
+<script>
+(function(){
+  const venue=()=>{ try{ return (window.DASH&&DASH.venue&&DASH.venue())||{}; }catch(e){ return {}; } };
+  const COL={Low:"#22c55e",Moderate:"#f5b400",High:"#F28C28","Very high":"#E5484D",Extreme:"#C026D3"};
+  let J=null, JT=0, OPEN=-2;
+  async function data(la,lo){ if(J&&Date.now()-JT<30*60000) return J; J=await (await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${la}&longitude=${lo}&timezone=America%2FNew_York&past_days=14&forecast_days=7&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&hourly=relative_humidity_2m,wind_gusts_10m,wind_speed_10m,temperature_2m&daily=precipitation_sum,relative_humidity_2m_min,wind_gusts_10m_max,temperature_2m_max`)).json(); JT=Date.now(); return J; }
+  function rate(minRH,gust,dry,hi){ let p=0; p+=minRH<=15?4:minRH<=20?3:minRH<=25?2:minRH<=35?1:0; p+=gust>=35?3:gust>=25?2:gust>=18?1:0; p+=dry>=14?2:dry>=7?1:0; if(hi>=85) p+=0.5; return p>=8?"Extreme":p>=6?"Very high":p>=4?"High":p>=2?"Moderate":"Low"; }
+  async function build(sec){ const body=sec.querySelector(".hfb"), v=venue(), la=+v.la, lo=+v.lo; if(!isFinite(la)) return; let j; try{ j=await data(la,lo); }catch(e){ body.innerHTML='<p class="hfintro">The fire weather forecast didn\'t load. Try again in a minute.</p>'; return; }
+    const D=j.daily, t0=new Date().toISOString().slice(0,10), k0=Math.max(0,D.time.findIndex(d=>d>=new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10)));
+    let last=-1; for(let i=0;i<k0;i++) if((D.precipitation_sum[i]||0)>=0.1) last=i;
+    let MD={}; try{ MD=await MAPDATA(); }catch(e){}
+    const pin=(F)=>{ let m=0; (F||[]).forEach(f=>{ try{ const P=f.geometry.type==="Polygon"?[f.geometry.coordinates]:f.geometry.coordinates; if(!f._dry&&P.some(p=>{ const r=p[0]; let k=false; for(let i=0,q=r.length-1;i<r.length;q=i++){ const [xi,yi]=r[i],[xj,yj]=r[q]; if(((yi>la)!==(yj>la))&&(lo<(xj-xi)*(la-yi)/(yj-yi)+xi)) k=!k; } return k; })) m=Math.max(m,f._lvl); }catch(e){} }); return m; };
+    let al=[]; try{ al=(window.ALERTS||[]).map(a=>a.properties||a).filter(p=>/Red Flag|Fire Weather/.test(p.event||"")).map(p=>p.event); }catch(e){}
+    const rows=[]; let dry=last<0?14:k0-last-1;
+    for(let i=k0;i<D.time.length;i++){ const d=D.time[i], minRH=Math.round(D.relative_humidity_2m_min[i]), gust=Math.round(D.wind_gusts_10m_max[i]), hi=Math.round(D.temperature_2m_max[i]), rain=D.precipitation_sum[i]||0;
+      let r=rate(minRH,gust,dry,hi); const ol=i-k0<=1?pin(((MD.fire||[])[i-k0])):0; const ON=["Low","Moderate","High","Very high","Extreme"]; if(ol){ const fl=ol>=3?"Extreme":ol>=2?"Very high":"High"; if(ON.indexOf(fl)>ON.indexOf(r)) r=fl; } if(rain>=0.25) r="Low";
+      const H=j.hourly.time.map((t,k)=>({t,k})).filter(x=>x.t.slice(0,10)===d&&+x.t.slice(11,13)>=10&&+x.t.slice(11,13)<=18), worst=H.length?H.reduce((a,x)=>j.hourly.relative_humidity_2m[x.k]<j.hourly.relative_humidity_2m[a.k]?x:a,H[0]):null;
+      rows.push({d,r,minRH,gust,hi,rain,dry,ol,worst:worst?+worst.t.slice(11,13):null}); dry=rain>=0.1?0:dry+1; }
+    const lab=(d,i)=>i===0?"Today":new Date(d+"T12:00").toLocaleDateString("en-US",{weekday:"short"}), fh=h=>h===12?"noon":(h%12)+(h<12?" AM":" PM");
+    const _fm=body.querySelector(".xmap"); body.innerHTML=`<div class="xmap" data-k="fire"></div>${al.length?`<div class="hfalert"><b>In effect:</b> ${[...new Set(al)].join(" · ")}</div>`:""}
+      <div class="hfdays">${rows.map((x,i)=>`<div class="hfday${i===OPEN?" open":""}"><button type="button" class="hfrow fdr" data-i="${i}"><span class="hfdn">${lab(x.d,i)}<small>${+x.d.slice(5,7)}/${+x.d.slice(8)}</small></span><span class="fdl" style="--c:${COL[x.r]}">${x.r.toUpperCase()}</span><span class="hfrt"><small>Humidity ${x.minRH}% · gusts ${x.gust} mph${x.rain>=0.05?` · rain ${x.rain.toFixed(2).replace(/^0/,"")}"`:""}</small></span><i class="hfcv">${i===OPEN?"−":"+"}</i></button>${i===OPEN?`<div class="hfx"><div class="hfcond"><span>Lowest humidity <b>${x.minRH}%${x.worst!=null?` around ${fh(x.worst)}`:""}</b></span><span>Peak gusts <b>${x.gust} mph</b></span><span>High <b>${x.hi}°</b></span><span>Days since ¼" of rain <b>${x.dry>=14?"14+":x.dry}</b></span>${x.ol?`<span>Fire weather outlook <b>${SDR_FIRENM(x.ol)}</b></span>`:""}</div></div>`:""}</div>`).join("")}</div>
+      <p class="hfnote">Fire danger from humidity, wind, days since rain and the official fire weather outlook. Outdoor burning rules come from your state forestry agency.</p>${window.SDR_SPONS?SDR_SPONS("fire"):""}`;
+    if(window.SDR_FIREMAP) SDR_FIREMAP(body.querySelector(".xmap"),la,lo,MD,_fm);
+    body.querySelectorAll(".hfrow").forEach(b=>b.onclick=e=>{ e.stopPropagation(); const i=+b.dataset.i; OPEN=OPEN===i?-2:i; build(sec); });
+    const bar=sec.querySelector(".cxbar span"); if(bar&&rows[0]) bar.textContent=`Today: ${rows[0].r} · humidity ${rows[0].minRH}% · gusts ${rows[0].gust} mph`; sec.dataset.lvl=rows[0]?rows[0].r:""; }
+  function mount(){ if(document.querySelector(".p-fire")) return; const after=document.querySelector(".p-hf")||document.querySelector(".p-alm"); if(!after) return;
+    const sec=document.createElement("section"); sec.className="panel p-hfx p-fire cx"; sec.innerHTML=`<button type="button" class="cxbar"><i>🔥</i><div><b>FIRE DANGER</b><span>Wildfire check for the next 7 days.</span></div><em>Open ›</em></button><div class="hfb"></div>`;
+    after.insertAdjacentElement("beforebegin",sec);
+    const em=()=>sec.querySelector(".cxbar em"), full=on=>{ sec.classList.toggle("hffull",on); document.documentElement.classList.toggle("hf-lock",on); if(on){ sec.classList.remove("cx"); em().textContent="Close ✕"; } else { sec.classList.add("cx"); em().textContent="Open ›"; } };
+    sec.querySelector(".cxbar").onclick=()=>{ if(sec.classList.contains("hffull")){ full(false); return; } if(innerWidth>=900&&sec.classList.contains("cx")){ full(true); build(sec); return; } sec.classList.toggle("cx"); em().textContent=sec.classList.contains("cx")?"Open ›":"Close ▴"; if(!sec.classList.contains("cx")) build(sec); };
+    sec.addEventListener("click",e=>{ if(e.target===sec&&sec.classList.contains("hffull")) full(false); });
+    build(sec); }
+  setTimeout(mount,8000); setInterval(()=>{ const s=document.querySelector(".p-fire"); if(!s) mount(); else build(s); },30*60000);
+})();
+</script>
+<style>.fdr{grid-template-columns:52px 96px minmax(0,1fr) 14px!important}.fdl{display:inline-block;text-align:center;padding:6px 4px;border-radius:8px;background:var(--c);color:#0E1A33;font-family:var(--display);font-weight:800;letter-spacing:.06em;font-size:12.5px}</style>
+<script>
+window.SDR_CPCLINE=(MD,s)=>{ try{ const C=MD.cpc||{}; const pin=g=>{ const P=!g?[]:g.type==="Polygon"?[g.coordinates]:g.type==="MultiPolygon"?g.coordinates:[]; return P.some(p=>{ const r=p[0]||[]; let k=false; for(let i=0,j=r.length-1;i<r.length;j=i++){ const [xi,yi]=r[i],[xj,yj]=r[j]; if(((yi>s.la)!==(yj>s.la))&&(s.lo<(xj-xi)*(s.la-yi)/(yj-yi)+xi)) k=!k; } return k; }); };
+  const pick=F=>{ const a=(F||[]).filter(f=>pin(f.geometry)).map(f=>{ const p=f.properties||{}; return {c:String(p.cat||p.CAT||""),pr:+(p.prob||p.PROB||0),st:p.start_date||p.START_DATE,en:p.end_date||p.END_DATE}; }).filter(x=>/above|below/i.test(x.c)).sort((x,y)=>y.pr-x.pr)[0]; return a&&a.pr>=40?a:null; };
+  const x=pick(C.t610)||pick(C.t814); if(!x) return "";
+  const warm=/above/i.test(x.c), key=(warm?"W":"C")+(x.pr>=60?"60":x.pr>=50?"50":"40"); let last=null; try{ last=JSON.parse(localStorage.getItem("sdr-cpcline")||"null"); }catch(e){}
+  const fresh=!last||last.k!==key||Date.now()-last.t>7*864e5; if(!fresh&&!(last&&last.d===new Date().toDateString())) return "";
+  if(fresh) try{ localStorage.setItem("sdr-cpcline",JSON.stringify({k:key,t:Date.now(),d:new Date().toDateString()})); }catch(e){}
+  const fm=t=>{ const d=new Date(String(t).length<=10?t+"T12:00":t); return isNaN(d)?"":d.toLocaleDateString("en-US",{month:"short",day:"numeric"}); }, rng=x.st&&x.en?`${fm(x.st)}–${fm(x.en)}`:"later this month";
+  const changed=last&&last.k&&last.k[0]!==key[0];
+  return `<li><b>Looking further out:</b> ${changed?"a change from the last outlook: ":""}the outlook ${x.pr>=50?"favors":"leans"} ${warm?"warmer":"cooler"} than normal ${rng} (${Math.round(x.pr/10)*10}%).</li>`; }catch(e){ return ""; } };
+</script>
+<script>
+(function(){
+  const esc=t=>String(t||"").replace(/&/g,"&amp;").replace(/</g,"&lt;");
+  const fit=(cx,cy,hh,W,H)=>{ const kx=Math.cos(cy*Math.PI/180), hw=hh*(W/H)/kx; return [cx-hw,cy-hh,cx+hw,cy+hh]; };
+  const num=p=>{ for(const k of Object.keys(p||{})){ if(!/prob|label|dn|value|percent|contour/i.test(k)) continue; const m=String(p[k]).match(/(\d+(?:\.\d+)?)/); if(m){ let v=+m[1]; if(v>0&&v<1) v*=100; if(v>=1&&v<=100) return Math.round(v); } } return 0; };
+  const pc=v=>v>=70?"#7C3AED":v>=50?"#2563EB":v>=30?"#3B82F6":"#93C5FD";
+  const WPC="https://mapservices.weather.noaa.gov/vector/rest/services/precip/wpc_prob_winter_precip/MapServer", SNOW="https://mapservices.weather.noaa.gov/raster/rest/services/snow/NOHRSC_Snow_Analysis/MapServer/export";
+  const C={}; const gj=async u=>{ if(C[u]&&Date.now()-C[u].t<20*60000) return C[u].j; const j=await (await fetch(u)).json(); C[u]={t:Date.now(),j}; return j; };
+  const wpc=async id=>{ try{ return ((await gj(`${WPC}/${id}/query?where=1%3D1&outFields=*&returnGeometry=true&outSR=4326&f=geojson`)).features||[]).filter(f=>f.geometry).map(f=>{ f._p=num(f.properties); return f; }).filter(f=>f._p>0).sort((a,b)=>a._p-b._p); }catch(e){ return []; } };
+  const REG={Southeast:[-80.9,37.0,2.6],"Mid-Atlantic & Northeast":[-73.5,43.3,3.0],Rockies:[-108.5,41.2,5.5],"West Coast":[-120.5,41.8,5.5]};
+  let SKITAB=0;
+  window.SDR_SKIMAP=async(el,R,RES,prev)=>{ if(!el) return; if(prev&&prev.innerHTML) el.innerHTML=prev.innerHTML; const W=720,H=440, g=REG[R[6]]||[R[3],R[2],3], box=fit(g[0],g[1],g[2],W,H);
+    const tabs=["Snow on the ground","Day 1","Day 2","Day 3"];
+    const draw=async()=>{ let lay=[], img=null, sub="", leg="";
+      if(SKITAB===0){ img=`${SNOW}?bbox=${box.join(",")}&bboxSR=4326&imageSR=4326&size=${W},${H}&layers=show:0&format=png32&transparent=true&f=image&_=${Math.floor(Date.now()/3600e3)}`; sub="Official snow analysis · now"; leg='<span><i style="background:linear-gradient(90deg,#c7e3ff,#4c8de0,#7a3fb8)"></i>Snow depth: light → deep</span>'; }
+      else { const F=await wpc(SKITAB===1?1:SKITAB===2?6:11); lay=[{features:F,style:f=>({fill:pc(f._p),stroke:"#1B2433",w:.6,fo:.7})}]; sub=`Chance of 4"+ of snow · ${tabs[SKITAB]}`; leg=F.length?[10,30,50,70].map(v=>`<span><i style="background:${pc(v)}"></i>${v}%+</span>`).join(""):"<span>No 4\"+ snow expected in this area</span>"; }
+      const pts=RES.filter(r=>r[6]===R[6]&&r[3]>box[0]&&r[3]<box[2]&&r[2]>box[1]&&r[2]<box[3]).map(r=>({lo:r[3],la:r[2],fill:r[0]===R[0]?"#F28C28":"#FFFFFF",r:r[0]===R[0]?6:3.5,label:r[0]===R[0]?r[0].toUpperCase():r[0]}));
+      const sel=pts.find(p=>p.fill==="#F28C28"); const others=pts.filter(p=>p!==sel);
+      const svg=window.SDR_BMAP?SDR_BMAP(box,W,H,lay,{image:img,points:others.concat(sel?[sel]:[]),title:SKITAB===0?"SNOW ON THE GROUND":"SNOW FORECAST",sub,disp:el.clientWidth||360,max:9}):"";
+      el.innerHTML=`<div class="xmt">${tabs.map((t,i)=>`<button type="button" data-t="${i}" aria-pressed="${i===SKITAB}">${t}</button>`).join("")}</div><div class="xmc">${svg}</div><div class="xml">${leg}</div>`;
+      el.querySelectorAll(".xmt button").forEach(b=>b.onclick=e=>{ e.stopPropagation(); SKITAB=+b.dataset.t; draw(); }); };
+    draw(); };
+  // ---------- active wildfires ----------
+  const WF="https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Incident_Locations_Current/FeatureServer/0/query";
+  const fires=async(box)=>{ try{ const j=await gj(`${WF}?where=1%3D1&geometry=${box.join(",")}&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=IncidentName,IncidentSize,PercentContained,FireDiscoveryDateTime,POOState,POOCounty,IncidentTypeCategory&outSR=4326&f=geojson`);
+      return (j.features||[]).filter(f=>f.geometry&&f.geometry.coordinates&&!/RX/i.test((f.properties||{}).IncidentTypeCategory||"")).map(f=>{ const p=f.properties||{}; return {n:String(p.IncidentName||"Fire").replace(/\b\w/g,m=>m.toUpperCase()).replace(/\B\w+/g,m=>m.toLowerCase()),a:+p.IncidentSize||0,c:p.PercentContained==null?null:+p.PercentContained,t:p.FireDiscoveryDateTime,st:String(p.POOState||"").replace(/^US-/,""),co:p.POOCounty||"",lo:f.geometry.coordinates[0],la:f.geometry.coordinates[1]}; }); }catch(e){ return null; } };
+  let FOPEN=-1;
+  window.SDR_FIREMAP=async(el,la,lo,MD,prev)=>{ if(!el) return; if(prev&&prev.innerHTML) el.innerHTML=prev.innerHTML; const W=720,H=440, box=fit(lo,la,2.4,W,H), wide=fit(lo,la,4.2,W,H);
+    const L=await fires(wide); const OL=(((MD||{}).fire||[])[0]||[]).filter(f=>!f._dry);
+    const mi=(f)=>{ const dx=(f.lo-lo)*69*Math.cos(la*Math.PI/180), dy=(f.la-la)*69, d=Math.hypot(dx,dy); return {d,dir:["N","NE","E","SE","S","SW","W","NW"][Math.round(((Math.atan2(dx,dy)*180/Math.PI)+360)%360/45)%8]}; };
+    const list=(L||[]).map(f=>Object.assign(f,mi(f))).filter(f=>f.d<=200).sort((a,b)=>a.d-b.d);
+    const inBox=list.filter(f=>f.lo>box[0]&&f.lo<box[2]&&f.la>box[1]&&f.la<box[3]);
+    const lay=[{features:OL,style:f=>({fill:window.SDR_FIRECOL?SDR_FIRECOL(f._lvl):"#E8A33D",stroke:"#1B2433",w:.8,fo:.45})}];
+    let svg=window.SDR_BMAP?SDR_BMAP(box,W,H,lay,{points:[{lo,la,fill:"#F28C28",r:6,label:"YOU"}],cities:true,title:"ACTIVE WILDFIRES",sub:L==null?"Fire data unavailable right now":`${inBox.length} active nearby · fire weather today`,disp:el.clientWidth||360,max:7}):"";
+    // fire markers, sized by acres, colored by containment
+    try{ const kx=Math.cos(((box[1]+box[3])/2)*Math.PI/180), sx=W/((box[2]-box[0])*kx), sy=H/(box[3]-box[1]), sc=Math.min(sx,sy), ox=(W-(box[2]-box[0])*kx*sc)/2, oy=(H-(box[3]-box[1])*sc)/2;
+      const mk=inBox.map(f=>{ const x=ox+(f.lo-box[0])*kx*sc, y=oy+(box[3]-f.la)*sc, r=Math.max(7,Math.min(22,5+Math.log10(Math.max(1,f.a))*4.5)), c=f.c==null||f.c<50?"#E5484D":f.c<90?"#F28C28":"#9CA3AF";
+        return `<circle cx="${x}" cy="${y}" r="${r}" fill="${c}" fill-opacity=".8" stroke="#fff" stroke-width="2"/><text x="${x}" y="${y+4.5}" text-anchor="middle" font-size="13">🔥</text>`; }).join("");
+      svg=svg.replace(/<\/svg>\s*$/,mk+"</svg>"); }catch(e){}
+    const ac=a=>a>=1?Math.round(a).toLocaleString()+" acres":"under 1 acre", ago=t=>{ if(!t) return ""; const h=(Date.now()-t)/3600e3; return h<48?`${Math.round(h)} hours ago`:`${Math.round(h/24)} days ago`; };
+    const rows=list.slice(0,6).map((f,i)=>`<div class="xfr${i===FOPEN?" open":""}"><button type="button" data-i="${i}"><b>${esc(f.n)}</b><span>${ac(f.a)} · ${f.c==null?"containment unknown":f.c+"% contained"}</span><em>${Math.round(f.d)} mi ${f.dir}</em></button>${i===FOPEN?`<div class="xfd"><div class="xbar"><i style="width:${f.c||0}%"></i></div><p>${f.c==null?"Containment not reported yet.":`${f.c}% contained`} · ${ac(f.a)}${f.t?` · started ${ago(+f.t||Date.parse(f.t))}`:""}${f.co?` · ${esc(f.co)} County${f.st?", "+esc(f.st):""}`:""}</p></div>`:""}</div>`).join("");
+    el.innerHTML=`<div class="xmc">${svg}</div><div class="xml"><span><i style="background:#E5484D"></i>Under 50% contained</span><span><i style="background:#F28C28"></i>50–89%</span><span><i style="background:#9CA3AF"></i>90%+</span>${OL.length?'<span><i style="background:#E8A33D;opacity:.6"></i>Fire weather risk</span>':""}</div>
+      ${L==null?"":list.length?`<div class="xfl"><div class="xfh">Active fires within 200 miles</div>${rows}</div>`:`<p class="hfnote" style="margin:8px 2px 0">No active wildfires reported within 200 miles.</p>`}`;
+    el.querySelectorAll(".xfr button").forEach(b=>b.onclick=e=>{ e.stopPropagation(); const i=+b.dataset.i; FOPEN=FOPEN===i?-1:i; SDR_FIREMAP(el,la,lo,MD); }); };
+})();
+</script>
+<style>
+.xmap{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:#0B1730}
+.xmap:empty{min-height:220px;background:linear-gradient(110deg,#0B1730 30%,#13213f 50%,#0B1730 70%);background-size:200% 100%;animation:xsh 1.4s linear infinite}@keyframes xsh{to{background-position:-200% 0}}
+.xmc svg{display:block;width:100%;height:auto}
+.xmt{display:flex;gap:6px;padding:8px;overflow-x:auto;border-bottom:1px solid rgba(255,255,255,.06)}.xmt button{flex:none;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:6px 12px;font-family:var(--display);font-weight:700;letter-spacing:.06em;font-size:13px;cursor:pointer}.xmt button[aria-pressed="true"]{background:#2F7CF6;border-color:#2F7CF6;color:#fff}
+.xml{display:flex;flex-wrap:wrap;gap:4px 14px;padding:8px 12px;font-size:12.5px;color:var(--muted);border-top:1px solid rgba(255,255,255,.06)}.xml span{display:inline-flex;align-items:center;gap:6px}.xml i{width:18px;height:10px;border-radius:3px;display:inline-block}
+.xfl{border-top:1px solid rgba(255,255,255,.08)}.xfh{padding:10px 12px 4px;font-family:var(--display);font-weight:800;letter-spacing:.14em;font-size:11.5px;color:var(--muted);text-transform:uppercase}
+.xfr>button{width:100%;display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:10px 12px;border:0;border-top:1px solid rgba(255,255,255,.05);background:none;color:var(--fg);text-align:left;cursor:pointer}.xfr>button b{font-size:15px}.xfr>button span{grid-column:1;font-size:13px;color:var(--muted)}.xfr>button em{grid-column:2;grid-row:1 / span 2;align-self:center;font-style:normal;font-family:var(--display);font-weight:800;font-size:15px;color:#FFB27A}
+.xfd{padding:0 12px 12px}.xfd p{margin:6px 0 0;font-size:13.5px;color:#C9D3E3}.xbar{height:8px;border-radius:9px;background:rgba(255,255,255,.1);overflow:hidden}.xbar i{display:block;height:100%;background:#22C55E}
+</style>
 </body></html>

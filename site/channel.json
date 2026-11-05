@@ -19,6 +19,11 @@
    "name": "",
    "logo": "",
    "url": ""
+  },
+  "fire": {
+   "name": "",
+   "logo": "",
+   "url": ""
   }
  },
  "how_to": "youtubeLiveLink: when the stream restarts, paste the new YouTube Live link (keep the quotes). deskLive: true while a meteorologist is on air (red flashing LIVE), false when off air. deskNote: optional line shown while live, e.g. Tracking storms west of Greenville. aiChatUrl: the chat server address (https://\u2026.workers.dev) \u2014 type off to use only the built-in answers. chatMode: auto (answers go out right away, labeled SDR Forecast Desk) or review (a meteorologist sends every answer from desk.html). Commit, and dashboards update within 2 minutes. sponsors: for each section (ski, beach, hunt) type the sponsor name, optionally a logo image link and their website; leave blank to show nothing. Never paste the stream key here."

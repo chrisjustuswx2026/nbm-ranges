@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<title>SDR Weather Intelligence</title>
+<meta name="description" content="Weather decisions made with confidence. Weather intelligence and decision support for emergency managers, cities, counties and leaders.">
+<link rel="icon" href="../greenville/icons/icon-192.png">
+<link rel="apple-touch-icon" href="../greenville/icons/icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0B1B2B;--ink2:#33475A;--muted:#5D7183;--line:#DDE5EB;--soft:#F3F6F8;--navy:#071827;--navy2:#0D2A40;--g:#1E9B76;--g2:#23A57F;--gl:#E3F4EE;--r:#D93B40;--display:"Barlow Condensed","Arial Narrow",sans-serif;--body:"Barlow","Helvetica Neue",Arial,sans-serif}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-behavior:smooth}
+html,body{margin:0;overflow-x:hidden;background:#fff;color:var(--ink);font-family:var(--body);-webkit-font-smoothing:antialiased}
+a{color:var(--g)}
+img{display:block;max-width:100%}
+.mode-flow .site{display:none}.mode-site .flow{display:none}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:12px;padding:15px 26px;font-family:var(--display);font-weight:800;letter-spacing:.14em;font-size:16px;text-transform:uppercase;cursor:pointer;text-decoration:none;white-space:nowrap}
+.btn.p{background:var(--g2);color:#fff;box-shadow:0 8px 20px rgba(30,155,118,.25)}.btn.p:hover{background:#1C9471}
+.btn.o{background:#fff;color:var(--ink);border:1px solid #C9D5DE}
+.btn.sm{padding:10px 16px;font-size:13.5px;border-radius:10px;box-shadow:none}
+.k{font-family:var(--display);font-weight:800;letter-spacing:.22em;font-size:13.5px;color:var(--g);text-transform:uppercase}
+.big{font-family:var(--display);font-weight:800;text-transform:uppercase;line-height:.92;margin:0;color:var(--ink)}
+.big em,h2 em{font-style:normal;color:var(--g2)}
+i[data-ic]{font-style:normal}i[data-ic] svg{width:100%;height:100%;max-width:22px;max-height:22px;display:block}
+
+/* nav */
+.nav{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:max(14px,env(safe-area-inset-top)) clamp(16px,4vw,48px) 14px;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.nav .logo{height:clamp(52px,7vw,72px);width:auto}
+
+/* hero */
+.hero{background:linear-gradient(180deg,#fff 0%,#EEF4F7 100%);overflow:hidden}
+.hero .in{max-width:1240px;margin:0 auto;padding:clamp(34px,6vw,70px) clamp(18px,4vw,48px) clamp(40px,6vw,80px);display:grid;grid-template-columns:1fr;gap:34px;align-items:center}
+.hero h1{font-size:clamp(50px,10vw,88px)}
+.hero .lead{font-size:clamp(18px,2vw,21px);color:var(--ink2);line-height:1.45;max-width:520px;margin:20px 0 28px}
+.who{margin:0 0 16px;line-height:1.5}
+@media(min-width:960px){.hero .in{grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:48px}.hero h1{font-size:clamp(48px,4.5vw,70px)}}
+
+/* devices */
+.dev{position:relative;padding:0 0 6%;margin-right:4%}
+.mac{position:relative}
+.mac .lid{background:#0E1116;border-radius:18px 18px 0 0;padding:2.2% 2.2% 3.4%;box-shadow:0 0 0 1px #2B3038 inset,0 0 0 2px #C9CED6,0 30px 60px rgba(11,27,43,.22)}
+.mac .lid::before{content:"";position:absolute;top:2px;left:50%;transform:translateX(-50%);width:12%;height:2.2%;background:#0E1116;border-radius:0 0 8px 8px;z-index:2}
+.mac .lid img{width:100%;border-radius:4px;display:block}
+.mac .deck{position:relative;height:clamp(10px,1.6vw,16px);margin:0 -7%;background:linear-gradient(180deg,#E4E7EB 0%,#C3C8CF 55%,#9EA4AC 100%);border-radius:0 0 18px 18px/0 0 14px 14px;box-shadow:0 18px 30px rgba(11,27,43,.18)}
+.mac .deck::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:16%;height:45%;background:linear-gradient(180deg,#B8BDC4,#D3D7DC);border-radius:0 0 8px 8px}
+.phn{position:absolute;right:-5%;bottom:0;width:31%;max-width:250px;border-radius:15%/7%;padding:2.2%;background:#0E1116;box-shadow:0 0 0 2px #C9CED6,0 30px 60px rgba(11,27,43,.35)}
+.phn img{width:100%;border-radius:12.5%/5.8%;display:block}
+.phn::before{content:"";position:absolute;top:4%;left:50%;transform:translateX(-50%);width:30%;height:3%;background:#0E1116;border-radius:99px;z-index:2}
+@media(max-width:959px){.dev{margin:6px 6% 0 0}.phn{width:34%}}
+
+/* pillars */
+.pil{background:#fff}
+.pil .in{max-width:1220px;margin:0 auto;padding:clamp(44px,6vw,80px) clamp(18px,4vw,48px)}
+.pil .intro{max-width:720px;margin:0 0 clamp(36px,5vw,60px)}
+.pil .intro h2{font-family:var(--display);font-weight:800;text-transform:uppercase;font-size:clamp(36px,5vw,54px);line-height:.95;margin:10px 0 0}
+.pg{display:grid;grid-template-columns:1fr;gap:64px}
+@media(min-width:960px){.pg{grid-template-columns:repeat(3,1fr);gap:40px}}
+.pg article{display:flex;flex-direction:column}
+.pp{display:flex;justify-content:center;padding:28px 0 0;margin:0 0 26px;background:linear-gradient(180deg,var(--soft),#fff);border-radius:24px}
+.fr{width:min(72vw,280px);border-radius:15%/7%;padding:9px;background:#0E1116;box-shadow:0 0 0 2px #C9CED6,0 26px 50px rgba(11,27,43,.25);position:relative;margin-bottom:-2px}
+.fr::before{content:"";position:absolute;top:3.4%;left:50%;transform:translateX(-50%);width:30%;height:2.6%;background:#0E1116;border-radius:99px;z-index:2}
+.fr img{width:100%;border-radius:12.5%/5.8%;display:block}
+.pp{overflow:hidden;max-height:clamp(440px,60vw,520px);align-items:flex-start}
+.pg h2{font-family:var(--display);font-weight:800;text-transform:uppercase;font-size:clamp(40px,4.4vw,50px);line-height:.95;margin:0 0 10px}
+.pg p{margin:0 0 16px;color:var(--ink2);font-size:17px;line-height:1.45}
+.pg ul{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.pg li{position:relative;padding-left:24px;color:var(--ink2);font-size:16.5px;line-height:1.4}
+.pg li::before{content:"";position:absolute;left:0;top:.5em;width:12px;height:7px;border-left:2px solid var(--g2);border-bottom:2px solid var(--g2);transform:rotate(-45deg)}
+@media(max-width:959px){.pg .pp{order:3;margin:22px 0 0}}
+
+/* offer */
+.offer{position:relative;color:#fff;background:linear-gradient(90deg,rgba(7,24,39,.96) 0%,rgba(7,24,39,.82) 55%,rgba(7,24,39,.55) 100%),url(storm.jpg) center/cover no-repeat}
+.offer .in{max-width:1220px;margin:0 auto;padding:clamp(56px,8vw,96px) clamp(18px,4vw,48px);display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:28px}
+.offer .k{color:#5FE0B5}
+.offer .was{font-family:var(--display);font-weight:800;font-size:clamp(28px,3.4vw,38px);color:#9FB0BD;text-decoration:line-through;text-decoration-color:#FF6B70;text-decoration-thickness:3px;margin-top:10px}
+.offer .now{font-family:var(--display);font-weight:800;font-size:clamp(46px,7vw,80px);line-height:.92;text-transform:uppercase}
+.offer .now em{font-style:normal;color:#5FE0B5}
+.offer .btn{min-width:240px}
+.foot{background:#fff;text-align:center;padding:clamp(48px,7vw,80px) 18px max(34px,env(safe-area-inset-bottom))}
+.foot .big{font-size:clamp(36px,6vw,64px)}
+.foot img{height:54px;width:auto;margin:22px auto 8px}
+.foot small{color:var(--muted)}
+
+/* ---------- sign-up flow ---------- */
+.flow{min-height:100vh;min-height:100dvh;background:var(--soft)}
+.side{display:none}
+.wrap{width:100%;max-width:520px;margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;padding:max(16px,env(safe-area-inset-top)) 20px max(22px,env(safe-area-inset-bottom));background:#fff}
+@media(min-width:960px){
+ .flow{display:grid;grid-template-columns:minmax(380px,0.9fr) minmax(0,1.1fr)}
+ .side{display:flex;flex-direction:column;position:sticky;top:0;height:100vh;padding:44px 52px;color:#fff;background:linear-gradient(180deg,rgba(7,24,39,.86),rgba(7,24,39,.97) 70%),url(storm.jpg) 30% center/cover no-repeat}
+ .side .lchip{display:inline-flex;align-self:flex-start;background:#fff;border-radius:14px;padding:10px 16px}.side .lchip img{height:54px;width:auto}
+ .side h2{font-family:var(--display);font-weight:800;text-transform:uppercase;font-size:clamp(44px,4vw,60px);line-height:.92;margin:auto 0 18px}.side h2 em{color:#5FE0B5}
+ .side p{color:#C7D5DE;font-size:18px;line-height:1.45;margin:0 0 30px;max-width:440px}
+ .side ol{list-style:none;margin:0;padding:22px 0 0;border-top:1px solid rgba(255,255,255,.16);display:grid;gap:12px}
+ .side li{display:flex;align-items:center;gap:12px;color:#8FA3B1;font-family:var(--display);font-weight:700;letter-spacing:.12em;text-transform:uppercase;font-size:15px}
+ .side li span{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;border:1px solid rgba(255,255,255,.25);font-size:14px;letter-spacing:0}
+ .side li.on{color:#fff}.side li.on span{background:var(--g2);border-color:var(--g2)}
+ .side li.ok{color:#C7D5DE}.side li.ok span{background:rgba(95,224,181,.18);border-color:#5FE0B5;color:#5FE0B5}
+ .wrap{max-width:none;margin:0;background:transparent;padding:56px clamp(40px,6vw,96px);justify-content:center}
+ .wrap .screen{width:100%;max-width:600px;margin:0 auto;background:#fff;border:1px solid var(--line);border-radius:24px;padding:36px 40px;box-shadow:0 20px 50px rgba(11,27,43,.08);flex:none}
+ .wrap .screen .top .tl{display:none}
+ .grow{flex:none;min-height:8px}
+}
+.screen{display:none;flex:1;flex-direction:column;animation:in .28s ease}.screen.on{display:flex}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:22px}
+.top .tl{height:40px;width:auto}
+.back{width:40px;height:40px;border-radius:50%;border:1px solid #C9D5DE;background:#fff;color:var(--ink);font-size:22px;cursor:pointer;line-height:1}
+.dots{display:flex;gap:6px}.dots i{width:22px;height:5px;border-radius:9px;background:#DCE4EA}.dots i.on{background:var(--g2)}
+h2.t{font-family:var(--display);font-weight:800;text-transform:uppercase;font-size:clamp(34px,3vw,42px);line-height:1;margin:6px 0 8px}
+p.s{color:var(--muted);font-size:16.5px;line-height:1.45;margin:0 0 22px}
+.grow{flex:1;min-height:18px}
+.cta{width:100%;border:0;border-radius:14px;padding:17px;font-family:var(--display);font-weight:800;letter-spacing:.14em;font-size:17px;text-transform:uppercase;background:var(--g2);color:#fff;cursor:pointer;margin-top:12px}
+.cta:disabled{opacity:.35;cursor:default}
+.fine{color:var(--muted);font-size:13.5px;text-align:center;margin:14px 0 0;line-height:1.45}
+.field{display:block;margin:0 0 14px}
+.field span{display:block;font-family:var(--display);font-weight:700;letter-spacing:.14em;font-size:12.5px;color:var(--muted);text-transform:uppercase;margin:0 0 6px}
+.field input,.field select,.codebox input{width:100%;padding:14px;border-radius:12px;border:1px solid #CBD6DE;background:#fff;color:var(--ink);font:500 17px var(--body);outline:none;-webkit-appearance:none;appearance:none}
+.field input:focus,.field select:focus,.codebox input:focus{border-color:var(--g2);box-shadow:0 0 0 3px rgba(35,165,127,.18)}
+.field select{background-image:linear-gradient(45deg,transparent 50%,#5D7183 50%),linear-gradient(135deg,#5D7183 50%,transparent 50%);background-position:calc(100% - 20px) 22px,calc(100% - 14px) 22px;background-size:6px 6px;background-repeat:no-repeat}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(min-width:960px){#s-about .row2.r3{grid-template-columns:1fr 1fr}}
+.opts{display:grid;gap:10px;margin:0 0 18px}
+@media(min-width:960px){.opts{grid-template-columns:repeat(3,1fr)}.opt{flex-direction:column;align-items:flex-start;padding:18px}}
+.opt{display:flex;align-items:center;gap:12px;padding:14px;border-radius:14px;border:1px solid #CBD6DE;background:#fff;cursor:pointer;text-align:left;color:var(--ink);font:600 16px var(--body);width:100%}
+.opt i{width:28px;height:28px;display:grid;place-items:center;color:var(--g)}.opt small{display:block;color:var(--muted);font-weight:500;font-size:13.5px;margin-top:2px}
+.opt.on{border-color:var(--g2);background:var(--gl);box-shadow:inset 0 0 0 1px var(--g2)}
+.box{background:var(--soft);border:1px solid var(--line);border-radius:16px;padding:6px 16px;margin:0 0 14px}
+.tg{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 0;border-top:1px solid var(--line)}.tg:first-child{border-top:0}
+.tg b{display:block;font-size:16px}.tg span{display:block;color:var(--muted);font-size:13.5px;margin-top:1px}
+.sw{flex:none;width:50px;height:30px;border-radius:99px;background:#C9D5DE;position:relative;cursor:pointer;transition:.2s;border:0}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}.sw.on{background:var(--g2)}.sw.on::after{left:23px}
+.upl{display:flex;align-items:center;gap:12px;padding:14px;border-radius:14px;border:1px dashed #B5C3CE;color:var(--muted);font-size:14.5px;cursor:pointer}.upl i{width:26px;height:26px;color:var(--g);display:grid;place-items:center}.upl b{color:var(--ink)}
+.price{border-radius:18px;padding:20px;background:linear-gradient(150deg,#0D2A40,#071827);color:#fff;margin:0 0 18px}
+.price .pl{font-family:var(--display);font-weight:700;letter-spacing:.14em;font-size:12.5px;color:#9FB0BD;text-transform:uppercase}
+.price .was{font-family:var(--display);font-weight:800;font-size:30px;color:#8FA3B1;text-decoration:line-through;text-decoration-thickness:3px;text-decoration-color:#FF6B70;margin-top:4px}
+.price .now{font-family:var(--display);font-weight:800;font-size:32px;line-height:1;text-transform:uppercase;margin-top:2px}
+.price .why{color:#5FE0B5;font-family:var(--display);font-weight:800;letter-spacing:.12em;font-size:13px;text-transform:uppercase;margin-top:6px}
+.price ul{margin:14px 0 0;padding:0;list-style:none;display:grid;gap:6px}.price li{font-size:14.5px;color:#DCE7EC}.price li::before{content:"";display:inline-block;width:10px;height:6px;border-left:2px solid #5FE0B5;border-bottom:2px solid #5FE0B5;transform:rotate(-45deg) translateY(-3px);margin-right:8px}
+@media(min-width:960px){.price ul{grid-template-columns:1fr 1fr}}
+.codebox{display:flex;gap:8px}.codebox input{flex:1;min-width:0;text-transform:uppercase;letter-spacing:.16em;font-family:var(--display);font-weight:800;font-size:20px}
+.codebox button{border:0;border-radius:12px;padding:0 20px;background:var(--ink);color:#fff;font-family:var(--display);font-weight:800;letter-spacing:.12em;cursor:pointer}
+.msg{font-size:14px;margin:8px 0 0;min-height:20px}.msg.ok{color:#178A63}.msg.no{color:var(--r)}
+.otp{display:flex;gap:8px;margin:6px 0 14px}.otp input{width:100%;text-align:center;font:800 26px var(--display);padding:12px 0;border-radius:12px;border:1px solid #CBD6DE;background:#fff;color:var(--ink)}
+.done{align-items:center;text-align:center;padding-top:6vh}
+.badge{width:84px;height:84px;border-radius:50%;display:grid;place-items:center;background:var(--gl);border:2px solid var(--g2);font-size:40px;color:var(--g);margin:0 auto 16px;animation:pop .4s ease}
+@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
+.sum{text-align:left;width:100%}.sum div{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--line);font-size:15px}.sum div:first-child{border-top:0}.sum span{color:var(--muted)}.sum b{text-align:right}
+</style>
+</head>
+<body class="mode-site">
+
+<div class="site">
+  <header class="nav"><img class="logo" src="logo.png" alt="SDR Weather Intelligence"><button class="btn o sm" onclick="flow('login')">Sign in</button></header>
+
+  <section class="hero"><div class="in">
+    <div>
+      <div class="k who">For emergency managers, cities, counties and leaders</div>
+      <h1 class="big">Weather decisions made with <em>confidence.</em></h1>
+      <p class="lead">Clear, confident weather decisions for the people who keep communities safe. Real meteorologists and your own live dashboard.</p>
+      <button class="btn p" onclick="flow('about')">Get started</button>
+    </div>
+    <div class="dev">
+      <div class="mac"><div class="lid"><img src="real-desk.jpg" alt="SDR Weather Intelligence dashboard on a computer" fetchpriority="high"></div><div class="deck"></div></div>
+      <div class="phn"><img src="real-home.jpg" alt="SDR Weather Intelligence dashboard on a phone"></div>
+    </div>
+  </div></section>
+
+  <section class="pil"><div class="in">
+    <div class="pg">
+      <article><div class="pp"><div class="fr"><img src="real-radar.jpg" alt="Live radar with a warning" loading="lazy"></div></div><h2>See <em>clearly.</em></h2><p>Packed with the most premium weather technology, built for early warning from real meteorologists.</p><ul><li>Live radar, warnings and lightning for your area</li><li>Storm tracks with arrival times for your towns</li><li>One clear call: All Clear, Heads Up, Take Action</li></ul></article>
+      <article><div class="pp"><div class="fr"><img src="real-chat.jpg" alt="Chat with a meteorologist" loading="lazy"></div></div><h2>Decide <em>confidently.</em></h2><ul><li>Live chat with real meteorologists</li><li>Live Q&amp;A sessions before significant weather</li><li>Decision support built around your operation</li></ul></article>
+      <article><div class="pp"><div class="fr"><img src="real-sched.jpg" alt="Schedule Watch" loading="lazy"></div></div><h2>Plan <em>ahead.</em></h2><ul><li>Schedule Watch alerts you when weather will impact your events</li><li>Briefings before the weather matters</li><li>Outlooks for the weeks ahead</li></ul></article>
+    </div>
+  </div></section>
+
+  <section class="offer"><div class="in">
+    <div><div class="k">Get started today</div><div class="was">$2,500 / year</div><div class="now">Complimentary<br><em>for SDR partners</em></div></div>
+    <button class="btn p" onclick="flow('about')">Get started</button>
+  </div></section>
+
+  <footer class="foot"><div class="big">Confidence <em>in chaos.</em></div><img src="logo.png" alt="SDR Weather Intelligence"></footer>
+</div>
+
+<div class="flow">
+<aside class="side">
+  <span class="lchip"><img src="logo.png" alt="SDR Weather Intelligence"></span>
+  <h2>Weather decisions made with <em>confidence.</em></h2>
+  <p>Set up your dashboard in a few minutes. Our meteorologists start watching your area right away.</p>
+  <ol id="steps"><li data-s="about"><span>1</span>About you</li><li data-s="site"><span>2</span>What we watch</li><li data-s="alerts"><span>3</span>How we reach you</li><li data-s="plan"><span>4</span>Membership</li></ol>
+</aside>
+<div class="wrap">
+
+<section class="screen" id="s-about">
+  <div class="top"><button class="back" onclick="home()" aria-label="Back">‹</button><div class="dots"><i class="on"></i><i></i><i></i><i></i></div><img class="tl" src="logo.png" alt="SDR Weather Intelligence"></div>
+  <div class="k">Step 1 of 4</div><h2 class="t">Tell us about you</h2>
+  <p class="s">So our meteorologists know who they're watching out for.</p>
+  <div class="row2"><label class="field"><span>First name</span><input id="fn" autocomplete="given-name" placeholder="First"></label><label class="field"><span>Last name</span><input id="ln" autocomplete="family-name" placeholder="Last"></label></div>
+  <label class="field"><span>Organization</span><input id="org" autocomplete="organization" placeholder="City, county, school or company"></label>
+  <label class="field"><span>Your role</span><input id="role" autocomplete="organization-title" placeholder="e.g. Emergency Manager"></label>
+  <label class="field"><span>Email</span><input id="em" type="email" inputmode="email" autocomplete="email" placeholder="you@example.gov"></label>
+  <label class="field"><span>Mobile phone</span><input id="ph" type="tel" inputmode="tel" autocomplete="tel" placeholder="(555) 555-5555"></label>
+  <div class="grow"></div>
+  <button class="cta" id="aboutNext" onclick="go('site')" disabled>Continue</button>
+</section>
+
+<section class="screen" id="s-site">
+  <div class="top"><button class="back" onclick="go('about')" aria-label="Back">‹</button><div class="dots"><i class="on"></i><i class="on"></i><i></i><i></i></div><img class="tl" src="logo.png" alt="SDR Weather Intelligence"></div>
+  <div class="k">Step 2 of 4</div><h2 class="t">What should we watch?</h2>
+  <p class="s">Pick what fits you best. You can add more sites and teams later.</p>
+  <div class="opts" id="types">
+    <button class="opt" data-v="gov"><i data-ic="gov"></i><span>City, county or agency<small>EMA, public works, DOT</small></span></button>
+    <button class="opt" data-v="edu"><i data-ic="edu"></i><span>School or university<small>Athletics, campus safety, grounds</small></span></button>
+    <button class="opt" data-v="biz"><i data-ic="biz"></i><span>Business or utility<small>Crews, events, operations</small></span></button>
+  </div>
+  <label class="field"><span>Your main location</span><select id="loc"><option value="greenville">Greenville County, SC</option><option value="clemson">Clemson University, SC</option><option value="bay">Bay County, FL</option><option value="other">Somewhere else (we'll set it up)</option></select></label>
+  <label class="field" id="otherWrap" hidden><span>City, address or ZIP</span><input id="other" placeholder="e.g. Tuscaloosa, AL"></label>
+  <div class="grow"></div>
+  <button class="cta" id="siteNext" onclick="go('alerts')" disabled>Continue</button>
+</section>
+
+<section class="screen" id="s-alerts">
+  <div class="top"><button class="back" onclick="go('site')" aria-label="Back">‹</button><div class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div><img class="tl" src="logo.png" alt="SDR Weather Intelligence"></div>
+  <div class="k">Step 3 of 4</div><h2 class="t">How should we reach you?</h2>
+  <p class="s">Choose what we send. Warnings always come through.</p>
+  <div class="box">
+    <div class="tg"><div><b>Warnings for your site</b><span>Tornado, severe storm, flash flood</span></div><button class="sw on" aria-label="Warnings"></button></div>
+    <div class="tg"><div><b>Lightning within 10 miles</b><span>With the 30-minute all-clear clock</span></div><button class="sw on" aria-label="Lightning"></button></div>
+    <div class="tg"><div><b>Briefings</b><span>When the weather matters for you</span></div><button class="sw on" aria-label="Briefings"></button></div>
+    <div class="tg"><div><b>Schedule watch</b><span>When weather changes affect your events</span></div><button class="sw on" aria-label="Schedule watch"></button></div>
+  </div>
+  <label class="upl" for="file"><i data-ic="cal"></i><span id="uplT"><b>Add your schedule (optional)</b><br>Games, events, crew days. Our team watches them for you.</span></label>
+  <input type="file" id="file" hidden>
+  <div class="grow"></div>
+  <button class="cta" onclick="go('plan')">Continue</button>
+</section>
+
+<section class="screen" id="s-plan">
+  <div class="top"><button class="back" onclick="go('alerts')" aria-label="Back">‹</button><div class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div><img class="tl" src="logo.png" alt="SDR Weather Intelligence"></div>
+  <div class="k">Step 4 of 4</div><h2 class="t">Your membership</h2>
+  <div class="price">
+    <div class="pl">Weather Intelligence Dashboard · annual</div>
+    <div class="was">$2,500</div>
+    <div class="now" id="nowPrice">Enter your partner code</div>
+    <div class="why" id="whyPrice" hidden>Complimentary · SDR Preferred Partner</div>
+    <ul><li>Live dashboard and status for your site</li><li>Warnings, lightning clock and radar</li><li>Briefings from our meteorologists</li><li>Meteorologist chat</li><li>Schedule watch</li></ul>
+  </div>
+  <label class="field"><span>SDR partner code</span></label>
+  <div class="codebox"><input id="code" placeholder="CODE" autocomplete="off" autocapitalize="characters"><button onclick="applyCode()">Apply</button></div>
+  <p class="msg" id="codeMsg"></p>
+  <div class="grow"></div>
+  <button class="cta" id="planNext" onclick="finish()" disabled>Create my dashboard</button>
+  <p class="fine">Not an SDR partner yet? Ask your SDR contact for a code.</p>
+</section>
+
+<section class="screen done" id="s-done">
+  <div class="badge">✓</div>
+  <div class="k">You're in</div>
+  <h2 class="t" id="hello">Welcome</h2>
+  <p class="s" style="margin-bottom:14px">Your dashboard is ready. Our meteorologists are watching your site.</p>
+  <div class="box sum" id="sum"></div>
+  <div class="grow"></div>
+  <button class="cta" onclick="openDash()">Open my dashboard</button>
+  <p class="fine">Tip: add it to your home screen for one-tap access.</p>
+</section>
+
+<section class="screen" id="s-login">
+  <div class="top"><button class="back" onclick="home()" aria-label="Back">‹</button><span></span><img class="tl" src="logo.png" alt="SDR Weather Intelligence"></div>
+  <div class="k">Sign in</div><h2 class="t">Welcome back</h2>
+  <p class="s">Enter your email or phone. We'll send you a 6-digit code. No passwords.</p>
+  <label class="field"><span>Email or phone</span><input id="who" inputmode="email" placeholder="you@example.gov"></label>
+  <div class="grow"></div>
+  <button class="cta" onclick="sendCode()">Send my code</button>
+  <p class="fine">New here? <a href="#" onclick="go('about');return false">Get started</a></p>
+</section>
+<section class="screen" id="s-otp">
+  <div class="top"><button class="back" onclick="go('login')" aria-label="Back">‹</button><span></span><img class="tl" src="logo.png" alt="SDR Weather Intelligence"></div>
+  <div class="k">Check your messages</div><h2 class="t">Enter your code</h2>
+  <p class="s" id="otpTo">We sent a 6-digit code.</p>
+  <div class="otp" id="otp"></div>
+  <label class="field"><span>Dashboard</span><select id="loc2"><option value="greenville">Greenville County, SC</option><option value="clemson">Clemson University, SC</option><option value="bay">Bay County, FL</option></select></label>
+  <div class="grow"></div>
+  <button class="cta" id="otpGo" onclick="openDash(document.getElementById('loc2').value)" disabled>Sign in</button>
+  <p class="fine">Didn't get it? <a href="#" onclick="sendCode();return false">Send again</a></p>
+</section>
+
+</div></div>
+
+<script>
+
+const IC={user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>',radar:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/>',chat:'<path d="M4 5h16v11H9l-5 4z"/>',bolt:'<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',bell:'<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/>',check:'<path d="m5 12 4 4 10-10"/>',doc:'<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/>',cal:'<rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>',chart:'<path d="M4 20h16"/><path d="m5 15 5-5 4 3 6-7"/>',gov:'<path d="M3 10 12 4l9 6M5 10v9M19 10v9M9 10v9M15 10v9M3 21h18"/>',edu:'<path d="m2 9 10-5 10 5-10 5z"/><path d="M6 11v5c3 2 9 2 12 0v-5"/>',arrow:'<path d="M4 12h15M13 6l6 6-6 6"/>',video:'<rect x="3" y="6" width="13" height="12" rx="2"/><path d="m16 10 5-3v10l-5-3"/>',biz:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V4h6v3M3 13h18"/>'};
+document.querySelectorAll("i[data-ic]").forEach(i=>{ i.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${IC[i.dataset.ic]||""}</svg>`; });
+const $=id=>document.getElementById(id); let TYPE=null;
+const ORDER=["about","site","alerts","plan","done"];
+function show(n){ document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("on",s.id==="s-"+n)); const k=ORDER.indexOf(n); document.querySelectorAll("#steps li").forEach((li,i)=>{ li.className=k<0?"":(i===k?"on":(i<k?"ok":"")); }); }
+function flow(n){ document.body.className="mode-flow"; show(n); window.scrollTo(0,0); try{ history.pushState({s:n},"","#"+n); }catch(e){} }
+function go(n){ show(n); window.scrollTo(0,0); try{ history.replaceState({s:n},"","#"+n); }catch(e){} }
+function home(){ document.body.className="mode-site"; window.scrollTo(0,0); try{ history.replaceState(null,"",location.pathname); }catch(e){} }
+window.addEventListener("popstate",e=>{ if(e.state&&e.state.s){ document.body.className="mode-flow"; show(e.state.s); } else home(); });
+const req=["fn","ln","org","em"]; req.concat(["role","ph"]).forEach(id=>$(id).addEventListener("input",()=>{ $("aboutNext").disabled=!req.every(k=>$(k).value.trim())||!/@/.test($("em").value); }));
+document.querySelectorAll("#types .opt").forEach(b=>b.onclick=()=>{ document.querySelectorAll("#types .opt").forEach(x=>x.classList.toggle("on",x===b)); TYPE=b.dataset.v; $("siteNext").disabled=false; });
+$("loc").onchange=()=>{ $("otherWrap").hidden=$("loc").value!=="other"; };
+document.querySelectorAll(".sw").forEach(s=>s.onclick=()=>s.classList.toggle("on"));
+$("file").onchange=function(){ if(this.files[0]) $("uplT").innerHTML='<b style="color:#6EE7A0">Schedule added</b><br>'+this.files[0].name.replace(/</g,"&lt;"); };
+function applyCode(){ const v=$("code").value.trim().toUpperCase().replace(/\s+/g,""), m=$("codeMsg");
+  if(v==="SDR2027"){ m.className="msg ok"; m.textContent="✓ Code accepted. Welcome, SDR partner."; $("nowPrice").textContent="$0"; $("whyPrice").hidden=false; $("planNext").disabled=false; }
+  else { m.className="msg no"; m.textContent=v?"That code didn't work. Check with your SDR contact.":"Enter the code from your SDR contact."; $("nowPrice").textContent="Enter your partner code"; $("whyPrice").hidden=true; $("planNext").disabled=true; } }
+$("code").addEventListener("keydown",e=>{ if(e.key==="Enter") applyCode(); });
+const NAMES={greenville:"Greenville County, SC",clemson:"Clemson University, SC",bay:"Bay County, FL",other:"Being set up by our team"}, TN={gov:"City, county or agency",edu:"School or university",biz:"Business or utility"};
+function finish(){ const loc=$("loc").value; try{ localStorage.setItem("sdr-member",JSON.stringify({fn:$("fn").value.trim(),org:$("org").value.trim(),loc})); }catch(e){}
+  $("hello").textContent=`Welcome, ${$("fn").value.trim()}`;
+  $("sum").innerHTML=[["Organization",$("org").value.trim()],["Type",TN[TYPE]||""],["Location",loc==="other"?($("other").value.trim()||NAMES.other):NAMES[loc]],["Membership","SDR Preferred Partner"]].map(([a,b])=>`<div><span>${a}</span><b>${String(b).replace(/</g,"&lt;")}</b></div>`).join("");
+  go("done"); }
+function openDash(l){ let loc=l||$("loc").value; if(loc==="other") loc="greenville"; location.href=`../${loc}/`; }
+function sendCode(){ const w=$("who").value.trim(); $("otpTo").textContent=w?`We sent a 6-digit code to ${w}.`:"We sent a 6-digit code."; const o=$("otp"); o.innerHTML=Array.from({length:6},()=>'<input inputmode="numeric" maxlength="1" aria-label="digit">').join(""); go("otp");
+  const I=[...o.querySelectorAll("input")]; I.forEach((x,i)=>{ x.addEventListener("input",()=>{ x.value=x.value.replace(/\D/g,"").slice(-1); if(x.value&&I[i+1]) I[i+1].focus(); $("otpGo").disabled=!I.every(y=>y.value); }); x.addEventListener("keydown",e=>{ if(e.key==="Backspace"&&!x.value&&I[i-1]) I[i-1].focus(); }); }); setTimeout(()=>I[0].focus(),200); }
+const h0=(location.hash||"").slice(1); if(h0&&$("s-"+h0)&&!["done","otp"].includes(h0)){ document.body.className="mode-flow"; show(h0); }
+</script>
+</body>
+</html>

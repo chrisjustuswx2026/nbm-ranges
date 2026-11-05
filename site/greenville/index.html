@@ -5266,9 +5266,9 @@ window.SITE_LL = window.__LOC?{lat:__LOC.la,lon:__LOC.lo}:(window.SITE_LL || { l
     else if(i.md){ const f=i.md, inf=window._MDINFO&&window._MDINFO[f._num];
       const HZ={tor:"Tornadoes",wind:"Damaging wind",hail:"Large hail",flood:"Flash flooding",winter:"Snow / ice"}; const tf=t=>new Date(t).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
       const likely=inf&&inf.prob!=null?(inf.prob>=80?"<b>A watch is likely soon.</b>":inf.prob>=40?"<b>A watch is possible.</b>":"<b>A watch is not expected right now</b>, but these storms can still be strong."):"";
-      const body=inf?`${inf.haz&&inf.haz.length?`<div class="ln">Threats: <b>${inf.haz.map(h=>HZ[h]||h).join(" · ")}</b></div>`:""}${(()=>{ const C=window.SDR_MDCHIPS?SDR_MDCHIPS(inf):[]; return C.length?`<div class="ln" style="margin-bottom:2px">Strongest expected:</div><div class="wcc">${C.map(([k,v])=>`<span class="wchip"><em>${k}</em>${v}</span>`).join("")}</div>`:""; })()}${inf.to?`<div class="ln">Timing: <b>${inf.from?tf(inf.from)+" to ":"through "}${tf(inf.to)}</b></div>`:""}<div class="ln">${likely}</div>`:`<div class="ln">Storms are organizing here. Getting the details…</div>`;
+      const body=inf?`<div class="mdb">${(()=>{ const C=window.SDR_MDCHIPS2?SDR_MDCHIPS2(inf):[]; return C.length?`<div class="wcc">${C.map(([k,v])=>`<span class="wchip"><em>${k}</em>${v}</span>`).join("")}</div>`:""; })()}${inf.to?`<div class="ln">${inf.from?"From <b>"+tf(inf.from)+"</b> to ":"Through "}<b>${tf(inf.to)}</b></div>`:""}${likely?`<div class="ln">${likely}</div>`:""}</div>`:`<div class="ln">Storms are organizing here. Getting the details…</div>`;
       card.innerHTML=`<div class="hd" style="background:#FF8C1A;color:#0A1428"><span>STORMS ORGANIZING</span><button data-x aria-label="Close">×</button></div>
-      <div class="bd">${body}${f._towns&&f._towns.length?`<div class="ln">Towns inside: ${f._towns.slice(0,8).join(", ")}</div>`:""}${f._url?`<a class="more" href="${f._url}" target="_blank" rel="noopener">Full text</a>`:""}</div>`;
+      <div class="bd">${body}${f._towns&&f._towns.length?`<div class="ln">Towns inside: ${f._towns.slice(0,4).join(", ")}${f._towns.length>4?` and ${f._towns.length-4} more`:""}</div>`:""}${f._url?`<a class="more" href="${f._url}" target="_blank" rel="noopener">Full text</a>`:""}</div>`;
       if(!inf&&window._mdInfo) window._mdInfo(f._num).then(()=>{ if(!card.hidden&&hits[hi]&&hits[hi].md===f) render(); }); }
     else { const col=COLORS[i.ev]||"#8A9BB8", d=details(i);
       const P0=(i.nws&&i.nws.properties)||{}, t0=+new Date(P0.effective||P0.sent||P0.onset||Date.now()), t1=i.ends?+new Date(i.ends):0, pct=t1>t0?Math.max(2,Math.min(100,Math.round((t1-Date.now())/(t1-t0)*100))):0;
@@ -6852,7 +6852,7 @@ window.SDR_GL=(function(){
 
 <script>
 // v125: client chat layer
-(function(){ let wrap=null, fr=null; const CHATV="1793837374";
+(function(){ let wrap=null, fr=null; const CHATV="1793839280";
   function open(){ if(!wrap){ wrap=document.createElement("div"); wrap.id="chatwrap"; wrap.innerHTML='<iframe id="chatfr" title="Message the team" allow="camera"></iframe>'; document.body.appendChild(wrap); fr=wrap.querySelector("iframe"); fr.src="./chat.html?v="+CHATV; fr.addEventListener("load",()=>{ try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }); }
     wrap.hidden=false; document.body.classList.add("chat-on"); if(!(history.state&&history.state.chat)) history.pushState({chat:1},""); try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }
   function close(){ if(wrap){ wrap.hidden=true; } document.body.classList.remove("chat-on"); }
@@ -7075,12 +7075,14 @@ window.SDR_NOWFIRST=(r,H)=>{ if(!r||/\bnow\b|arriving|moves in|by \d|winding/i.t
   const RN=window.RADAR_NEAR, radar=RN&&!RN.none&&!RN.light&&RN.d<=20, obs=window.OBS_WET&&OBS_WET.wet;
   if(!wet.length&&!radar&&!obs) return r;
   const mx=Math.max(0,...H6.map(h=>h.pop||0)), cold=H6.some(h=>/snow|flurr/i.test(h.short||""))||(H6[0]&&H6[0].feel!=null&&H6[0].feel<=33);
-  const W=cold?(mx>=50?"Snow showers":"Flurries"):mx>=50?"Showers":mx>=30?"Spotty showers":"A few sprinkles";
+  const thn=H6.some(h=>(h.thunder||0)>=30); const W=cold?(mx>=50?"Snow showers":"Flurries"):thn&&mx>=40?"Storms":mx>=50?"Showers":mx>=30?"Spotty showers":"A few sprinkles";
   const first=wet[0], start=first?+new Date(first.t):now, nowish=radar||obs||start-now<60*60e3;
   const end=(H||[]).filter(h=>+new Date(h.t)>Math.max(now,start)).find(h=>(h.pop||0)<20);
-  const h=nowish?(end&&+new Date(end.t)-now<12*3600e3?`${W} until ${hm(end.t)}`:`${W} around now`):`${W} after ${hm(start)}`;
+  const dl=t=>{ const d=new Date(t), k=Math.round((new Date(d).setHours(0,0,0,0)-new Date().setHours(0,0,0,0))/864e5); return k<=0?"":k===1?" tomorrow":" "+d.toLocaleDateString("en-US",{weekday:"long"}); };
+  const h=nowish?(end&&+new Date(end.t)-now<30*3600e3?`${W} until ${hm(end.t)}${new Date(end.t).getHours()>=4||+new Date(end.t)-now>12*3600e3?dl(end.t):""}`:`${W} on and off for a while`):`${W} after ${hm(start)}`;
   const rest=String(r.p||"").replace(/\s*Dry until then\.?/i,"").trim();
-  return {level:r.level==="clear"?"clear":r.level, ico:cold?"sn":"rn", h, p:`Then ${r.h.charAt(0).toLowerCase()+r.h.slice(1)}${rest?": "+rest.charAt(0).toLowerCase()+rest.slice(1):"."}`}; };
+  const same=/\b(tonight|today|this (morning|afternoon|evening)|now)\b/i.test(r.h||"");
+  return {level:r.level==="clear"?"clear":r.level, ico:cold?"sn":"rn", h, p:same?(rest&&!/^dry/i.test(rest)?rest.charAt(0).toUpperCase()+rest.slice(1):""):`Then ${r.h.charAt(0).toLowerCase()+r.h.slice(1)}${rest?": "+rest.charAt(0).toLowerCase()+rest.slice(1):"."}`}; };
 
 // v149: say "noon" and "midnight" instead of 12 PM / 12 AM, everywhere on the page
 (function(){ const RX=/(^|[^:\d])12(?::00)?\s?(AM|PM|a\.m\.|p\.m\.)/gi, SKIP={SCRIPT:1,STYLE:1,TEXTAREA:1,INPUT:1};
@@ -8053,12 +8055,13 @@ html.hf-lock,html.hf-lock body{overflow:hidden!important}html.hf-lock body::afte
     const hm=t=>{ const d=new Date(t), h=d.getHours(); return h===0?"midnight":h===12?"noon":(h%12)+(h<12?" AM":" PM"); };
     try{ (window.ALERTS||[]).map(a=>a.properties||a).filter(a=>a.onset&&+new Date(a.onset)>now&&+new Date(a.onset)<now+72*3600e3).sort((x,y)=>+new Date(x.onset)-+new Date(y.onset)).slice(0,2)
       .forEach(a=>out.push([/Warning/.test(a.event)?"r":"y",`<b>${a.event}</b> starts ${dn(a.onset)} ${hm(a.onset)}`])); }catch(e){}
-    const first=(d,f)=>{ const k=new Date(d).toDateString(); const h=H.find(q=>new Date(q.t).toDateString()===k&&f(q)); return h?h.t:null; };
-    D.slice(0,6).forEach((x,i)=>{ if(!x||!x.date||out.length>=3) return; if(i===0&&x.d!=="TONIGHT"&&new Date().getHours()>=20) return;
+    const first=(d,f)=>{ const k=new Date(d).toDateString(); const h=H.find(q=>new Date(q.t).toDateString()===k&&+new Date(q.t)>=now-1800e3&&f(q)); return h?h.t:null; };
+    const nxh=((document.getElementById("nx-h")||{}).textContent||""), nowHead=/\buntil\b|\bnow\b|on and off/i.test(nxh);
+    D.slice(0,6).forEach((x,i)=>{ if(!x||!x.date||out.length>=3) return; if(i===0&&x.d!=="TONIGHT"&&new Date().getHours()>=20) return; if(i===0&&nowHead) return;
       const day=x.d==="TONIGHT"?"tonight":dn(x.date), pp=Math.max(x.pp||0,x.ppN||0), r=x.rr?x.rr[1]/100:(x.qpf||0);
       if((x.snowP||0)>=40||(x.sr&&x.sr[1]>=50)){ out.push(["b",`<b>Snow ${day}</b>${x.sr&&x.sr[1]>=10?`, about ${(x.sr[1]/100).toFixed(1)}"`:""}`]); return; }
       if((x.iceP||0)>=30){ out.push(["r",`<b>Ice possible ${day}</b>`]); return; }
-      if((x.thunder||0)>=30){ const t=first(x.date,q=>(q.thunder||0)>=30||(q.pop||0)>=50); out.push([(x.thunder||0)>=60?"r":"y",`<b>Storms ${day}</b>${t?(new Date(t).getHours()<5?" early morning":` after ${hm(t)}`):""} · ${Math.round(pp/10)*10}%${r>=0.25?` · about ${r.toFixed(2)}"`:""}`]); return; }
+      if((x.thunder||0)>=30){ const t=first(x.date,q=>(q.thunder||0)>=30||(q.pop||0)>=50); out.push([(x.thunder||0)>=60?"r":"y",`<b>Storms ${day}</b>${t?(+new Date(t)<=now?"":new Date(t).getHours()<5?" early morning":` after ${hm(t)}`):""} · ${Math.round(pp/10)*10}%${r>=0.25?` · about ${r.toFixed(2)}"`:""}`]); return; }
       if(r>=0.5){ out.push(["y",`<b>Soaking rain ${day}</b>, about ${r.toFixed(2)}"`]); return; }
       if(x.lo!=null&&x.lo<=32&&i<=3){ out.push(["b",`<b>Freeze ${day==="today"?"tonight":day+" night"}</b>, low ${x.lo}°`]); return; }
       if((x.gust||0)>=35){ out.push(["y",`<b>Gusts to ${Math.ceil(x.gust/5)*5} mph</b> ${day}`]); return; }
@@ -8147,4 +8150,13 @@ window.SDR_MDCHIPS=inf=>{ if(!inf) return []; const C=[]; if(inf.gust) C.push([i
 window.SDR_MDLINE=inf=>{ if(!inf) return null; const P=[]; if(inf.gust) P.push(`${inf.gust>=58?"damaging gusts":"gusts"} up to ${inf.gust} mph`); if(inf.hail) P.push(`hail up to ${_hl(inf.hail)}"`); if(inf.torEF!=null) P.push(`a brief tornado (up to EF${inf.torEF} strength)`);
   if(!P.length) return null; const t=P.length>1?P.slice(0,-1).join(", ")+(P.length>2?",":"")+" and "+P[P.length-1]:P[0]; return `<b>Strongest expected:</b> ${t.charAt(0).toUpperCase()+t.slice(1)}${inf.torEF!=null?" possible":""}.`; };
 </script>
+<script>
+window.SDR_MDCHIPS2=inf=>{ if(!inf) return []; const C=[], hz=inf.haz||[], iso=inf.prob!=null&&inf.prob<40, up=t=>t.charAt(0).toUpperCase()+t.slice(1), hl=v=>v>=1?(Math.round(v*4)/4).toFixed(2).replace(/0$/,"").replace(/\.0$/,""):String(v).replace(/^0/,"");
+  if(hz.includes("tor")||inf.torEF!=null) C.push(["TORNADO",up([iso?"isolated":"",inf.torEF!=null?`brief, up to EF${inf.torEF}`:(iso?"":"possible")].filter(Boolean).join(", "))]);
+  if(hz.includes("wind")||inf.gust) C.push([!inf.gust||inf.gust>=58?"DAMAGING WIND":"GUSTS",inf.gust?`Up to ${inf.gust} mph`:(iso?"Isolated":"Possible")]);
+  if(hz.includes("hail")||inf.hail) C.push(["HAIL",inf.hail?`Up to ${hl(inf.hail)}"`:(iso?"Isolated":"Possible")]);
+  if(hz.includes("flood")) C.push(["FLASH FLOODING","Possible"]); if(hz.includes("winter")) C.push(["SNOW / ICE","Possible"]); return C; };
+(function(){ const o=window.SDR_MDLINE; if(typeof o!=="function") return; window.SDR_MDLINE=inf=>{ let t=o(inf); if(t&&inf&&inf.prob!=null&&inf.prob<40) t=t.replace("a brief tornado","an isolated, brief tornado"); return t; }; })();
+</script>
+<style>.acard:has(.mdb) .bd{max-height:none!important;overflow:visible!important}.acard .mdb .wcc{margin:2px 0 6px}.acard .mdb .ln{margin:3px 0}</style>
 </body></html>

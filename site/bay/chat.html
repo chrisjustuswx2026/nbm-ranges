@@ -574,6 +574,22 @@ var SDR_ENGINE=(function(){
     '<div class="bar"><span class="base"></span><span class="iq" style="left:19%;width:37%"></span><span class="md" style="left:36%"></span><span class="th" style="left:62%"></span></div>'+
     '<div class="lab"><span>1 in 10 <b>0.16"</b></span><span>1 in 4 <b>0.30"</b></span><span>1 in 4 <b>0.90"</b></span><span>1 in 10 <b>1.45"</b></span></div>'+
     '<p>Most runs land between <b>0.3" and 0.9"</b>. About 1 in 10 go past an inch.</p><small>What the models say · National Blend ranges for Memorial Stadium · 10:14 AM</small>';M.appendChild(d);lastSide="them";M.scrollTop=M.scrollHeight;}
+  // v234: a risk map centered on ANOTHER place the client asked about (Rome, Athens, Whitfield), in the Map Room look
+  var LASTPLACE=null;
+  function placeMap(pl){ try{ var P=window.parent; if(!pl||!P||P===window||!P.SDR_BMAP||!P.MAPDATA) return Promise.resolve(null);
+    return Promise.resolve(P.MAPDATA()).then(function(D){ D=D||{}; var d=0; if(pl.date){ var t0=new Date(); t0.setHours(0,0,0,0); var x=new Date(pl.date+"T12:00:00"); d=Math.max(0,Math.min(2,Math.floor((x-t0)/864e5))); }
+      var F=((D.spc||[])[d])||[], SC={TSTM:"#C1E9C1",MRGL:"#7FC57F",SLGT:"#F6F67F",ENH:"#E6C27F",MDT:"#E67F7F",HIGH:"#FF7FFF"}, NM={TSTM:"Thunder",MRGL:"1 Marginal",SLGT:"2 Slight",ENH:"3 Enhanced",MDT:"4 Moderate",HIGH:"5 High"};
+      var lay=[{features:F,style:function(f){ var p=f.properties||{}; return {fill:p.fill||SC[p.LABEL]||"#C1E9C1",stroke:"#333",w:1,fo:.7}; }}];
+      var M=d===0?(((D.priority||{}).mds)||[]):[]; if(M.length) lay.push({features:M,style:function(){ return {fill:"#FF8C1A",stroke:"#FF8C1A",w:2.5,dash:"7 5",fo:.15}; }});
+      var W=720,H=520,hh=2.3,kx=Math.cos(pl.lat*Math.PI/180),hw=hh*(W/H)/kx, box=[pl.lon-hw,pl.lat-hh,pl.lon+hw,pl.lat+hh];
+      var dn=d===0?(new Date().getHours()>=17?"TONIGHT":"TODAY"):d===1?"TOMORROW":new Date(Date.now()+d*864e5).toLocaleDateString("en-US",{weekday:"long"}).toUpperCase();
+      var nm=String(pl.name||"").split(",")[0];
+      var svg=P.SDR_BMAP(box,W,H,lay,{points:[{lo:pl.lon,la:pl.lat,fill:"#F28C28",r:6,label:nm.toUpperCase()}],cities:true,title:"SEVERE RISK",sub:dn,disp:330});
+      var has={}; F.forEach(function(f){ has[(f.properties||{}).LABEL]=1; });
+      var sw=function(c,t,dash){ return '<span style="display:inline-flex;align-items:center;gap:5px;margin:2px 10px 2px 0"><i style="width:11px;height:11px;border-radius:2px;display:inline-block;background:'+c+(dash?';border:2px dashed #FF8C1A;background:rgba(255,140,26,.15)':'')+'"></i>'+t+'</span>'; };
+      var leg=Object.keys(NM).filter(function(k){ return has[k]; }).map(function(k){ return sw(SC[k],NM[k]); }).join("")+(M.length?sw("","Storms organizing",1):"");
+      if(!F.length&&!M.length) leg='<span>No severe risk on the map '+dn.toLowerCase()+'</span>';
+      return {svg:svg+'<div style="font:600 12px Inter,Arial,sans-serif;color:#DCE6F5;background:#0E1A33;padding:7px 10px">'+leg+'</div>',title:"Severe risk "+dn.toLowerCase()+" · "+nm}; }).catch(function(){ return null; }); }catch(e){ return Promise.resolve(null); } }
   function imageSvg(svg,cap){var d=document.createElement("div");d.className="img zoomable";d.innerHTML='<div class="svgpic">'+svg+'</div><div class="cap"><b>'+cap+'</b><span class="zm">Tap to enlarge</span></div>';d.addEventListener("click",function(){lbOpen(svg,cap);});M.appendChild(d);lastSide="them";M.scrollTop=M.scrollHeight;}
   // picture viewer: full screen, pinch or double-tap to zoom, drag to look around
   var LB=null,lbScale=1,lbBase=0;
@@ -634,7 +650,7 @@ var SDR_ENGINE=(function(){
     var persp=new Promise(function(res){ var t=setTimeout(function(){ res(""); },5000); try{ var f=window.parent.SDR_PERSPECTIVE; if(!f){ clearTimeout(t); res(""); return; } f().then(function(x){ clearTimeout(t); res(x||""); },function(){ clearTimeout(t); res(""); }); }catch(e){ clearTimeout(t); res(""); } });
     persp.then(function(px){ return fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},signal:ctl.signal,body:JSON.stringify({site:siteName(),client:siteName(),question:text,history:AIHIST.slice(-12),dashboard:aiData()+(px?"\n\n"+px:""),schedule:schedText(),met:lastMet,location:aiLoc(),mode:chatMode(),thread:THREAD})}); })
       .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,j:j}; }); })
-      .then(function(x){ clearTimeout(timer); if(x.ok&&x.j&&x.j.queued){ done({queued:true}); return; } if(!x.ok||!x.j||!x.j.text) throw new Error((x.j&&x.j.error)||"no reply"); done({text:x.j.text,from:x.j.from||"SDR Forecast Desk"}); })
+      .then(function(x){ clearTimeout(timer); if(x.ok&&x.j&&x.j.queued){ done({queued:true}); return; } if(!x.ok||!x.j||!x.j.text) throw new Error((x.j&&x.j.error)||"no reply"); done({text:x.j.text,from:x.j.from||"SDR Forecast Desk",place:x.j.place||null}); })
       .catch(function(){ clearTimeout(timer); done(null); });
     return true; }
   var PLAYGEN=0, GREETED=false, POSTED={};
@@ -663,6 +679,8 @@ var SDR_ENGINE=(function(){
               AIHIST.push({role:"assistant",content:reply});
               var wait=Math.max(0,Math.min(5000,900+reply.length*14)-(Date.now()-tStart));
               setTimeout(function(){ if(gen0!==PLAYGEN) return; typing(false); bubble("them",reply.replace(/</g,"&lt;"),{from:FROM}); GREETED=true;
+                if(res.place) LASTPLACE=res.place; var wantPic=/\b(pic|pics|picture|map|image|show me|graphic)\b/i.test(text), PL0=res.place||(wantPic?LASTPLACE:null);
+                if(PL0){ placeMap(PL0).then(function(a){ if(!a||gen0!==PLAYGEN) return; setTimeout(function(){ if(gen0!==PLAYGEN) return; imageSvg(a.svg,a.title); POSTED[a.title]=1; M.scrollTop=M.scrollHeight; },1100); }); return; }
                 var att=[]; try{ var ctxQ=AIHIST.filter(function(m){ return m.role==="user"; }).slice(-3).map(function(m){ return m.content; }).join(" ")+" "+((reply.match(/\b(today|tonight|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/ig)||[]).slice(0,1).join(" "));
                   att=(SDR_ENGINE.attachments(/\b(game|practice|match|event|outside|outdoor|work|crew|field|tailgate|walk)\b/i.test(ctxQ)?ctxQ+" hour by hour":ctxQ)||[]).filter(function(a){ return !POSTED[a.title]; }).slice(0,1); }catch(e){}
                 att.forEach(function(a,i){ setTimeout(function(){ if(gen0!==PLAYGEN) return; imageSvg(a.svg,a.title); POSTED[a.title]=1; },1200+i*900); }); },wait); })) return; }

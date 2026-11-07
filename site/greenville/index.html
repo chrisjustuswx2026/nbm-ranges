@@ -6110,7 +6110,9 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
     if(HZ==="severe") return T.torW||T.svW?`${T.torW?"Tornado Watch":"Severe Thunderstorm Watch"} in effect. Know where you'll shelter, and move people right away if a warning is issued.`:/organizing|watch likely/i.test(txt)?"A watch is likely soon. Know where you'll shelter now.":/Level [3-5]/.test(txt)?`Have shelter plans ready${tw?` for ${tw}`:""}.`:`${tw?`Rain and storms on and off ${tw}`:"Storms possible"}; move indoors at the first thunder and stay off flooded roads.`;
     if(HZ==="flood") return T.flW?"Flooding is happening or expected. Avoid low roads and creek crossings, and never drive through water on the road.":`Avoid low roads and creek crossings${tw?` ${tw}`:""}; never drive through water on the road.`;
     if(HZ==="winter") return "Decide on delays and closures tonight; pre-treat walkways and entrances.";
-    if(HZ==="freeze") return "Protect pipes, irrigation and tender plants tonight.";
+    if(HZ==="freeze"){ const _m=txt.match(/\b(tonight|tomorrow night|(?:sunday|monday|tuesday|wednesday|thursday|friday|saturday) night|(?:sunday|monday|tuesday|wednesday|thursday|friday|saturday) morning)\b/i); const _when=_m?_m[1].toLowerCase():"";
+      const _lo=(txt.match(/\b(\d{2})°/g)||[]).map(x=>parseInt(x)).filter(n=>n>=10&&n<=45); const _min=_lo.length?Math.min(..._lo):null; const _hard=/hard freeze|freeze warning/i.test(txt)||(_min!=null&&_min<=28); const _frz=/\bfreeze\b/i.test(txt)||(_min!=null&&_min<=32);
+      const _w=_when?(_when==="tonight"?"tonight":_when):""; if(_hard) return `Protect pipes, irrigation and tender plants${_w?" "+_w:""}.`; if(_frz) return `Cover tender plants and drain irrigation lines${_w?" "+_w:""}.`; return `Frost on windshields and tender plants${_w?" "+_w:""}; no action needed otherwise.`; }
     if(HZ==="heat") return "Build in water, shade and rest breaks for anyone outdoors.";
     if(HZ==="wind") return "Secure tents, signs and loose equipment before the gusts arrive.";
     if(HZ==="trop") return /cone|Tropical Storm (Watch|Warning)|Hurricane (Watch|Warning)/i.test(txt+b.title)?"Use the time before it arrives to prepare: secure equipment and clear drains.":/high chance/i.test(txt)?"Too early to know any impact here. We'll update as it organizes.":`No changes for ${city}. We're tracking it in case it shifts.`;
@@ -7004,7 +7006,7 @@ window.SDR_GL=(function(){
 
 <script>
 // v125: client chat layer
-(function(){ let wrap=null, fr=null; const CHATV="1794081421";
+(function(){ let wrap=null, fr=null; const CHATV="1794081953";
   function open(){ if(!wrap){ wrap=document.createElement("div"); wrap.id="chatwrap"; wrap.innerHTML='<iframe id="chatfr" title="Message the team" allow="camera"></iframe>'; document.body.appendChild(wrap); fr=wrap.querySelector("iframe"); fr.src="./chat.html?v="+CHATV; fr.addEventListener("load",()=>{ try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }); }
     wrap.hidden=false; document.body.classList.add("chat-on"); if(!(history.state&&history.state.chat)) history.pushState({chat:1},""); try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }
   function close(){ if(wrap){ wrap.hidden=true; } document.body.classList.remove("chat-on"); }

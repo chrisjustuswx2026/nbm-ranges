@@ -927,7 +927,7 @@ document.addEventListener("desk-ready",()=>{ const D=window.DESK; if(!D||window.
     if(F.page&&!b.dataset.sure){ b.dataset.sure=1; b.textContent="TAP AGAIN · REPLACES THE PAGE"; setTimeout(()=>{ delete b.dataset.sure; b.textContent="BUILD THE BRIEFING"; },4000); return; }
     delete b.dataset.sure; b.disabled=true; b.textContent="BUILDING… ABOUT 20 SECONDS";
     try{ const j=await D.api("/desk/brief/build",{notes:F.notes,cat:F.cat,images:F.images.filter(x=>x.id).map(x=>({id:x.id,cap:x.cap}))}); if(!j.page) throw new Error("no page");
-      F.page=j.page; keep(); paint(); D.toast("Built. Read every line, fix anything, then publish."); if(innerWidth<1080) $("wb-pv").scrollIntoView({behavior:"smooth",block:"start"}); }
+      F.page=j.page; keep(); paint(); D.toast(j.mode==="none"&&F.images.length?"Built from your notes. The maps couldn't be read, so labels came from their file names.":"Built. Read every line, fix anything, then publish."); if(innerWidth<1080) $("wb-pv").scrollIntoView({behavior:"smooth",block:"start"}); }
     catch(e){ if(e.status===401) return D.login("Wrong password."); D.toast("Couldn't build it: "+(e&&e.message||"no reply")); }
     finally{ b.disabled=false; b.textContent=F.page?"BUILD IT AGAIN":"BUILD THE BRIEFING"; } };
 

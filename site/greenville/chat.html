@@ -543,7 +543,8 @@ var SDR_ENGINE=(function(){
     return out.slice(0,2); }
   function attachNamed(n){ try{ var Q={qpf13:/1–3|1-3/,qpf15:/1–5|1-5/,qpf17:/1–7|1-7/}; if(Q[n]) return cardSvg(/^qpf$/,Q[n]);
       if(/^(spc[1-3]|spc48|ero[1-3]|cpc[tp](610|814)|drought|winter|tropics|md|watch|rivers)$/.test(n)) return cardSvg(new RegExp("^"+n+"$"));
-      if(n==="radar") return cardSvg(/^radar$/); if(n==="tenday") return tenDayCard(); if(n==="temp_outlook") return cardSvg(/^cpct610$/)||cardSvg(/^cpct814$/); if(n==="rain_outlook") return cardSvg(/^cpcp610$/)||cardSvg(/^cpcp814$/); if(n==="rainmap") return cardSvg(/^qpf$/); if(n==="outlook") return cardSvg(/^spc1$/)||cardSvg(/^ero1$/); if(n==="rain") return weekTable(LASTW&&LASTW.idx); if(n==="hourly"){ var W=LASTW&&LASTW.day?LASTW:{idx:0,day:days()[0],label:"today"}; return hourlyCard(W)||windCard(); } }catch(e){} return null; }
+      if(n==="radar") return cardSvg(/^radar$/); if(n==="tenday") return tenDayCard(); if(n==="temp_outlook") return cardSvg(/^cpct610$/)||cardSvg(/^cpct814$/); if(n==="rain_outlook") return cardSvg(/^cpcp610$/)||cardSvg(/^cpcp814$/); if(n==="rainmap") return cardSvg(/^qpf$/); if(n==="outlook") return cardSvg(/^spc1$/)||cardSvg(/^ero1$/); if(n==="rain") return weekTable(LASTW&&LASTW.idx); if(n==="hourly"){ var W=LASTW&&LASTW.day?LASTW:{idx:0,day:days()[0],label:"today"}; return hourlyCard(W)||windCard(); }
+      var hm=n.match(/^hourly(\d{1,2})$/); if(hm){ var i2=Math.max(0,Math.min(9,+hm[1]-1)); var D2=days(); if(!D2[i2]) return null; return hourlyCard({idx:i2,day:D2[i2],label:dname(D2[i2],i2)})||windCard(); } }catch(e){} return null; }
   return { answer:core, plan:plan, followUp:followUp, attachments:attachments, attachNamed:attachNamed, setMet:setMet, ok:function(){ return !!(P&&days().length); } };
 })();
 
@@ -607,10 +608,10 @@ var SDR_ENGINE=(function(){
   function markRead(){var s=M.querySelector(".status");if(s){s.textContent="Read "+now();s.classList.add("read");}}
   function ackRow(){var r=document.createElement("div");r.className="ack";var b=document.createElement("button");b.textContent="Got it";var sm=document.createElement("small");sm.textContent="lets the team know you saw it";
     b.addEventListener("click",function(){b.textContent="✓ Got it";b.classList.add("done");sm.textContent="acknowledged "+now();b.disabled=true; M.querySelectorAll(".ack button:not(.done)").forEach(function(x){ x.parentNode.remove(); });
-      var url=aiUrl(); var say=function(t){ setTimeout(function(){ typing(true); setTimeout(function(){ typing(false); bubble("them",t,{from:lastFrom||"SDR Forecast Desk"}); },1200); },500); };
+      var url=aiUrl(); var say=function(t){ setTimeout(function(){ typing(true); setTimeout(function(){ typing(false); bubble("them",t,{from:ackFrom||"SDR Forecast Desk"}); },1200); },500); };
       if(url){ fetch(url.replace(/\/$/,"")+"/ack",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({thread:THREAD})}).then(function(r){ return r.json(); }).then(function(j){ say(j.text||CLOSED_LINE); }).catch(function(){ say(CLOSED_LINE); }); } else say(CLOSED_LINE); });
     r.appendChild(b);r.appendChild(sm);M.appendChild(r);}
-  var CLOSED_LINE="We'll close out your tab right now, but if you need anything else, please reach back out.", lastFrom="";
+  var CLOSED_LINE="We'll close out your tab right now, but if you need anything else, please reach back out.", ackFrom="";
   function typing(on){var t=M.querySelector(".typing");if(t)t.remove();if(on){var d=document.createElement("div");d.className="typing";d.innerHTML="<i></i><i></i><i></i>";M.appendChild(d);M.scrollTop=M.scrollHeight;}}
 
 
@@ -644,10 +645,10 @@ var SDR_ENGINE=(function(){
   // review mode: the team's replies arrive on the thread
   var POLL=null, SINCE=Date.now()-60000, LASTASKED="";
   function pollThread(){ var url=aiUrl(); if(!url||POLL) return; var n=0;
-    POLL=setInterval(function(){ if(++n>450){ clearInterval(POLL); POLL=null; return; }
+    POLL=setInterval(function(){ if(++n>1350){ clearInterval(POLL); POLL=null; return; }
       fetch(url.replace(/\/$/,"")+"/thread?id="+encodeURIComponent(THREAD)+"&since="+SINCE).then(function(r){ return r.json(); }).then(function(j){ (j.messages||[]).forEach(function(m){ SINCE=Math.max(SINCE,m.t); clearStatus();
-        if(m.ack||m.role==="client") return; lastFrom=m.from||"Meteorologist"; bubble("them",String(m.text||"").replace(/</g,"&lt;"),{from:m.from||"Meteorologist"}); AIHIST.push({role:"assistant",content:m.text}); M.querySelectorAll(".ack").forEach(function(x){ x.remove(); }); setTimeout(function(){ ackRow(); M.scrollTop=M.scrollHeight; },900);
-        (m.attach||[]).forEach(function(a,i){ setTimeout(function(){ var c=null; try{ if(LASTASKED) SDR_ENGINE.answer(LASTASKED); c=SDR_ENGINE.attachNamed(a); }catch(e){} if(c){ imageSvg(c.svg,c.title); POSTED[c.title]=1; } },700+i*700); }); }); }).catch(function(){}); },8000); }
+        if(m.ack||m.role==="client") return; ackFrom=m.from||"Meteorologist"; bubble("them",String(m.text||"").replace(/</g,"&lt;"),{from:m.from||"Meteorologist"}); AIHIST.push({role:"assistant",content:m.text}); M.querySelectorAll(".ack").forEach(function(x){ x.remove(); }); setTimeout(function(){ ackRow(); M.scrollTop=M.scrollHeight; },900);
+        (m.attach||[]).forEach(function(a,i){ setTimeout(function(){ var c=null; try{ if(LASTASKED) SDR_ENGINE.answer(LASTASKED); c=SDR_ENGINE.attachNamed(a); if(!c) console.warn("no card for",a); }catch(e){ console.warn("attach",a,e); } if(c){ imageSvg(c.svg,c.title); POSTED[c.title]=1; } },700+i*700); }); }); }).catch(function(){}); },8000); }
   function aiReply(text,done){ var url=aiUrl(); if(!url) return false;
     var ctl=new AbortController(), timer=setTimeout(function(){ ctl.abort(); },45000);
     // v170: almanac, records, freeze dates, days since, sun & moon, hunt & fish go with every question (at most 5 s to gather)
@@ -679,7 +680,7 @@ var SDR_ENGINE=(function(){
           if(aiReply(text,function(res){ if(gen0!==PLAYGEN) return;
               if(!res){ typing(false); fallback(); return; }
               if(res.queued){ typing(false); bubble("them",ONIT[Math.floor(Math.random()*ONIT.length)],{from:"SDR Weather Intelligence"}); pollThread(); return; }
-              var reply=res.text, FROM=res.from; lastFrom=FROM; if(res.between&&res.note){ typing(false); bubble("them",res.note,{from:"SDR Weather Intelligence"}); typing(true); }
+              var reply=res.text, FROM=res.from; ackFrom=FROM; if(res.between&&res.note){ typing(false); bubble("them",res.note,{from:"SDR Weather Intelligence"}); typing(true); pollThread(); }
               AIHIST.push({role:"assistant",content:reply});
               var wait=Math.max(0,Math.min(5000,900+reply.length*14)-(Date.now()-tStart));
               setTimeout(function(){ if(gen0!==PLAYGEN) return; typing(false); bubble("them",reply.replace(/</g,"&lt;"),{from:FROM}); GREETED=true; setTimeout(function(){ if(gen0===PLAYGEN&&!M.querySelector(".ack button:not(.done)")) { ackRow(); M.scrollTop=M.scrollHeight; } },2600);

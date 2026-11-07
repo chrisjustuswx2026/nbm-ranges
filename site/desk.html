@@ -303,6 +303,9 @@ body.live .set{display:none}
 #signin input,#signin select{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px 12px;font:inherit;font-size:16px;color:var(--fg)}
 #signin button{background:var(--blue);border:0;border-radius:10px;padding:12px;font-family:var(--display);font-weight:800;letter-spacing:.12em;font-size:15px;color:#fff;cursor:pointer}
 #signin .err{color:#FF8A8E;font-size:13.5px}#signin label{font-size:12.5px;color:var(--dim);font-family:var(--display);font-weight:800;letter-spacing:.12em;margin-bottom:-6px}
+.attach select{background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font:inherit;font-size:13px}
+.attlist{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px}
+.attchip{background:#13224A;border:1px solid #2F7CF6;color:#DCEBFF;border-radius:999px;padding:5px 11px;font-size:13px;cursor:pointer}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:14px;z-index:20;max-width:90vw;box-shadow:0 8px 30px rgba(0,0,0,.4)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -360,12 +363,12 @@ body.live .set{display:none}
       <div class="pending" id="pending" hidden></div>
       <div class="draft" id="work">
         <div class="band">Draft reply<small id="dn2"></small></div>
-        <div class="hd"><span class="tag">AI draft · review before sending</span><span class="fresh">Forecast updated 12 min ago</span><span class="n" id="dn">Draft 1 of 3</span></div>
-        <div class="kinds" id="kinds"></div>
-        <div class="rulebox" id="rule"></div>
+        <div class="hd"><span class="tag">AI draft · review before sending</span><span class="n" id="dn" hidden>Draft 1 of 3</span></div>
+        <div class="kinds" id="kinds" hidden></div>
+        <div class="rulebox" id="rule" hidden></div>
         <textarea id="box" aria-label="Reply"></textarea>
         <div class="chips" id="chips"><span class="k">Insert</span></div>
-        <div class="attach" id="attach"><span class="k">Attach</span><button data-m="radar">📡 Radar now</button><button data-m="map">🗺 Risk map</button><button data-m="hourly">📊 Hourly strip</button><button data-m="range">📈 Range card</button><button data-m="photo">📷 Photo</button></div>
+        <div class="attach" id="attach"><span class="k">Attach</span><select id="attday"><option value="">Hour by hour · pick a day</option></select><button data-m="tenday">🌡 10-day</button><button data-m="radar">📡 Radar now</button><button data-m="rain">🌧 Rain by day</button><button data-m="spc1">⚡ Severe · today</button><button data-m="spc2">⚡ Severe · tomorrow</button><button data-m="ero1">💧 Flood risk · today</button><button data-m="qpf13">🗺 Rain map 1–3 days</button><button data-m="qpf17">🗺 Rain map 1–7 days</button><button data-m="cpct610">📆 Temps 6–10 day</button><button data-m="cpcp610">📆 Rain 6–10 day</button><button data-m="tropics">🌀 Tropics</button><button data-m="winter">❄️ Winter</button><button data-m="rivers">🌊 Rivers</button></div><div class="attlist" id="attlist"></div>
         <div class="acts"><button id="saved">Saved replies</button><button class="call" id="esc">Escalate to call</button></div>
         <button class="send" id="send">SEND AS <span id="sig">MATTHEW</span> · METEOROLOGIST</button>
         <div class="note">The draft is built from this client's own dashboard for the day they asked about. A meteorologist reviews every draft; nothing auto-sends except the hello, which goes out under the name of a meteorologist on shift (the one with the fewest open threads), so the answer should come from that same person when it can. You are the expert: never "I’ll get a senior meteorologist." If it’s outside the weather, say what we can see and what we can’t rule out. Sending posts to the client's chat and the log.</div>
@@ -603,7 +606,7 @@ body.live .set{display:none}
   var SHORT=" <b>Short.</b> Quick is the default: two or three sentences, the answer and the call. Full only when they need the numbers.";
   var LEAD=" <b>Dashboard first.</b> Timing and totals come from the hourly, the storm window and the rain range. <b>Your read wins.</b> If you'd lean colder, wetter or earlier than the models, say so in the reply (\"I'd lean colder than the models here\"), and say why.";
   var NOPROMISE=" <b>No follow-up promises.</b> They can reach back out. Promise a check-back only if you keep the thread open.";
-  function drafts(){var t=byId(cur),c=t.ctx;document.getElementById("rule").innerHTML=ruleFor(c)+SHORT+LEAD+LEANP+VARY+(c.range?ODDS:"")+(t.mon?"":NOPROMISE);document.querySelectorAll("#kinds button").forEach(function(b,i){b.classList.toggle("on",i===dk);});
+  function drafts(){var t=byId(cur),c=t.ctx;document.querySelectorAll("#kinds button").forEach(function(b,i){b.classList.toggle("on",i===dk);});
     document.getElementById("dn").textContent="Draft "+(dk+1)+" of "+c.drafts.length;box.value=c.drafts[dk].t;}
   function insert(s){if(!s)return;var v=box.value,p=box.selectionStart||v.length,pre=v.slice(0,p),post=v.slice(p);
     box.value=pre+(pre&&!/\s$/.test(pre)?" ":"")+s+(post&&!/^\s/.test(post)?" ":"")+post;box.focus();}
@@ -615,11 +618,15 @@ body.live .set{display:none}
       M.appendChild(d);});
     var p=document.getElementById("pending");p.hidden=!timers[t.id];if(timers[t.id])p.textContent="No one has answered yet. A hello goes out in "+timers[t.id].left+" s unless someone replies first.";}
   document.getElementById("back").addEventListener("click",function(){document.getElementById("thread").hidden=true;document.getElementById("queue").hidden=false;list();});
-  var pendAtt=null,ATT={range:{i:"📈",n:"Range card · what the models say · "},radar:{i:"📡",n:"Radar · live · "},map:{i:"🗺",n:"Severe risk map · Saturday · "},hourly:{i:"📊",n:"Hour by hour · Saturday · "},photo:{i:"📷",n:"Photo · "}};
-  document.querySelectorAll("#attach button").forEach(function(b){b.addEventListener("click",function(){var k=b.getAttribute("data-m");pendAtt={i:ATT[k].i,n:ATT[k].n+now(),k:k};toast("Attached: "+pendAtt.n+" (goes with the reply). Snapshots come straight from this client\u2019s dashboard.");});});
+  var pendAtt=null, ATTS=[];
+  (function(){ var sel=document.getElementById("attday"), d0=new Date(); d0.setHours(0,0,0,0); for(var i=0;i<10;i++){ var d=new Date(d0); d.setDate(d.getDate()+i); var o=document.createElement("option"); o.value="hourly"+(i+1); o.textContent="📊 Hour by hour · "+(i===0?"Today":i===1?"Tomorrow":d.toLocaleDateString("en-US",{weekday:"long"}))+" · "+d.toLocaleDateString("en-US",{month:"short",day:"numeric"}); sel.appendChild(o); }
+    sel.addEventListener("change",function(){ if(sel.value){ addAtt(sel.value,sel.options[sel.selectedIndex].textContent); sel.value=""; } }); })();
+  function drawAtts(){ var L=document.getElementById("attlist"); L.innerHTML=ATTS.length?'<span class="k">Going with the reply</span>'+ATTS.map(function(a,i){ return '<button type="button" class="attchip" data-i="'+i+'">'+a.n+' ✕</button>'; }).join(""):""; L.querySelectorAll(".attchip").forEach(function(b){ b.addEventListener("click",function(){ ATTS.splice(+b.getAttribute("data-i"),1); drawAtts(); }); }); pendAtt=ATTS.length?{i:"🖼",n:ATTS.map(function(a){ return a.n; }).join(", "),ks:ATTS.map(function(a){ return a.k; })}:null; }
+  function addAtt(k,n){ if(ATTS.length>=3){ toast("Up to 3 pictures per reply"); return; } if(ATTS.some(function(a){ return a.k===k; })) return; ATTS.push({k:k,n:n}); drawAtts(); }
+  document.querySelectorAll("#attach button").forEach(function(b){b.addEventListener("click",function(){ addAtt(b.getAttribute("data-m"),b.textContent.trim()); });});
   document.getElementById("send").addEventListener("click",function(){var t=byId(cur);if(!box.value.trim())return; if(t.sending) return;
-    if(window.LIVE){ var text=box.value, att=pendAtt?[({range:"rain",radar:"radar",map:"spc1",hourly:"hourly"})[pendAtt.k]].filter(Boolean):[]; var sb=document.getElementById("send"); t.sending=true; sb.disabled=true;
-      LIVE.api("/desk/send",{id:t.id,text:text,met:you().n,attach:att}).then(function(){ t.sending=false; sb.disabled=false; t.sent=true; t.msgs.push({w:"them",t:text,s:you().n+" · Meteorologist · "+now(),att:pendAtt});pendAtt=null;disarm(t);t.answered=you().i;t.by=you().i; LIVE.remember(t); toast("Sent to "+t.name+". They get it on their dashboard."); box.value=""; msgs(); })
+    if(window.LIVE){ var text=box.value, att=pendAtt&&pendAtt.ks?pendAtt.ks.slice(0,3):[]; var sb=document.getElementById("send"); t.sending=true; sb.disabled=true;
+      LIVE.api("/desk/send",{id:t.id,text:text,met:you().n,attach:att}).then(function(){ t.sending=false; sb.disabled=false; t.sent=true; t.msgs.push({w:"them",t:text,s:you().n+" · Meteorologist · "+now(),att:pendAtt});pendAtt=null;disarm(t);t.answered=you().i;t.by=you().i; LIVE.remember(t); toast("Sent to "+t.name+". They get it on their dashboard."); box.value=""; ATTS=[]; drawAtts(); msgs(); })
         .catch(function(e){ t.sending=false; sb.disabled=false; if(e&&e.status===404){ toast("Someone else already answered this one."); t.open=false; t.closedBy="team"; t.closedAt=now(); LIVE.remember(t); } else if(e&&e.status===401){ LIVE.login("Wrong password."); } else toast("Didn't send. Try again."); });
       return; }
     t.msgs.push({w:"them",t:box.value,s:you().n+" · Meteorologist · "+now(),att:pendAtt});pendAtt=null;disarm(t);t.answered=you().i;t.by=you().i;

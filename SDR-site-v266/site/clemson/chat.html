@@ -1,0 +1,730 @@
+<meta charset="utf-8"><title>SDR · Message the team</title><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Barlow:wght@400;500;600;700&display=swap">
+<style>
+/* Client "Message the team" thread. Messages-app feel on the dashboard's navy: slim header, clean bubbles, time between groups, sender once per group. */
+:root{
+  --bg:#0A1428; --panel:#111E42; --panel2:#182A5C; --line:#2B3F6B;
+  --fg:#F4F7FB; --muted:#A9B6CC; --dim:#6F7F9E;
+  --accent:#F28C28; --blue:#2F7CF6; --bubble:#1C2C5A;
+  --clear:#22C55E; --clear-bg:#0F2E22; --clear-line:#1E5A3A;
+  --heads:#F5B800; --heads-bg:#3A2B06; --heads-line:#7A5E10;
+  --action:#E5484D; --action-bg:#3B0F13; --action-line:#8E2A30;
+  --display:"Barlow Condensed","Arial Narrow",Impact,sans-serif;
+  --body:"Barlow","Helvetica Neue",Arial,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+.app{height:100dvh!important;overflow:hidden}
+.pin{position:relative;z-index:2}
+/* v196: the header is part of the grid, not floating over it, so the status strip under it is never covered */
+.app>.hd{position:relative!important;top:auto!important;z-index:3;padding-top:calc(8px + env(safe-area-inset-top,0px))}
+.app>.pin{margin-top:8px}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:17px;line-height:1.3;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.app{max-width:560px;margin:0 auto;height:100%;display:grid;grid-template-rows:auto auto 1fr auto;background:var(--bg);
+  padding-left:max(0px,env(safe-area-inset-left,0px));padding-right:max(0px,env(safe-area-inset-right,0px))}
+
+/* header: like a Messages contact header */
+.hd{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.08);background:rgba(10,20,40,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);position:sticky;top:env(safe-area-inset-top,0px);z-index:3}
+.hd .back{color:var(--blue);display:flex;align-items:center}
+.hd .who{display:grid;justify-items:center;gap:3px}
+.logo{background:#fff;border-radius:8px;padding:4px 7px;display:flex}
+.logo img{height:22px;width:auto;display:block}
+.hd .who b{font-size:13px;font-weight:600}
+.hd .who small{font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:5px}
+.hd .who small::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--clear)}
+.hd .who small.off::before{background:var(--dim)}
+.hd .more{color:var(--blue);font-size:22px;text-align:right}
+
+/* pinned: one slim strip */
+.pin{margin:8px 12px 0;border-radius:12px;background:var(--heads-bg);border:1px solid var(--heads-line);padding:8px 12px;display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;font-size:14px}
+.pin .dot{width:9px;height:9px;border-radius:50%;background:var(--heads);box-shadow:0 0 0 4px rgba(245,184,0,.18)}
+.pin b{display:block;font-weight:600}
+.pin small{color:var(--muted);font-size:12.5px}
+.pin .go{color:var(--heads);font-weight:700;font-size:13px}
+
+/* thread */
+.msgs{min-height:0;overflow-y:auto;padding:10px 12px 8px;display:flex;flex-direction:column;gap:2px;overscroll-behavior:contain}
+.ts{text-align:center;font-size:11.5px;color:var(--dim);margin:12px 0 6px;font-weight:600}
+.ts b{color:var(--muted);font-weight:700}
+.who-l{font-size:11.5px;color:var(--dim);margin:6px 0 2px 14px}
+.b{max-width:78%;padding:8px 13px;border-radius:19px;font-size:17px;line-height:1.3;word-wrap:break-word;position:relative}
+.b.them{align-self:flex-start;background:var(--bubble);border-bottom-left-radius:5px}
+.b.them.cont{border-top-left-radius:5px}
+.b.me{align-self:flex-end;background:var(--blue);color:#fff;border-bottom-right-radius:5px}
+.b.me.cont{border-top-right-radius:5px}
+.b+.b{margin-top:2px}
+.b.them+.b.me,.b.me+.b.them{margin-top:10px}
+.status{align-self:flex-end;font-size:11.5px;color:var(--dim);margin:3px 6px 0;font-weight:600}
+.status.read{color:var(--muted)}
+.b .st{display:block;font-family:var(--display);font-weight:800;letter-spacing:.08em;font-size:14px;margin-bottom:2px;text-transform:uppercase}
+.st.clear{color:var(--clear)} .st.heads{color:var(--heads)} .st.action{color:var(--action)}
+.img{align-self:flex-start;max-width:78%;width:280px;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.08);margin-top:3px}
+.img.me{align-self:flex-end}
+.img .pic{height:150px;background:
+  radial-gradient(circle at 60% 55%,rgba(229,72,77,.9) 0 6%,rgba(245,184,0,.85) 9%,rgba(34,197,94,.8) 15%,transparent 22%),
+  radial-gradient(circle at 35% 40%,rgba(34,197,94,.55) 0 10%,transparent 16%),
+  linear-gradient(180deg,#3B4C7A,#1C2C5A);position:relative}
+.img .pic::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 22px,rgba(255,255,255,.07) 22px 23px),repeating-linear-gradient(90deg,transparent 0 22px,rgba(255,255,255,.07) 22px 23px)}
+.img .pic.photo{background:linear-gradient(180deg,#7A8BB0 0%,#3B4C7A 45%,#2A2F3F 70%,#1A1C26 100%)}
+.img .cap{font-size:12.5px;color:var(--muted);padding:6px 10px;background:var(--bubble);display:flex;justify-content:space-between;gap:8px}
+.img .cap b{color:var(--fg);font-weight:600}
+.rc{align-self:flex-start;max-width:78%;width:300px;border-radius:16px;overflow:hidden;background:var(--bubble);padding:10px 12px;display:grid;gap:7px;margin-top:3px}
+.rc .t{display:flex;justify-content:space-between;align-items:baseline}
+.rc .t b{font-family:var(--display);font-weight:800;font-size:19px;letter-spacing:.01em}
+.rc .t span{font-size:12px;color:var(--muted)}
+.rc .bar{position:relative;height:24px}
+.rc .base{position:absolute;left:0;right:0;top:10px;height:4px;border-radius:2px;background:var(--line)}
+.rc .iq{position:absolute;top:7px;height:10px;border-radius:5px;background:var(--blue)}
+.rc .md{position:absolute;top:2px;width:3px;height:20px;background:#fff;border-radius:2px}
+.rc .th{position:absolute;top:0;width:2px;height:24px;background:var(--action)}
+.rc .lab{display:flex;justify-content:space-between;font-size:11px;color:var(--dim)}
+.rc .lab b{color:var(--fg)}
+.rc p{margin:0;font-size:14px;line-height:1.35}
+.rc p b{color:var(--heads)}
+.rc small{font-size:10.5px;color:var(--dim)}
+.ack{align-self:flex-start;margin:6px 0 2px 2px;display:flex;align-items:center;gap:8px}
+.ack button{font-size:15.5px;font-weight:700;border:2px solid var(--blue);color:var(--blue);border-radius:999px;padding:9px 24px;min-height:42px}
+.ack button.done{border-color:var(--clear-line);color:var(--clear);background:var(--clear-bg)}
+.ack small{font-size:12px;color:var(--dim)}
+.msgs>*{flex-shrink:0}
+.pin b .rn{font-family:var(--body);font-weight:500;font-size:12.5px;color:var(--muted);letter-spacing:0}
+.pin .nx{display:block;margin-top:4px;font-size:13.5px;font-weight:600;color:var(--fg);line-height:1.3}
+.pin .nx i{font-style:normal;font-family:"Barlow Condensed",sans-serif;font-weight:800;letter-spacing:.1em;font-size:11px;padding:1px 6px;border-radius:4px;margin-right:7px;vertical-align:1px}
+.pin .nx.headsup i{background:rgba(245,184,0,.18);color:var(--heads)} .pin .nx.action i{background:rgba(229,72,77,.2);color:#FF8A8E} .pin .nx.clear i{background:rgba(34,197,94,.16);color:var(--clear)}
+.pin .nx small{display:block;color:var(--muted);font-weight:400;font-size:12.5px;margin-top:1px}
+/* v134: fits any width (desktop pop-up panel included) */
+.hd{grid-template-columns:44px minmax(0,1fr) 44px}
+.hd .who{min-width:0}
+.who b{white-space:normal!important;text-align:center;line-height:1.3}
+html,body{overflow-x:hidden}
+.pin{min-width:0}
+.img.zoomable{cursor:zoom-in}
+.img .cap .zm{color:var(--blue);font-weight:600}
+#lb{position:fixed;inset:0;z-index:999;background:#050A16;display:flex;flex-direction:column}
+#lb[hidden]{display:none!important}
+#lb .lbh{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:calc(10px + env(safe-area-inset-top,0px)) 14px 10px;color:#F4F7FB;font-size:14px;font-weight:600}
+#lb .lbh button{font-family:"Barlow Condensed",sans-serif;font-weight:800;letter-spacing:.1em;font-size:14px;color:#fff;border:1.5px solid rgba(255,255,255,.35);border-radius:999px;padding:7px 16px;background:rgba(255,255,255,.06)}
+#lb .lbs{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;display:flex;align-items:center}
+#lb .lbs>div{margin:auto;line-height:0}
+#lb .lbs svg{display:block;width:100%;height:auto}
+#lb .lbf{text-align:center;color:#A9B6CC;font-size:12px;padding:8px 0 calc(12px + env(safe-area-inset-bottom,0px))}
+.typing{align-self:flex-start;background:var(--bubble);border-radius:19px;border-bottom-left-radius:5px;padding:10px 14px;display:flex;gap:4px;margin-top:10px}
+.typing i{width:7px;height:7px;border-radius:50%;background:var(--muted);opacity:.5;animation:dot 1.2s infinite}
+.typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
+@keyframes dot{50%{opacity:1;transform:translateY(-2px)}}
+
+/* bottom: suggestions + compose */
+.bottom{display:grid;gap:8px;padding:8px 10px calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid rgba(255,255,255,.08);background:var(--bg)}
+.quick{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.quick::-webkit-scrollbar{display:none}
+.quick button{flex:none;font-size:14px;font-weight:500;border:1px solid var(--line);border-radius:999px;padding:6px 13px;color:var(--fg);background:var(--panel)}
+.quick button.brief{color:var(--accent);border-color:rgba(242,140,40,.6)}
+.compose{display:flex;gap:8px;align-items:center}
+.compose .plus{width:34px;height:34px;border-radius:50%;background:var(--panel2);display:grid;place-items:center;flex:none;font-size:22px;color:var(--muted);line-height:1}
+.compose .field{flex:1;display:flex;align-items:flex-end;border:1px solid var(--line);border-radius:20px;padding:4px 4px 4px 14px;min-width:0;background:var(--panel)}
+.compose textarea{flex:1;min-width:0;background:none;color:var(--fg);border:0;outline:0;font:inherit;font-size:17px;line-height:1.3;padding:5px 0;resize:none;height:32px;max-height:140px;overflow-y:auto;display:block}
+.compose textarea::placeholder{color:var(--dim)}
+.compose .go{margin-bottom:1px;width:30px;height:30px;border-radius:50%;background:var(--blue);color:#fff;display:grid;place-items:center;flex:none}
+.compose .go svg{width:14px;height:14px}
+[hidden]{display:none!important}
+.demo{position:fixed;bottom:calc(92px + env(safe-area-inset-bottom,0px));right:max(10px,env(safe-area-inset-right,0px));z-index:5;display:flex;gap:5px;opacity:.85}
+.demo button,.demo span{font-family:var(--display);font-weight:700;font-size:10px;letter-spacing:.1em;border:1px solid var(--line);border-radius:4px;padding:2px 6px;color:var(--muted);background:var(--bg)}
+.demo button.on{color:var(--fg);border-color:var(--accent)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.smp{font-size:11px;color:#6F7F9E;margin:-4px 0 8px 12px;letter-spacing:.02em}
+.img .svgpic{background:#0E1A33;line-height:0}.img .svgpic svg{width:100%;height:auto;display:block}
+.who b{white-space:nowrap}.who .lv{display:inline-flex;align-items:center;gap:5px;font-family:"Barlow Condensed",sans-serif;font-weight:800;font-size:11px;letter-spacing:.14em;color:#FF6B6F;margin-right:6px;vertical-align:1px}.who .lv i{width:7px;height:7px;border-radius:50%;background:#FF4D4D;animation:lvp 1.6s ease-in-out infinite}@keyframes lvp{0%,100%{opacity:1}50%{opacity:.35}}
+.pin.clear{background:var(--clear-bg);border-color:var(--clear-line)}.pin.clear .dot{background:var(--clear);box-shadow:0 0 0 4px rgba(34,197,94,.18)}.pin.clear .go{color:var(--clear)}
+.pin.action{background:var(--action-bg);border-color:var(--action-line)}.pin.action .dot{background:var(--action);box-shadow:0 0 0 4px rgba(229,72,77,.22)}.pin.action .go{color:#FF8A8E}
+.pin b .cw{font-family:"Barlow Condensed",sans-serif;font-weight:800;letter-spacing:.08em;margin-right:6px}.pin b .cw.clear{color:var(--clear)}.pin b .cw.headsup{color:var(--heads)}.pin b .cw.action{color:#FF8A8E}
+.pin{cursor:pointer}.pin[hidden]{display:none}
+</style>
+
+<div class="app">
+  <header class="hd">
+    <button class="back" aria-label="Back to dashboard"><svg width="12" height="20" viewBox="0 0 12 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2 2 10l8 8"/></svg></button>
+    <div class="who"><span class="logo"><img id="logo" alt="SDR Weather Intelligence"></span><b><span class="lv"><i></i>LIVE CHAT</span> Meteorologist team</b><small id="promise">Usually replies within 15 min</small></div>
+    <button class="more" aria-label="More">⋯</button>
+  </header>
+  <div class="pin" id="pin" hidden><span class="dot"></span><div><b id="pin-h"></b><small id="pin-s"></small><span class="nx" id="pin-n" hidden></span></div><span class="go">Dashboard ›</span></div>
+  <div class="msgs" id="msgs"></div>
+  <div class="bottom">
+    <div class="quick" id="quick"></div>
+    <form class="compose" id="compose"><button type="button" class="plus" id="cam" aria-label="Send a photo">+</button><div class="field"><textarea id="ci" placeholder="Message" autocomplete="off" rows="1" enterkeyhint="send"></textarea><button type="submit" class="go" aria-label="Send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V4M5 11l7-7 7 7"/></svg></button></div></form>
+  </div>
+</div>
+<div class="demo" hidden><span>SAMPLE</span><button class="on" id="d-day">DAY</button><button id="d-night">AFTER HRS</button><button id="d-reset">RESET</button></div>
+
+<script>
+// ===================== SAMPLE METEOROLOGIST (Emma) =====================
+// Reads the live dashboard this widget sits inside (same site, so window.parent is ours) and writes a reply the way the team would:
+// conversational, short, decision language, model agreement in words, never "confidence". Every reply carries a small "sample" note.
+// Attachments follow what was ASKED FOR (a table of totals, the hourly strip, the severe map, the radar), not just the weather.
+var SDR_ENGINE=(function(){
+  var P=null; try{ P=window.parent&&window.parent!==window?window.parent:null; }catch(e){ P=null; }
+  function g(fn,dflt){ try{ var v=fn(); return v==null?dflt:v; }catch(e){ return dflt; } }
+  var DAYN=["sunday","monday","tuesday","wednesday","thursday","friday","saturday"];
+  var FONT='font-family="Barlow Condensed,Arial Narrow,sans-serif"';
+  function siteName(){ return g(function(){ return P.DASH.venue().name; },"your site"); }
+  function AT(){ var n=siteName(); return (/county|city|parish|,\s*[A-Z]{2}$|^your site$/i.test(n)?"in ":"at ")+n; }
+  function days(){ return g(function(){ return P.STRIPS.days(); },[]); }
+  function hours(){ return g(function(){ return P.STRIPS.hours(); },[]); }
+  function conf(d){ var C=g(function(){ return P.SDR_CONF; },[]); var ymd=d&&d.date?new Date(d.date).toLocaleDateString("en-CA"):""; var r=C.find(function(c){ return String(c.date).slice(0,10)===ymd; }); return r?r.conf:(d&&d.conf!=null?d.conf:null); }
+  function agree(c){ if(c==null) return ""; return pick(c>=4?["the models are in good agreement","the models mostly line up on this","the guidance is pretty consistent here"]:c===3?["the models are in fair agreement","most of the guidance agrees, not all of it","decent agreement, not unanimous"]:["the models are split on this one","the guidance is all over the place on this","the models don't agree yet"]); }
+  function alerts(){ return g(function(){ return (P.ALERTS||[]).map(function(a){ return a.properties||a; }); },[]); }
+  function radar(){ return g(function(){ return P.RADAR_NEAR; },null); }
+  function callNow(){ return g(function(){ var c=P.document.getElementById("call"); return c.classList.contains("action")?"action":c.classList.contains("headsup")?"headsup":"clear"; },"clear"); }
+  function whyNow(){ return g(function(){ return P.document.getElementById("st-why").textContent.trim(); },""); }
+  function hlab(h){ h=((h%24)+24)%24; return h===0?"midnight":h===12?"noon":(h%12)+(h<12?" AM":" PM"); }
+  function hrOf(t){ return new Date(t).getHours(); }
+  function inch(v){ return v==null?null:(v<1?"a trace":(v/100).toFixed(2)+'"'); }
+  function win(a,b){ if(a==null) return ""; return b!=null&&b!==a?hlab(a)+" to "+hlab(b):"around "+hlab(a); }
+  var used={}; function pick(arr,key){ key=key||arr[0]; var p=arr.filter(function(x){ return x!==used[key]; }); var v=p[Math.floor(Math.random()*p.length)]; used[key]=v; return v; }
+  function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+  function dname(d,idx){ if(idx===0) return "today"; if(idx===1) return "tomorrow"; return d.long||new Date(d.date).toLocaleDateString("en-US",{weekday:"long"}); }
+
+  // which day(s) is the question about?
+  function when(q){ q=q.toLowerCase(); var D=days(); if(!D.length) return {idx:0,day:null}; var today=new Date(); today.setHours(0,0,0,0);
+    if(/\bthis week\b|\bthe week\b|\bweek\b|\bnext few days\b|\b(7|seven|10|ten)[- ]day/.test(q)) return {week:true};
+    if(/\bweekend\b/.test(q)){ var si=D.findIndex(function(x){ return new Date(x.date).getDay()===6; }); return {idx:si<0?0:si,day:D[si<0?0:si],label:"Saturday",pair:si>=0&&D[si+1]?[si,si+1]:null}; }
+    if(/\btonight\b/.test(q)) return {idx:0,day:D[0],label:"tonight"};
+    if(/\bthis (morning|afternoon|evening)\b|\blater today\b/.test(q)) return {idx:0,day:D[0],label:"today"};
+    if(/\btomorrow\b/.test(q)) return {idx:1,day:D[1]||D[0],label:"tomorrow"};
+    var DRX=["sun(day)?","mon(day)?","tue(s|sday)?","wed(nesday)?","thu(r|rs|rsday)?","fri(day)?","sat(urday)?"]; for(var i=0;i<7;i++){ if(new RegExp("\\b"+DRX[i]+"\\b").test(q)){ var d=new Date(today); var diff=(i-today.getDay()+7)%7; if(diff===0&&/\bnext\b/.test(q)) diff=7; d.setDate(d.getDate()+diff); var idx=D.findIndex(function(x){ return new Date(x.date).toDateString()===d.toDateString(); }); if(idx<0) idx=0; return {idx:idx,day:D[idx],label:cap(DAYN[i])}; } }
+    return {idx:0,day:D[0],label:null,now:/\bnow\b|\bright now\b|\bcurrently\b|\bradar\b|\btoday\b/.test(q)};
+  }
+  function topic(q){ q=q.toLowerCase();
+    if(/cool ?down|cool-down|cooler|cooling|warm ?up|warm-up|warmer|warming|cold snap|cold front|colder|pattern|next week|week ahead|long[- ]range|extended|10[- ]day|ten[- ]day|two weeks|2 weeks|trend|6[- ]to[- ]10|8[- ]to[- ]14|10[- ]to[- ]14/.test(q)&&!/thunder|storm|severe|tornado|lightning/.test(q)) return "trend";
+    if(/lightning|strike/.test(q)) return "lightning";
+    if(/severe|tornado|hail|outlook/.test(q)) return "severe";
+    if(/thunder|storm/.test(q)) return "storms";
+    if(/hourly|hour by hour|by hour|hour-by-hour|timeline/.test(q)) return "hourly";
+    if(/total|amount|how much|inch|accum/.test(q)&&/rain|precip|wet/.test(q)) return "totals";
+    if(/rain|shower|wet|precip|umbrella|concrete|paint|spray|mow|pour|tarp|cover|cancel|postpone|outside|outdoor/.test(q)) return "rain";
+    if(/wind|gust|breez|blow/.test(q)) return "wind";
+    if(/freez|frost|how cold|low temp|\bcold\b|\bice\b/.test(q)) return "cold";
+    if(/\bhot\b|heat|humid|wbgt|how warm|high temp|temperature|\btemps?\b|\bhigh\b(?! end)|\bhighs\b/.test(q)) return "temp";
+    if(/snow|flurr|sleet|winter/.test(q)) return "snow";
+    if(/radar|right now|currently|\bnow\b/.test(q)) return "now";
+    return "general";
+  }
+  function dayHours(d){ if(!d) return []; var day=new Date(d.date).toDateString(); return hours().filter(function(h){ return new Date(h.t).toDateString()===day; }); }
+  function window_(H,f,thr){ var ks=H.filter(function(h){ return (h[f]||0)>=thr; }).map(function(h){ return hrOf(h.t); }); if(!ks.length) return null; return {a:Math.min.apply(null,ks),b:Math.max.apply(null,ks)+1,peak:Math.max.apply(null,H.map(function(h){ return h[f]||0; }))}; }
+  function outlookLevel(idx){ try{ var cards=[].slice.call(P.document.querySelectorAll("#mrPrev .mcard")); var c=cards.find(function(x){ return (x.dataset.id||"")==="spc"+(idx+1); }); if(!c) return null; var m=(c.textContent||"").match(/Level\s*(\d)\s*of\s*5/i); return m?+m[1]:(/flag|prio/.test(c.className)?2:null); }catch(e){ return null; } }
+
+  // ---------- voice ----------
+  // Each meteorologist has a slightly different way of talking. The facts are the same; the words aren't.
+  var VOICE={
+    Emma:   {open:["Okay, here's what I've got.","Looked at it for you.","Here's the read.","Here's the picture.","Good question."], tail:["Let me know if that covers it.","Happy to dig deeper on any of that.","Hope that helps.","Want the hour-by-hour on that?"], warm:true},
+    Matthew:{open:["Here's where it stands.","Short version:","Bottom line:","Where it stands:"], tail:["Anything else?","That should do it.","Reach out if it changes.","Let me know."], warm:false},
+    Lily:   {open:["Here's what I'm seeing.","Took a look —","Here's where it stands for you.","Good news and a caveat:"], tail:["Does that help?","Let me know if you want me to keep an eye on it.","I'll flag it if anything shifts.","I hope that's what you needed."], warm:true},
+    Miller: {open:["Here's my read.","Here you go.","Looked it over.","Quick answer:"], tail:["That's my read.","We'll watch it.","Reach out if you need anything else.","We'll keep an eye on it."], warm:false},
+    Anne:   {open:["Here's my take.","Pulled it up —","For your site:","Let me walk you through it."], tail:["Let me know if that answers it.","I can send the hourly if that'd help.","We'll keep watching it for you.","Anything else on your list?"], warm:true}
+  };
+  var MET="Emma"; function setMet(n){ if(VOICE[n]) MET=n; } function V(){ return VOICE[MET]||VOICE.Emma; }
+  function maybe(p){ return Math.random()<p; }
+  function one(arr,key){ return pick(arr,key||arr.join("|").slice(0,30)); }
+  function fmtAmt(d){ return d.rr&&d.rr[1]!=null?one(["most likely "+inch(d.rr[1])+", middle half of the models "+inch(d.rr[0])+" to "+inch(d.rr[2]),"I'd plan on about "+inch(d.rr[1])+" — the models mostly land between "+inch(d.rr[0])+" and "+inch(d.rr[2]),"call it "+inch(d.rr[1])+", could be as little as "+inch(d.rr[0])+" or up near "+inch(d.rr[2])],"amt"):""; }
+  function agreeTail(c){ if(c==null) return ""; if(c>=4) return one([" "+cap(agree(c))+".",""," Good agreement on that.",""],"agt4"); if(c===3) return one([" "+cap(agree(c))+"."," Decent agreement, not perfect."," I'd call it fairly solid."],"agt3"); return one([" Fair warning — "+agree(c)+", so this could move."," Honestly the models are split, so check back with us."," I'd hold this loosely; the guidance isn't settled yet."],"agt2"); }
+
+  function nowLine(){ var site=siteName(), A=alerts(), R=radar(), call=callNow();
+    var warn=A.find(function(a){ return /Warning/.test(a.event||""); }), watch=A.find(function(a){ return /Watch/.test(a.event||""); }); var parts=[];
+    // the RIGHT NOW call decides whether a warning is ours; anything else in the list is "nearby"
+    if(call==="action") parts.push((whyNow()||((warn&&warn.event)||"A warning")+" covers "+site+".").replace(/\.$/,"")+". Get people under cover now — I'll stay on this thread with you.");
+    else if(call==="headsup") parts.push(one(["We're at HEADS UP for "+site+" — "+whyNow().replace(/\.$/,"")+".","Heads up status right now: "+whyNow().replace(/\.$/,"")+"."],"hu"));
+    else if(warn){ var ar0=String(warn.areaDesc||"").split(";")[0].trim(); parts.push("You're clear "+AT()+", but there's a "+warn.event+" nearby"+(ar0?" for "+ar0:"")+" — I'm watching it."); warn=null; }
+    else parts.push(one(["All quiet "+AT()+" right now.","Nothing going on "+AT()+" at the moment.","You're clear "+AT()+".","Quiet out your way right now."],"nowopen")+(curWx()?" It's "+curWx():"")+(R&&!R.none&&!R.light?" "+cap(R.kind)+" is "+Math.round(R.d)+" miles to your "+R.dir+" — I'm watching it.":R&&!R.none&&R.light?" A few light returns "+Math.round(R.d)+" miles "+R.dir+", nothing reaching the ground.":one([" Radar's quiet out to 45 miles."," Nothing on radar within 45 miles."," Radar's empty around you."],"rq")));
+    if(call!=="action"&&warn){ var ar=String(warn.areaDesc||"").split(";")[0].trim(); parts.push("There's a "+warn.event+" nearby"+(ar?" for "+ar:"")+" — not for you, but I'm watching it."); }
+    else if(call==="headsup"&&watch&&!warn) parts.push("I'll flag it the moment anything develops.");
+    return parts.join(" "); }
+
+  function weekLine(t){ var site=siteName(), D=days().slice(0,7); if(!D.length) return "Give me a second, the week's still loading on my end.";
+    var wet=D.filter(function(d){ return Math.max(d.pp||0,d.ppN||0)>=40; }), st=D.filter(function(d){ return (d.thunder||0)>=30; }), gusty=D.filter(function(d){ return (d.gust||0)>=30; });
+    var tot=D.reduce(function(a,d){ return a+(d.rr&&d.rr[1]?d.rr[1]:0); },0), hi=D.reduce(function(a,d){ return a+(d.rr&&d.rr[2]?d.rr[2]:0); },0); var s="";
+    if(t==="totals"||t==="rain"){ if(!wet.length) s=one(["Not much to measure this week "+AT()+".","Dry stretch — totals are close to nothing.","Honestly, you won't need the rain gauge this week."],"wk1"); else s=one(["Here's the week in rain:","Rain by day:","Day by day it looks like this:"],"wk2")+" "+wet.map(function(d){ return (d.long||d.d)+(d.rr&&d.rr[1]!=null?" about "+inch(d.rr[1]):" "+Math.max(d.pp||0,d.ppN||0)+"% chance"); }).join(", ")+". "+(tot?one(["Add it up and you're around "+inch(tot)+" for the week.","Week total most likely "+inch(tot)+(function(){ var w=wet.slice().sort(function(a,b){ return ((b.rr&&b.rr[2])||0)-((a.rr&&a.rr[2])||0); })[0]; return w&&w.rr&&w.rr[2]>tot?", and the wetter models put "+(w.long||w.d)+" alone closer to "+inch(w.rr[2]):""; })()+"."],"wkt"):""); if(st.length) s+=" "+cap(st.map(function(d){ return d.long||d.d; }).join(" and "))+" carr"+(st.length>1?"y":"ies")+" a storm chance too."; }
+    else if(t==="wind"){ s=gusty.length?"Windiest days are "+gusty.map(function(d){ return (d.long||d.d)+" (gusts to "+d.gust+")"; }).join(", ")+". The rest stays under 30.":one(["No real wind days this week — gusts stay under 30 the whole stretch.","Nothing windy on the board. Under 30 all week."],"wkw"); }
+    else if(t==="temp"||t==="cold"){ var his=D.map(function(d){ return d.hi; }).filter(Boolean), los=D.map(function(d){ return d.lo; }).filter(function(x){ return x!=null; }); s="Highs run "+Math.min.apply(null,his)+" to "+Math.max.apply(null,his)+" this week, lows "+Math.min.apply(null,los)+" to "+Math.max.apply(null,los)+"."; var fr=D.filter(function(d){ return d.lo!=null&&d.lo<=36; }); if(fr.length) s+=" Frost worth watching "+fr.map(function(d){ return d.long||d.d; }).join(" and ")+"."; }
+    else { s=wet.length?one(["The days to plan around are ","I'd circle ","Watch "],"wk3")+wet.map(function(d){ return (d.long||d.d)+" ("+Math.max(d.pp||0,d.ppN||0)+"%"+((d.thunder||0)>=30?", storms":"")+")"; }).join(" and ")+". "+one(["Everything else looks workable.","The rest is fine.","Rest of the week's open."],"wk4"):one(["Quiet week "+AT()+".","Nothing to plan around this week."],"wk5")+" Highs "+Math.min.apply(null,D.map(function(d){ return d.hi; }).filter(Boolean))+" to "+Math.max.apply(null,D.map(function(d){ return d.hi; }).filter(Boolean))+"."; if(gusty.length) s+=" Gusty "+gusty.map(function(d){ return d.long||d.d; }).join(", ")+" — "+Math.max.apply(null,gusty.map(function(d){ return d.gust; }))+" mph at the top."; }
+    return s; }
+
+  function dayLine(t,W){ var site=siteName(), d=W.day, idx=W.idx, H=dayHours(d), nm=W.label||dname(d,idx), c=conf(d);
+    var pp=Math.max(d.pp||0,d.ppN||0), th=d.thunder||0, rw=window_(H,"pop",30), tw=window_(H,"thunder",20), lvl=outlookLevel(idx), s="";
+    if(t==="severe"||((t==="storms"||t==="general")&&lvl&&lvl>=2)){
+      if(lvl&&lvl>=2) s=one(["There's a level "+lvl+" of 5 severe risk over "+site+" "+nm,"We've got "+site+" in a level "+lvl+" of 5 severe risk "+nm,cap(nm)+" carries a level "+lvl+" of 5 severe risk for "+site],"sv1")+(tw?one([" — the window I'm watching is "+win(tw.a,tw.b),", mainly "+win(tw.a,tw.b),"; timing looks like "+win(tw.a,tw.b)],"sv2"):"")+". "+one(["That's heads-up territory: keep your plan, know where people go if it turns, and we'll call it the second anything is warned.","Not a cancel — a watch-it. Keep the plan, have the shelter spot in mind, and I'll be on it if a warning goes up.","I wouldn't change plans yet. Know your shelter, and we'll flag it the moment it's warned."],"sv3")+(pp<20&&th<20?" The hour-by-hour is still mostly dry, for what it's worth.":"");
+      else s=one(["No severe risk on the board for "+nm+" "+AT()+".","Nothing severe flagged "+nm+".","You're not in a severe risk area "+nm+"."],"sev")+(th>=20?" A regular thunder chance, yes"+(tw?", mostly "+win(tw.a,tw.b):"")+", but nothing organized.":" "+(pp>=40?"Some plain rain around, though.":one(["Quiet day.","Looks quiet.","Nothing much going on."],"qd")));
+      return s+agreeTail(c); }
+    if(t==="rain"||t==="totals"||t==="storms"||t==="general"||t==="hourly"){
+      if(pp<20&&th<20){ s=one(["Dry "+nm+" "+AT()+".",cap(nm)+" looks dry.","You're good "+nm+" — dry "+AT()+".","No rain "+nm+"."],"dry")+" High near "+d.hi+"°"+(d.lo!=null?", low "+d.lo+"°":"")+(d.gust>=25?", gusts to "+d.gust+" mph":"")+"."+(t==="general"?" "+one(["Good day to get things done outside.","Go ahead and plan on it.","Nothing to work around.","Honestly a nice one."],"dry2"):"");
+        var nx=nextWet(idx+1); if(nx){ var npp=Math.max(nx.day.pp||0,nx.day.ppN||0); s+=" "+one(["Next rain chance is "+nx.label,"The next wet day is "+nx.label,"Rain doesn't show up until "+nx.label],"nxw")+" ("+npp+"%"+(nx.day.rr&&nx.day.rr[1]>=5?", around "+inch(nx.day.rr[1]):"")+((nx.day.thunder||0)>=30?", with storms":"")+")."; } else s+=" "+one(["Dry the rest of the 10 days, too.","Nothing wet in the 10-day at all."],"nxd"); if(c!=null&&c<=2) s+=" "+one(["The models are a little split that far out, so I'd check back the night before.","Fair warning that guidance isn't locked in yet."],"dryc"); }
+      else { var lead= th>=30?(pp>=60?one(["Storms are likely","Expect storms","Storms look likely"],"l1"):one(["There's a storm chance","Some storms possible","Storm chance in play"],"l2")): pp>=60?one(["Rain is likely","Expect rain","Plan on rain"],"l3"): pp>=40?one(["Decent rain chance","Fair chance of rain","Rain's possible"],"l4"):one(["Slight rain chance","Small chance of rain","Low rain chance"],"l5");
+        s=(rw&&/when|what time|start|timing/i.test(LASTQ)?one(["Timing first: ","When: "],"tm")+win(rw.a,rw.b)+" "+nm+". "+lead+". ":lead+" "+nm+(rw?", "+win(rw.a,rw.b):"")+". "); var am=fmtAmt(d); if(am) s+=cap(am)+". ";
+        if(th>=20) s+=(tw?one(["Thunder window "+win(tw.a,tw.b),"Lightning risk mostly "+win(tw.a,tw.b),"If there's thunder it's "+win(tw.a,tw.b)],"tw")+(tw.peak>=40?" — that's the stretch to plan around.":"."):"Some thunder possible with it.")+" ";
+        s+=agreeTail(c).trim(); }
+      return s.trim(); }
+    if(t==="wind"){ var gw=window_(H,"gust",25); return (d.wind?"Wind "+d.wind+" mph":"Light wind")+(d.gust?", gusts to "+d.gust+" mph":"")+" "+nm+"."+(gw?" Windiest "+win(gw.a,gw.b)+".":"")+(d.gust>=35?" Enough to hold lifts and loose material.":d.gust>=25?one([" Fine for most work; spraying is marginal."," Workable, but I'd skip spraying."],"wd"):one([" Nothing that gets in the way."," Non-issue."],"wd2")); }
+    if(t==="cold"){ return (d.lo!=null?"Low "+(idx===0?"tonight":nm+" night")+" around "+d.lo+"°":"No low available yet")+". "+(d.lo!=null&&d.lo<=28?"That's a hard freeze — protect anything tender and drain lines.":d.lo!=null&&d.lo<=32?"Freeze likely; cover what you can.":d.lo!=null&&d.lo<=36?"Frost is possible in the low spots.":one(["No frost concern.","You're fine on frost.","Nowhere near frost."],"fr"))+agreeTail(c); }
+    if(t==="temp"){ var fl=null; try{ var F=H.filter(function(h){ return h.feel!=null&&hrOf(h.t)>=10&&hrOf(h.t)<=18; }); if(F.length) fl=Math.max.apply(null,F.map(function(h){ return h.feel; })); }catch(e){} return "High near "+d.hi+"° "+nm+(fl!=null&&fl-d.hi>=3?", feels like "+fl+"° at the peak":"")+(d.lo!=null?", low "+d.lo+"°":"")+". "+(d.hi>=95?"Heat's the issue — shift heavy work early and push water.":d.hi>=88?"Warm enough to matter for crews by early afternoon.":d.hi<=45?"Cold one. Layer up.":one(["Comfortable for outdoor work.","Nice working weather.","Easy day temperature-wise."],"tp")); }
+    if(t==="snow"){ return (d.snowP>=30?"Snow chance "+d.snowP+"% "+nm+(d.sr&&d.sr[1]?" — most likely about "+(d.sr[1]/10).toFixed(1)+'"':"")+".":"No snow in the picture for "+nm+".")+agreeTail(c); }
+    return dayLine("general",W); }
+
+
+  // ---------- thunder: read the hour-by-hour like a forecaster would ----------
+  function dlab(i){ var d=days()[i]; return i===0?"today":i===1?"tomorrow":(d&&(d.long||d.d))||""; }
+  function runs(H,f,thr){ var out=[],cur=null; H.forEach(function(h){ if((h[f]||0)>=thr){ if(!cur){ cur={a:hrOf(h.t),b:hrOf(h.t)+1,peak:0,ph:hrOf(h.t)}; out.push(cur); } cur.b=hrOf(h.t)+(h.step?3:1); if((h[f]||0)>cur.peak){ cur.peak=h[f]; cur.ph=hrOf(h.t); } } else cur=null; }); out.forEach(function(r){ if(r.b>24) r.b=24; }); return out; }
+  function thunderDay(i){ var D=days(), d=D[i]; if(!d) return null; var H=dayHours(d), R=runs(H,"thunder",20); if(R.length){ R.sort(function(a,b){ return b.peak-a.peak; }); return {idx:i,label:dlab(i),main:R[0],more:R[1]||null,peak:R[0].peak,c:conf(d)}; } if((d.thunder||0)>=20) return {idx:i,label:dlab(i),main:null,peak:d.thunder,c:conf(d)}; return null; }
+  function thunderAhead(from,n){ var out=[]; for(var i=from||0;i<Math.min(days().length,8)&&out.length<(n||3);i++){ var t=thunderDay(i); if(t) out.push(t); } return out; }
+  function tWin(t){ return t.main?win(t.main.a,t.main.b):""; }
+  function thunderLine(focusIdx,named){ var L=thunderAhead(0,4); var lastLab=dlab(Math.min(days().length,8)-1);
+    if(!L.length) return one(["No thunder anywhere in the forecast through "+lastLab+".","I don't see any thunder through "+lastLab+" — rain chances, maybe, but no lightning risk."],"tn0");
+    var F=named!=null?thunderDay(named):null, s="";
+    if(named!=null&&!F){ var d=days()[named]; var pp=d?Math.max(d.pp||0,d.ppN||0):0; s=cap(dlab(named))+(pp>=40?" is mostly a rain day — thunder stays under 20% "+AT()+".":" doesn't carry a thunder chance.")+" ";
+      var other=L.filter(function(x){ return x.idx!==named; })[0]; if(other) s+=one(["The thunder day is ","Where I do see thunder is ","The lightning risk is "],"tn1")+other.label+(tWin(other)?", "+tWin(other):"")+" — up to "+other.peak+"%."; return s; }
+    var A=F||L[0];
+    s=(F?cap(A.label)+one(["'s thunder window is ","'s lightning risk is mostly ","'s thunder chance runs "],"tn2"):one(["Thunder's most likely ","The best lightning chance is ","If we get thunder, it's "],"tn3")+A.label+", ")+(tWin(A)||"during the day")+(A.main&&A.main.peak?", peaking around "+A.main.peak+"% near "+hlab(A.main.ph):"")+".";
+    if(A.more) s+=" There's a second, smaller window "+win(A.more.a,A.more.b)+".";
+    var B=L.filter(function(x){ return x.idx!==A.idx; })[0]; if(B) s+=" "+cap(B.label)+(B.peak>A.peak?" is actually the higher one":" has a lower chance")+(tWin(B)?", mainly "+tWin(B):"")+" ("+B.peak+"%).";
+    s+=" "+(A.peak>=40?one(["That's the stretch I'd plan outdoor work around. Once thunder is heard, get people inside.","I'd build the day around that window — when thunder roars, go indoors."],"tn4"):one(["It's a low-end chance, but if you hear thunder, that's the signal to clear people out.","Not a washout, just a thunder risk to keep in mind."],"tn5"));
+    return (s+agreeTail(A.c)).replace(/\s+/g," ").trim(); }
+  // the hour-by-hour story of a wet day: when it starts, when it peaks, when it ends
+  function story(W){ var d=W.day; if(!d) return ""; var H=dayHours(d); if(H.length<4) return ""; var nm=W.label||dname(d,W.idx);
+    var R=runs(H,"pop",30); if(!R.length) return ""; var a=R[0].a, b=R[R.length-1].b; var pk=0,ph=null; H.forEach(function(h){ if((h.pop||0)>pk){ pk=h.pop; ph=hrOf(h.t); } });
+    var hv=runs(H,"pop",Math.max(55,pk-10)); var s=one(["Here's how "+nm+" plays out: ","Hour by hour, "+nm+" looks like this: ","Breaking "+nm+" down: "],"st1");
+    s+="rain chances climb past 30% around "+hlab(a)+", peak near "+pk+"%"+(hv.length?" "+win(hv[0].a,hv[0].b):" around "+hlab(ph))+(b<24?", and drop back under 30% by "+hlab(b):", and stay up into the night")+".";
+    var T=runs(H,"thunder",20); if(T.length){ T.sort(function(x,y){ return y.peak-x.peak; }); s+=" Thunder risk "+win(T[0].a,T[0].b)+", topping out near "+T[0].peak+"%."; }
+    var gw=Math.max.apply(null,H.map(function(h){ return h.gust||0; })); if(gw>=25) s+=" Gusts to "+gw+" with it.";
+    return s; }
+
+  // ---------- answering the actual question, the way a forecaster would ----------
+  function rainRuns(d){ var H=dayHours(d); var R=runs(H,"pop",30); if(!R.length) return null; var pk=0,ph=null; H.forEach(function(h){ if((h.pop||0)>pk){ pk=h.pop; ph=hrOf(h.t); } }); var hv=runs(H,"pop",Math.max(55,pk-10)); return {a:R[0].a,b:R[R.length-1].b,peak:pk,ph:ph,heavy:hv[0]||null,H:H}; }
+  function amtTxt(d){ return d&&d.rr&&d.rr[1]!=null&&d.rr[1]>=1?"about "+inch(d.rr[1]):""; }
+  function startEnd(W,which){ var d=W.day, nm=W.label||dname(d,W.idx), r=rainRuns(d); if(!r) return null; var hv=r.heavy?win(r.heavy.a,r.heavy.b):"";
+    if(which==="start") return one(["Rain moves in around "+hlab(r.a)+" "+nm,"It starts around "+hlab(r.a)+" "+nm,"First rain shows up around "+hlab(r.a)+" "+nm],"se1")+(hv?", gets heaviest "+hv:"")+(r.b<24?", and tapers off by "+hlab(r.b):", and keeps going into the night")+"."+(amtTxt(d)?" "+cap(amtTxt(d))+" in all.":"");
+    var nx0=days()[W.idx+1], r20=nx0?rainRuns(nx0):null;
+    if(/how long|last/.test(LASTQ)||(r.b>=24&&r20&&r20.a<=1)){ if(r.b>=24&&r20&&r20.a<=1) return "Rain runs from about "+hlab(r.a)+" "+nm+" until about "+hlab(r20.b)+" "+dlab(W.idx+1)+(hv?"; the heaviest is "+hv+" "+nm:"")+"."+(r20.peak<50?" The "+dlab(W.idx+1)+" part is lighter, on and off.":""); return "From about "+hlab(r.a)+" to "+hlab(r.b)+" "+nm+(hv?", heaviest "+hv:"")+"."; }
+    var s=(r.b<24?one(["It winds down by "+hlab(r.b)+" "+nm,"Rain is mostly done by "+hlab(r.b)+" "+nm,"Look for it to wrap up around "+hlab(r.b)+" "+nm],"se2"):"It doesn't really end "+nm+" — it rains into the night")+(hv?"; the heaviest is "+hv:"")+".";
+    var nx=days()[W.idx+1]; if(nx){ var r2=rainRuns(nx); if(r2&&r2.a<=3) s+=" "+(r2.b<=12?one(["Then another round early "+dlab(W.idx+1),"There's leftover rain early "+dlab(W.idx+1)],"se3"):"Then more on and off "+dlab(W.idx+1))+" until about "+hlab(r2.b)+"."; }
+    return s; }
+  function partOf(q){ q=q.toLowerCase(); if(/\bmorning\b|\bam\b|sunrise/.test(q)) return [6,12,"morning"]; if(/afternoon|midday|lunch/.test(q)) return [12,18,"afternoon"]; if(/evening|after work/.test(q)) return [17,22,"evening"]; if(/overnight/.test(q)) return [0,6,"overnight"]; return null; }
+  function partLine(W,P){ var d=W.day, nm=W.label||dname(d,W.idx); var H=dayHours(d).filter(function(h){ var k=hrOf(h.t); return k>=P[0]&&k<P[1]; }); if(!H.length) return null;
+    var pops=H.map(function(h){ return h.pop||0; }), mx=Math.max.apply(null,pops), mn=Math.min.apply(null,pops), th=Math.max.apply(null,H.map(function(h){ return h.thunder||0; })); var lab=(nm==="today"||nm==="tonight")?(P[2]==="evening"?"This evening":"This "+P[2]):cap(nm)+" "+P[2];
+    if(mx<20) return one([lab+" looks dry — rain chances stay under 20% from "+hlab(P[0])+" to "+hlab(P[1])+".",lab+" is fine. Under 20% the whole stretch, "+hlab(P[0])+" to "+hlab(P[1])+"."],"pt1")+(H[0].temp!=null?" Temperatures "+Math.min.apply(null,H.map(function(h){ return h.temp; }))+"° to "+Math.max.apply(null,H.map(function(h){ return h.temp; }))+"°.":"");
+    var first=pops[0], last=pops[pops.length-1], s;
+    if(first>=40&&last<first-15){ var ok=H.find(function(h){ return (h.pop||0)<30; }); s="Not a dry "+P[2]+" — rain chances start near "+first+"%"+(ok?" and drop under 30% by "+hlab(hrOf(ok.t)):" and ease to "+last+"% by "+hlab(P[1]))+"."; }
+    else if(last>=40&&first<30){ var bad=H.find(function(h){ return (h.pop||0)>=40; }); s=lab+" starts dry, but rain chances climb"+(bad?" past 40% by "+hlab(hrOf(bad.t)):" to "+last+"%")+". Get the outdoor part done early."; }
+    else s=(mn>=60?one(["Yes, mostly. ","I'd treat it as one. ","Pretty much. "],"wo")+"Rain chances stay "+mn+"–"+mx+"% "+nm+" "+P[2]:mx>=60?"Plan on rain "+nm+" "+P[2]:"There's a "+mn+"–"+mx+"% rain chance "+nm+" "+P[2])+", "+hlab(P[0])+" to "+hlab(P[1])+".";
+    if(th>=20) s+=" Some thunder possible in that stretch ("+th+"%)."; return s; }
+  function decision(W){ var d=W.day, nm=W.label||dname(d,W.idx), pp=Math.max(d.pp||0,d.ppN||0), th=d.thunder||0, r=rainRuns(d), c=conf(d), lvl=outlookLevel(W.idx);
+    if(pp<20&&th<20) return one(["No reason to cancel "+nm+". It looks dry — high near "+d.hi+"°.","Keep it on. "+cap(nm)+" looks dry, high near "+d.hi+"°."],"dc1")+(c!=null&&c<=2?" The models aren't fully settled that far out, so we'll confirm it the day before.":"");
+    var safe=r&&r.a>=9?"Your best window is before "+hlab(r.a)+".":r&&r.b<=18?"It should be done by "+hlab(r.b)+", so a later start could work.":"";
+    var s;
+    if((lvl&&lvl>=2)||th>=40||pp>=70) s=one(["I wouldn't cancel yet, but I'd plan for it to be wet "+nm+".","Not a cancel today — but "+nm+" is a wet day, and I'd have the backup ready."],"dc2")+" "+(r?"Rain from about "+hlab(r.a)+(r.heavy?", heaviest "+win(r.heavy.a,r.heavy.b):"")+(r.b<24?", done by "+hlab(r.b):"")+".":"")+(th>=20?" Thunder is the real issue"+(thunderDay(W.idx)&&thunderDay(W.idx).main?", mainly "+tWin(thunderDay(W.idx)):"")+" — that's what would clear people out.":"")+(safe?" "+safe:"");
+    else s="I'd keep it on, with a backup. "+cap(nm)+" has a "+pp+"% rain chance"+(amtTxt(d)?", "+amtTxt(d):"")+(r?", mostly "+win(r.a,r.b):"")+"."+(safe?" "+safe:"");
+    s+=" "+(W.idx<=1?one(["If you need to make the call now, that's my read.","That's how I'd play it today."],"dc3"):c!=null&&c<=2?"The models are still split, so I'd wait to decide until "+dlab(Math.max(0,W.idx-1))+".":"I'd make the final call "+dlab(Math.max(0,W.idx-1))+" — the timing will be sharper by then.");
+    return s; }
+  function activity(W,q){ var ql=q.toLowerCase(), d=W.day, nm=W.label||dname(d,W.idx), pp=Math.max(d.pp||0,d.ppN||0), nx=days()[W.idx+1], rn=nx?rainRuns(nx):null, r=rainRuns(d);
+    if(/tarp|cover (the )?(field|infield|mound)|cover it/.test(ql)){ var nw=nextWet(0); if(!nw) return "No need to tarp — there's no rain in the 10-day."; var rr=rainRuns(nw.day); return one(["Tarp it before ","I'd have the tarp on before "],"tp1")+(rr?hlab(rr.a)+" "+nw.label:nw.label)+(rr?" — rain moves in then and runs "+(rr.b<24?"until about "+hlab(rr.b):"into the night"):"")+(amtTxt(nw.day)?", "+amtTxt(nw.day):"")+". "+(nw.idx>=2?"Nothing before that, so no rush until then.":"That's soon, so I'd get it ready now."); }
+    if(/concrete|pour|asphalt|pave/.test(ql)){ var ok=pp<30&&(d.lo==null||d.lo>=40); var s=ok?cap(nm)+" works for the pour — "+(pp?pp+"% chance, "+(amtTxt(d)||"a trace at most"):"dry")+", low near "+d.lo+"°.":pp>=30?"I'd skip "+nm+" for a pour — "+pp+"% rain chance"+(r?", mostly "+win(r.a,r.b):"")+".":"Cold for a pour "+nm+" — low near "+d.lo+"°; you'd need blankets.";
+      if(ok&&rn) s+=" The catch is "+dlab(W.idx+1)+": rain moves in around "+hlab(rn.a)+(amtTxt(nx)?", "+amtTxt(nx):"")+". Pour early, and have it covered by evening."; else if(ok) s+=" The next day stays dry too, so it gets a clean cure."; return s; }
+    if(/spray|herbicide|pesticide|fungicide/.test(ql)){ var gs=d.gust||0; return (pp<20&&gs<15?cap(nm)+" is a good spray day — dry and gusts stay under 15.":pp>=30?"Not "+nm+" — "+pp+"% rain chance"+(r?" starting around "+hlab(r.a):"")+" would wash it off.":"Wind is the problem "+nm+" — gusts to "+gs+". Early morning is your best shot.")+(rn&&rn.a<=12?" Rain early "+dlab(W.idx+1)+" too, so give it time to dry on.":""); }
+    if(/paint|stain|seal/.test(ql)) return (pp<20&&(d.lo==null||d.lo>=45)?cap(nm)+" works for painting — dry, high near "+d.hi+"°.":pp>=20?"I'd wait — "+pp+"% rain chance "+nm+".":"Cool for paint "+nm+" — low near "+d.lo+"°; start late morning.")+(rn?" Rain arrives "+dlab(W.idx+1)+" around "+hlab(rn.a)+", so it needs to be dry to the touch by then.":"");
+    if(/mow|cut grass|seed|fertiliz|plant/.test(ql)) return (pp<20?cap(nm)+" is fine for it — dry, high near "+d.hi+"°.":"I'd do it before "+nm+" — "+pp+"% rain chance"+(r?" from about "+hlab(r.a):"")+".")+(/seed|fertiliz/.test(ql)&&rn?" And a soaking "+dlab(W.idx+1)+" would actually help it.":"");
+    return null; }
+  function bestDays(){ var D=days().slice(0,7); if(!D.length) return null; var good=[],ok=[],bad=[]; D.forEach(function(d,i){ var pp=Math.max(d.pp||0,d.ppN||0), th=d.thunder||0, gs=d.gust||0; var o={i:i,d:d,pp:pp,th:th}; if(pp<20&&th<20&&gs<25&&(d.hi==null||d.hi<92)) good.push(o); else if(pp<40&&th<30&&gs<30) ok.push(o); else bad.push(o); });
+    function names(L){ var out=[],k=0; while(k<L.length){ var j=k; while(j+1<L.length&&L[j+1].i===L[j].i+1) j++; out.push(j-k>=2?dlab(L[k].i)+" through "+dlab(L[j].i):j===k?dlab(L[k].i):dlab(L[k].i)+" and "+dlab(L[j].i)); k=j+1; } return cap(out.join(", ")); }
+    var s=good.length?one(["Best days are ","Your best stretch: ","I'd pick "],"bd1")+names(good).replace(/^./,function(c){ return c.toLowerCase(); })+" — dry"+(good[0].d.hi?", highs near "+good[0].d.hi+"°":"")+".":"No perfect day this week, honestly.";
+    if(ok.length) s+=" "+names(ok)+(ok.length>1?" are":" is")+" workable too ("+ok.map(function(o){ return o.pp+"%"; }).join(", ")+", mostly light).";
+    if(bad.length) s+=" I'd avoid "+bad.map(function(o){ return dlab(o.i)+" ("+(o.th>=30?"storms":o.pp+"% rain")+(amtTxt(o.d)?", "+amtTxt(o.d).replace("about ",""):"")+")"; }).join(" and ")+".";
+    return s; }
+  function severeAhead(q){ var tor=/tornado/i.test(q), L=[0,1,2].map(function(i){ return {i:i,l:outlookLevel(i)}; }).filter(function(x){ return x.l; });
+    if(L.length){ var x=L.sort(function(a,b){ return b.l-a.l; })[0]; var td=thunderDay(x.i); return "Yes — "+dlab(x.i)+" carries a level "+x.l+" of 5 severe risk "+AT()+(td&&td.main?", mainly "+tWin(td):"")+". "+(tor?(x.l>=3?"A tornado or two can't be ruled out at that level; damaging wind is still the main concern.":"Tornadoes aren't the main concern at that level — damaging wind gusts and lightning are."):"Damaging wind gusts and lightning are the main concerns.")+" We'll call it the moment anything is warned."; }
+    var T=thunderAhead(3,1)[0]; return (tor?"No tornado threat on the board. ":"")+"No severe risk "+AT()+" for the next three days."+(T?" "+cap(T.label)+" brings storms — thunder up to "+T.peak+"%"+(tWin(T)?", mainly "+tWin(T):"")+" — but it's too far out for a severe outlook yet. If it gets flagged, you'll hear from us first.":" Nothing stormy in the 10-day either."); }
+  function coldWeek(){ var D=days().slice(0,7); var L=D.map(function(d,i){ return {i:i,lo:d.lo}; }).filter(function(x){ return x.lo!=null; }); if(!L.length) return null; var mn=L.reduce(function(a,b){ return b.lo<a.lo?b:a; });
+    var fz=L.filter(function(x){ return x.lo<=32; }), fr=L.filter(function(x){ return x.lo>32&&x.lo<=36; });
+    if(fz.length) return "Yes — "+fz.map(function(x){ return (x.i===0?"tonight":dlab(x.i)+" night")+" ("+x.lo+"°)"; }).join(" and ")+(mn.lo<=25?". That's a hard freeze; protect anything tender and drain exposed lines.":". Cover anything tender.");
+    if(fr.length) return "No hard freeze, but frost is possible "+fr.map(function(x){ return (x.i===0?"tonight":dlab(x.i)+" night")+" ("+x.lo+"°)"; }).join(" and ")+" in the low spots.";
+    return one(["No freeze or frost this week. ","Nowhere near freezing this week. "],"cw1")+"Coldest night is "+(mn.i===0?"tonight":dlab(mn.i)+" night")+" around "+mn.lo+"°."; }
+  function agreeLine(W){ var d=W.day, nm=W.label||dname(d,W.idx), c=conf(d), r=rainRuns(d); if(c==null) return null;
+    var s="Model agreement is "+c+" of 5 for "+nm+". ";
+    if(c>=4) s+=r?"The timing is solid — rain from about "+hlab(r.a)+(r.b<24?" to "+hlab(r.b):" into the night")+". The amount is the softer part"+(d.rr?": most models land between "+inch(d.rr[0])+" and "+inch(d.rr[2]):"")+".":"They line up well on a dry day.";
+    else if(c===3) s+="Fair, not unanimous. "+(r?"Most models have rain "+nm+"; they differ on timing and how much"+(d.rr?" ("+inch(d.rr[0])+" to "+inch(d.rr[2])+")":"")+".":"Most keep it dry; a couple sneak in a shower.");
+    else s+="They're split. "+(d.rr?"Amounts range from "+inch(d.rr[0])+" to "+inch(d.rr[2])+". ":"")+"I'd check back with us "+dlab(Math.max(0,W.idx-1))+".";
+    return s; }
+  function curWx(){ var H=hours(), n=Date.now(), best=null; H.forEach(function(h){ if(!best||Math.abs(h.t-n)<Math.abs(best.t-n)) best=h; }); if(!best||Math.abs(best.t-n)>2*3600e3) return ""; return best.temp+"°"+(best.feel!=null&&Math.abs(best.feel-best.temp)>=3?", feels like "+best.feel+"°":"")+(best.wind?", wind "+best.wind+" mph":"")+(best.gust>=20?", gusts to "+best.gust:"")+"."; }
+
+
+  // ---------- sun times (NOAA approximation) ----------
+  function venueLL(){ return g(function(){ var v=P.DASH.venue(); return v&&v.la!=null?{la:+v.la,lo:+v.lo}:null; },null); }
+  function sunTimes(date,la,lo){ var rad=Math.PI/180, d0=new Date(Date.UTC(date.getFullYear(),date.getMonth(),date.getDate())); var n=Math.floor((d0-Date.UTC(date.getFullYear(),0,0))/864e5);
+    var gm=2*Math.PI/365*(n-1+(12-12)/24), eq=229.18*(0.000075+0.001868*Math.cos(gm)-0.032077*Math.sin(gm)-0.014615*Math.cos(2*gm)-0.040849*Math.sin(2*gm));
+    var dec=0.006918-0.399912*Math.cos(gm)+0.070257*Math.sin(gm)-0.006758*Math.cos(2*gm)+0.000907*Math.sin(2*gm)-0.002697*Math.cos(3*gm)+0.00148*Math.sin(3*gm);
+    var ha=Math.acos(Math.cos(90.833*rad)/(Math.cos(la*rad)*Math.cos(dec))-Math.tan(la*rad)*Math.tan(dec))/rad;
+    var rise=720-4*(lo+ha)-eq, set=720-4*(lo-ha)-eq; var mk=function(m){ return new Date(d0.getTime()+m*60000); }; return {rise:mk(rise),set:mk(set)}; }
+  function tfmt(d){ return d.toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}); }
+  function sunLine(W){ var ll=venueLL(); if(!ll) return "I don't have your site's location handy for that one — one of the team will follow up.";
+    var base=W&&W.day?new Date(W.day.date):new Date(); var t=sunTimes(base,ll.la,ll.lo), nx=new Date(base); nx.setDate(nx.getDate()+1); var t2=sunTimes(nx,ll.la,ll.lo);
+    var nm=W&&W.day&&W.idx>0?(W.label||dname(W.day,W.idx)):"tonight";
+    if(/sunrise|sun rise|sun come|dawn|get light/i.test(LASTQ)){ var dn=W&&W.day?(W.idx===0?"this morning":W.idx===1?"tomorrow":(W.label||dname(W.day,W.idx))):"tomorrow", tr=W&&W.day&&W.idx>0?t.rise:(W&&W.day&&W.idx===0?t.rise:t2.rise); return "Sunrise "+dn+" is "+tfmt(tr)+" "+AT()+". "+"First light is about 25 minutes before that."; }
+    return "Sunset "+nm+" is "+tfmt(t.set)+" "+AT()+". It's mostly dark about 25 minutes after that"+(W&&W.idx>0?".":", and sunrise tomorrow is "+tfmt(t2.rise)+"."); }
+  // ---------- wind for the next 12 hours ----------
+  function wnum(h){ if(typeof h.wind==="number") return h.wind; var m=String(h.wind||"").match(/\d+/g); return m?+m[m.length-1]:null; }
+  function next12(){ var now=Date.now(); return hours().filter(function(h){ return h.t>=now-3600e3&&h.t<=now+12*3600e3; }); }
+  function windAhead(){ var H=next12(); if(H.length<3) return null; var W_=H.map(wnum).filter(function(x){ return x!=null; }), G=H.map(function(h){ return Math.max(h.gust||0,wnum(h)||0); });
+    var gm=Math.max.apply(null,G), wm=W_.length?Math.max.apply(null,W_):0, wl=W_.length?Math.min.apply(null,W_):0; var pk=H[G.indexOf(gm)];
+    var dir=(H[0].wdir||H[0].dir||"")+""; var s="Next 12 hours "+AT()+": wind "+(dir&&!/\d/.test(dir)?dir+" ":"")+(wl===wm?wm:wl+" to "+wm)+" mph"+(gm>wm?", gusts to "+gm+(pk?" around "+hlab(hrOf(pk.t)):""):"")+".";
+    var late=H.slice(Math.floor(H.length*0.6)), lg=late.length?Math.max.apply(null,late.map(function(h){ return Math.max(h.gust||0,wnum(h)||0); })):gm;
+    if(lg<=gm-6) s+=" It eases later — gusts under "+(lg+2)+" by "+hlab(hrOf(late[0].t))+".";
+    s+=" "+(gm>=40?"That's strong enough to hold lifts and secure anything loose.":gm>=30?"Breezy enough to secure loose material and watch tents.":gm>=25?"Fine for most work; I'd hold off on spraying.":"Nothing that gets in the way.");
+    return s; }
+  function windCard(){ var H=next12(); if(H.length<4) return null; var Wd=320,Hh=170,L=22,R=Wd-14,top=34,bot=Hh-24; var n=H.length, bw=Math.max(6,(R-L)/n-4);
+    var G=H.map(function(h){ return Math.max(h.gust||0,wnum(h)||0); }), mx=Math.max(30,Math.max.apply(null,G)); var X=function(i){ return L+(R-L)*(i+0.5)/n; }, Y=function(v){ return bot-(bot-top)*v/mx; };
+    var col=function(v){ return v>=45?"#FF6B6F":v>=35?"#F5A524":v>=25?"#F5D76E":v>=15?"#7FD6C2":"#4E6E8E"; };
+    var bars=H.map(function(h,i){ var w=wnum(h)||0, gst=G[i]; return '<rect x="'+(X(i)-bw/2)+'" y="'+Y(gst)+'" width="'+bw+'" height="'+(bot-Y(gst))+'" rx="2" fill="'+col(gst)+'" opacity=".38"/><rect x="'+(X(i)-bw/2)+'" y="'+Y(w)+'" width="'+bw+'" height="'+(bot-Y(w))+'" rx="2" fill="'+col(w)+'"/>'+((i%3===0||gst===Math.max.apply(null,G))?'<text x="'+X(i)+'" y="'+(Y(gst)-5)+'" text-anchor="middle" font-size="10.5" font-weight="800" fill="#fff" '+FONT+'>'+gst+'</text>':""); }).join("");
+    var ax=H.map(function(h,i){ var k=hrOf(h.t); return i%3===0?'<text x="'+X(i)+'" y="'+(Hh-6)+'" text-anchor="middle" font-size="9.5" font-weight="700" fill="#A9B6CC" '+FONT+'>'+(k===0?"12A":k===12?"NOON":(k%12)+(k<12?"A":"P"))+'</text>':""; }).join("");
+    return {svg:'<svg viewBox="0 0 '+Wd+' '+Hh+'" style="width:100%;height:auto;display:block;background:#0E1A33"><text x="'+L+'" y="16" font-size="11" font-weight="800" letter-spacing=".08em" fill="#fff" '+FONT+'>WIND · NEXT 12 HOURS</text><text x="'+R+'" y="16" text-anchor="end" font-size="10" fill="#A9B6CC" '+FONT+'>solid wind · light gusts · mph</text>'+bars+'<line x1="'+L+'" x2="'+R+'" y1="'+bot+'" y2="'+bot+'" stroke="rgba(255,255,255,.25)"/>'+ax+'</svg>',title:"Wind and gusts, next 12 hours"}; }
+  // anything we can't answer from the dashboard gets an honest hand-off, not a guess
+  var WX=/weather|forecast|rain|storm|thunder|lightning|wind|gust|breez|temp|hot|cold|warm|cool|heat|freez|frost|snow|ice|sun|cloud|fog|humid|radar|alert|warning|watch|severe|tornado|hail|flood|look|good|ok|okay|fine|go\b|plan|outside|outdoor|event|game|practice|work|safe|cancel|postpone|today|tonight|tomorrow|week|weekend|morning|afternoon|evening|night|\b(mon|tue|wed|thu|fri|sat|sun)/i;
+  var LASTASK=null;
+  function hourIn(q){ var m=q.toLowerCase().match(/\b(\d{1,2})(?::(\d{2}))?\s*(am|pm|a|p)?\b/); if(!m) return /noon/.test(q)?12:/midnight/.test(q)?24:null; var h=+m[1]; if(h>12) return h; var ap=m[3]; if(ap&&ap[0]==="p"&&h<12) h+=12; else if(!ap&&h<7) h+=12; return h; }
+  function followUp(q){ var A=LASTASK; if(!A||Date.now()-A.t>15*60e3||!A.W||!A.W.day) return null; var ql=q.toLowerCase();
+    // a real new question gets the normal path
+    if(/\?/.test(q)&&q.length>30&&namedDay(q)) return null;
+    LASTASK=null; var W=A.W, nm=W.label||dname(W.day,W.idx), H=dayHours(W.day), r=rainRuns(W.day), txt=null;
+    var hr=hourIn(q);
+    if(hr!=null&&(A.kind==="time"||/done|finish|wrap|by\b/.test(ql))){ var before=H.filter(function(h){ return hrOf(h.t)<hr; }), mx=before.length?Math.max.apply(null,before.map(function(h){ return h.pop||0; })):0;
+      txt=mx<30?"Done by "+hlab(hr)+" works. Rain chances stay under 30% until then"+(r&&r.a>=hr?" — the rain doesn't move in until about "+hlab(r.a):"")+".":!r?"Rain chances get up to "+mx+"% before "+hlab(hr)+".":hr-r.a<=2?"Done by "+hlab(hr)+" is cutting it close — rain moves in around "+hlab(r.a)+" "+nm+", so the last stretch could be wet. Start early and you'll beat most of it.":"Not really — rain moves in around "+hlab(r.a)+" "+nm+", so you'd be working in it most of that window"+(r.heavy&&r.heavy.a<hr?", and the heaviest starts at "+hlab(r.heavy.a):"")+". If it can move to another day, I would."; }
+    else if(A.kind==="indoor"||/\b(inside|indoor|outside|outdoors|has to be|backup|back-up)\b/.test(ql)){ var yes=/\b(yes|yeah|yep|we do|we can|inside|indoor|have one|got one)\b/.test(ql)&&!/\bno\b|outside|has to be/.test(ql);
+      txt=yes?"Good — then I'd plan to move inside by "+(r?hlab(r.a):"the afternoon")+" "+nm+(thunderDay(W.idx)&&thunderDay(W.idx).main?", and definitely before the thunder window, "+tWin(thunderDay(W.idx)):"")+".":"Then I'd get the outdoor part done before "+(r?hlab(r.a):"the rain")+" "+nm+(r&&r.heavy?" and avoid "+win(r.heavy.a,r.heavy.b)+" — that's the heaviest":"")+". If there's lightning, people need somewhere to go — even cars work in a pinch."; }
+    else if(/setup|set up|load in|load-in|early|morning|before/.test(ql)){ txt="For setup: "+(partLine(W,[6,12,"morning"])||"mornings look like the better window."); }
+    else if(/afternoon/.test(ql)){ txt=partLine(W,[12,18,"afternoon"]); }
+    else if(/evening|night|tonight/.test(ql)){ txt=partLine(W,[17,22,"evening"]); }
+    else { var st=story(W); txt=st?"For "+(/rain/.test(ql)?"the rain itself":/event|game|itself|during|show/.test(ql)?"the event itself":nm)+": "+st.replace(/^(Here's how [^:]+: |Hour by hour, [^:]+: |Breaking [^:]+: )/,"")+(amtTxt(W.day)?" "+cap(amtTxt(W.day))+" in all.":""):null; }
+    if(!txt) return null; LASTTXT=txt;
+    return [{text:txt.replace(/\s+/g," ").trim(),delay:0}]; }
+  var LASTW=null, LASTQ="", LASTKEY="", LASTTXT="";
+  function nextWet(from){ var D=days(); for(var i=from||0;i<D.length;i++){ var d=D[i]; if(Math.max(d.pp||0,d.ppN||0)>=30||(d.thunder||0)>=30||(d.snowP||0)>=30) return {idx:i,day:d,label:i===0?"today":i===1?"tomorrow":(d.long||d.d)}; } return null; }
+  function namedDay(q){ return /\bthis (morning|afternoon|evening)\b/i.test(q)||/\b(today|tonight|tomorrow|weekend|week|sun(day)?|mon(day)?|tue(s|sday)?|wed(nesday)?|thu(r|rs|rsday)?|fri(day)?|sat(urday)?)\b/i.test(q); }
+  function core(q){ LASTQ=q; var t=topic(q), W=when(q); var call=callNow();
+    if(!namedDay(q)&&!W.week){ if(LASTW&&!/\bnow\b|right now|radar|currently/i.test(q)) W=LASTW; else if(/^(rain|totals|storms|snow|general)$/.test(t)&&!/\bnow\b|right now|currently/i.test(q)){ var nw=nextWet(0); if(nw) W=nw; } }
+    // a rain question with no day named, about a dry day, means "when's the next rain" — answer that day
+    if(!namedDay(q)&&!W.week&&/^(rain|totals|storms)$/.test(t)&&W.day&&Math.max(W.day.pp||0,W.day.ppN||0)<20&&(W.day.thunder||0)<20){ var nw2=nextWet(/\bwhen\b/i.test(q)?0:(W.idx||0)); if(nw2) W=nw2; }
+    if(W&&W.day&&!W.now) LASTW=W;   // a "right now" check (including the opening message) is never the day we're talking about
+    var ql=q.toLowerCase(), future=/\bwhen\b|what time|\bwill\b|going to|chance|timing|start|later|this week|if we get/.test(ql)||namedDay(q), thq=/thunder|lightning|storm/.test(ql);
+    if(call==="action"||t==="now"||(W.now&&!W.week&&t==="general")) return nowLine();
+    if(t==="lightning"&&!future){ var s0=nowLine()+" "+(g(function(){ return P.LTG&&P.LTG.connected; },false)?"Lightning feed is live; nothing inside 10 miles.":"No storm cells near the site right now."); var nt=thunderAhead(0,1)[0]; s0+=nt?" "+one(["Next thunder chance is ","The next time lightning is in play is "],"ntc")+nt.label+(tWin(nt)?", "+tWin(nt):"")+" ("+nt.peak+"%).":" No thunder in the forecast after that either."; return s0; }
+    if((t==="lightning"||t==="storms")&&thq){ var nIdx=namedDay(q)&&!W.week?W.idx:(LASTW&&/if we get it|that day|\bthen\b/.test(ql)&&LASTW.day?LASTW.idx:null); var lv=nIdx!=null?outlookLevel(nIdx):null; if(!(lv&&lv>=2)) return thunderLine(null,nIdx); }
+    if(/sunset|sunrise|sun set|sun rise|sun go(es)? down|sun come|get dark|daylight|dusk|dawn/.test(ql)) return sunLine(namedDay(q)&&!W.week?W:null);
+    if(t==="wind"&&!(namedDay(q)&&W.idx>1)&&!W.week){ var wa=windAhead(); if(wa) return wa; }
+    if(t==="general"&&(!WX.test(ql)||/\b(who won|score|scores|traffic|tickets?|parking|menu|address|phone number|stock|news|price|cost)\b/.test(ql))) return one(["Good question — that one's outside what I can pull up from your dashboard. I'll have one of the team follow up with you.","That's not something I have in front of me on your dashboard. Let me pass it to the team and we'll get back to you."],"oos");
+    if(/severe|tornado|hail/.test(ql)&&!namedDay(q)) return severeAhead(q);
+    if(/best day|which day|what day|driest|good day/.test(ql)) { var bd=bestDays(); if(bd) return bd; }
+    if(t==="cold"&&(W.week||!namedDay(q))) { var cw=coldWeek(); if(cw) return cw; }
+    if(W.day&&!W.week){
+      if(/confiden|how sure|certain|agree|trust/.test(ql)){ var ag=agreeLine(W); if(ag) return ag; }
+      var ac=/tarp|cover|concrete|pour|asphalt|pave|spray|herbicide|pesticide|fungicide|paint|stain|seal|mow|cut grass|seed|fertiliz|plant/.test(ql)?activity(W,q):null; if(ac) return ac;
+      if(/cancel|postpone|call it off|move it|reschedul|go or no|should we (still|hold|have|do)|push it/.test(ql)) return decision(W);
+      var pt=partOf(q); if(pt&&!/temp|hot|cold|wind/.test(t)){ var pl=partLine(W,pt); if(pl) return pl; }
+      if(/rain|storm|shower|wet|general|totals/.test(t)||/\bit\b/.test(ql)){ if(/\b(end|stop|over|done|wrap|clear out|finish|how long|last)\b/.test(ql)){ var se=startEnd(W,"end"); if(se) return se; } if(/\b(start|begin|move in|arrive|get here|what time|when)\b/.test(ql)&&!/end|stop/.test(ql)){ var ss=startEnd(W,"start"); if(ss) return ss; } }
+    }
+    if(W.week) return weekLine(t);
+    if(!W.day) return nowLine();
+    if(W.pair&&W.pair[1]!=null){ var D=days(), a=D[W.pair[0]], b2=D[W.pair[1]];
+      if(t==="cold"){ var lo=Math.min(a.lo==null?99:a.lo,b2.lo==null?99:b2.lo); return (lo<=32?"Yes — ":lo<=36?"Close call. ":one(["No frost this weekend. ","You're clear on frost. "],"wkf"))+"Saturday night around "+a.lo+"°, Sunday night around "+b2.lo+"°."+(lo<=28?" Hard freeze; protect anything tender.":lo<=32?" Cover what you can.":lo<=36?" Low spots could see a little.":""); }
+      if(t==="temp") return "Highs "+a.hi+"° Saturday and "+b2.hi+"° Sunday, lows "+a.lo+"° and "+b2.lo+"°.";
+      if(t==="wind") return "Saturday "+(a.wind||"light")+(a.gust?" gusting "+a.gust:"")+", Sunday "+(b2.wind||"light")+(b2.gust?" gusting "+b2.gust:"")+" mph."+(Math.max(a.gust||0,b2.gust||0)>=30?" Sunday's the breezy one.":""); }
+    // "are we good?" with no day: answer for now first, then the next thing to plan around
+    if(t==="general"&&!namedDay(q)&&!W.week&&W.day&&W.idx>=2){ var D0=days(), dry=function(d){ return d&&Math.max(d.pp||0,d.ppN||0)<20&&(d.thunder||0)<20; };
+      if(dry(D0[0])&&dry(D0[1])){ var nx0=dayLine("rain",W); return one(["You're good for now — dry today and tomorrow, highs near "+D0[0].hi+"°.","Yes for the next couple of days — today and tomorrow stay dry, highs near "+D0[0].hi+"°."],"gd")+" The next thing to plan around is "+dlab(W.idx)+": "+nx0.charAt(0).toLowerCase()+nx0.slice(1); } }
+    // asked the same thing again? go a level deeper instead of repeating
+    var key=t+"|"+(W.idx==null?"":W.idx); var deeper=/more detail|deeper|break (it|that) down|details|specific|exactly|hour by hour/i.test(q);
+    if((key===LASTKEY||deeper)&&W.day){ var st0=story(W); if(st0){ LASTKEY=key; return st0; } }
+    LASTKEY=key;
+    if(W.pair&&W.pair[1]!=null&&/^(rain|general|totals|storms)$/.test(t)){ var Dp=days(), a1=Dp[W.pair[0]], b1=Dp[W.pair[1]]; var dry1=Math.max(a1.pp||0,a1.ppN||0)<20&&(a1.thunder||0)<20, dry2=Math.max(b1.pp||0,b1.ppN||0)<20&&(b1.thunder||0)<20; if(dry1&&dry2){ var nw3=nextWet(W.pair[1]+1); return one(["Saturday and Sunday both look dry","The whole weekend looks dry","Dry weekend "+AT()],"wkd")+" — highs near "+a1.hi+"° and "+b1.hi+"°, lows near "+a1.lo+"°."+(nw3?" Next rain is "+nw3.label+" ("+Math.max(nw3.day.pp||0,nw3.day.ppN||0)+"%"+(amtTxt(nw3.day)?", "+amtTxt(nw3.day):"")+").":""); } }
+    var s=dayLine(t,W); if(W.pair&&W.pair[1]!=null){ var W2={idx:W.pair[1],day:days()[W.pair[1]],label:"Sunday"}; s+=" "+dayLine(t==="severe"?"general":t,W2); }
+    return s.replace(/\s+/g," ").trim(); }
+
+  // The plan: a list of {text|att, delay} the widget plays out, with varied rhythm per answer
+  function plan(q,opts){ opts=opts||{}; var txt=core(q); if(txt===LASTTXT&&LASTW&&LASTW.day){ var st1=story(LASTW); txt=st1&&st1!==txt?st1:one(["Same picture as a minute ago — nothing's changed in the latest data.","No change since I last checked; that's still the forecast."],"same")+" "+txt; } LASTTXT=txt; var att=attachments(q), v=V(), out=[]; var urgent=callNow()==="action";
+    var style=urgent?"straight":one(["straight","open","two","picfirst","openq"],"style");
+    if(urgent) style="straight";
+    if((style==="open"||style==="openq")&&txt.length>90) txt=one(v.open,"vo-"+MET)+" "+txt;
+    if(style==="two"&&txt.length>120){ var i=txt.indexOf(". ",Math.floor(txt.length*0.45)); if(i>0){ out.push({text:txt.slice(0,i+1),delay:0}); out.push({text:txt.slice(i+2),delay:1400+Math.random()*900}); } else out.push({text:txt,delay:0}); }
+    else if(style==="picfirst"&&att.length){ out.push({att:att[0],delay:0}); out.push({text:txt,delay:1500}); att=att.slice(1); }
+    else out.push({text:txt,delay:0});
+    att.forEach(function(a){ out.push({att:a,delay:1200+Math.random()*800}); });
+    // a tail: sometimes a question back, sometimes a close-out, sometimes nothing
+    if(!urgent){ var r=Math.random();
+      if(r<0.3) out.push({text:one(v.tail,"vt-"+MET),delay:1800+Math.random()*1200,tail:true});
+      else if(r<0.5) out.push({text:one(["Does that help answer your question? If so, tap Got it and we'll close out the thread for now. You can reach out any time.","Does that answer your question? If so, tap Got it and we'll close out the thread for now. You can reach out any time."],"close"),delay:2200+Math.random()*1500,tail:true,ack:true});
+      else if(r<0.58&&!opts.noq&&/rain|storm|thunder|gust|wind|freeze|frost|heat/i.test(txt)&&!/dry|quiet|clear|no frost|nothing/i.test(txt)) { var QQ={"Is this for the morning crew or the afternoon?":"part","Are you asking for setup or for the event itself?":"setup","What time are you trying to be done by? I can get more specific.":"time","Indoor backup an option for you, or does it have to be outside?":"indoor"}; var qt=one(Object.keys(QQ),"q"); out.push({text:qt,delay:2000+Math.random()*1000,tail:true,question:true}); LASTASK={kind:QQ[qt],W:LASTW,t:Date.now()}; } }
+    return out; }
+  // ---------- attachments: driven by what was asked ----------
+  function cardSvg(idRe,titleRe){ try{ var cards=[].slice.call(P.document.querySelectorAll("#mrPrev .mcard")); var c=cards.find(function(x){ return idRe.test(x.dataset.id||"")&&(!titleRe||titleRe.test(x.textContent||"")); }); if(!c) return null; var svg=c.querySelector(".mimg svg"); if(!svg) return null; var cl=svg.cloneNode(true); cl.removeAttribute("width"); cl.removeAttribute("height"); cl.setAttribute("style","width:100%;height:auto;display:block");
+      var o=svg.querySelectorAll("*"), n=cl.querySelectorAll("*"); for(var i=0;i<o.length&&i<n.length;i++){ var cs=P.getComputedStyle(o[i]); if(/text|tspan/i.test(o[i].tagName)){ n[i].setAttribute("font-size",cs.fontSize); n[i].setAttribute("font-family",cs.fontFamily); n[i].setAttribute("font-weight",cs.fontWeight); n[i].setAttribute("letter-spacing",cs.letterSpacing); n[i].setAttribute("fill",cs.fill); if(cs.paintOrder) n[i].setAttribute("paint-order",cs.paintOrder); if(cs.stroke&&cs.stroke!=="none"){ n[i].setAttribute("stroke",cs.stroke); n[i].setAttribute("stroke-width",cs.strokeWidth); } } if(cs.display==="none") n[i].remove(); }
+      var tt=c.querySelector(".mlab b"); return {svg:cl.outerHTML,title:tt?tt.textContent.replace(/Â/g,"").trim():"Map"}; }catch(e){ return null; } }
+  function tableCard(title,rows,hl){ var Wd=320, rh=22, Hh=30+rows.length*rh+8; var y=26; var body=rows.map(function(r,i){ var yy=30+i*rh; return '<rect x="0" y="'+(yy-2)+'" width="'+Wd+'" height="'+rh+'" fill="'+(i===hl?"rgba(79,163,255,.22)":i%2?"rgba(255,255,255,.03)":"transparent")+'"/>'+r.map(function(cell,j){ var x=j===0?10:j===1?120:j===2?200:270; var anchor=j===0?"start":"end"; var xx=j===0?10:(j===1?170:j===2?245:310); return '<text x="'+xx+'" y="'+(yy+13)+'" text-anchor="'+anchor+'" font-size="12" font-weight="'+(j===0?700:600)+'" fill="'+(j===0?"#F4F7FB":"#DCE6F5")+'" '+FONT+'>'+cell+'</text>'; }).join(""); }).join("");
+    return '<svg viewBox="0 0 '+Wd+' '+Hh+'" style="width:100%;height:auto;display:block;background:#0E1A33"><text x="10" y="16" font-size="11" font-weight="800" letter-spacing=".08em" fill="#fff" '+FONT+'>'+title+'</text>'+body+'</svg>'; }
+  function weekTable(hi){ var D=days().slice(0,7); var rows=[["DAY","CHANCE","LIKELY","HIGH END"]].concat(D.map(function(d){ var pp=Math.max(d.pp||0,d.ppN||0); return [(d.d||"").toUpperCase(), pp?pp+"%":"dry", d.rr&&d.rr[1]!=null?(d.rr[1]<1?"trace":(d.rr[1]/100).toFixed(2)+'"'):"—", d.rr&&d.rr[2]!=null?(d.rr[2]<1?"trace":(d.rr[2]/100).toFixed(2)+'"'):"—"]; })); return {svg:tableCard("RAIN THIS WEEK · "+siteName().toUpperCase(),rows,hi!=null&&hi<7?hi+1:null),title:"Rain by day · middle half of the models"}; }
+  function hourlyCard(W){ var H=dayHours(W.day); if(H.length<6) return null;   // v231: clean layout. Nothing floats over anything: temps and times sit in their own rows under the chart.
+    var wnum=function(h){ var w=h.wind; if(typeof w==="number") return w; var m=String(w||"").match(/(\d+)(?!.*\d)/); return m?+m[1]:0; };
+    var WS=H.map(wnum), GS=H.map(function(h){ return Math.max(h.gust||0,wnum(h)); }), gmax=Math.max.apply(null,GS), windy=gmax>=20||Math.max.apply(null,WS)>=12;
+    var Wd=360,L=16,R=Wd-16, tH=58, tT=74, tB=tT+44, rT=tB+30, rB=rT+92, wT=rB+30, wB=wT+56, axY=(windy?wB:rB)+20, tmY=axY+18, Hh=tmY+16;
+    var hrs=H.map(function(h){ return hrOf(h.t); }); var k0=Math.min.apply(null,hrs), span=Math.max(1,Math.max.apply(null,hrs)-k0); var X=function(k){ return L+12+(R-L-24)*(k-k0)/span; };
+    var T=H.map(function(h){ return h.temp; }), tl=Math.min.apply(null,T), th=Math.max.apply(null,T); var ty=function(v){ return tB-(tB-tT)*((v-tl)/Math.max(1,th-tl)); };
+    var pts=H.map(function(h){ return X(hrOf(h.t))+","+ty(h.temp); }).join(" ");
+    var lab=function(x,y,t,sz,c){ return '<text x="'+x+'" y="'+y+'" text-anchor="middle" font-size="'+(sz||12)+'" font-weight="800" fill="'+(c||"#fff")+'" '+FONT+'>'+t+'</text>'; };
+    var hd=function(y,t,c,r,rc){ return '<text x="'+L+'" y="'+y+'" font-size="9.5" font-weight="800" letter-spacing=".12em" fill="'+c+'" '+FONT+'>'+t+'</text>'+(r?'<text x="'+R+'" y="'+y+'" text-anchor="end" font-size="9.5" font-weight="800" letter-spacing=".08em" fill="'+(rc||c)+'" '+FONT+'>'+r+'</text>':""); };
+    var bw=Math.max(6,Math.min(13,(R-L)/H.length*0.72)), P=H.map(function(h){ return h.pop||0; }), pk=Math.max.apply(null,P);
+    var rcol=function(v,t){ return t>=30?(v>=50?"#F5A524":"#F5D76E"):v>=60?"#2F7BFF":v>=40?"#4FA3FF":v>=20?"#8CC8FF":"#C9E6FF"; };
+    var lastLab=-99, bars=H.map(function(h,i){ var v=h.pop||0, k=hrOf(h.t), t=h.thunder||0; var hgt=Math.max(v?3:0,(rB-rT-18)*v/100); var x=X(k);
+      var out=v?'<rect x="'+(x-bw/2)+'" y="'+(rB-hgt)+'" width="'+bw+'" height="'+hgt+'" rx="3" fill="'+rcol(v,t)+'"/>':"";
+      var prev=i?(H[i-1].pop||0):-1; if(v>=10&&(v!==prev||v===pk&&i===P.indexOf(pk))&&x-lastLab>=26){ out+=lab(x,rB-hgt-5,v+"%",v===pk?12.5:10.5,v===pk?"#fff":"#C9D6EA"); lastLab=x; } return out; }).join("");
+    var guide=[25,50,75].map(function(v){ var y=rB-(rB-rT-18)*v/100; return '<line x1="'+L+'" x2="'+R+'" y1="'+y+'" y2="'+y+'" stroke="rgba(255,255,255,.07)" stroke-dasharray="3 4"/>'; }).join("");
+    var TW=H.filter(function(h){ return (h.thunder||0)>=30; }), twin=TW.length?(function(a,b){ var f=function(k){ return k===0?"12A":k===12?"NOON":(k%12)+(k<12?"A":"P"); }; return f(a)+"–"+f((b+1)%24); })(hrOf(TW[0].t),hrOf(TW[TW.length-1].t)):"";
+    var wind="";
+    if(windy){ var wmx=Math.max(30,gmax+5), wy=function(v){ return wB-(wB-wT)*Math.min(1,v/wmx); }, wc=function(v){ return v>=45?"#FF6B6F":v>=35?"#F5A524":v>=25?"#F5D76E":"#7FD6C2"; };
+      wind=hd(wT-12,"WIND · GUSTS (MPH)","#7FD6C2","PEAK GUST "+gmax)
+        +H.map(function(h,i){ var x=X(hrOf(h.t)), w=WS[i], g=GS[i]; return '<rect x="'+(x-bw/2)+'" y="'+wy(g)+'" width="'+bw+'" height="'+(wB-wy(g))+'" rx="3" fill="'+wc(g)+'" opacity=".35"/><rect x="'+(x-bw/2)+'" y="'+wy(w)+'" width="'+bw+'" height="'+(wB-wy(w))+'" rx="3" fill="'+wc(w)+'"/>'; }).join("")
+        +'<line x1="'+L+'" x2="'+R+'" y1="'+wB+'" y2="'+wB+'" stroke="rgba(255,255,255,.25)"/>'; }
+    var step=H.length<=10?1:H.length<=16?2:3, nm=function(k){ return k===0?"12A":k===12?"NOON":(k%12)+(k<12?"A":"P"); };
+    var cols=H.filter(function(h){ return (hrOf(h.t)-k0)%step===0; });
+    var ax=cols.map(function(h){ var x=X(hrOf(h.t)); return '<text x="'+x+'" y="'+axY+'" font-size="10.5" font-weight="700" fill="#A9B6CC" text-anchor="middle" '+FONT+'>'+nm(hrOf(h.t))+'</text><text x="'+x+'" y="'+tmY+'" font-size="11.5" font-weight="800" fill="#FFC857" text-anchor="middle" '+FONT+'>'+h.temp+'°</text>'; }).join("")
+      +'<line x1="'+L+'" x2="'+R+'" y1="'+(axY-14)+'" y2="'+(axY-14)+'" stroke="rgba(255,255,255,.08)"/>';
+    var dots=cols.map(function(h){ return '<circle cx="'+X(hrOf(h.t))+'" cy="'+ty(h.temp)+'" r="2.6" fill="#FFC857"/>'; }).join("");
+    var mt=Math.max.apply(null,H.map(function(h){ return h.thunder||0; })), g=Math.max.apply(null,H.map(function(h){ return h.gust||0; }));
+    var sub=pk?("Rain chance up to "+pk+"%"+(mt>=30?" · thunder possible":"")):"Dry"; if(g>=25&&!windy) sub+=" · gusts to "+g;
+    return {svg:'<svg viewBox="0 0 '+Wd+' '+Hh+'" style="width:100%;height:auto;display:block;background:#0E1A33"><text x="'+L+'" y="22" font-size="13" font-weight="800" letter-spacing=".08em" fill="#fff" '+FONT+'>'+(W.label||dname(W.day,W.idx)).toUpperCase()+' · HOUR BY HOUR</text><text x="'+L+'" y="40" font-size="11.5" fill="#A9B6CC" '+FONT+'>'+sub+'</text>'
+      +hd(tH,"TEMPERATURE","#FFC857",tl+"° TO "+th+"°")+'<polyline points="'+pts+'" fill="none" stroke="#FFC857" stroke-width="3" stroke-linejoin="round"/>'+dots
+      +hd(rT-12,"CHANCE OF RAIN","#6FB7FF",twin?"⚡ THUNDER "+twin:"","#FFC857")+guide+bars+'<line x1="'+L+'" x2="'+R+'" y1="'+rB+'" y2="'+rB+'" stroke="rgba(255,255,255,.25)"/>'+wind+ax+'</svg>',title:cap(W.label||dname(W.day,W.idx))+" hour by hour"}; }
+  // v156: the next 10 days of highs and lows, one bar per day (low at the bottom, high at the top)
+  function tenDayCard(){ var D=days().filter(function(d){ return d.hi!=null||d.lo!=null; }).slice(0,10); if(D.length<4) return null;
+    var Wd=360,Hh=250,L=16,R=Wd-16,T=58,B=Hh-44, n=D.length, cw=(R-L)/n;
+    var V=[]; D.forEach(function(d){ if(d.hi!=null) V.push(d.hi); if(d.lo!=null) V.push(d.lo); }); var lo=Math.min.apply(null,V)-3, hi=Math.max.apply(null,V)+3, Y=function(v){ return B-(B-T)*(v-lo)/Math.max(1,hi-lo); };
+    var lab=function(x,y,t,c,sz){ return '<text x="'+x+'" y="'+y+'" text-anchor="middle" font-size="'+(sz||12)+'" font-weight="800" fill="'+(c||"#fff")+'" '+FONT+' stroke="#0E1A33" stroke-width="3.5" paint-order="stroke">'+t+'</text>'; };
+    var col=function(v){ return v>=90?"#E05252":v>=80?"#F5A524":v>=70?"#FFC857":v>=60?"#9BD37A":v>=50?"#6FB7FF":v>=40?"#4D8CFF":"#9C8CFF"; };
+    var hiI=0, loI=0; D.forEach(function(d,i){ if((d.hi||-999)>(D[hiI].hi||-999)) hiI=i; if((d.lo!=null?d.lo:999)<(D[loI].lo!=null?D[loI].lo:999)) loI=i; });
+    var bars=D.map(function(d,i){ var x=L+cw*i+cw/2, h=d.hi!=null?d.hi:d.lo, l=d.lo!=null?d.lo:d.hi, y1=Y(h), y2=Y(l);
+      return '<defs><linearGradient id="tg'+i+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+col(h)+'"/><stop offset="1" stop-color="'+col(l)+'"/></linearGradient></defs><rect x="'+(x-9)+'" y="'+y1+'" width="18" height="'+Math.max(4,y2-y1)+'" rx="9" fill="url(#tg'+i+')"/>'
+        +lab(x,y1-6,h+"°",i===hiI?"#FFC857":"#fff",i===hiI?13.5:12)+lab(x,y2+15,l+"°",i===loI?"#8FC3FF":"#C9D3E3",i===loI?13.5:11.5)
+        +'<text x="'+x+'" y="'+(Hh-14)+'" text-anchor="middle" font-size="11" font-weight="800" fill="#A9B6CC" '+FONT+'>'+(i===0&&d.d==="TONIGHT"?"TNT":String(d.d||(d.long||"").slice(0,3)).slice(0,3).toUpperCase())+'</text>'; }).join("");
+    var cold=D[loI], warm=D[hiI], nm=function(d,i){ var w=d.long||d.d||""; return (i>=7?"next ":"")+w; };
+    return {svg:'<svg viewBox="0 0 '+Wd+' '+Hh+'" style="width:100%;height:auto;display:block;background:#0E1A33"><text x="'+L+'" y="20" font-size="13" font-weight="800" letter-spacing=".08em" fill="#fff" '+FONT+'>NEXT '+n+' DAYS · HIGHS AND LOWS</text><text x="'+L+'" y="38" font-size="11.5" fill="#A9B6CC" '+FONT+'>Coldest night '+(cold.lo!=null?cold.lo+"° ":"")+nm(cold,loI)+' · warmest day '+(warm.hi!=null?warm.hi+"° ":"")+nm(warm,hiI)+'</text>'+bars+'</svg>',title:"Highs and lows · next "+n+" days"}; }
+  function attachments(q){ if(!P) return []; var t=topic(q), W=when(q), ql=q.toLowerCase(), out=[];
+    if(/drought|dry spell|burn ban|soil moisture/.test(ql)){ var dr=cardSvg(/^drought$/); if(dr) return [dr]; }
+    if(/tropic|hurricane|tropical storm/.test(ql)){ var tr=cardSvg(/^tropics$/); if(tr) return [tr]; }
+    if(/flood/.test(ql)&&!/river/.test(ql)){ var ei=W&&W.idx!=null&&W.idx<=2?W.idx:0; var er=cardSvg(new RegExp("^ero"+(ei+1)+"$"))||cardSvg(/^ero1$/); var q3=cardSvg(/^qpf$/,/1–3|1-3/); return [er,q3].filter(Boolean); }
+    if(/river/.test(ql)){ var rv=cardSvg(/^rivers$/); if(rv) return [rv]; }
+    if(/rain/.test(ql)&&/(this|next) week|7[- ]day|week ahead|through the week/.test(ql)){ var q7=cardSvg(/^qpf$/,/1–7|1-7/); if(q7) return [q7,weekTable()]; }
+    if((t==="severe"||t==="storms")&&/next week|later|weekend|days? 4|4[- ]to[- ]8/.test(ql)){ var s48=cardSvg(/^spc48$/); if(s48) return [s48]; }
+    if(t==="trend"&&/rain|wet|dry/.test(ql)){ var cp=cardSvg(/^cpcp610$/)||cardSvg(/^cpcp814$/); var td0=tenDayCard(); return [td0,cp].filter(Boolean); }
+    if(t==="trend"){ var td=tenDayCard(); if(td) out.push(td); var co=/8|14|two weeks|2 weeks|later|end of|mid[- ]/.test(ql)?(cardSvg(/^cpct814$/)||cardSvg(/^cpct610$/)):(cardSvg(/^cpct610$/)||cardSvg(/^cpct814$/)); if(co) out.push(co); return out; }
+    if(/sunset|sunrise|sun set|sun rise|get dark|daylight|dusk|dawn/.test(ql)) return [];
+    if(t==="general"&&(!WX.test(ql)||/\b(who won|score|scores|traffic|tickets?|parking|menu|address|phone number|stock|news|price|cost)\b/.test(ql))) return [];
+    if(t==="wind"&&!(namedDay(q)&&W.idx>1)&&!W.week){ var wc=windCard(); if(wc) return [wc]; } if(!namedDay(q)&&!W.week&&LASTW) W=LASTW; var wantsPic=/send|show|see|picture|map|image|chart|graph|outlook|radar|hourly|totals|table/.test(ql);
+    var fut=/\bwhen\b|what time|\bwill\b|going to|chance|timing|start|later|if we get/.test(ql)||namedDay(q);
+    if((t==="lightning"||t==="storms")&&fut&&/thunder|lightning|storm/.test(ql)){ var ti=namedDay(q)&&!W.week?W.idx:null; var TD=ti!=null?thunderDay(ti):null; if(!TD) TD=thunderAhead(0,1)[0]; if(TD){ var hc=hourlyCard({idx:TD.idx,day:days()[TD.idx],label:cap(TD.label)}); if(hc) out.push(hc); } var lv2=outlookLevel(TD?TD.idx:0); if(lv2&&lv2>=2){ var sv=cardSvg(new RegExp("^spc"+((TD?TD.idx:0)+1)+"$")); if(sv) out.push(sv); } return out.slice(0,2); }
+    if(t==="now"||t==="lightning"||/radar/.test(ql)){ var r=cardSvg(/^radar$/); if(r) out.push(r); }
+    if(t==="severe"||t==="storms"){   // v149: the storm day that matters here, not today's national map
+      var TD2=(namedDay(q)&&!W.week)?thunderDay(W.idx||0):thunderAhead(0,1)[0], di=TD2?TD2.idx:(W.week?0:(W.idx||0)), lvS=outlookLevel(di);
+      if(lvS&&lvS>=1){ var s=cardSvg(new RegExp("^spc"+(di+1)+"$")); if(s) out.push(s); if(di===0){ var md=cardSvg(/^md$/); if(md) out.push(md); } }
+      if(TD2){ var hcS=hourlyCard({idx:TD2.idx,day:days()[TD2.idx],label:cap(TD2.label)}); if(hcS) out.push(hcS); }
+      if(W.week&&/rain/.test(ql)) out.push(weekTable(TD2?TD2.idx:undefined)); }
+    if(W.week&&(t==="totals"||t==="rain"||t==="general"||t==="hourly")) out.push(weekTable());
+    var dry=W.day&&Math.max(W.day.pp||0,W.day.ppN||0)<20&&(W.day.thunder||0)<20;
+    if(!W.week&&W.day&&(t==="hourly"||t==="temp"||t==="wind"||(!dry&&(t==="rain"||t==="totals"||t==="storms"))||(t==="general"&&wantsPic))){ var h=hourlyCard(W); if(h) out.push(h);
+      if(h&&!dry&&t!=="totals"&&Math.max(W.day.pp||0,W.day.ppN||0)>=40){ var qp2=(W.idx!=null&&W.idx<=2)?cardSvg(/^qpf$/):null; if(qp2) out.push(qp2); else { var wt2=weekTable(W.idx); wt2.title="Rain totals this week · "+cap(W.label||dname(W.day,W.idx)); out.push(wt2); } } }
+    // the rainfall map covers days 1-3 only: send it only when the day asked about is inside it; otherwise the week table shows that day in context
+    if(t==="totals"&&!W.week&&W.day&&Math.max(W.day.pp||0,W.day.ppN||0)>=20){ var qp=(W.idx!=null&&W.idx<=2)?cardSvg(/^qpf$/):null; if(qp) out.push(qp); else { var wt=weekTable(W.idx); var nm2=(W.label||dname(W.day,W.idx)); wt.title="Rain by day · "+cap(nm2)+" is the wet one"; out.push(wt); } }
+    return out.slice(0,2); }
+  function attachNamed(n){ try{ var Q={qpf13:/1–3|1-3/,qpf15:/1–5|1-5/,qpf17:/1–7|1-7/}; if(Q[n]) return cardSvg(/^qpf$/,Q[n]);
+      if(/^(spc[1-3]|spc48|ero[1-3]|cpc[tp](610|814)|drought|winter|tropics|md|watch|rivers)$/.test(n)) return cardSvg(new RegExp("^"+n+"$"));
+      if(n==="radar") return cardSvg(/^radar$/); if(n==="tenday") return tenDayCard(); if(n==="temp_outlook") return cardSvg(/^cpct610$/)||cardSvg(/^cpct814$/); if(n==="rain_outlook") return cardSvg(/^cpcp610$/)||cardSvg(/^cpcp814$/); if(n==="rainmap") return cardSvg(/^qpf$/); if(n==="outlook") return cardSvg(/^spc1$/)||cardSvg(/^ero1$/); if(n==="rain") return weekTable(LASTW&&LASTW.idx); if(n==="hourly"){ var W=LASTW&&LASTW.day?LASTW:{idx:0,day:days()[0],label:"today"}; return hourlyCard(W)||windCard(); } }catch(e){} return null; }
+  return { answer:core, plan:plan, followUp:followUp, attachments:attachments, attachNamed:attachNamed, setMet:setMet, ok:function(){ return !!(P&&days().length); } };
+})();
+
+</script>
+<script>
+(function(){
+  document.getElementById("logo").src="data:image/png;base64,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";
+  var night=false, M=document.getElementById("msgs"), ci=document.getElementById("ci"), helloT=null, replyT=null, lastSide="", lastMet=(function(){ var B=["Emma","Matthew","Lily","Miller","Anne"]; var n=B[Math.floor(Math.random()*B.length)]; try{ SDR_ENGINE.setMet(n); }catch(e){} return n; })(), lastMsgAt=0, lastBye="", lastHello="";
+  function now(){return new Date().toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});}
+  function day(){return new Date().toLocaleDateString([],{weekday:"long"});}
+  function greet(n){var h=new Date().getHours(),G=h<12?["Good morning","Good morning","Hi","Hi",""]:h<17?["Good afternoon","Hi","Hi","",""]:["Good evening","Good evening","Hi","",""];var g=G[Math.floor(Math.random()*G.length)];if(!g) return n?"Hi "+n+". ":"";return n?g+", "+n+". ":(g==="Hey"||g==="Hi"?g+" there. ":g+". ");}
+  var BODY=["Let me look into this and I'll get right back to you.","Give me a minute to pull up your forecast.","On it. Let me get those details for you.","Checking your site now.","Good question. Let me take a look.","Let me check the latest and I'll be right back.","Pulling your numbers now.","Looking at it now."];
+  var BODY_RADAR=["Pulling up the radar for you now.","Let me take a look at what's headed your way."];
+  var BYE=["Happy to help. I hope it goes well.","Any time. Reach out if anything changes.","Glad to help. Have a good day.","Glad to help — we'll be watching it.","Of course. We'll keep watching it for you.","Any time. We're watching it closely."];
+  function pick(pool,last){var p=pool.filter(function(b){return b!==last;});return p[Math.floor(Math.random()*p.length)];}
+  function firstName(s){var r=s.match(/\b(?:[Tt]his is|[Ii]t's|[Ii]t is|[Ii]'m|[Ii] am)\s+([A-Z][a-z]{1,15})\b/)||s.match(/^([A-Z][a-z]{1,15})\s+here\b/);var n=r?r[1]:"";return /^(And|The|At|In|On|Going|Taking|Trying|Wondering|Looking|Not|So|Just|Headed|Heading|Out|Here|Still|Planning|With|From|Coach|Glad|Good|Fine|Okay|Ok|Sure|Sorry|Back|Asking)$/.test(n)?"":n;}
+  function isThanks(t){return /\b(thank|thanks|thx|ty|appreciate|got it|perfect|awesome|great)\b/i.test(t)&&t.length<60;}
+
+  function ts(label){var d=document.createElement("div");d.className="ts";d.innerHTML=label;M.appendChild(d);lastSide="";}
+  function sender(n){var d=document.createElement("div");d.className="who-l";d.textContent=/Forecast Desk/.test(n)?"SDR Forecast Desk · automated answer":n+(/Meteorologist team|Division|Weather Intelligence/.test(n)?"":" · Meteorologist");M.appendChild(d);}
+  function clearStatus(){var s=M.querySelector(".status");if(s)s.remove();}
+  var lastFrom="";function bubble(side,html,opts){opts=opts||{};if(side==="them"&&opts.from&&(lastSide!=="them"||opts.from!==lastFrom)){sender(opts.from);lastFrom=opts.from;}if(side!=="them")lastFrom="";
+    var b=document.createElement("div");b.className="b "+side+(lastSide===side?" cont":"");b.innerHTML=html;M.appendChild(b);
+    if(side==="me"){clearStatus();var s=document.createElement("div");s.className="status";s.textContent="Delivered";M.appendChild(s);}
+    lastSide=side;M.scrollTop=M.scrollHeight;return b;}
+  function image(side,kind,cap){var d=document.createElement("div");d.className="img"+(side==="me"?" me":"");d.innerHTML='<div class="pic'+(kind==="photo"?" photo":"")+'"></div><div class="cap"><b>'+cap+'</b><span>'+now()+'</span></div>';M.appendChild(d);lastSide=side;M.scrollTop=M.scrollHeight;}
+  function rangeCard(){var d=document.createElement("div");d.className="rc";d.innerHTML='<div class="t"><b>Rain Saturday · 0.57" most likely</b><span>middle half 0.3–0.9"</span></div>'+
+    '<div class="bar"><span class="base"></span><span class="iq" style="left:19%;width:37%"></span><span class="md" style="left:36%"></span><span class="th" style="left:62%"></span></div>'+
+    '<div class="lab"><span>1 in 10 <b>0.16"</b></span><span>1 in 4 <b>0.30"</b></span><span>1 in 4 <b>0.90"</b></span><span>1 in 10 <b>1.45"</b></span></div>'+
+    '<p>Most runs land between <b>0.3" and 0.9"</b>. About 1 in 10 go past an inch.</p><small>What the models say · National Blend ranges for Memorial Stadium · 10:14 AM</small>';M.appendChild(d);lastSide="them";M.scrollTop=M.scrollHeight;}
+  // v234: a risk map centered on ANOTHER place the client asked about (Rome, Athens, Whitfield), in the Map Room look
+  var LASTPLACE=null;
+  function placeMap(pl){ try{ var P=window.parent; if(!pl||!P||P===window||!P.SDR_BMAP||!P.MAPDATA) return Promise.resolve(null);
+    return Promise.resolve(P.MAPDATA()).then(function(D){ D=D||{}; var d=0; if(pl.date){ var t0=new Date(); t0.setHours(0,0,0,0); var x=new Date(pl.date+"T12:00:00"); d=Math.max(0,Math.min(2,Math.floor((x-t0)/864e5))); }
+      var F=((D.spc||[])[d])||[], SC={TSTM:"#C1E9C1",MRGL:"#7FC57F",SLGT:"#F6F67F",ENH:"#E6C27F",MDT:"#E67F7F",HIGH:"#FF7FFF"}, NM={TSTM:"Thunder",MRGL:"1 Marginal",SLGT:"2 Slight",ENH:"3 Enhanced",MDT:"4 Moderate",HIGH:"5 High"};
+      var lay=[{features:F,style:function(f){ var p=f.properties||{}; return {fill:p.fill||SC[p.LABEL]||"#C1E9C1",stroke:"#333",w:1,fo:.7}; }}];
+      var M=d===0?(((D.priority||{}).mds)||[]):[]; if(M.length) lay.push({features:M,style:function(){ return {fill:"#FF8C1A",stroke:"#FF8C1A",w:2.5,dash:"7 5",fo:.15}; }});
+      var W=720,H=520,hh=2.3,kx=Math.cos(pl.lat*Math.PI/180),hw=hh*(W/H)/kx, box=[pl.lon-hw,pl.lat-hh,pl.lon+hw,pl.lat+hh];
+      var dn=d===0?(new Date().getHours()>=17?"TONIGHT":"TODAY"):d===1?"TOMORROW":new Date(Date.now()+d*864e5).toLocaleDateString("en-US",{weekday:"long"}).toUpperCase();
+      var nm=String(pl.name||"").split(",")[0];
+      var svg=P.SDR_BMAP(box,W,H,lay,{points:[{lo:pl.lon,la:pl.lat,fill:"#F28C28",r:6,label:nm.toUpperCase()}],cities:true,title:"SEVERE RISK",sub:dn,disp:330});
+      var has={}; F.forEach(function(f){ has[(f.properties||{}).LABEL]=1; });
+      var sw=function(c,t,dash){ return '<span style="display:inline-flex;align-items:center;gap:5px;margin:2px 10px 2px 0"><i style="width:11px;height:11px;border-radius:2px;display:inline-block;background:'+c+(dash?';border:2px dashed #FF8C1A;background:rgba(255,140,26,.15)':'')+'"></i>'+t+'</span>'; };
+      var leg=Object.keys(NM).filter(function(k){ return has[k]; }).map(function(k){ return sw(SC[k],NM[k]); }).join("")+(M.length?sw("","Storms organizing",1):"");
+      if(!F.length&&!M.length) leg='<span>No severe risk on the map '+dn.toLowerCase()+'</span>';
+      return {svg:svg+'<div style="font:600 12px Inter,Arial,sans-serif;color:#DCE6F5;background:#0E1A33;padding:7px 10px">'+leg+'</div>',title:"Severe risk "+dn.toLowerCase()+" · "+nm}; }).catch(function(){ return null; }); }catch(e){ return Promise.resolve(null); } }
+  function imageSvg(svg,cap){var d=document.createElement("div");d.className="img zoomable";d.innerHTML='<div class="svgpic">'+svg+'</div><div class="cap"><b>'+cap+'</b><span class="zm">Tap to enlarge</span></div>';d.addEventListener("click",function(){lbOpen(svg,cap);});M.appendChild(d);lastSide="them";M.scrollTop=M.scrollHeight;}
+  // picture viewer: full screen, pinch or double-tap to zoom, drag to look around
+  var LB=null,lbScale=1,lbBase=0;
+  function lbSize(){var w=LB.querySelector(".lbs>div");w.style.width=Math.round(lbBase*lbScale)+"px";}
+  function lbOpen(svg,cap){if(!LB){LB=document.createElement("div");LB.id="lb";LB.innerHTML='<div class="lbh"><b></b><button type="button">CLOSE</button></div><div class="lbs"><div></div></div><div class="lbf">Pinch or double-tap to zoom</div>';document.body.appendChild(LB);
+      LB.querySelector("button").addEventListener("click",lbClose);
+      var sc=LB.querySelector(".lbs"),d0=0,s0=1,lastTap=0;
+      sc.addEventListener("touchstart",function(e){if(e.touches.length===2){d0=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);s0=lbScale;}else{var t=Date.now();if(t-lastTap<300){lbScale=lbScale>1.2?1:2.5;lbSize();e.preventDefault();}lastTap=t;}},{passive:false});
+      sc.addEventListener("touchmove",function(e){if(e.touches.length===2&&d0){e.preventDefault();var d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);lbScale=Math.max(1,Math.min(5,s0*d/d0));lbSize();}},{passive:false});
+      sc.addEventListener("touchend",function(e){if(e.touches.length<2)d0=0;});
+      sc.addEventListener("dblclick",function(){lbScale=lbScale>1.2?1:2.5;lbSize();});
+      window.addEventListener("popstate",function(){if(LB&&!LB.hidden){LB.hidden=true;}});}
+    LB.querySelector(".lbh b").textContent=cap;LB.querySelector(".lbs>div").innerHTML=svg;lbScale=1;lbBase=Math.min(window.innerWidth-16,900);lbSize();LB.hidden=false;try{history.pushState({lb:1},"");}catch(e){}}
+  function lbClose(){if(LB&&!LB.hidden){LB.hidden=true;try{if(history.state&&history.state.lb)history.back();}catch(e){}}}
+  function markRead(){var s=M.querySelector(".status");if(s){s.textContent="Read "+now();s.classList.add("read");}}
+  function ackRow(){var r=document.createElement("div");r.className="ack";var b=document.createElement("button");b.textContent="Got it";var sm=document.createElement("small");sm.textContent="lets the team know you saw it";
+    b.addEventListener("click",function(){b.textContent="✓ Got it";b.classList.add("done");sm.textContent="acknowledged "+now();b.disabled=true;});r.appendChild(b);r.appendChild(sm);M.appendChild(r);}
+  function typing(on){var t=M.querySelector(".typing");if(t)t.remove();if(on){var d=document.createElement("div");d.className="typing";d.innerHTML="<i></i><i></i><i></i>";M.appendChild(d);M.scrollTop=M.scrollHeight;}}
+
+
+  // ===================== v145: AI replies through the SDR chat server (address in channel.json → aiChatUrl) =====================
+  var AIHIST=[];
+  function aiUrl(){ var D="https://sdr-chat.raspy-bonus-f476.workers.dev"; try{ var C=window.parent&&window.parent.CHANNEL; if(C&&C.aiChatUrl==="off") return ""; return C&&C.aiChatUrl?String(C.aiChatUrl):D; }catch(e){ return D; } }
+  function aiLoc(){ try{ var v=window.parent.DASH.venue(); var n=String(v.name||""), m=n.match(/^(.*?),\s*([A-Z]{2})$/); var ST={SC:"South Carolina",NC:"North Carolina",GA:"Georgia",FL:"Florida",AL:"Alabama",TN:"Tennessee",VA:"Virginia",MS:"Mississippi",LA:"Louisiana",TX:"Texas"};
+    var city=v.city||(m?m[1].replace(/ County$/,""):""), st=v.state||(m?m[2]:""); if(!city&&/clemson|memorial stadium/i.test(n)){ city="Clemson"; st="SC"; } return {city:city,region:ST[st]||st,timezone:"America/New_York"}; }catch(e){ return {}; } }
+  function aiData(){ var P=window.parent, out=[], g=function(id){ try{ var e=P.document.getElementById(id); return e?e.textContent.replace(/\s+/g," ").trim():""; }catch(x){ return ""; } };
+    try{ var v=P.DASH.venue(); out.push("Site: "+v.name+(v.la!=null?" ("+(+v.la).toFixed(2)+", "+(+v.lo).toFixed(2)+")":"")); }catch(e){}
+    out.push("Local time now: "+new Date().toLocaleString("en-US",{weekday:"long",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}));
+    out.push("RIGHT NOW: "+(g("st-h")||"")+". "+g("st-why"));
+    try{ var H=P.STRIPS.hours(), n=Date.now(), c=H.reduce(function(b,h){ return !b||Math.abs(h.t-n)<Math.abs(b.t-n)?h:b; },null); if(c) out.push("Conditions now: "+c.temp+"°"+(c.feel!=null?", feels like "+c.feel+"°":"")+", wind "+(c.wind||"?")+" mph"+(c.gust?", gusts "+c.gust:"")+(c.short?", "+c.short:"")); }catch(e){}
+    out.push("WHAT'S NEXT: "+g("nx-h")+". "+g("nx-p"));
+    try{ var A=(P.ALERTS||[]).map(function(a){ a=a.properties||a; return a.event+(a.areaDesc?" ("+String(a.areaDesc).split(";").slice(0,3).join(";")+")":"")+(a.ends||a.expires?" until "+new Date(a.ends||a.expires).toLocaleString("en-US",{weekday:"short",hour:"numeric",minute:"2-digit"}):""); }); out.push("ALERTS NEAR SITE: "+(A.length?A.slice(0,8).join(" | "):"none")); }catch(e){}
+    try{ var R=P.RADAR_NEAR; out.push("RADAR: "+(!R||R.none?"nothing within about 45 miles":(R.light?"light returns ":R.kind+" ")+Math.round(R.d)+" miles "+R.dir)); }catch(e){}
+    try{ var cards=[].slice.call(P.document.querySelectorAll("#mrPrev .mcard")).map(function(c){ var t=c.querySelector(".mlab b"), l=c.querySelector(".mlab span, .mline, small"); return (t?t.textContent.trim():"")+(l?": "+l.textContent.trim():""); }).filter(Boolean); if(cards.length) out.push("OUTLOOK MAPS: "+cards.slice(0,10).join(" | ")); }catch(e){}
+    try{ var D=P.STRIPS.days(); out.push("DAILY (rain = middle half of the models: low/most likely/high, inches; model agreement x of 5):");
+      D.slice(0,10).forEach(function(d){ var dt=new Date(d.date); var rr=d.rr?" rain "+(d.rr[0]/100).toFixed(2)+"/"+(d.rr[1]/100).toFixed(2)+"/"+(d.rr[2]/100).toFixed(2)+'"':"";
+        out.push("- "+dt.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"})+": "+(d.short||d.sky||"")+" high "+d.hi+" low "+d.lo+", rain chance day "+(d.pp||0)+"% night "+(d.ppN||0)+"%, thunder "+(d.thunder||0)+"%,"+rr+", wind "+(d.wind||"?")+" gusts "+(d.gust||"?")+(d.snowP?", snow chance "+d.snowP+"%":"")+(d.conf!=null?", model agreement "+d.conf+" of 5":"")); }); }catch(e){}
+    try{ var H2=P.STRIPS.hours(), now2=Date.now(), lines=[], byDay={}; H2.forEach(function(h){ if(h.t<now2-3600e3) return; var k=new Date(h.t).toDateString(); (byDay[k]=byDay[k]||[]).push(h); });
+      Object.keys(byDay).slice(0,8).forEach(function(k,i){ var L=byDay[k]; var wet=L.some(function(h){ return (h.pop||0)>=30||(h.thunder||0)>=20; }); if(i>1&&!wet) return;
+        lines.push(new Date(k).toLocaleDateString("en-US",{weekday:"short"})+": "+L.filter(function(h,j){ return i<2||new Date(h.t).getHours()%2===0; }).map(function(h){ var hr=new Date(h.t).getHours(); return (hr===0?"12a":hr===12?"12p":hr%12+(hr<12?"a":"p"))+" "+h.temp+"° "+(h.pop||0)+"%"+((h.thunder||0)?"/T"+h.thunder:"")+(h.gust?" g"+h.gust:""); }).join(", ")); });
+      if(lines.length) out.push("HOURLY (hour temp rain%/T=thunder% g=gust):\n"+lines.join("\n")); }catch(e){}
+    return out.join("\n"); }
+  function chatMode(){ try{ var C=window.parent.CHANNEL; return C&&C.chatMode==="review"?"review":"auto"; }catch(e){ return "auto"; } }
+  function siteName(){ try{ return window.parent.DASH.venue().name; }catch(e){ return ""; } }
+  var THREAD=(function(){ var k="sdr-thread-"+siteName(); try{ var v=localStorage.getItem(k); if(v) return v; v=Date.now().toString(36)+Math.random().toString(36).slice(2,8); localStorage.setItem(k,v); return v; }catch(e){ return Date.now().toString(36)+Math.random().toString(36).slice(2,8); } })();
+  // v216: only a schedule the client actually uploaded (never the sample events shown in the Schedule Watch ad)
+  function schedText(){ try{ if(window.parent.SDR_SCHED_PROMO&&window.parent.SDR_SCHED_PROMO()) return ""; return [].slice.call(window.parent.document.querySelectorAll("#sched .ev")).map(function(e){ var tm=e.querySelector(".tm"), nm=e.querySelector(".nm"); return (tm?tm.textContent.replace(/\s+/g," ").trim():"")+" · "+(nm?nm.textContent.replace(/\s+/g," ").trim():""); }).join("\n"); }catch(e){ return ""; } }
+  // review mode: the team's replies arrive on the thread
+  var POLL=null, SINCE=Date.now()-60000, LASTASKED="";
+  function pollThread(){ var url=aiUrl(); if(!url||POLL) return; var n=0;
+    POLL=setInterval(function(){ if(++n>450){ clearInterval(POLL); POLL=null; return; }
+      fetch(url.replace(/\/$/,"")+"/thread?id="+encodeURIComponent(THREAD)+"&since="+SINCE).then(function(r){ return r.json(); }).then(function(j){ (j.messages||[]).forEach(function(m){ SINCE=Math.max(SINCE,m.t); clearStatus();
+        bubble("them",String(m.text||"").replace(/</g,"&lt;"),{from:m.from||"Meteorologist"}); AIHIST.push({role:"assistant",content:m.text});
+        (m.attach||[]).forEach(function(a,i){ setTimeout(function(){ var c=null; try{ if(LASTASKED) SDR_ENGINE.answer(LASTASKED); c=SDR_ENGINE.attachNamed(a); }catch(e){} if(c){ imageSvg(c.svg,c.title); POSTED[c.title]=1; } },700+i*700); }); }); }).catch(function(){}); },8000); }
+  function aiReply(text,done){ var url=aiUrl(); if(!url) return false;
+    var ctl=new AbortController(), timer=setTimeout(function(){ ctl.abort(); },45000);
+    // v170: almanac, records, freeze dates, days since, sun & moon, hunt & fish go with every question (at most 5 s to gather)
+    var persp=new Promise(function(res){ var t=setTimeout(function(){ res(""); },5000); try{ var f=window.parent.SDR_PERSPECTIVE; if(!f){ clearTimeout(t); res(""); return; } f().then(function(x){ clearTimeout(t); res(x||""); },function(){ clearTimeout(t); res(""); }); }catch(e){ clearTimeout(t); res(""); } });
+    persp.then(function(px){ return fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},signal:ctl.signal,body:JSON.stringify({site:siteName(),client:siteName(),question:text,history:AIHIST.slice(-12),dashboard:aiData()+(px?"\n\n"+px:""),schedule:schedText(),met:lastMet,location:aiLoc(),mode:chatMode(),thread:THREAD})}); })
+      .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,j:j}; }); })
+      .then(function(x){ clearTimeout(timer); if(x.ok&&x.j&&x.j.queued){ done({queued:true}); return; } if(!x.ok||!x.j||!x.j.text) throw new Error((x.j&&x.j.error)||"no reply"); done({text:x.j.text,from:x.j.from||"SDR Forecast Desk",place:x.j.place||null}); })
+      .catch(function(){ clearTimeout(timer); done(null); });
+    return true; }
+  var PLAYGEN=0, GREETED=false, POSTED={};
+  var ONIT=["Got it. A meteorologist is looking at this now and will reply here shortly.","Thanks — a meteorologist has your question and will answer here in a few minutes."];
+  var QUICK=["Are we good for Saturday?","When do storms start?","How much rain?","Lightning near us?"];
+  function quick(){var Q=document.getElementById("quick");Q.innerHTML="";QUICK.forEach(function(q){var b=document.createElement("button");b.textContent=q;b.addEventListener("click",function(){send(q);});Q.appendChild(b);});
+    var r=document.createElement("button");r.className="brief";r.textContent="Request a briefing";r.addEventListener("click",function(){send("Can we get a briefing for Saturday's game?");});Q.appendChild(r);}
+
+  function seed(){M.innerHTML="";lastSide="";ts("<b>"+day()+"</b> "+now());
+    var live=null; try{ if(SDR_ENGINE.ok()) live=SDR_ENGINE.answer("right now"); }catch(e){}
+    bubble("them",live?live:'<span class="st clear">All clear</span>Normal operations today. Nothing on radar within 30 miles.',{from:"SDR Forecast Desk"});}
+
+  function send(text){if(!text.trim())return; if(lastMsgAt&&Date.now()-lastMsgAt>20*60000){ GREETED=false; POSTED={}; var B=["Emma","Matthew","Lily","Miller","Anne"].filter(function(n){ return n!==lastMet; }); lastMet=B[Math.floor(Math.random()*B.length)]; try{ SDR_ENGINE.setMet(lastMet); }catch(e){} } lastMsgAt=Date.now(); ts(now());
+    bubble("me",text.replace(/</g,"&lt;"));ci.value="";clearTimeout(helloT);clearTimeout(replyT);PLAYGEN++;typing(false);
+    if(isThanks(text)){var b=pick(BYE,lastBye)+(Math.random()<0.4?" I'll close this thread out for now — reach back any time.":"");lastBye=b;setTimeout(function(){markRead();typing(true);setTimeout(function(){typing(false);bubble("them",b,{from:"SDR Forecast Desk"});},1800);},1500);return;}
+    var n=firstName(text);
+    helloT=setTimeout(function(){markRead();typing(true);
+      setTimeout(function(){typing(false);
+        if(night){bubble("them",greet(n)+"You've caught us after hours. A meteorologist will respond to your question first thing in the morning. Your dashboard has your status and the latest briefing in the meantime.",{from:"SDR Weather Intelligence Division"});return;}
+        if(aiUrl()){ var gen0=PLAYGEN; typing(true); AIHIST.push({role:"user",content:text}); LASTASKED=text;
+          var tStart=Date.now();
+          if(aiReply(text,function(res){ if(gen0!==PLAYGEN) return;
+              if(!res){ typing(false); fallback(); return; }
+              if(res.queued){ typing(false); bubble("them",ONIT[Math.floor(Math.random()*ONIT.length)],{from:"SDR Weather Intelligence"}); pollThread(); return; }
+              var reply=res.text, FROM=res.from;
+              AIHIST.push({role:"assistant",content:reply});
+              var wait=Math.max(0,Math.min(5000,900+reply.length*14)-(Date.now()-tStart));
+              setTimeout(function(){ if(gen0!==PLAYGEN) return; typing(false); bubble("them",reply.replace(/</g,"&lt;"),{from:FROM}); GREETED=true;
+                if(res.place) LASTPLACE=res.place; var wantPic=/\b(pic|pics|picture|map|image|show me|graphic)\b/i.test(text), PL0=res.place||(wantPic?LASTPLACE:null);
+                if(PL0){ placeMap(PL0).then(function(a){ if(!a||gen0!==PLAYGEN) return; setTimeout(function(){ if(gen0!==PLAYGEN) return; imageSvg(a.svg,a.title); POSTED[a.title]=1; M.scrollTop=M.scrollHeight; },1100); }); return; }
+                var att=[]; try{ var ctxQ=AIHIST.filter(function(m){ return m.role==="user"; }).slice(-3).map(function(m){ return m.content; }).join(" ")+" "+((reply.match(/\b(today|tonight|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/ig)||[]).slice(0,1).join(" "));
+                  att=(SDR_ENGINE.attachments(/\b(game|practice|match|event|outside|outdoor|work|crew|field|tailgate|walk)\b/i.test(ctxQ)?ctxQ+" hour by hour":ctxQ)||[]).filter(function(a){ return !POSTED[a.title]; }).slice(0,1); }catch(e){}
+                att.forEach(function(a,i){ setTimeout(function(){ if(gen0!==PLAYGEN) return; imageSvg(a.svg,a.title); POSTED[a.title]=1; },1200+i*900); }); },wait); })) return; }
+        fallback(); function fallback(){
+        var PL=null, wasAnswer=false; try{ if(SDR_ENGINE.ok()){ PL=SDR_ENGINE.followUp(text); wasAnswer=!!PL; if(!PL) PL=SDR_ENGINE.plan(text); } }catch(e){ PL=null; }
+        if(PL) PL=PL.filter(function(it){ return !(it.att&&POSTED[it.att.title]); });
+        var skipHello=PL&&(wasAnswer||GREETED||Math.random()<0.35); if(PL&&!skipHello) GREETED=true;   // sometimes the answer just comes, no hello
+        if(!skipHello){ var pool=/radar|right now|currently|\bnow\b/i.test(text)?BODY_RADAR:BODY; var h=pick(pool,lastHello);lastHello=h;bubble("them",greet(n)+h,{from:"SDR Forecast Desk"}); }
+        var gen=++PLAYGEN; var play=function(items,k){ if(gen!==PLAYGEN){ typing(false); return; } if(k>=items.length){ M.scrollTop=M.scrollHeight; return; } var it=items[k]; var wait=(k===0?(skipHello?0:3200+Math.random()*2800):it.delay)+ (it.text?Math.min(2600,600+it.text.length*18):900);
+          typing(true); setTimeout(function(){ if(gen!==PLAYGEN) return; typing(false); if(it.att){ imageSvg(it.att.svg,it.att.title); POSTED[it.att.title]=1; } else bubble("them",it.text.replace(/</g,"&lt;"),{from:"SDR Forecast Desk"}); if(it.ack) ackRow(); M.scrollTop=M.scrollHeight; play(items,k+1); }, wait); };
+        if(PL){ replyT=setTimeout(function(){ play(PL,0); }, skipHello?1200:600); }
+        else { replyT=setTimeout(function(){typing(true);setTimeout(function(){typing(false);
+          bubble("them","Your forecast is still loading on my end. Give me a moment and I'll come right back to this.",{from:"SDR Forecast Desk"});
+          M.scrollTop=M.scrollHeight;},2400);},3500+Math.floor(Math.random()*2500)); }
+      } },1600);},3500);}
+  document.getElementById("compose").addEventListener("submit",function(e){e.preventDefault();send(ci.value);ciFit();});
+  // v211: the message box grows as you type (like a text message), up to about 5 lines; Enter sends on a computer, Shift+Enter adds a line
+  function ciFit(){ ci.style.height="32px"; ci.style.height=Math.min(140,Math.max(32,ci.scrollHeight))+"px"; }
+  ci.addEventListener("input",ciFit);
+  ci.addEventListener("keydown",function(e){ if(e.key==="Enter"&&!e.shiftKey&&!e.isComposing&&!/iPhone|iPad|Android/i.test(navigator.userAgent)){ e.preventDefault(); send(ci.value); ciFit(); } });
+  var camB=document.getElementById("cam"); if(camB) camB.hidden=true;
+  function mode(nt){night=nt;document.getElementById("d-day").classList.toggle("on",!nt);document.getElementById("d-night").classList.toggle("on",nt);
+    var p=document.getElementById("promise");p.textContent=nt?"After hours · back in the morning":"Usually replies within 15 min";p.classList.toggle("off",nt);}
+  document.getElementById("d-day").addEventListener("click",function(){mode(false);});
+  document.getElementById("d-night").addEventListener("click",function(){mode(true);});
+  document.getElementById("d-reset").addEventListener("click",function(){clearTimeout(helloT);clearTimeout(replyT);PLAYGEN++;typing(false);seed();});
+  // the banner mirrors the dashboard: RIGHT NOW call + What's Next headline, refreshed every 30 s
+  function pinPaint(){ try{ var P=window.parent; if(!P||P===window) return; var c=P.document.getElementById("call"), nh=P.document.getElementById("nx-h"), np=P.document.getElementById("nx-p"), sh=P.document.getElementById("st-h");
+      var lvl=c&&c.classList.contains("action")?"action":c&&c.classList.contains("headsup")?"headsup":"clear"; var word=(sh&&sh.textContent.trim())||({clear:"ALL CLEAR",headsup:"HEADS UP",action:"TAKE ACTION"})[lvl];
+      var nx=P.document.getElementById("next"); var nlvl=nx&&nx.classList.contains("action")?"action":nx&&nx.classList.contains("headsup")?"headsup":"clear"; var show=lvl!=="clear"?lvl:nlvl;
+      var head=nh?nh.textContent.trim():""; var sub=lvl!=="clear"?(P.document.getElementById("st-why")||{}).textContent||"":(np&&!np.hidden?np.textContent.trim():"");
+      var pin=document.getElementById("pin"); if(!head&&!word) return; pin.className="pin "+lvl; pin.hidden=false;
+      // line 1: RIGHT NOW, word and color match. line 2: WHAT'S NEXT, in its own color — never mixed into one line
+      document.getElementById("pin-h").innerHTML='<span class="cw '+lvl+'">'+word+'</span>'+(lvl==="clear"?'<span class="rn">right now</span>':"");
+      document.getElementById("pin-s").textContent=lvl!=="clear"?(sub||"").trim():"";
+      var pn=document.getElementById("pin-n"), hasNext=head&&!/checking/i.test(head)&&nlvl!=="clear";
+      if(lvl==="clear"&&hasNext){ var npv=np&&!np.hidden?np.textContent.trim():""; pn.className="nx "+nlvl; pn.innerHTML='<i>NEXT</i>'+head.replace(/</g,"&lt;")+(npv?'<small>'+npv.replace(/</g,"&lt;")+'</small>':""); pn.hidden=false; }
+      else if(lvl==="clear"&&head&&!/checking/i.test(head)){ pn.className="nx clear"; pn.innerHTML='<i>NEXT</i>'+head.replace(/</g,"&lt;"); pn.hidden=false; }
+      else pn.hidden=true; }catch(e){} }
+  var pinEl=document.getElementById("pin"); if(pinEl) pinEl.addEventListener("click",function(){ if(window.parent&&window.parent!==window) window.parent.postMessage({sdr:"chat-close"},"*"); });
+  pinPaint(); [800,2500,6000].forEach(function(t){setTimeout(pinPaint,t);}); setInterval(pinPaint,15000);
+  quick();seed();
+  // v125: embedded in the dashboard as the CHAT screen — the back arrow returns to the dashboard; a parent can also ask us to reset
+  var back=document.querySelector(".back"); if(back) back.addEventListener("click",function(){ if(window.parent&&window.parent!==window){ window.parent.postMessage({sdr:"chat-close"},"*"); } else { history.back(); } });
+  window.addEventListener("message",function(e){ var d=e.data||{}; if(d.sdr==="chat-prefill"&&d.text){ ci.value=d.text; ciFit(); try{ ci.focus(); ci.setSelectionRange(d.text.length,d.text.length); }catch(x){} return; } if(d.sdr==="chat-open"){ pinPaint(); setTimeout(pinPaint,1500); try{ var v=window.parent.DASH&&window.parent.DASH.venue&&window.parent.DASH.venue(); if(v&&v.name){ var w=document.querySelector(".who b"); if(w) w.innerHTML='<span class="lv"><i></i>LIVE CHAT</span> Meteorologist team · '+v.name.replace(/[<&]/g,""); } }catch(x){} } });
+})();
+</script>

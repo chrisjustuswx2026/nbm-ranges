@@ -1,0 +1,98 @@
+# Builds the National Blend ranges every 3 hours and publishes them on GitHub Pages (free, readable by any dashboard).
+name: NBM ranges
+
+on:
+  schedule:
+    - cron: "25 */3 * * *"     # every 3 hours, 25 past (UTC)
+  workflow_dispatch:            # the "Run workflow" button
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: nbm-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install tools
+        run: pip install pygrib numpy scipy
+      - name: Build ranges
+        run: python nbm_ranges.py public
+      - name: Keep the national place list (built once from the Census, then reused)
+        uses: actions/cache@v4
+        with:
+          path: places-cache
+          key: places-v1
+      - name: National place list for the search box
+        run: python places.py public
+      - name: Keep the crisp county lines (built once from the Census, then reused)
+        uses: actions/cache@v4
+        with:
+          path: counties-cache
+          key: counties-v2
+      - name: Crisp county lines for the dashboard maps
+        run: python counties.py public
+      - name: Keep the zoomed-in map detail (highways, lakes, rivers; built once)
+        uses: actions/cache@v4
+        with:
+          path: basemap-cache
+          key: basemap-v3
+      - name: Zoomed-in map detail (highways, route shields, lakes, rivers)
+        run: python basemap.py public
+      - name: Keep the detailed lakes (built once from the Census, then reused)
+        uses: actions/cache@v4
+        with:
+          path: water-cache
+          key: water-v1
+      - name: Detailed lakes and wide rivers (zoomed in)
+        run: python water.py public
+      - name: Keep the DOT camera list (rebuilt once a day)
+        uses: actions/cache@v4
+        with:
+          path: cameras-cache
+          key: cameras-${{ github.run_number }}
+          restore-keys: cameras-
+      - name: DOT traffic cameras (KY, SC, TN free; NC, GA, FL, LA with keys in Secrets)
+        env:
+          DRIVENC_KEY: ${{ secrets.DRIVENC_KEY }}
+          GA511_KEY: ${{ secrets.GA511_KEY }}
+          FL511_KEY: ${{ secrets.FL511_KEY }}
+          TDOT_KEY: ${{ secrets.TDOT_KEY }}
+          LA511_KEY: ${{ secrets.LA511_KEY }}
+        run: python cameras.py public
+      - name: River gauges near the client sites and anywhere in flood (never fails the job)
+        run: python rivers.py public
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Ski resort reports, November through March (never fails the job)
+        run: |
+          m=$(date -u +%-m)
+          if [ "$m" -ge 11 ] || [ "$m" -le 3 ]; then
+            npm install --no-save playwright@1.48.2 >/dev/null 2>&1 && npx playwright install --with-deps chromium >/dev/null 2>&1 && node site/tools/ski_reports.js public || echo "ski reports skipped"
+          fi
+      - name: Dashboards (the site folder becomes /clemson/ and /bay/ on the same website)
+        run: if [ -d site ]; then cp -r site/. public/; fi
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

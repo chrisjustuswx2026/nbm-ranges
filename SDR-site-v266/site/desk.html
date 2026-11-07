@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>SDR Forecast Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0A1428;--panel:#0E1A33;--panel2:#13224A;--line:rgba(160,180,215,.18);--fg:#F4F7FB;--muted:#A9B6CC;--dim:#7385A3;--blue:#3B82F6;--clear:#22C55E;--heads:#F5B800;--action:#E5484D;--display:"Barlow Condensed",sans-serif}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--fg);font-family:Barlow,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+button,textarea,input,select{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0}
+.top{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;padding:calc(12px + env(safe-area-inset-top,0px)) 16px 12px;background:#0B1730;border-bottom:1px solid var(--line)}
+.top h1{margin:0;font-family:var(--display);font-weight:800;letter-spacing:.14em;font-size:19px}
+.top .cnt{font-family:var(--display);font-weight:800;letter-spacing:.1em;font-size:13px;color:var(--muted)}
+.top .me{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.top select{background:#0B1730;border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+main{max-width:860px;margin:0 auto;padding:14px 14px 40px;display:grid;gap:14px}
+.empty{color:var(--muted);text-align:center;padding:50px 10px;line-height:1.6}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.card.concern{border-color:rgba(229,72,77,.55)}
+.card.watch{border-color:rgba(245,184,0,.45)}
+.ch{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--line)}
+.ch b{font-family:var(--display);font-weight:800;letter-spacing:.08em;font-size:15px}
+.ch .age{margin-left:auto;color:var(--dim);font-size:12.5px}
+.lv{font-family:var(--display);font-weight:800;letter-spacing:.1em;font-size:11px;border-radius:4px;padding:2px 7px}
+.lv.clear{background:rgba(34,197,94,.16);color:var(--clear)} .lv.watch{background:rgba(245,184,0,.18);color:var(--heads)} .lv.concern{background:rgba(229,72,77,.2);color:#FF8A8E}
+.q{padding:12px 14px 4px;font-size:17px;line-height:1.4}
+.ev{padding:0 14px 6px;color:#CFE4FF;font-size:14px}
+.ev:before{content:"◷ ";color:var(--dim)}
+.issue{margin:6px 14px 10px;padding:9px 12px;border-radius:10px;background:rgba(255,255,255,.04);font-weight:600;font-size:15px}
+.persp{margin:-4px 14px 10px;padding:8px 12px;border-radius:10px;background:rgba(111,183,255,.08);border-left:3px solid #6FB7FF;font-size:14px;color:#DCEBFF}
+.brief{margin:0 14px 10px;padding:0;list-style:none;display:grid;gap:4px}
+.brief li{font-size:13.5px;color:#C9D3E3;line-height:1.4;padding-left:14px;position:relative}
+.brief li:before{content:"";position:absolute;left:2px;top:8px;width:5px;height:5px;border-radius:50%;background:var(--dim)}
+.k{font-family:var(--display);font-weight:800;letter-spacing:.12em;font-size:11px;color:var(--dim);margin:0 14px 4px}
+textarea{display:block;width:calc(100% - 28px);margin:0 14px 10px;min-height:96px;resize:vertical;background:#0B1730;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:15.5px;line-height:1.42;outline:none}
+textarea:focus{border-color:var(--blue)}
+.att{display:flex;flex-wrap:wrap;gap:8px;margin:0 14px 10px}
+.att label{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:13.5px;cursor:pointer}
+.att input{accent-color:var(--blue)}
+.more{margin:0 14px 10px}.more summary{cursor:pointer;color:var(--muted);font-size:13.5px;margin-bottom:8px}.more .att{margin:0}
+.acts{display:flex;gap:8px;padding:0 14px 14px}
+.acts button{border:1.5px solid var(--line);border-radius:999px;padding:9px 18px;font-family:var(--display);font-weight:800;letter-spacing:.1em;font-size:14px}
+.acts .send{background:var(--clear);border-color:var(--clear);color:#06210F}
+.acts .send:disabled{opacity:.5}
+.acts .drop{margin-left:auto;color:var(--muted)}
+.hist{margin:0 14px 8px;font-size:12.5px;color:var(--dim)}
+.hist summary{cursor:pointer}
+.hist p{margin:4px 0;color:var(--muted)}
+.login{max-width:380px;margin:60px auto;padding:22px;background:var(--panel);border:1px solid var(--line);border-radius:16px;display:grid;gap:12px}
+.login h2{margin:0;font-family:var(--display);letter-spacing:.12em}
+.login input{background:#0B1730;border:1px solid var(--line);border-radius:10px;padding:11px 12px;font-size:16px}
+.login button{background:var(--blue);border-radius:10px;padding:11px;font-family:var(--display);font-weight:800;letter-spacing:.12em}
+.err{color:#FF8A8E;font-size:13.5px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#13224A;border:1px solid var(--line);border-radius:999px;padding:9px 16px;font-size:14px;z-index:9}
+</style>
+</head>
+<body>
+<div class="top"><h1>SDR FORECAST DESK</h1><span class="cnt" id="demo" hidden style="color:#F5B800">· DEMO</span><span class="cnt" id="cnt"></span><span class="me">Sending as <select id="met"><option>Lily</option><option>Miller</option><option>Emma</option><option>Matthew</option><option>Anne</option></select></span></div>
+<main id="main"></main>
+<script>
+(async function(){
+  const main=document.getElementById("main"), cnt=document.getElementById("cnt"), met=document.getElementById("met");
+  const ss=(k,v)=>{ try{ if(v===undefined) return sessionStorage.getItem(k); sessionStorage.setItem(k,v); }catch(e){ return null; } };
+  const ls=(k,v)=>{ try{ if(v===undefined) return localStorage.getItem(k); localStorage.setItem(k,v); }catch(e){ return null; } };
+  if(ls("desk-met")) met.value=ls("desk-met"); met.onchange=()=>ls("desk-met",met.value);
+  let URL0=""; try{ const j=await (await fetch("./channel.json?_="+Date.now(),{cache:"no-store"})).json(); URL0=String(j.aiChatUrl||"").replace(/\/$/,""); }catch(e){}
+  const DEMO=/[?&]demo\b/.test(location.search);
+  if(!URL0&&!DEMO){ main.innerHTML='<div class="empty">The chat server isn\'t connected yet.<br>Add its address to <b>channel.json → aiChatUrl</b>.</div>'; return; }
+  let KEY=DEMO?"demo":(ss("desk-key")||"");
+  const T0=Date.now(), DQ=[
+   {id:"d1",t:T0-2*60000,level:"concern",client:"Greenville County EMA",site:"Greenville County, SC",question:"Are we going to need to pull the vendors at the Fall Festival Saturday? Worried about the wind.",event:"Fall Festival · Sat 8 AM – 6 PM · Downtown",issue:"Gusts 35–40 mph Saturday late morning into the afternoon behind the front.",perspective:"Strongest wind lines up with the busiest part of the festival. Tents and signs are the concern, not storms.",briefing:["Front clears early Saturday; dry after 8 AM","Northwest gusts 35–40 mph, strongest 11 AM–3 PM","Wind eases after 5 PM","No storms or lightning expected"],draft:"Good morning. Saturday stays dry, but wind is the issue. Gusts of 35 to 40 mph are likely from about 11 AM to 3 PM, strongest midday. Tents, banners and signs should be weighted or held back until mid-afternoon. Wind eases after 5 PM. We'll update you Friday evening.",attach:["hourly","tenday"]},
+   {id:"d2",t:T0-9*60000,level:"watch",client:"Clemson University",site:"Clemson University, SC",question:"Any lightning risk for the band practice field tonight 6 to 8?",event:"Band practice · Tonight 6–8 PM",issue:"Isolated storms possible late afternoon, fading by evening.",perspective:"Low chance, but any storm that forms could bring lightning within 10 miles.",briefing:["20% chance of a storm 3–7 PM","Storms that form move east at 25 mph","Dry after 7 PM"],draft:"A small chance of a storm through about 7 PM, 20 percent. If one forms, we'll alert you the moment lightning is within 10 miles. Most likely you're dry for practice, and the chance drops after 7.",attach:["radar","hourly"]},
+   {id:"d3",t:T0-26*60000,level:"clear",client:"Bay County EM",site:"Bay County, FL",question:"How's the beach cleanup looking Sunday morning?",event:"Beach cleanup · Sun 7–11 AM",issue:"",perspective:"",briefing:["Sunny, 68° at 7 AM, 76° by 11","Light north wind","Rip current risk low"],draft:"Sunday morning looks great. Sunny, 68 degrees at 7 AM, warming to the mid-70s by 11. Light wind. No concerns from our team.",attach:["hourly"]}];
+  const api=DEMO?((p,body)=>new Promise(r=>setTimeout(()=>{ if(p==="/desk/queue") return r({items:DQ}); const i=DQ.findIndex(x=>x.id===(body||{}).id); if(i>=0) DQ.splice(i,1); r({ok:true}); },300))):(p,body)=>fetch(URL0+p,{method:body?"POST":"GET",headers:{"Content-Type":"application/json","X-Desk-Key":KEY},body:body?JSON.stringify(body):undefined}).then(async r=>{ const j=await r.json().catch(()=>({})); if(!r.ok) throw Object.assign(new Error(j.error||r.status),{status:r.status}); return j; });
+  function login(msg){ main.innerHTML=`<form class="login"><h2>DESK SIGN-IN</h2><input type="password" placeholder="Desk password" autocomplete="current-password" required>${msg?`<div class="err">${msg}</div>`:""}<button>SIGN IN</button></form>`;
+    main.querySelector("form").onsubmit=e=>{ e.preventDefault(); KEY=main.querySelector("input").value; ss("desk-key",KEY); start(); }; }
+  const toast=t=>{ const d=document.createElement("div"); d.className="toast"; d.textContent=t; document.body.appendChild(d); setTimeout(()=>d.remove(),2600); };
+  const age=t=>{ const m=Math.round((Date.now()-t)/60000); return m<1?"just now":m<60?m+" min ago":Math.round(m/60)+" h ago"; };
+  const esc=s=>String(s||"").replace(/[&<]/g,c=>c==="&"?"&amp;":"&lt;");
+  const shown=new Set(); let timer=null;
+  function card(it){ const c=document.createElement("div"); const lv=["clear","watch","concern"].includes(it.level)?it.level:"watch"; c.className="card "+lv; c.dataset.id=it.id;
+    const att=["hourly","tenday","radar","rain","spc1","spc2","spc3","spc48","ero1","ero2","ero3","qpf13","qpf15","qpf17","cpct610","cpct814","cpcp610","cpcp814","drought","winter","tropics","rivers"];
+    const lab={hourly:"📈 Day snapshot",tenday:"🌡 10-day highs & lows",radar:"📡 Radar",rain:"🌧 Rain table",spc1:"⚡ Severe · today",spc2:"⚡ Severe · tomorrow",spc3:"⚡ Severe · day 3",spc48:"⚡ Severe · days 4–8",ero1:"💧 Flood risk · today",ero2:"💧 Flood risk · tomorrow",ero3:"💧 Flood risk · day 3",qpf13:"🗺 Rainfall 1–3 days",qpf15:"🗺 Rainfall 1–5 days",qpf17:"🗺 Rainfall 1–7 days",cpct610:"📆 Temps 6–10 day",cpct814:"📆 Temps 8–14 day",cpcp610:"📆 Rain 6–10 day",cpcp814:"📆 Rain 8–14 day",drought:"🟫 Drought",winter:"❄️ Winter impacts",tropics:"🌀 Tropics",rivers:"🌊 Rivers"};
+    const ALIAS={outlook:"spc1",rainmap:"qpf13",temp_outlook:"cpct610",rain_outlook:"cpcp610"}; it.attach=(it.attach||[]).map(a=>ALIAS[a]||a);
+    c.innerHTML=`<div class="ch"><span class="lv ${lv}">${lv==="concern"?"CONCERN":lv==="clear"?"ROUTINE":"WATCH"}</span><b>${esc(it.client||it.site)}</b><span class="age" data-t="${it.t}">${age(it.t)}</span></div>
+      <div class="q">“${esc(it.question)}”</div>${it.event?`<div class="ev">${esc(it.event)}</div>`:""}
+      ${it.issue?`<div class="issue">${esc(it.issue)}</div>`:""}
+      ${it.perspective?`<div class="persp">💡 ${esc(it.perspective)}</div>`:""}
+      ${(it.briefing||[]).length?`<div class="k">BRIEFING</div><ul class="brief">${it.briefing.map(b=>`<li>${esc(b)}</li>`).join("")}</ul>`:""}
+      ${(it.history||[]).length?`<details class="hist"><summary>Earlier in this conversation</summary>${it.history.map(h=>`<p><b>${h.role==="user"?"Client":"Team"}:</b> ${esc(h.content)}</p>`).join("")}</details>`:""}
+      <div class="k">DRAFT — EDIT FREELY</div><textarea>${esc(it.draft)}</textarea>
+      <div class="k">PICTURES — TICK WHAT TO SEND</div>${(()=>{ const on=(it.attach||[]).filter(a=>lab[a]); const quick=on.concat(["hourly","tenday","radar","rain"].filter(a=>!on.includes(a))); const rest=att.filter(a=>!quick.includes(a)); const box=a=>`<label><input type="checkbox" value="${a}" ${on.includes(a)?"checked":""}>${lab[a]}</label>`;
+        return `<div class="att">${quick.map(box).join("")}</div><details class="more"><summary>More maps from the dashboard</summary><div class="att">${rest.map(box).join("")}</div></details>`; })()}
+      <div class="acts"><button class="send" type="button">SEND</button><button class="drop" type="button">DISMISS</button></div>`;
+    c.querySelector(".send").onclick=async()=>{ const b=c.querySelector(".send"); b.disabled=true; b.textContent="SENDING…";
+      try{ await api("/desk/send",{id:it.id,text:c.querySelector("textarea").value.trim(),met:met.value,attach:[...c.querySelectorAll(".att input:checked")].map(x=>x.value)}); c.remove(); shown.delete(it.id); toast("Sent as "+met.value); count(); }
+      catch(e){ b.disabled=false; b.textContent="SEND"; toast(e.status===404?"Already answered by someone else":"Didn't send — try again"); if(e.status===404){ c.remove(); shown.delete(it.id); count(); } } };
+    c.querySelector(".drop").onclick=async()=>{ try{ await api("/desk/dismiss",{id:it.id}); }catch(e){} c.remove(); shown.delete(it.id); count(); };
+    return c; }
+  function count(){ const n=main.querySelectorAll(".card").length; cnt.textContent=n?`· ${n} WAITING`:""; document.title=(n?`(${n}) `:"")+"SDR Forecast Desk";
+    if(!n&&!main.querySelector(".empty")) main.innerHTML='<div class="empty">Nothing waiting. New questions appear here with a briefing and a draft.</div>'; }
+  async function refresh(){ try{ const j=await api("/desk/queue"); const items=j.items||[]; const em=main.querySelector(".empty"); if(items.length&&em) em.remove();
+      items.forEach(it=>{ if(shown.has(it.id)) return; shown.add(it.id); main.appendChild(card(it)); });
+      main.querySelectorAll(".age").forEach(a=>a.textContent=age(+a.dataset.t)); count(); }
+    catch(e){ if(e.status===401){ clearInterval(timer); ss("desk-key",""); login("Wrong password."); } } }
+  function start(){ main.innerHTML='<div class="empty">Loading…</div>'; refresh(); clearInterval(timer); timer=setInterval(refresh,8000); }
+  if(DEMO) document.getElementById("demo").hidden=false;
+  if(!KEY) login(); else start();
+})();
+</script>
+</body>
+</html>

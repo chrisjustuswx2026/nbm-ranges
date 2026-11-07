@@ -5941,7 +5941,7 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
         if(R.local!==false&&R.hero&&["spc","md","watch","ero","alert"].includes(R.hero.kind)||cat==="HEAT"){ try{ const X=await extras(R.dayIdx!=null?R.dayIdx:0,[b.title,b.sub,...b.lines].join(" ")); if(X.meters.length) b.meters=X.meters; b.lines=b.lines.concat(X.lines); }catch(e){} }
         // a newer briefing on the same threat (same kind, same day, same place) replaces the older one: one tile per threat
         const today=new Date().toDateString(), key=x=>[x.cat,x.dayIdx==null?"":x.dayIdx,x.local===false?"R":"L",x.local===false?x.title.replace(/ (raised|lowered|ends|changes) /," "):""].join("|");
-        const dup=LIST.find(x=>new Date(x.t).toDateString()===today&&key(x)===key(b)); if(dup) LIST.splice(LIST.indexOf(dup),1); LIST.unshift(b);
+        const dup=LIST.find(x=>new Date(x.t).toDateString()===today&&key(x)===key(b)); if(dup) LIST.splice(LIST.indexOf(dup),1); LIST.unshift(b); LIST.sort((a,b2)=>(_rank(b2)-_rank(a))||((b2.t||0)-(a.t||0)));
         save(); if(window.STORY) setTimeout(()=>STORY.run(),300); } } }
     library(); if(!O&&!window._briefPinned) show(lead()||quiet());
   }
@@ -6331,8 +6331,9 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
     if(false&&MD.cpc&&MD.cpc.t610&&window.MRX){ const F=MD.cpc.t610, inF=f=>at(f.geometry,s), a=F.filter(inF).sort((x,y)=>(+(y.properties||{}).prob||0)-(+(x.properties||{}).prob||0))[0];
       fig.push(map("THE PATTERN AHEAD","g","6–10 DAYS",[{features:F,style:f=>({fill:MRX.cpcCol(f,"t"),stroke:"none",fo:.85})}],'<span><i style="background:#2563EB"></i>Cooler than normal</span><span><i style="background:#BFBFBF"></i>Near normal</span><span><i style="background:#D9480F"></i>Warmer than normal</span>',[a?`<b>${MRX.cpcSay(a,"t").replace(/^./,m=>m.toUpperCase())}</b> for ${city}.`:`<b>Near normal</b> for ${city}.`,`Looking 6 to 10 days out.`],[-125,24,-66,50],[{lo:s.lo,la:s.la,fill:"#F28C28",r:6}],"pattern")); }
     fig.splice(FX?0:(b.daily?(TH.A.length?0:1):1)); const mb=box.querySelector(".bsmaps"); if(mb&&fig.length) mb.innerHTML=`<div class="bsmg n${fig.length}">${fig.join("")}</div>`; }
+  const _rank=x=>(x.srv&&Date.now()-(x.t||0)<12*3600e3)?1:0;
   window.SDR_TEAMMERGE=arr=>{ const sig=L=>L.filter(x=>x.srv).map(x=>x.id+":"+(x.u||x.t)).join(",");
-    const before=sig(LIST); LIST=LIST.filter(x=>!x.srv); arr.forEach(x=>LIST.push(Object.assign({},x,{team:true,srv:true}))); LIST.sort((a,b)=>(b.t||0)-(a.t||0)); save();
+    const before=sig(LIST); LIST=LIST.filter(x=>!x.srv); arr.forEach(x=>LIST.push(Object.assign({},x,{team:true,srv:true}))); LIST.sort((a,b)=>(_rank(b)-_rank(a))||((b.t||0)-(a.t||0))); save();
     if(before!==sig(LIST)){ library(); const cur=window._curBrief; if(cur&&cur.srv){ const n=LIST.find(x=>x.srv&&x.id===cur.id); if(n){ show(n); return; } }
       if(!window._briefPinned) show(lead()||quiet()); } };
   window.BRIEF={ run, list:()=>LIST, show:b=>{ window._briefPinned=true; show(b); } };
@@ -6577,12 +6578,12 @@ function SDR_STORY(H, D, spc, nowMs){
   const tab=document.querySelector('.tabs button[data-pane="briefing"]'); const SEEN="sdr-brief-seen";
   let seen=0; try{ seen=+localStorage.getItem(SEEN)||0; }catch(e){}
   if(tab) tab.addEventListener("click",()=>{ seen=Date.now(); try{ localStorage.setItem(SEEN,String(seen)); }catch(e){} paint(); });
-  function paint(){ const L=((window.BRIEF&&BRIEF.list&&BRIEF.list())||[]).filter(x=>x.local!==false&&Date.now()-x.t<48*3600e3); const b=L[0];
+  function paint(){ const L=((window.BRIEF&&BRIEF.list&&BRIEF.list())||[]).filter(x=>x.local!==false&&Date.now()-x.t<48*3600e3); const b=L.find(x=>x.srv&&Date.now()-x.t<12*3600e3)||L[0];
     // dot on the Briefing tab for anything new
     if(tab){ tab.classList.toggle("hasnew",!!(b&&b.t>seen)); }
     // slim strip under the top cards only for threats
     const host=document.getElementById("status"); let st=document.getElementById("bstrip");
-    const age=b?Date.now()-b.t:1e15; const show=b&&b.cat!=="UPDATE"&&b.cat!=="DAILY"&&(age<6*3600e3||b.t>seen);   // v149: 6 hours on Home, then until they've opened it
+    const age=b?Date.now()-b.t:1e15; const show=b&&(b.srv||(b.cat!=="UPDATE"&&b.cat!=="DAILY"))&&(age<(b.srv?12:6)*3600e3||b.t>seen);   // v149: 6 hours on Home, then until they've opened it
     if(!show){ if(st) st.hidden=true; return; }
     if(!st&&host){ st=document.createElement("button"); st.id="bstrip"; st.type="button"; host.insertAdjacentElement("afterend",st); st.onclick=()=>{ if(tab) tab.click(); if(window.BRIEF&&BRIEF.show) BRIEF.show(b); window.scrollTo(0,0); }; }
     if(st){ st.hidden=false; const _v=window.SDR_LATEST_VIDEO&&SDR_LATEST_VIDEO(); const _hasV=!!(_v&&b.srv&&_v.id===b.id); st.innerHTML=`<i></i><span><b>${_hasV?"New briefing + video":"New briefing"}</b>${b.title}</span><em>${_hasV?"Watch →":"Read →"}</em>`; st.onclick=()=>{ if(tab) tab.click(); if(window.BRIEF&&BRIEF.show) BRIEF.show(b); window.scrollTo(0,0); }; } }
@@ -7006,7 +7007,7 @@ window.SDR_GL=(function(){
 
 <script>
 // v125: client chat layer
-(function(){ let wrap=null, fr=null; const CHATV="1794081953";
+(function(){ let wrap=null, fr=null; const CHATV="1794083057";
   function open(){ if(!wrap){ wrap=document.createElement("div"); wrap.id="chatwrap"; wrap.innerHTML='<iframe id="chatfr" title="Message the team" allow="camera"></iframe>'; document.body.appendChild(wrap); fr=wrap.querySelector("iframe"); fr.src="./chat.html?v="+CHATV; fr.addEventListener("load",()=>{ try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }); }
     wrap.hidden=false; document.body.classList.add("chat-on"); if(!(history.state&&history.state.chat)) history.pushState({chat:1},""); try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }
   function close(){ if(wrap){ wrap.hidden=true; } document.body.classList.remove("chat-on"); }
@@ -9299,6 +9300,8 @@ html body #days .dn b{font-size:16px!important}html body #days .dn small{font-si
     const head=o.masthead===false?"":`<div class="bp-mast"><img class="bp-logo" alt="SDR Weather Intelligence" src="${esc(o.logo||"./sdr-logo.png")}"><div class="bp-mt">${P.kicker?ed("kicker","div","bp-kick",P.kicker):""}${ed("title","h2","bp-title",P.title||"")}${P.sub?ed("sub","p","bp-sub",P.sub):""}<div class="bp-issued">${issued}</div></div><div class="bp-tagr">SDR<br>BRIEFING</div></div><div class="bp-rule"></div>`;
     return `<div class="bp">
       ${head}
+      ${P.meters&&P.meters.length?`<div class="bp-meters"><div class="bp-mh">THREAT METERS</div><div class="bp-mr n${P.meters.length}">${P.meters.map((m,i)=>`<div><small>${E?`<span contenteditable="true" data-p="meters.${i}.label">${esc(m.label)}</span>`:esc(m.label)}</small><i>${[1,2,3,4,5].map(k=>`<em class="${k<=m.n?"on l"+m.n:""}"></em>`).join("")}</i><b>${m.n}/5</b></div>`).join("")}</div></div>`:""}
+      ${P.timing?`<div class="bp-timing">${ed("timing","span","",P.timing)}</div>`:""}
       ${P.intro?`<div class="bp-intro">${ed("intro","p","",P.intro)}</div>`:""}
       ${P.glance&&P.glance.length?`<div class="bp-glance"><div class="bp-gh">AT A GLANCE</div><div class="bp-gr">${P.glance.map((g,i)=>`<div><small>${ed("glance."+i+".label","span","",g.label||"")}</small>${ed("glance."+i+".value","b","",g.value||"")}</div>`).join("")}</div></div>`:""}
       ${section(P.hero,"hero","bp-hero")}
@@ -9321,7 +9324,16 @@ html body #days .dn b{font-size:16px!important}html body #days .dn small{font-si
 .bp-issued{display:inline-block;background:#0F4C3A;color:#fff;font-family:var(--display);font-weight:800;letter-spacing:.14em;font-size:10.5px;padding:5px 9px;border-radius:4px}
 .bp-tagr{font-family:var(--display);font-weight:800;letter-spacing:.2em;font-size:10.5px;color:var(--dim);text-align:right;line-height:1.3;padding-top:4px}
 .bp-rule{height:4px;background:#0F4C3A;border-radius:2px;margin:-2px 0 0}
-.bp-intro p{margin:0;font-size:16px;line-height:1.5;color:#E6EDF7}
+.bp-intro p{margin:0;font-size:15px;line-height:1.45;color:#E6EDF7}
+.bp-meters{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.bp-mh{background:#1B3A6B;color:#fff;font-family:var(--display);font-weight:800;letter-spacing:.16em;font-size:11px;text-align:center;padding:5px 10px}
+.bp-mr{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr))}
+.bp-mr div{padding:8px 10px;border-left:1px solid var(--line);display:grid;grid-template-columns:1fr auto;gap:2px 8px;align-items:center}.bp-mr div:first-child{border-left:0}
+.bp-mr small{font-family:var(--display);font-weight:800;letter-spacing:.12em;font-size:10.5px;color:var(--muted)}
+.bp-mr b{font-family:var(--display);font-weight:800;font-size:13px;color:#F5B800;text-align:right}
+.bp-mr i{grid-column:1/-1;display:flex;gap:3px}.bp-mr em{flex:1;height:7px;border-radius:2px;background:rgba(255,255,255,.1)}
+.bp-mr em.on.l1{background:#22C55E}.bp-mr em.on.l2{background:#F5B800}.bp-mr em.on.l3{background:#F28C28}.bp-mr em.on.l4{background:#E5484D}.bp-mr em.on.l5{background:#B42318}
+.bp-timing{background:#B42318;color:#fff;border-radius:8px;padding:8px 12px;text-align:center;font-family:var(--display);font-weight:800;letter-spacing:.14em;font-size:12.5px;text-transform:uppercase}
 .bp-pic.crop{position:relative}.bp-pic.crop img{display:block}
 .bp-foot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;background:#0F4C3A;color:#fff;border-radius:10px;padding:9px 12px;font-family:var(--display);font-weight:800;letter-spacing:.14em;font-size:10.5px;text-transform:uppercase}
 @media(max-width:520px){ .bp-mast{grid-template-columns:auto minmax(0,1fr)} .bp-tagr{display:none} .bp-logo{width:72px} .bp-title{font-size:25px} }
@@ -9351,12 +9363,13 @@ html body #days .dn b{font-size:16px!important}html body #days .dn small{font-si
 .bp-txt{display:grid;gap:8px;align-content:start}
 .bp-stat small{display:block;font-family:var(--display);font-weight:800;letter-spacing:.14em;font-size:10.5px;color:var(--t);text-transform:uppercase}
 .bp-stat b{display:block;font-family:var(--display);font-weight:800;font-size:40px;line-height:1;color:var(--t);margin-top:2px}
-.bp-ul{margin:0;padding-left:16px;display:grid;gap:5px}.bp-ul li{font-size:14.5px;line-height:1.4;color:#DCE4F0}.bp-ul li::marker{color:#5BD3A1}
-.bp-cards{display:grid;gap:12px}
+.bp-ul{margin:0;padding-left:16px;display:grid;gap:4px}.bp-ul li{font-size:14px;line-height:1.35;color:#DCE4F0}.bp-ul li::marker{color:#5BD3A1}
+.bp-cards{display:grid;gap:10px;grid-template-columns:repeat(2,minmax(0,1fr))}.bp-cards.n1{grid-template-columns:1fr}.bp-cards.n3 .bp-card:first-child{grid-column:1/-1}
 .bp-note{border:1.5px solid #0F4C3A;border-radius:10px;padding:10px 12px}.bp-note p{margin:0;font-size:14px;line-height:1.45;font-weight:600;color:#DCE4F0}
 .bp-bottom{background:#0F4C3A;border-radius:12px;padding:12px 14px}.bp-bottom small{display:block;font-family:var(--display);font-weight:800;letter-spacing:.16em;font-size:11px;color:#fff;margin-bottom:4px}.bp-bottom p{margin:0;color:#fff;font-size:15px;line-height:1.45}
 .bp-next{font-family:var(--display);font-weight:800;letter-spacing:.14em;font-size:11px;color:var(--dim);text-align:right;text-transform:uppercase}
 @media(min-width:760px){ .bp-hero .bp-body{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);align-items:start} .bp-cards.n2,.bp-cards.n3{grid-template-columns:repeat(2,minmax(0,1fr))} .bp-cards.n3{grid-template-columns:repeat(3,minmax(0,1fr))} .bp-gr b{font-size:17px} }
+@media(max-width:520px){ .bp-card .bp-bar{font-size:12.5px;letter-spacing:.06em;padding:6px 8px} .bp-card .bp-subbar,.bp-card .bp-footbar{font-size:10px;padding:4px 6px} .bp-card .bp-body{padding:7px;gap:7px} .bp-card .bp-ul li{font-size:12.5px} .bp-card .bp-plq{font-size:10.5px;padding:3px 6px;max-width:60%} .bp-card .bp-lab{font-size:9px;max-width:80%} .bp-card .bp-stat b{font-size:26px} }
 @media(max-width:420px){ .bp-plq{font-size:12.5px;padding:5px 8px;max-width:52%} .bp-bar{font-size:17px} .bp-gr b{font-size:13px} .bp-stat b{font-size:34px} .bp-tag b{font-size:13px} .bp-lab{font-size:10px} }
 .bp [contenteditable]{outline:1px dashed transparent;border-radius:3px;transition:outline-color .15s}
 .bp [contenteditable]:hover{outline-color:rgba(245,184,0,.6)}.bp [contenteditable]:focus{outline:2px solid #F5B800;background:rgba(245,184,0,.08)}

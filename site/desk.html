@@ -754,6 +754,8 @@ body.live .set{display:none}
     const head=o.masthead===false?"":`<div class="bp-mast"><img class="bp-logo" alt="SDR Weather Intelligence" src="${esc(o.logo||"./sdr-logo.png")}"><div class="bp-mt">${P.kicker?ed("kicker","div","bp-kick",P.kicker):""}${ed("title","h2","bp-title",P.title||"")}${P.sub?ed("sub","p","bp-sub",P.sub):""}<div class="bp-issued">${issued}</div></div><div class="bp-tagr">SDR<br>BRIEFING</div></div><div class="bp-rule"></div>`;
     return `<div class="bp">
       ${head}
+      ${P.meters&&P.meters.length?`<div class="bp-meters"><div class="bp-mh">THREAT METERS</div><div class="bp-mr n${P.meters.length}">${P.meters.map((m,i)=>`<div><small>${E?`<span contenteditable="true" data-p="meters.${i}.label">${esc(m.label)}</span>`:esc(m.label)}</small><i>${[1,2,3,4,5].map(k=>`<em class="${k<=m.n?"on l"+m.n:""}"></em>`).join("")}</i><b>${m.n}/5</b></div>`).join("")}</div></div>`:""}
+      ${P.timing?`<div class="bp-timing">${ed("timing","span","",P.timing)}</div>`:""}
       ${P.intro?`<div class="bp-intro">${ed("intro","p","",P.intro)}</div>`:""}
       ${P.glance&&P.glance.length?`<div class="bp-glance"><div class="bp-gh">AT A GLANCE</div><div class="bp-gr">${P.glance.map((g,i)=>`<div><small>${ed("glance."+i+".label","span","",g.label||"")}</small>${ed("glance."+i+".value","b","",g.value||"")}</div>`).join("")}</div></div>`:""}
       ${section(P.hero,"hero","bp-hero")}
@@ -776,7 +778,16 @@ body.live .set{display:none}
 .bp-issued{display:inline-block;background:#0F4C3A;color:#fff;font-family:var(--display);font-weight:800;letter-spacing:.14em;font-size:10.5px;padding:5px 9px;border-radius:4px}
 .bp-tagr{font-family:var(--display);font-weight:800;letter-spacing:.2em;font-size:10.5px;color:var(--dim);text-align:right;line-height:1.3;padding-top:4px}
 .bp-rule{height:4px;background:#0F4C3A;border-radius:2px;margin:-2px 0 0}
-.bp-intro p{margin:0;font-size:16px;line-height:1.5;color:#E6EDF7}
+.bp-intro p{margin:0;font-size:15px;line-height:1.45;color:#E6EDF7}
+.bp-meters{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.bp-mh{background:#1B3A6B;color:#fff;font-family:var(--display);font-weight:800;letter-spacing:.16em;font-size:11px;text-align:center;padding:5px 10px}
+.bp-mr{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr))}
+.bp-mr div{padding:8px 10px;border-left:1px solid var(--line);display:grid;grid-template-columns:1fr auto;gap:2px 8px;align-items:center}.bp-mr div:first-child{border-left:0}
+.bp-mr small{font-family:var(--display);font-weight:800;letter-spacing:.12em;font-size:10.5px;color:var(--muted)}
+.bp-mr b{font-family:var(--display);font-weight:800;font-size:13px;color:#F5B800;text-align:right}
+.bp-mr i{grid-column:1/-1;display:flex;gap:3px}.bp-mr em{flex:1;height:7px;border-radius:2px;background:rgba(255,255,255,.1)}
+.bp-mr em.on.l1{background:#22C55E}.bp-mr em.on.l2{background:#F5B800}.bp-mr em.on.l3{background:#F28C28}.bp-mr em.on.l4{background:#E5484D}.bp-mr em.on.l5{background:#B42318}
+.bp-timing{background:#B42318;color:#fff;border-radius:8px;padding:8px 12px;text-align:center;font-family:var(--display);font-weight:800;letter-spacing:.14em;font-size:12.5px;text-transform:uppercase}
 .bp-pic.crop{position:relative}.bp-pic.crop img{display:block}
 .bp-foot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;background:#0F4C3A;color:#fff;border-radius:10px;padding:9px 12px;font-family:var(--display);font-weight:800;letter-spacing:.14em;font-size:10.5px;text-transform:uppercase}
 @media(max-width:520px){ .bp-mast{grid-template-columns:auto minmax(0,1fr)} .bp-tagr{display:none} .bp-logo{width:72px} .bp-title{font-size:25px} }
@@ -806,12 +817,13 @@ body.live .set{display:none}
 .bp-txt{display:grid;gap:8px;align-content:start}
 .bp-stat small{display:block;font-family:var(--display);font-weight:800;letter-spacing:.14em;font-size:10.5px;color:var(--t);text-transform:uppercase}
 .bp-stat b{display:block;font-family:var(--display);font-weight:800;font-size:40px;line-height:1;color:var(--t);margin-top:2px}
-.bp-ul{margin:0;padding-left:16px;display:grid;gap:5px}.bp-ul li{font-size:14.5px;line-height:1.4;color:#DCE4F0}.bp-ul li::marker{color:#5BD3A1}
-.bp-cards{display:grid;gap:12px}
+.bp-ul{margin:0;padding-left:16px;display:grid;gap:4px}.bp-ul li{font-size:14px;line-height:1.35;color:#DCE4F0}.bp-ul li::marker{color:#5BD3A1}
+.bp-cards{display:grid;gap:10px;grid-template-columns:repeat(2,minmax(0,1fr))}.bp-cards.n1{grid-template-columns:1fr}.bp-cards.n3 .bp-card:first-child{grid-column:1/-1}
 .bp-note{border:1.5px solid #0F4C3A;border-radius:10px;padding:10px 12px}.bp-note p{margin:0;font-size:14px;line-height:1.45;font-weight:600;color:#DCE4F0}
 .bp-bottom{background:#0F4C3A;border-radius:12px;padding:12px 14px}.bp-bottom small{display:block;font-family:var(--display);font-weight:800;letter-spacing:.16em;font-size:11px;color:#fff;margin-bottom:4px}.bp-bottom p{margin:0;color:#fff;font-size:15px;line-height:1.45}
 .bp-next{font-family:var(--display);font-weight:800;letter-spacing:.14em;font-size:11px;color:var(--dim);text-align:right;text-transform:uppercase}
 @media(min-width:760px){ .bp-hero .bp-body{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);align-items:start} .bp-cards.n2,.bp-cards.n3{grid-template-columns:repeat(2,minmax(0,1fr))} .bp-cards.n3{grid-template-columns:repeat(3,minmax(0,1fr))} .bp-gr b{font-size:17px} }
+@media(max-width:520px){ .bp-card .bp-bar{font-size:12.5px;letter-spacing:.06em;padding:6px 8px} .bp-card .bp-subbar,.bp-card .bp-footbar{font-size:10px;padding:4px 6px} .bp-card .bp-body{padding:7px;gap:7px} .bp-card .bp-ul li{font-size:12.5px} .bp-card .bp-plq{font-size:10.5px;padding:3px 6px;max-width:60%} .bp-card .bp-lab{font-size:9px;max-width:80%} .bp-card .bp-stat b{font-size:26px} }
 @media(max-width:420px){ .bp-plq{font-size:12.5px;padding:5px 8px;max-width:52%} .bp-bar{font-size:17px} .bp-gr b{font-size:13px} .bp-stat b{font-size:34px} .bp-tag b{font-size:13px} .bp-lab{font-size:10px} }
 .bp [contenteditable]{outline:1px dashed transparent;border-radius:3px;transition:outline-color .15s}
 .bp [contenteditable]:hover{outline-color:rgba(245,184,0,.6)}.bp [contenteditable]:focus{outline:2px solid #F5B800;background:rgba(245,184,0,.08)}
@@ -938,11 +950,12 @@ document.addEventListener("desk-ready",()=>{ const D=window.DESK; if(!D||window.
 
   // images: resized here, uploaded once, the page lays them out
   const loadImg=src=>new Promise((ok,no)=>{ const i=new Image(); i.onload=()=>ok(i); i.onerror=no; i.src=src; });
-  async function shrink(file){ const src=URL.createObjectURL(file); const im=await loadImg(src); URL.revokeObjectURL(src); const W=1600, k=Math.min(1,W/im.width); const c=document.createElement("canvas"); c.width=Math.round(im.width*k); c.height=Math.round(im.height*k); c.getContext("2d").drawImage(im,0,0,c.width,c.height);
-    return {blob:await new Promise(r=>c.toBlob(r,"image/jpeg",0.88)),w:c.width,h:c.height}; }
+  async function shrink(file,W,q){ W=W||1600; q=q||0.88; const src=URL.createObjectURL(file); const im=await loadImg(src); URL.revokeObjectURL(src); const k=Math.min(1,W/im.width); const c=document.createElement("canvas"); c.width=Math.round(im.width*k); c.height=Math.round(im.height*k); c.getContext("2d").drawImage(im,0,0,c.width,c.height);
+    return {blob:await new Promise(r=>c.toBlob(r,"image/jpeg",q)),w:c.width,h:c.height}; }
   async function upload(x){ x.busy=true; drawImgs(); try{ const {blob,w,h}=await shrink(x.file); x.w=w; x.h=h;
       if(D.demo){ x.src=await new Promise(r=>{ const fr=new FileReader(); fr.onload=()=>r(fr.result); fr.readAsDataURL(blob); }); x.id="img_demo"+Math.random().toString(36).slice(2,8); }
-      else{ const r=await fetch(D.url+"/desk/img",{method:"POST",headers:{"Content-Type":"image/jpeg","X-Desk-Key":D.key()},body:blob}); const j=await r.json().catch(()=>({})); if(r.status===401) return D.login("Wrong password."); if(!r.ok||!j.id) throw new Error(j.error||r.status); x.id=j.id; x.src=""; }
+      else{ const r=await fetch(D.url+"/desk/img",{method:"POST",headers:{"Content-Type":"image/jpeg","X-Desk-Key":D.key()},body:blob}); const j=await r.json().catch(()=>({})); if(r.status===401) return D.login("Wrong password."); if(!r.ok||!j.id) throw new Error(j.error||r.status); x.id=j.id; x.src="";
+        try{ const sm=await shrink(x.file,1000,0.8); await fetch(D.url+"/desk/img?small="+encodeURIComponent(x.id),{method:"POST",headers:{"Content-Type":"image/jpeg","X-Desk-Key":D.key()},body:sm.blob}); }catch(e){} }
     }catch(e){ D.toast("Image didn't upload. Try again."); F.images.splice(F.images.indexOf(x),1); } x.busy=false; delete x.file; keep(); drawImgs(); paint(); }
   function add(files){ [...files].filter(f=>/^image\//.test(f.type)).forEach(f=>{ if(F.images.length>=4){ D.toast("Up to 4 images"); return; } const x={file:f,cap:f.name.replace(/\.[a-z]+$/i,"").replace(/[_-]+/g," ").slice(0,60)}; F.images.push(x); upload(x); }); }
   function drawImgs(){ const box=$("wb-imgs"); box.innerHTML=F.images.map((x,i)=>`<div class="it" data-i="${i}"><img alt="" src="${x.id?esc(imgUrl(x)):""}"><span class="n">${i+1}</span>${x.busy?'<div class="iw">Uploading…</div>':""}<button type="button" class="ix" aria-label="Remove">✕</button></div>`).join("");

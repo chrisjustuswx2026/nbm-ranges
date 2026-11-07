@@ -6987,7 +6987,7 @@ window.SDR_GL=(function(){
 
 <script>
 // v125: client chat layer
-(function(){ let wrap=null, fr=null; const CHATV="1794026637";
+(function(){ let wrap=null, fr=null; const CHATV="1794027940";
   function open(){ if(!wrap){ wrap=document.createElement("div"); wrap.id="chatwrap"; wrap.innerHTML='<iframe id="chatfr" title="Message the team" allow="camera"></iframe>'; document.body.appendChild(wrap); fr=wrap.querySelector("iframe"); fr.src="./chat.html?v="+CHATV; fr.addEventListener("load",()=>{ try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }); }
     wrap.hidden=false; document.body.classList.add("chat-on"); if(!(history.state&&history.state.chat)) history.pushState({chat:1},""); try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }
   function close(){ if(wrap){ wrap.hidden=true; } document.body.classList.remove("chat-on"); }
@@ -8183,7 +8183,7 @@ html.hf-lock,html.hf-lock body{overflow:hidden!important}html.hf-lock body::afte
     const box=c.querySelector(".lt"), h=rows.join(""); if(box.dataset.h!==h){ box.innerHTML=h; box.dataset.h=h; box.querySelectorAll(".lr").forEach(r=>r.onclick=()=>{ tab(r.dataset.go); if(r.dataset.go==="briefing"&&!r.dataset.v&&b&&window.BRIEF&&BRIEF.show){ BRIEF.show(b); window.scrollTo(0,0); } if(r.dataset.v) setTimeout(()=>{ const p=document.querySelector("#pane-briefing .vid .play"); if(p) p.click(); },400); }); } }
   // forecast first: radar, hours, 10-day, then the team, the schedule, alerts, maps and the extras
   function order(){ if(innerWidth>=900) return; const o=document.getElementById("pane-overview"); if(!o) return; const q=c=>o.querySelector(":scope > "+c);
-    const _calm=/\bclear\b/.test((document.getElementById("call")||{}).className||""); const seq=(_calm?[".p-hours",".p-days",".two"]:[".two",".p-hours",".p-days"]).concat([".p-latest",".p-sched",".p-alerts",".p-maproom",".p-bucket",".p-gauges",".p-alm",".p-hf",".p-area",".p-briefs"]).map(q).filter(Boolean);
+    const seq=[".two","#askbar",".p-hours",".p-days"].concat([".p-latest",".p-sched",".p-alerts",".p-maproom",".p-bucket",".p-gauges",".p-alm",".p-fire",".p-beach",".p-ski",".p-hf",".p-area",".p-briefs"]).map(q).filter(Boolean);
     const cur=[...o.children].filter(e=>seq.includes(e)); if(cur.every((e,i)=>e===seq[i])) return;
     seq.forEach(e=>o.appendChild(e)); [".p-chat",".notes"].map(q).filter(Boolean).forEach(e=>o.appendChild(e)); }
   // one hero card on phones: What's Next folds into the status card
@@ -9092,7 +9092,7 @@ window.SDR_MAPCARD=function(xmc,o){ if(!xmc) return; let c=xmc.querySelector(".m
     const rv=((window.CHANNEL||{}).chatMode)==="review";
     b.innerHTML=`<em class="lv"><s></s>LIVE CHAT</em><span>${rv?"Ask our meteorologists":"Ask the forecast desk"}</span><em class="go">›</em>`;
     b.onclick=()=>{ const t=document.querySelector('.tabs button[data-pane="chat"]'); if(t) t.click(); window.scrollTo(0,0); };
-    const after=document.getElementById("bstrip")&&!document.getElementById("bstrip").hidden?document.getElementById("bstrip"):st; after.insertAdjacentElement("afterend",b); }
+    const tw=document.querySelector("#pane-overview > .two"), after=tw||(document.getElementById("bstrip")&&!document.getElementById("bstrip").hidden?document.getElementById("bstrip"):st); after.insertAdjacentElement("afterend",b); }
   setTimeout(put,1200); setInterval(put,5000); })();
 </script>
 <style>
@@ -9146,4 +9146,43 @@ window.SDR_MAPCARD=function(xmc,o){ if(!xmc) return; let c=xmc.querySelector(".m
 .p-gauges .gn{margin:0;color:var(--muted);font-size:14px}
 </style>
 
+<style id="sdr-272">
+body #next.nxcard.clear #nx-h,body #next.clear #nx-h{color:#F4F7FB!important}
+/* compact Right Now */
+#call.nx-on{padding:16px 18px 16px!important;min-height:0!important}
+#nowx .nxtop{margin:0}
+#nowx .nxpill{font-size:18px!important;padding:6px 14px 6px 7px!important;gap:8px!important}#nowx .nxpill svg{width:24px!important;height:24px!important;padding:4px!important}
+#nowx .nxwhy{margin:8px 0 0!important;font-size:15px!important}
+#nowx .nxmain{margin-top:8px!important;gap:10px!important}
+#nowx .nxl{display:grid!important;grid-template-columns:auto 1fr;align-items:center;column-gap:14px}
+#nowx .nxt{font-size:72px!important;grid-row:span 2}
+#nowx .nxc{font-size:20px!important;margin:0!important;align-self:end}
+#nowx .nxi svg{width:72px!important;height:72px!important}
+#nowx .nxstrip{margin-top:10px!important;border-radius:12px!important}
+#nowx .nxstrip div{padding:7px 6px!important}#nowx .nxstrip b{font-size:20px!important}#nowx .nxstrip small{font-size:10px!important;margin-top:1px!important}
+#nowx .nxl .nxs{grid-column:2;align-self:start}
+@media(max-width:420px){ #nowx .nxt{font-size:64px!important} #nowx .nxi svg{width:62px!important;height:62px!important} #nowx .nxc{font-size:18px!important} }
+</style>
+<script>
+(function(){ const fit=()=>{ const m=window.SDR_RMAP, r=document.querySelector(".radar"); if(!m||!r||innerWidth>=760||r.classList.contains("rfull")) return; const v=window.__LOC||{}; try{ m.invalidateSize(); m.setView([v.la||34.85,v.lo||-82.39],7.5,{animate:false}); }catch(e){} };
+  setTimeout(fit,2500); setTimeout(fit,6000); window.addEventListener("resize",()=>setTimeout(fit,200));
+  new MutationObserver(()=>setTimeout(fit,300)).observe(document.body,{attributes:true,attributeFilter:["class"]}); })();
+</script>
+<style id="sdr-273">
+@media (max-width:759px){
+ html body .radar:not(.rfull) #map,html body .radar:not(.rfull) #rmap{height:230px!important;min-height:0!important;max-height:230px!important}
+ .radar:not(.rfull) .lbl2,.radar:not(.rfull) .lbl3,.radar:not(.rfull) .rvlab,.radar:not(.rfull) .sdr-cam,.radar:not(.rfull) .sdr-ishield,.radar:not(.rfull) .tlbl,
+ .radar:not(.rfull) .leaflet-control-zoom,.radar:not(.rfull) .rbell,.radar:not(.rfull) .rwarn,.radar:not(.rfull) .rctl,.radar:not(.rfull) .leaflet-control-attribution,
+ .radar:not(.rfull) > .foot,.radar:not(.rfull) .rtools,.radar:not(.rfull) .leaflet-pane.leaflet-cams-pane,.radar:not(.rfull) .leaflet-pane.leaflet-trk-pane{display:none!important}
+ .radar:not(.rfull){cursor:pointer}
+ .radar:not(.rfull)::after{content:"Tap for full radar ›";position:absolute;right:10px;bottom:10px;z-index:800;font-family:var(--display);font-weight:800;letter-spacing:.08em;font-size:12px;color:#fff;background:rgba(14,26,51,.85);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:5px 10px;pointer-events:none}
+ .radar:not(.rfull){position:relative;height:auto!important;min-height:0!important;padding-bottom:0!important}
+ .radar:not(.rfull) > :not(.map){display:none!important}
+}
+/* What's Next carries more weight */
+#next .k,#next .k b{font-size:13px!important;letter-spacing:.16em!important}
+#next #nx-h{font-size:clamp(26px,7vw,32px)!important;line-height:1.05!important}
+#next #nx-p{font-size:16.5px!important}
+#call.nx-on:not(.action) > :not(#nowx){display:none!important}
+</style>
 </body></html>

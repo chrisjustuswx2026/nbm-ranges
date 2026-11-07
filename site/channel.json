@@ -3,7 +3,7 @@
  "deskLive": false,
  "deskNote": "",
  "aiChatUrl": "https://sdr-chat.raspy-bonus-f476.workers.dev",
- "chatMode": "auto",
+ "chatMode": "review",
  "sponsors": {
   "ski": {
    "name": "",

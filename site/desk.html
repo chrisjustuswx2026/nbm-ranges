@@ -308,6 +308,41 @@ body.live .set{display:none}
 .attchip{background:#13224A;border:1px solid #2F7CF6;color:#DCEBFF;border-radius:999px;padding:5px 11px;font-size:13px;cursor:pointer}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:14px;z-index:20;max-width:90vw;box-shadow:0 8px 30px rgba(0,0,0,.4)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ===== v303 desk design pass: bigger type, a real two-column desk on wide screens, stream card ===== */
+body{font-size:16px}
+.k{font-size:12.5px;letter-spacing:.16em}
+.rule{font-size:13.5px;color:var(--dim);padding:0 4px}
+.tabs button{font-size:14px;padding:10px 6px}
+.bench .hd b{font-size:20px}
+.bench .hd small{font-size:13.5px}
+.met{width:96px;padding:10px 6px}
+.met small{font-size:12.5px}
+.keep{gap:8px;font-size:14px}
+.keep input{padding:8px 10px!important;font-size:14px!important}
+.keep button{padding:9px 14px;font-size:13px}
+#liverow{border-top:1px solid var(--line);padding-top:10px;margin-top:2px}
+#liverow>span:first-child{color:var(--muted)}
+#livest{width:100%;font-size:13px;color:var(--dim)}
+#livest b{color:var(--muted);font-weight:600}
+.card{font-size:16px}
+@media (min-width:1100px){
+  main{max-width:1280px}
+  #queue{grid-template-columns:360px minmax(0,1fr);grid-template-rows:auto auto 1fr;column-gap:16px;align-items:start}
+  #queue .bench{grid-column:1;grid-row:1/span 3;position:sticky;top:76px;padding:14px 16px}
+  #queue .tabs{grid-column:2;grid-row:1}
+  #queue .rule{grid-column:2;grid-row:2}
+  #queue #list{grid-column:2;grid-row:3}
+  .bench .hd{flex-direction:column;align-items:flex-start;gap:4px}
+  .bench .hd .sample{margin-left:0!important}
+  .mets{display:grid;grid-template-columns:1fr 1fr;overflow:visible}
+  .met{width:auto}
+  #deskrow,#liverow{display:grid;grid-template-columns:1fr;gap:8px}
+  #deskrow>span:not(#deskst),#liverow>span:first-child{font-family:var(--display);font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:12px;color:var(--muted)}
+  #deskrow button,#liverow button{width:100%}
+  #deskrow #deskst{font-size:13px;color:var(--dim);text-transform:none;letter-spacing:0;font-family:var(--body);font-weight:400}
+  #thread,#admin{max-width:980px;margin:0 auto;width:100%}
+}
 </style>
 
 <header class="top gut">
@@ -329,7 +364,7 @@ body.live .set{display:none}
       <div class="mets" id="mets"></div>
       <div class="cover" id="cover" hidden><b>Nobody on shift.</b> Lead notified. Clients get the after-hours note until someone clocks in.</div>
       <div class="keep" id="deskrow"><button id="offbtn" style="border-color:var(--line);color:var(--fg)">DESK OFFLINE</button><span>back</span><input id="backat" placeholder="first thing in the morning" style="background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:5px 8px;font:inherit;font-size:13px;min-width:0;flex:1"><span id="deskst" style="color:var(--dim)">Desk is open · lead or admin can take it offline</span></div>
-      <div class="keep" id="liverow"><span style="font-weight:800;letter-spacing:.08em;font-size:11px;white-space:nowrap">NEW LIVE LINK</span><input id="livelink" placeholder="paste the new YouTube live link when the stream restarts" style="background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:5px 8px;font:inherit;font-size:13px;min-width:0;flex:1"><button id="livebtn" style="border-color:var(--line);color:var(--fg);white-space:nowrap">SEND TO DASHBOARDS</button></div>
+      <div class="keep" id="liverow"><span style="font-weight:800;letter-spacing:.08em;font-size:11px;white-space:nowrap">NEW LIVE LINK</span><input id="livelink" placeholder="paste the new YouTube live link when the stream restarts" style="background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:5px 8px;font:inherit;font-size:13px;min-width:0;flex:1"><button id="livebtn" style="border-color:var(--line);color:var(--fg);white-space:nowrap">SEND TO DASHBOARDS</button><span id="livest">Stream: checking…</span></div>
     </section>
 
     <div class="tabs" id="tabs">
@@ -719,8 +754,10 @@ body.live .set{display:none}
       var b=document.getElementById("offbtn"); b.textContent=DESK.offline?"DESK IS OFFLINE · GO ONLINE":"DESK OFFLINE"; b.style.color=DESK.offline?"var(--action)":"var(--fg)"; b.style.borderColor=DESK.offline?"var(--action-line)":"var(--line)";
       document.getElementById("deskst").textContent=DESK.offline?"Clients get the between-shifts answer from the software; questions wait here.":(Object.keys(on).length?"Desk is open · lead or admin can take it offline":"Nobody on shift: the software answers clients, and their questions wait here."); bench(); }
     window.LIVE=DEMO?null:{api:api,remember:remember,login:login,applyShift:applyShift};
+    function liveStatus(){ if(DEMO) return; fetch(URL0+"/status",{cache:"no-store"}).then(function(r){ return r.json(); }).then(function(j){ var el=document.getElementById("livest"); if(!el) return; if(j.live){ var d=j.liveAt?new Date(j.liveAt):null; el.innerHTML='Stream on the dashboards: <b>youtu.be/'+j.live+'</b>'+(d?' · set '+d.toLocaleString([], {weekday:"short",hour:"numeric",minute:"2-digit"}):''); } else el.textContent="Stream: dashboards are using the link in channel.json"; }).catch(function(){}); }
+    setTimeout(liveStatus,1500); setInterval(liveStatus,60000);
     (function(){ var b=document.getElementById("livebtn"), i=document.getElementById("livelink"); if(!b) return; b.addEventListener("click",function(){ var v=i.value.trim(); if(!v){ toast("Paste the YouTube live link first."); return; } if(DEMO){ toast("Demo mode: nothing sent."); return; }
-      api("/desk/live",{link:v,name:(you()||{}).n||""}).then(function(j){ if(j.live){ toast("Dashboards switch to the new stream within 2 minutes."); i.value=""; } else toast(j.error||"Couldn't send it."); }).catch(function(){ toast("Couldn't reach the server. Try again."); }); }); })();
+      api("/desk/live",{link:v,name:(you()||{}).n||""}).then(function(j){ if(j.live){ toast("Dashboards switch to the new stream within 2 minutes."); i.value=""; liveStatus(); } else toast(j.error||"Couldn't send it."); }).catch(function(){ toast("Couldn't reach the server. Try again."); }); }); })();
     fetch("./channel.json?_="+Date.now(),{cache:"no-store"}).then(function(r){ return r.json(); }).then(function(j){ URL0=String(j.aiChatUrl||"").replace(/\/$/,""); }).catch(function(){}).then(function(){
       if(!URL0&&!DEMO){ document.getElementById("queue").innerHTML='<div class="panel empty">The chat server isn\'t connected yet. Add its address to channel.json → aiChatUrl.</div>'; return; }
       if(DEMO){ setYou(WHO||"Matthew"); start(); return; }
@@ -854,6 +891,15 @@ body.live .set{display:none}
 #wb input:focus,#wb textarea:focus{border-color:var(--blue)}
 #wb #wb-notes{min-height:170px;resize:vertical}
 .wrow{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
+#wk{margin:0 0 12px;border:1px solid var(--line);border-radius:14px;padding:12px;background:rgba(5,12,28,.35)}
+.wkh b{display:block;font-family:var(--display);font-weight:800;letter-spacing:.14em;font-size:13px}.wkh small{display:block;color:var(--muted);font-size:13px;margin:2px 0 10px}
+#wk-custom{display:flex;gap:8px;margin-top:8px}#wk-custom[hidden]{display:none}#wk-custom input{flex:1;min-width:0;background:#0B1730;border:1px solid var(--line);border-radius:10px;padding:8px 10px;color:inherit;font:inherit}
+.wkt{width:100%;border-collapse:collapse;margin:12px 0 4px;font-size:13.5px}.wkt th{font-family:var(--display);font-weight:800;letter-spacing:.1em;font-size:10.5px;color:var(--muted);text-align:left;padding:4px 6px;border-bottom:1px solid var(--line)}
+.wkt td{padding:7px 6px;border-bottom:1px solid rgba(255,255,255,.06);vertical-align:top}.wkt td b{font-family:var(--display);font-weight:800}.wkt .hl{color:#F5A15A;font-weight:700}.wkt .lo{color:#7FB2E8;font-weight:700}.wkt small{display:block;color:var(--muted);font-size:12px}
+.wkx{margin-top:12px}.wkx>b{display:block;font-family:var(--display);font-weight:800;letter-spacing:.12em;font-size:11.5px;color:var(--muted);margin-bottom:6px}
+.wki{display:flex;gap:9px;align-items:flex-start;padding:6px 0}.wki input[type=checkbox]{margin-top:5px;width:18px;height:18px;accent-color:#2F7CF6;flex:none}#wb .wki textarea{flex:1;min-width:0;min-height:0!important;resize:vertical;line-height:1.35;background:#0B1730;border:1px solid var(--line);border-radius:8px;padding:7px 9px;color:inherit;font:inherit;font-size:14px}
+#wk-ctx{min-height:80px!important;margin-top:4px}
+.wkgo{display:flex;gap:10px;align-items:center;margin-top:12px}.wkgo small{color:var(--muted);font-size:12.5px}
 .btn{border:1.5px solid var(--line);border-radius:999px;padding:9px 18px;font-family:var(--display);font-weight:800;letter-spacing:.1em;font-size:14px}
 .btn.build{background:var(--blue);border-color:var(--blue);color:#fff;width:100%;padding:12px;font-size:15px}
 .btn.build:disabled{opacity:.55}
@@ -922,7 +968,13 @@ document.addEventListener("desk-ready",()=>{ const D=window.DESK; if(!D||window.
     <div class="wc"><div class="wh"><b>1 · YOUR MAPS</b><small>Up to 4 for a one-pager, 8 for a big event · the first one leads</small></div>
       <div class="drop" id="wb-drop"><b>Add images</b> · drag, tap to pick, or paste a screenshot</div><input type="file" id="wb-file" accept="image/*" multiple hidden>
       <div class="imgs" id="wb-imgs"></div></div>
-    <div class="wc"><div class="wh"><b>2 · YOUR NOTES</b><small>Bullet points are fine</small></div>
+    <div class="wc"><div class="wh"><b>2 · YOUR NOTES</b><small>Bullet points are fine</small><button type="button" class="btn" id="wb-week" style="margin-left:auto;padding:6px 12px;font-size:12px">WEEK AHEAD</button></div>
+      <div id="wk" hidden>
+        <div class="wkh"><b>WEEK AHEAD</b><small>Pick the place. We pull its 7-day; you pick what matters and add the bigger picture.</small></div>
+        <div class="wb-chips" id="wk-loc"><button type="button" data-l="34.8526,-82.3940,Greenville County">Greenville County</button><button type="button" data-l="34.6788,-82.8430,Clemson">Clemson</button><button type="button" data-l="30.1588,-85.6602,Bay County">Bay County</button><button type="button" data-l="custom">Other place…</button></div>
+        <div id="wk-custom" hidden><input type="text" id="wk-q" placeholder="City, ST (like Asheville, NC)"><button type="button" class="btn" id="wk-go">PULL</button></div>
+        <div id="wk-body"></div>
+      </div>
       <textarea id="wb-notes" placeholder="Dry and warm this week, highs in the 80s, 10–20° above normal, great for recovery work&#10;High pressure holds through the weekend, little rain&#10;Strong cold front next weekend, 15–20° below normal Sat&#10;First frost/freeze in the mountains Sunday morning, low 30s; upper 30s Greenville and Charlotte&#10;Next briefing Thursday"></textarea>
       <div class="wrow"><button type="button" class="btn build" id="wb-build">BUILD THE BRIEFING</button></div>
       <p class="hint" style="margin:8px 0 0">Builds the page from your notes and maps only. Tap any text on the page to fix a word. Read it all before you publish.</p></div>
@@ -939,6 +991,60 @@ document.addEventListener("desk-ready",()=>{ const D=window.DESK; if(!D||window.
     const n=$("wb-new"); if(n) n.onclick=()=>{ F=blank(); keep(); fill(); drawImgs(); vprev(); paint(); };
     $("wb-go").textContent=F.id?"UPDATE BRIEFING":"PUBLISH TO ALL DASHBOARDS"; };
   $("wb-notes").addEventListener("input",()=>{ F.notes=$("wb-notes").value; keep(); });
+  // v306b WEEK AHEAD: the chosen place's 7-day from its own forecast office, the things worth saying (pick and edit), and room for the bigger picture
+  const WK={ll:null,name:"",days:[],alerts:[]};
+  $("wb-week").onclick=()=>{ const w=$("wk"); w.hidden=!w.hidden; if(!w.hidden&&!WK.days.length){ const dsite=(new URLSearchParams(location.search).get("site")||"").toLowerCase(); const b=[...$("wk-loc").querySelectorAll("button")].find(x=>x.textContent.toLowerCase().includes(dsite.split(" ")[0]||"greenville"))||$("wk-loc").querySelector("button"); b.click(); } };
+  $("wk-loc").querySelectorAll("button").forEach(b=>b.onclick=()=>{ $("wk-loc").querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));
+    if(b.dataset.l==="custom"){ $("wk-custom").hidden=false; $("wk-q").focus(); return; } $("wk-custom").hidden=true; const [la,lo,...n]=b.dataset.l.split(","); pull(+la,+lo,n.join(",")); });
+  $("wk-go").onclick=async()=>{ const q=$("wk-q").value.trim(); if(!q) return; try{ const j=await (await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q.split(",")[0])}&count=10&language=en&format=json&countryCode=US`)).json(); const st=(q.split(",")[1]||"").trim().toUpperCase();
+      const ab={AL:"Alabama",AK:"Alaska",AZ:"Arizona",AR:"Arkansas",CA:"California",CO:"Colorado",CT:"Connecticut",DE:"Delaware",FL:"Florida",GA:"Georgia",HI:"Hawaii",ID:"Idaho",IL:"Illinois",IN:"Indiana",IA:"Iowa",KS:"Kansas",KY:"Kentucky",LA:"Louisiana",ME:"Maine",MD:"Maryland",MA:"Massachusetts",MI:"Michigan",MN:"Minnesota",MS:"Mississippi",MO:"Missouri",MT:"Montana",NE:"Nebraska",NV:"Nevada",NH:"New Hampshire",NJ:"New Jersey",NM:"New Mexico",NY:"New York",NC:"North Carolina",ND:"North Dakota",OH:"Ohio",OK:"Oklahoma",OR:"Oregon",PA:"Pennsylvania",RI:"Rhode Island",SC:"South Carolina",SD:"South Dakota",TN:"Tennessee",TX:"Texas",UT:"Utah",VT:"Vermont",VA:"Virginia",WA:"Washington",WV:"West Virginia",WI:"Wisconsin",WY:"Wyoming"};
+      const R=(j.results||[]).find(r=>!st||r.admin1===ab[st]||String(r.admin1||"").toUpperCase()===st)||(j.results||[])[0]; if(!R) throw 0; pull(R.latitude,R.longitude,`${R.name}${R.admin1?", "+(Object.keys(ab).find(k=>ab[k]===R.admin1)||R.admin1):""}`); }catch(e){ D2toast("Couldn't find that place."); } };
+  async function pull(la,lo,name){ const body=$("wk-body"); body.innerHTML=`<p style="color:var(--muted);margin:10px 0 0">Pulling the 7-day for ${name}…</p>`;
+    try{ const pt=await (await fetch(`https://api.weather.gov/points/${la.toFixed(4)},${lo.toFixed(4)}`)).json(); const [fc,al]=await Promise.all([fetch(pt.properties.forecast).then(r=>r.json()),fetch(`https://api.weather.gov/alerts/active?point=${la.toFixed(4)},${lo.toFixed(4)}`).then(r=>r.json()).catch(()=>({features:[]}))]);
+      const days=[]; (fc.properties.periods||[]).forEach(p=>{ const d=new Date(p.startTime), dd=p.isDaytime?d:new Date(+d-12*3600e3), k=dd.toDateString(); let x=days.find(z=>z.k===k); if(!x){ x={k,d:dd,hi:null,lo:null,pp:0,sky:"",skyN:"",txt:"",txtN:"",wind:""}; days.push(x); }
+        const pp=(p.probabilityOfPrecipitation||{}).value||0; x.pp=Math.max(x.pp,pp); if(p.isDaytime){ x.hi=p.temperature; x.sky=p.shortForecast; x.txt=p.detailedForecast; x.wind=`${p.windDirection} ${p.windSpeed}`; } else { x.lo=p.temperature; x.skyN=p.shortForecast; x.txtN=p.detailedForecast; } });
+      WK.ll=[la,lo]; WK.name=name; WK.days=days.filter(x=>x.hi!=null||x.lo!=null).slice(0,7); WK.alerts=(al.features||[]).map(f=>f.properties).filter(p=>!/Test/i.test(p.event)); draw(); }
+    catch(e){ body.innerHTML=`<p style="color:#F5A15A;margin:10px 0 0">Couldn't pull the forecast for ${name}. Try again in a minute.</p>`; } }
+  const dnL=x=>x.d.toLocaleDateString("en-US",{weekday:"long"}), dnS=x=>x.d.toLocaleDateString("en-US",{weekday:"short"}), r10=n=>Math.round(n/10)*10, dec=v=>Math.floor(v/10)*10+"s";
+  const amt=t=>{ const m=String(t||"").match(/(New (?:rainfall|snow|ice) (?:amounts|accumulation)[^.]*\.)/i); return m?m[1].replace(/^New /,"").replace(/\.$/,"").replace(/^\w/,c=>c.toUpperCase()):""; };
+  const gust=t=>{ const m=String(t||"").match(/gusts? (?:as high as|up to) (\d+) mph/i); return m?+m[1]:0; };
+  function picks(){ const W=WK.days, P=[]; if(!W.length) return P; const H=W.filter(x=>x.hi!=null);
+    // alerts first
+    WK.alerts.forEach(a=>P.push({on:true,t:`${a.event} in effect${a.ends||a.expires?` until ${new Date(a.ends||a.expires).toLocaleString("en-US",{weekday:"short",hour:"numeric",minute:"2-digit"})}`:""}`}));
+    // the swing
+    if(H.length>=4){ let pk=0; for(let i=1;i<Math.min(4,H.length);i++) if(H[i].hi>H[pk].hi) pk=i; let tr=Math.min(pk+1,H.length-1); for(let i=pk+1;i<H.length;i++) if(H[i].hi<H[tr].hi) tr=i;
+      for(let i=tr-1;i>pk;i--) if(H[i].hi>=H[pk].hi-2){ pk=i; break; } for(let i=pk+1;i<=tr;i++) if(H[i].hi<=H[tr].hi+2){ tr=i; break; }
+      let lw=0; for(let i=1;i<Math.min(4,H.length);i++) if(H[i].hi<H[lw].hi) lw=i; let wm=Math.min(lw+1,H.length-1); for(let i=lw+1;i<H.length;i++) if(H[i].hi>H[wm].hi) wm=i;
+      if(H[pk].hi-H[tr].hi>=10) P.push({on:true,t:`Big cooldown: ${dec(H[pk].hi)} to ${dec(H[tr].hi)} by ${dnL(H[tr])} (${H[pk].hi}° ${dnS(H[pk])}, ${H[tr].hi}° ${dnS(H[tr])}). About ${Math.round((H[pk].hi-H[tr].hi)/5)*5}° colder.`});
+      else if(H[wm].hi-H[lw].hi>=10) P.push({on:true,t:`Warming up: ${dec(H[lw].hi)} to ${dec(H[wm].hi)} by ${dnL(H[wm])} (${H[lw].hi}° ${dnS(H[lw])}, ${H[wm].hi}° ${dnS(H[wm])}).`});
+      else P.push({on:false,t:`Steady temperatures: highs ${Math.min(...H.map(x=>x.hi))}° to ${Math.max(...H.map(x=>x.hi))}° all week.`}); }
+    // cold nights
+    const fz=W.find(x=>x.lo!=null&&x.lo<=32), fr=fz?null:W.find(x=>x.lo!=null&&x.lo<=36);
+    if(fz) P.push({on:true,t:`Freeze possible ${dnL(fz)} night, low near ${fz.lo}°. Protect pipes, irrigation and tender plants.`}); else if(fr) P.push({on:true,t:`Frost possible ${dnL(fr)} night, low near ${fr.lo}°. Cover tender plants.`});
+    // wet / stormy / snowy days, with amounts when the forecast gives them
+    const wet=W.filter(x=>x.pp>=30); wet.forEach(x=>{ const all=x.txt+" "+x.txtN, th=/thunder/i.test(all), sn=/snow|sleet|freezing rain/i.test(all), a=amt(x.txt)||amt(x.txtN);
+      P.push({on:x.pp>=50||th||sn,t:`${dnL(x)}: ${sn?"wintry weather":th?"storms":"rain"} (${r10(x.pp)}% chance)${a?`. ${a}`:""}.`}); });
+    if(!wet.length) P.push({on:true,t:`Rain: nothing worth planning around through ${dnL(W[W.length-1])}.`});
+    // wind
+    const wd=W.map(x=>({x,g:Math.max(gust(x.txt),gust(x.txtN))})).filter(z=>z.g>=30).sort((a,b)=>b.g-a.g)[0]; if(wd) P.push({on:wd.g>=40,t:`Windy ${dnL(wd.x)}: gusts up to ${wd.g} mph.`});
+    // heat
+    const hot=H.find(x=>x.hi>=95); if(hot) P.push({on:true,t:`Heat ${dnL(hot)}: highs near ${hot.hi}°. Plan water and breaks for crews.`});
+    return P; }
+  function draw(){ const W=WK.days, P=picks(), body=$("wk-body");
+    body.innerHTML=`<table class="wkt"><thead><tr><th>DAY</th><th>HIGH / LOW</th><th>RAIN</th><th>FORECAST</th></tr></thead><tbody>${W.map(x=>`<tr><td><b>${dnS(x).toUpperCase()}</b><small>${x.d.toLocaleDateString("en-US",{month:"numeric",day:"numeric"})}</small></td><td><span class="hl">${x.hi!=null?x.hi+"°":"–"}</span> / <span class="lo">${x.lo!=null?x.lo+"°":"–"}</span></td><td>${r10(x.pp)}%</td><td>${x.sky||x.skyN}<small>${x.wind||""}</small></td></tr>`).join("")}</tbody></table>
+      <div class="wkx"><b>WHAT'S WORTH SAYING · ${WK.name.toUpperCase()}</b>${P.map((p,i)=>`<label class="wki"><input type="checkbox" data-i="${i}" ${p.on?"checked":""}><textarea data-i="${i}" rows="${p.t.length>60?2:1}">${p.t.replace(/</g,"&lt;")}</textarea></label>`).join("")}
+        <label class="wki"><input type="checkbox" data-add checked><textarea data-add rows="1" placeholder="Add your own point (optional)"></textarea></label></div>
+      <div class="wkx"><b>THE BIGGER PICTURE</b><textarea id="wk-ctx" placeholder="Your read on the pattern: the 6–10 day outlook, what's driving it, what you're watching next week, how confident you are."></textarea></div>
+      <div class="wkgo"><button type="button" class="btn build" id="wk-use">PUT THIS IN MY NOTES</button><small>Then add maps (the 6–10 day outlook is a good one) and build.</small></div>`;
+    $("wk-use").onclick=()=>{ const pts=[...body.querySelectorAll('.wki')].map(l=>{ const c=l.querySelector('input[type=checkbox]'), t=l.querySelector('textarea'); return c.checked&&t.value.trim()?t.value.trim():null; }).filter(Boolean);
+      const ctx=$("wk-ctx").value.trim();
+      const notes=[`WEEK AHEAD BRIEFING · ${WK.name} · ${W[0].d.toLocaleDateString("en-US",{month:"short",day:"numeric"})}–${W[W.length-1].d.toLocaleDateString("en-US",{month:"short",day:"numeric"})}`,
+        `Top things to know this week (lead with the first one):`,...pts.map(x=>"- "+x),
+        ctx?`Bigger picture (the meteorologist's own words, keep the meaning): ${ctx}`:"",
+        `The 7-day for ${WK.name}:`,...W.map(x=>`- ${dnS(x)}: ${x.sky||x.skyN}, high ${x.hi!=null?x.hi+"°":"–"}, low ${x.lo!=null?x.lo+"°":"–"}, rain ${r10(x.pp)}%`)].filter(Boolean).join("\n");
+      if(F.notes.trim()&&!confirm("Replace the notes you already typed?")) return;
+      F.notes=notes; $("wb-notes").value=notes; keep(); $("wk").hidden=true; $("wb-notes").scrollIntoView({block:"center",behavior:"smooth"}); D2toast("Your week ahead is in the notes. Add maps, then build."); }; }
+  function D2toast(m){ try{ D.toast(m); }catch(e){} }
   $("wb-video").addEventListener("input",()=>{ F.video=$("wb-video").value; keep(); vprev(); paint(); });
   $("wb-cat").onclick=e=>{ const b=e.target.closest("button"); if(!b) return; F.cat=b.dataset.c; keep(); fill(); };
 

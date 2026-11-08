@@ -744,7 +744,7 @@ body.live .set{display:none}
     const url=x=>o.imgUrl?o.imgUrl(x):(x.src||"");
     const pic=(sec,p)=>{ const x=sec.img!=null?images[sec.img-1]:null; if(!x) return ""; const c=sec.crop&&x.w&&x.h?sec.crop:null;
       const frame=c?` style="aspect-ratio:${(x.w*c.w).toFixed(0)}/${(x.h*c.h).toFixed(0)}"`:"", im=c?` style="position:absolute;left:${(-c.x/c.w*100).toFixed(2)}%;top:${(-c.y/c.h*100).toFixed(2)}%;width:${(100/c.w).toFixed(2)}%;height:auto;max-width:none"`:"";
-      const C=c||{x:0,y:0,w:1,h:1}, fx=v=>((v-C.x)/C.w*100), fy=v=>((v-C.y)/C.h*100);
+      const C=c||{x:0,y:0,w:1,h:1}, fx=v=>Math.max(14,Math.min(86,(v-C.x)/C.w*100)), fy=v=>Math.max(8,Math.min(90,(v-C.y)/C.h*100));
       const pl=(sec.plaques||[]).map((q,i)=>`${q.ax!=null&&q.ay!=null?`<svg class="bp-arrow" viewBox="0 0 100 100" preserveAspectRatio="none"><line x1="${fx(q.x).toFixed(1)}" y1="${fy(q.y).toFixed(1)}" x2="${fx(q.ax).toFixed(1)}" y2="${fy(q.ay).toFixed(1)}"/></svg><i class="bp-dot" style="left:${fx(q.ax).toFixed(1)}%;top:${fy(q.ay).toFixed(1)}%"></i>`:""}<span class="bp-plq" style="left:${fx(q.x).toFixed(1)}%;top:${fy(q.y).toFixed(1)}%">${E?`<b contenteditable="true" data-p="${p}.plaques.${i}.text">${esc(q.text)}</b>`:`<b>${esc(q.text)}</b>`}</span>`).join("");
       return `<div class="bp-pic${c?" crop":""}"${frame}><img alt="${esc(sec.label||"")}" loading="lazy" src="${esc(url(x))}"${x.w&&x.h?` width="${x.w}" height="${x.h}"`:""}${im}>${pl}${sec.label?ed(p+".label","span","bp-lab",sec.label):""}${sec.tag||sec.tagBig?`<span class="bp-tag" style="background:${TONE[sec.tone]||TONE.calm}">${sec.tag?ed(p+".tag","small","",sec.tag):""}${sec.tagBig?ed(p+".tagBig","b","",sec.tagBig):""}</span>`:""}</div>`; };
     const bullets=(sec,p)=>sec.bullets&&sec.bullets.length?`<ul class="bp-ul">${sec.bullets.slice(0,o.full?5:3).map((b,i)=>ed(p+".bullets."+i,"li","",b)).join("")}</ul>`:"";
@@ -759,7 +759,9 @@ body.live .set{display:none}
       ${P.intro&&o.full?`<div class="bp-intro">${ed("intro","p","",P.intro)}</div>`:""}
       ${P.glance&&P.glance.length&&o.full?`<div class="bp-glance"><div class="bp-gh">AT A GLANCE</div><div class="bp-gr">${P.glance.map((g,i)=>`<div><small>${ed("glance."+i+".label","span","",g.label||"")}</small>${ed("glance."+i+".value","b","",g.value||"")}</div>`).join("")}</div></div>`:""}
       ${section(P.hero,"hero","bp-hero")}
-      ${P.cards&&P.cards.length?`<div class="bp-cards n${P.cards.length}">${P.cards.map((c,i)=>section(c,"cards."+i,"bp-card")).join("")}</div>`:""}
+      ${(()=>{ const C=(P.cards||[]).map((c,i)=>[c,i]), p1=C.filter(([c])=>c.page!==2), p2=C.filter(([c])=>c.page===2);
+        const grid=(L,cls)=>L.length?`<div class="bp-cards n${L.length} ${cls||""}">${L.map(([c,i])=>section(c,"cards."+i,"bp-card"+((c.crop&&c.crop.w&&c.crop.h&&images[c.img-1]&&(images[c.img-1].w*c.crop.w)/(images[c.img-1].h*c.crop.h)<0.95)?" tall":""))).join("")}</div>`:"";
+        return grid(p1)+(p2.length?`<div class="bp-p2"><span>PAGE 2 · THE DETAIL</span></div>`+grid(p2,"p2"):""); })()}
       ${P.note&&o.full?`<div class="bp-note">${ed("note","p","",P.note)}</div>`:""}
       ${P.bottom?`<div class="bp-bottom"><small>BOTTOM LINE</small>${ed("bottom","p","",P.bottom)}</div>`:""}
       <div class="bp-foot"><span>${esc(o.brand||"SDR WEATHER INTELLIGENCE DIVISION")}</span>${P.next?ed("next","span","",P.next):(o.ready===""?"":`<span>${esc(o.ready||"SDR STANDS READY TO SERVE")}</span>`)}</div>
@@ -804,7 +806,7 @@ body.live .set{display:none}
 .bp-body{display:grid;gap:10px;padding:10px}
 .bp-bar{font-size:20px;letter-spacing:.06em;padding:9px 12px}
 .bp-subbar{background:#0A1428;color:#fff;font-family:var(--display);font-weight:800;letter-spacing:.12em;font-size:12px;text-align:center;padding:5px 10px;text-transform:uppercase;border-top:1px solid rgba(255,255,255,.12)}
-.bp-footbar{background:#0A1428;color:#fff;font-family:var(--display);font-weight:800;letter-spacing:.12em;font-size:12.5px;text-align:center;padding:7px 10px;text-transform:uppercase;border-radius:0 0 8px 8px;margin-top:-10px;border-top:3px solid #2F7CF6}
+.bp-footbar{background:#0A1428;color:#fff;font-family:var(--display);font-weight:800;letter-spacing:.1em;font-size:12.5px;text-align:center;padding:7px 10px;text-transform:uppercase;white-space:normal;overflow-wrap:anywhere;line-height:1.2;border-radius:0 0 8px 8px;margin-top:-10px;border-top:3px solid #2F7CF6}
 .bp-pic{position:relative}
 .bp-plq{position:absolute;transform:translate(-50%,-50%);background:#fff;color:#0A1428;border-left:5px solid #2F7CF6;padding:5px 9px;font-weight:800;font-size:13.5px;line-height:1.15;max-width:40%;box-shadow:0 4px 14px rgba(0,0,0,.35);text-align:center;border-radius:2px;z-index:3}
 .bp-plq b{font-weight:800}
@@ -820,11 +822,13 @@ body.live .set{display:none}
 .bp-stat small{display:block;font-family:var(--display);font-weight:800;letter-spacing:.14em;font-size:10.5px;color:var(--t);text-transform:uppercase}
 .bp-stat b{display:block;font-family:var(--display);font-weight:800;font-size:40px;line-height:1;color:var(--t);margin-top:2px}
 .bp-ul{margin:0;padding-left:16px;display:grid;gap:4px}.bp-ul li{font-size:14px;line-height:1.35;color:#DCE4F0}.bp-ul li::marker{color:#5BD3A1}
-.bp-cards{display:grid;gap:10px}@media(min-width:600px){.bp-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.bp-cards.n1{grid-template-columns:1fr}.bp-cards.n3 .bp-card:first-child{grid-column:1/-1}}
+.bp-cards{display:grid;gap:10px}
+.bp-p2{display:flex;align-items:center;gap:10px;margin:6px 0 0}.bp-p2::before,.bp-p2::after{content:"";flex:1;height:1px;background:var(--line)}.bp-p2 span{font-family:var(--display);font-weight:800;letter-spacing:.16em;font-size:11px;color:var(--dim)}
+.bp-card.tall .bp-body{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}.bp-card.tall .bp-footbar{grid-column:1}.bp-card.tall .bp-txt{grid-column:2;grid-row:1/3}@media(min-width:600px){.bp-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.bp-cards.n1{grid-template-columns:1fr}.bp-cards.n3 .bp-card:first-child{grid-column:1/-1}}
 .bp-note{border:1.5px solid #0F4C3A;border-radius:10px;padding:10px 12px}.bp-note p{margin:0;font-size:14px;line-height:1.45;font-weight:600;color:#DCE4F0}
 .bp-bottom{background:#0F4C3A;border-radius:12px;padding:12px 14px}.bp-bottom small{display:block;font-family:var(--display);font-weight:800;letter-spacing:.16em;font-size:11px;color:#fff;margin-bottom:4px}.bp-bottom p{margin:0;color:#fff;font-size:15px;line-height:1.45}
 .bp-next{font-family:var(--display);font-weight:800;letter-spacing:.14em;font-size:11px;color:var(--dim);text-align:right;text-transform:uppercase}
-@media(min-width:760px){ .bp-hero .bp-body{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);align-items:start} .bp-cards.n2,.bp-cards.n3{grid-template-columns:repeat(2,minmax(0,1fr))} .bp-cards.n3{grid-template-columns:repeat(3,minmax(0,1fr))} .bp-gr b{font-size:17px} }
+@media(min-width:760px){ .bp-hero .bp-body{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);align-items:start} .bp-hero .bp-footbar{grid-column:1;margin-top:-10px} .bp-hero .bp-txt{grid-column:2;grid-row:1/3} .bp-cards.n2,.bp-cards.n3{grid-template-columns:repeat(2,minmax(0,1fr))} .bp-cards.n3{grid-template-columns:repeat(3,minmax(0,1fr))} .bp-gr b{font-size:17px} }
 @media(max-width:520px){ .bp-card .bp-bar{font-size:12.5px;letter-spacing:.06em;padding:6px 8px} .bp-card .bp-subbar,.bp-card .bp-footbar{font-size:10px;padding:4px 6px} .bp-card .bp-body{padding:7px;gap:7px} .bp-card .bp-ul li{font-size:12.5px} .bp-card .bp-plq{font-size:10.5px;padding:3px 6px;max-width:60%} .bp-card .bp-lab{font-size:9px;max-width:80%} .bp-card .bp-stat b{font-size:26px} }
 @media(max-width:420px){ .bp-plq{font-size:12.5px;padding:5px 8px;max-width:52%} .bp-bar{font-size:17px} .bp-gr b{font-size:13px} .bp-stat b{font-size:34px} .bp-tag b{font-size:13px} .bp-lab{font-size:10px} }
 .bp [contenteditable]{outline:1px dashed transparent;border-radius:3px;transition:outline-color .15s}
@@ -912,7 +916,7 @@ document.addEventListener("desk-ready",()=>{ const D=window.DESK; if(!D||window.
 
   wb.innerHTML=`<div id="wb-edit"></div><div class="wbg"><div class="wbl">
     <div class="wc"><div class="wh"><b>WHAT KIND</b></div><div class="wb-chips" id="wb-cat">${TYPES.map(([k,n,c])=>`<button type="button" data-c="${k}" style="--c:${c}" aria-pressed="false">${n.toUpperCase()}</button>`).join("")}</div></div>
-    <div class="wc"><div class="wh"><b>1 · YOUR MAPS</b><small>Up to 4 · the first one leads unless the notes say otherwise</small></div>
+    <div class="wc"><div class="wh"><b>1 · YOUR MAPS</b><small>Up to 4 for a one-pager, 8 for a big event · the first one leads</small></div>
       <div class="drop" id="wb-drop"><b>Add images</b> · drag, tap to pick, or paste a screenshot</div><input type="file" id="wb-file" accept="image/*" multiple hidden>
       <div class="imgs" id="wb-imgs"></div></div>
     <div class="wc"><div class="wh"><b>2 · YOUR NOTES</b><small>Bullet points are fine</small></div>
@@ -940,7 +944,7 @@ document.addEventListener("desk-ready",()=>{ const D=window.DESK; if(!D||window.
     if(F.images.some(x=>x.busy)){ D.toast("Wait for the images to finish"); return; }
     if(F.page&&!b.dataset.sure){ b.dataset.sure=1; b.textContent="TAP AGAIN · REPLACES THE PAGE"; setTimeout(()=>{ delete b.dataset.sure; b.textContent="BUILD THE BRIEFING"; },4000); return; }
     delete b.dataset.sure; b.disabled=true; b.textContent="BUILDING… ABOUT 20 SECONDS";
-    try{ const j=await D.api("/desk/brief/build",{notes:F.notes,cat:F.cat,images:F.images.filter(x=>x.id).map(x=>({id:x.id,cap:x.cap}))}); if(!j.page) throw new Error("no page");
+    try{ const j=await D.api("/desk/brief/build",{notes:F.notes,cat:F.cat,images:F.images.filter(x=>x.id).map(x=>({id:x.id,cap:x.cap,w:x.w,h:x.h}))}); if(!j.page) throw new Error("no page");
       F.page=j.page; keep(); paint(); D.toast(j.mode==="none"&&F.images.length?"Built from your notes. The maps couldn't be read, so labels came from their file names.":"Built. Read every line, fix anything, then publish."); if(innerWidth<1080) $("wb-pv").scrollIntoView({behavior:"smooth",block:"start"}); }
     catch(e){ if(e.status===401) return D.login("Wrong password."); D.toast("Couldn't build it: "+(e&&e.message||"no reply")); }
     finally{ b.disabled=false; b.textContent=F.page?"BUILD IT AGAIN":"BUILD THE BRIEFING"; } };
@@ -959,7 +963,7 @@ document.addEventListener("desk-ready",()=>{ const D=window.DESK; if(!D||window.
       else{ const r=await fetch(D.url+"/desk/img",{method:"POST",headers:{"Content-Type":"image/jpeg","X-Desk-Key":D.key()},body:blob}); const j=await r.json().catch(()=>({})); if(r.status===401) return D.login("Wrong password."); if(!r.ok||!j.id) throw new Error(j.error||r.status); x.id=j.id; x.src="";
         try{ const sm=await shrink(x.file,1000,0.8); await fetch(D.url+"/desk/img?small="+encodeURIComponent(x.id),{method:"POST",headers:{"Content-Type":"image/jpeg","X-Desk-Key":D.key()},body:sm.blob}); }catch(e){} }
     }catch(e){ D.toast("Image didn't upload. Try again."); F.images.splice(F.images.indexOf(x),1); } x.busy=false; delete x.file; keep(); drawImgs(); paint(); }
-  function add(files){ [...files].filter(f=>/^image\//.test(f.type)).forEach(f=>{ if(F.images.length>=4){ D.toast("Up to 4 images"); return; } const x={file:f,cap:f.name.replace(/\.[a-z]+$/i,"").replace(/[_-]+/g," ").slice(0,60)}; F.images.push(x); upload(x); }); }
+  function add(files){ [...files].filter(f=>/^image\//.test(f.type)).forEach(f=>{ if(F.images.length>=8){ D.toast("Up to 8 images (4 per page)"); return; } const x={file:f,cap:f.name.replace(/\.[a-z]+$/i,"").replace(/[_-]+/g," ").slice(0,60)}; F.images.push(x); upload(x); }); }
   function drawImgs(){ const box=$("wb-imgs"); box.innerHTML=F.images.map((x,i)=>`<div class="it" data-i="${i}"><img alt="" src="${x.id?esc(imgUrl(x)):""}"><span class="n">${i+1}</span>${x.busy?'<div class="iw">Uploading…</div>':""}<button type="button" class="ix" aria-label="Remove">✕</button></div>`).join("");
     box.querySelectorAll(".ix").forEach(b=>b.onclick=()=>{ const i=+b.parentElement.dataset.i; F.images.splice(i,1); if(F.page){ const fix=s=>{ if(!s||s.img==null) return; if(s.img===i+1) s.img=null; else if(s.img>i+1) s.img--; }; fix(F.page.hero); (F.page.cards||[]).forEach(fix); } keep(); drawImgs(); paint(); }); }
   const dz=$("wb-drop"), fi=$("wb-file"); dz.onclick=()=>fi.click(); fi.onchange=()=>{ add(fi.files); fi.value=""; };
@@ -972,7 +976,7 @@ document.addEventListener("desk-ready",()=>{ const D=window.DESK; if(!D||window.
       ${window.SDR_PAGE(P,F.images.filter(x=>x.id),{edit:true,imgUrl,logo:"./sdr-logo.png"})}`}</div>${P?`<div class="pvask"><div class="wh"><b>CHANGE SOMETHING</b><small>Tell it what you want, like you'd tell a producer</small></div><textarea id="wb-ask" placeholder="Lead with the frost. Headline is weak. Add what this means for road crews. Crop map 2 tighter on the Carolinas."></textarea><div class="wrow"><button type="button" class="btn ai" id="wb-revise">✦ MAKE THE CHANGE</button><span class="hint">Keeps everything else as it is.</span></div></div><div class="pvfix">Tap any text to fix a word. Changes save as you type.<button type="button" id="wb-drop-page">CLEAR THE PAGE</button></div>`:""}`;
     if(v){ const r=pv.querySelector(".bp"); if(r) r.insertAdjacentHTML("afterbegin",`<div class="pvv"><img alt="" src="https://i.ytimg.com/vi/${v}/hqdefault.jpg"><i><svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg></i><em>WATCH THE BRIEFING</em></div>`); }
     const rv=$("wb-revise"); if(rv) rv.onclick=async()=>{ const ask=($("wb-ask").value||"").trim(); if(!ask){ $("wb-ask").focus(); return; } read(); rv.disabled=true; rv.textContent="WORKING… ABOUT 20 SECONDS";
-      try{ const j=await D.api("/desk/brief/revise",{page:F.page,notes:F.notes,instruction:ask,images:F.images.filter(x=>x.id).map(x=>({id:x.id,cap:x.cap}))}); if(!j.page) throw new Error("no page"); F.page=j.page; keep(); paint(); D.toast("Changed. Read it over."); }
+      try{ const j=await D.api("/desk/brief/revise",{page:F.page,notes:F.notes,instruction:ask,images:F.images.filter(x=>x.id).map(x=>({id:x.id,cap:x.cap,w:x.w,h:x.h}))}); if(!j.page) throw new Error("no page"); F.page=j.page; keep(); paint(); D.toast("Changed. Read it over."); }
       catch(e){ if(e.status===401) return D.login("Wrong password."); D.toast("Couldn't change it: "+(e&&e.message||"no reply")); rv.disabled=false; rv.textContent="✦ MAKE THE CHANGE"; } };
     pv.querySelectorAll("[contenteditable]").forEach(el=>{ el.addEventListener("input",()=>{ read(); }); el.addEventListener("keydown",e=>{ if(e.key==="Enter"&&el.tagName!=="LI"&&el.tagName!=="P"){ e.preventDefault(); el.blur(); } }); });
     const cl=$("wb-drop-page"); if(cl) cl.onclick=()=>{ F.page=null; keep(); paint(); $("wb-build").textContent="BUILD THE BRIEFING"; };

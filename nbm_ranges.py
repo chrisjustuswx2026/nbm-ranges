@@ -38,7 +38,7 @@ LAT0, LAT1, LON0, LON1 = 24.0, 50.0, -125.0, -66.0
 PCTS = (10, 50, 90)                      # fallback percentiles
 PCTS2 = (25, 50, 75)                     # preferred (v115): the middle half of the models, no outliers; falls back to 10/90 when 25/75 are missing
 PCT_SLOT = {10: 0, 50: 1, 90: 2, 25: 3, 75: 5}   # slot codes: 0-2 = fallback low/likely/high, 3 and 5 = preferred low/high (25th/75th)
-NDAYS = 10
+NDAYS = 11   # v297: 11 so the 10-day still shows 10 full days after tonight drops off
 MISSING = -999
 
 RANGE_FIELDS = ("rain", "snow", "ice")

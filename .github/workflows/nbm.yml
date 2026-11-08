@@ -72,6 +72,15 @@ jobs:
         run: python cameras.py public
       - name: River gauges near the client sites and anywhere in flood (never fails the job)
         run: python rivers.py public
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Ski resort reports, November through March (never fails the job)
+        run: |
+          m=$(date -u +%-m)
+          if [ "$m" -ge 11 ] || [ "$m" -le 3 ]; then
+            npm install --no-save playwright@1.48.2 >/dev/null 2>&1 && npx playwright install --with-deps chromium >/dev/null 2>&1 && node site/tools/ski_reports.js public || echo "ski reports skipped"
+          fi
       - name: Dashboards (the site folder becomes /clemson/ and /bay/ on the same website)
         run: if [ -d site ]; then cp -r site/. public/; fi
       - uses: actions/upload-pages-artifact@v3

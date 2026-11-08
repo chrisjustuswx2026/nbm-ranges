@@ -329,6 +329,7 @@ body.live .set{display:none}
       <div class="mets" id="mets"></div>
       <div class="cover" id="cover" hidden><b>Nobody on shift.</b> Lead notified. Clients get the after-hours note until someone clocks in.</div>
       <div class="keep" id="deskrow"><button id="offbtn" style="border-color:var(--line);color:var(--fg)">DESK OFFLINE</button><span>back</span><input id="backat" placeholder="first thing in the morning" style="background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:5px 8px;font:inherit;font-size:13px;min-width:0;flex:1"><span id="deskst" style="color:var(--dim)">Desk is open · lead or admin can take it offline</span></div>
+      <div class="keep" id="liverow"><span style="font-weight:800;letter-spacing:.08em;font-size:11px;white-space:nowrap">NEW LIVE LINK</span><input id="livelink" placeholder="paste the new YouTube live link when the stream restarts" style="background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:5px 8px;font:inherit;font-size:13px;min-width:0;flex:1"><button id="livebtn" style="border-color:var(--line);color:var(--fg);white-space:nowrap">SEND TO DASHBOARDS</button></div>
     </section>
 
     <div class="tabs" id="tabs">
@@ -718,6 +719,8 @@ body.live .set{display:none}
       var b=document.getElementById("offbtn"); b.textContent=DESK.offline?"DESK IS OFFLINE · GO ONLINE":"DESK OFFLINE"; b.style.color=DESK.offline?"var(--action)":"var(--fg)"; b.style.borderColor=DESK.offline?"var(--action-line)":"var(--line)";
       document.getElementById("deskst").textContent=DESK.offline?"Clients get the between-shifts answer from the software; questions wait here.":(Object.keys(on).length?"Desk is open · lead or admin can take it offline":"Nobody on shift: the software answers clients, and their questions wait here."); bench(); }
     window.LIVE=DEMO?null:{api:api,remember:remember,login:login,applyShift:applyShift};
+    (function(){ var b=document.getElementById("livebtn"), i=document.getElementById("livelink"); if(!b) return; b.addEventListener("click",function(){ var v=i.value.trim(); if(!v){ toast("Paste the YouTube live link first."); return; } if(DEMO){ toast("Demo mode: nothing sent."); return; }
+      api("/desk/live",{link:v,name:(you()||{}).n||""}).then(function(j){ if(j.live){ toast("Dashboards switch to the new stream within 2 minutes."); i.value=""; } else toast(j.error||"Couldn't send it."); }).catch(function(){ toast("Couldn't reach the server. Try again."); }); }); })();
     fetch("./channel.json?_="+Date.now(),{cache:"no-store"}).then(function(r){ return r.json(); }).then(function(j){ URL0=String(j.aiChatUrl||"").replace(/\/$/,""); }).catch(function(){}).then(function(){
       if(!URL0&&!DEMO){ document.getElementById("queue").innerHTML='<div class="panel empty">The chat server isn\'t connected yet. Add its address to channel.json → aiChatUrl.</div>'; return; }
       if(DEMO){ setYou(WHO||"Matthew"); start(); return; }

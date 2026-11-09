@@ -749,7 +749,7 @@ body{font-size:16px}
     function start(){ document.getElementById("signin").hidden=true; document.getElementById("queue").hidden=false; document.getElementById("dtabs").hidden=false; document.body.classList.toggle("live",!DEMO);
       window.DESK={api:api,demo:DEMO,url:URL0,key:function(){ return KEY; },toast:toast,met:{get value(){ return you().n; }},login:function(m){ login(m); }};
       bench(); list(); document.dispatchEvent(new Event("desk-ready"));
-      if(!DEMO){ poll(); clearInterval(polling); polling=setInterval(poll,8000); } }
+      if(!DEMO){ poll(); clearInterval(polling); var lastPoll=Date.now(); polling=setInterval(function(){ var gap=document.hidden?30000:8000; if(Date.now()-lastPoll<gap-500) return; lastPoll=Date.now(); poll(); },2000); document.addEventListener('visibilitychange',function(){ if(!document.hidden){ lastPoll=Date.now(); poll(); } }); } }
     function applyShift(st){ if(!st) return; var on=st.on||{}; METS.forEach(function(x){ var was=x.on; x.on=!!on[x.n]; if(x.on&&!was) x.onSince=on[x.n]; }); DESK.offline=!!st.offline; DESK.back=st.back||"";
       var b=document.getElementById("offbtn"); b.textContent=DESK.offline?"DESK IS OFFLINE · GO ONLINE":"DESK OFFLINE"; b.style.color=DESK.offline?"var(--action)":"var(--fg)"; b.style.borderColor=DESK.offline?"var(--action-line)":"var(--line)";
       document.getElementById("deskst").textContent=DESK.offline?"Clients get the between-shifts answer from the software; questions wait here.":(Object.keys(on).length?"Desk is open · lead or admin can take it offline":"Nobody on shift: the software answers clients, and their questions wait here."); bench(); }

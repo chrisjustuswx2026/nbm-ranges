@@ -2579,7 +2579,7 @@ body.chan-on .tabs button[data-pane="live"]::before{content:"";position:absolute
 .chplay i{width:76px;height:76px;border-radius:50%;background:#E5484D;display:grid;place-items:center;box-shadow:0 8px 28px rgba(229,72,77,.45)}
 .chplay b{font-family:var(--display);font-weight:800;letter-spacing:.14em;font-size:13px}
 </style>
-<script>window.SDR_VER="311";</script><style>.shd .ver{margin-left:auto;margin-right:10px;font-family:var(--display);font-weight:700;letter-spacing:.1em;font-size:11px;color:var(--dim)}</style>
+<script>window.SDR_VER="314";</script><style>.shd .ver{margin-left:auto;margin-right:10px;font-family:var(--display);font-weight:700;letter-spacing:.1em;font-size:11px;color:var(--dim)}</style>
 <script>
 /* SDR_WEEKSTORY: on a quiet day, find what actually matters this week. Ranked: first frost/freeze, a big cooldown or warmup, the 6-10 day outlook, the next rain. */
 window.SDR_WEEKSTORY=function(D,MD,s,nh,thisFall){ try{ D=(D||[]).slice(0,8).filter(x=>x&&x.hi!=null); if(D.length<5) return null;
@@ -4803,7 +4803,7 @@ window.CHANNEL = { youtubeChannelId: "", youtubeVideoId: "0kJsmlz95V0" };
   try{ const r=await fetch("../channel.json?_="+Date.now(),{cache:"no-store"}); if(r.ok){ const j=await r.json(); const pick=v=>{ v=String(v||"").trim(); const m=v.match(/(?:live\/|v=|youtu\.be\/|embed\/)([\w-]{11})/); return m?m[1]:(/^[\w-]{11}$/.test(v)?v:""); };
     const v=pick(j.youtubeLiveLink||j.youtubeVideoId); if(v) window.CHANNEL.youtubeVideoId=v; window.CHANNEL.deskLive=j.deskLive===true; window.CHANNEL.deskNote=String(j.deskNote||"").trim(); window.CHANNEL.aiChatUrl=String(j.aiChatUrl||"").trim(); window.CHANNEL.chatMode=j.chatMode==="review"?"review":"auto"; if(j.youtubeChannelId) window.CHANNEL.youtubeChannelId=String(j.youtubeChannelId).trim(); } }catch(e){}
   // v303: the desk can post the current live link to the server; when it has one, that stream wins (unlisted streams can't use the channel embed)
-  window.SDR_LIVE_SYNC=async function(){ const C=window.CHANNEL||{}; if(!/^https?:/.test(C.aiChatUrl||"")) return ""; try{ const ac=new AbortController(); setTimeout(()=>ac.abort(),4000); const r=await fetch(C.aiChatUrl.replace(/\/$/,"")+"/status",{signal:ac.signal,cache:"no-store"}); if(!r.ok) return ""; const j=await r.json(); const v=String(j.live||"").trim(); if(!/^[\w-]{11}$/.test(v)) return ""; if(v!==C.youtubeVideoId||C.youtubeChannelId){ C.youtubeVideoId=v; C.youtubeChannelId=""; window.__SDR_URL=`https://www.youtube-nocookie.com/embed/${v}?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1`; window.dispatchEvent(new Event("sdr-channel"));
+  window.SDR_LIVE_SYNC=async function(){ const C=window.CHANNEL||{}; if(!/^https?:/.test(C.aiChatUrl||"")) return ""; try{ const ac=new AbortController(); setTimeout(()=>ac.abort(),4000); const r=await fetch(C.aiChatUrl.replace(/\/$/,"")+"/status",{signal:ac.signal,cache:"no-store"}); if(!r.ok) return ""; const j=await r.json(); window._sdrStaffed=!!j.staffed; window._sdrBack=String(j.back||"").trim(); window.dispatchEvent(new Event("sdr-staff")); const v=String(j.live||"").trim(); if(!/^[\w-]{11}$/.test(v)) return ""; if(v!==C.youtubeVideoId||C.youtubeChannelId){ C.youtubeVideoId=v; C.youtubeChannelId=""; window.__SDR_URL=`https://www.youtube-nocookie.com/embed/${v}?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1`; window.dispatchEvent(new Event("sdr-channel"));
       document.querySelectorAll('iframe[src*="youtube-nocookie.com/embed"]').forEach(f=>{ const n=f.src.replace(/embed\/live_stream\?channel=[^&]+/,"embed/"+v).replace(/embed\/[\w-]{11}(?=\?)/,"embed/"+v); if(n!==f.src) f.src=n; }); } return v; }catch(e){ return ""; } };
   try{ await SDR_LIVE_SYNC(); }catch(e){}
   setInterval(()=>{ SDR_LIVE_SYNC(); },120000);
@@ -7172,7 +7172,7 @@ window.SDR_GL=(function(){
 
 <script>
 // v125: client chat layer
-(function(){ let wrap=null, fr=null; const CHATV="1794173748";
+(function(){ let wrap=null, fr=null; const CHATV="1794185269";
   function open(){ if(!wrap){ wrap=document.createElement("div"); wrap.id="chatwrap"; wrap.innerHTML='<iframe id="chatfr" title="Message the team" allow="camera"></iframe>'; document.body.appendChild(wrap); fr=wrap.querySelector("iframe"); fr.src="./chat.html?v="+CHATV; fr.addEventListener("load",()=>{ try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }); }
     wrap.hidden=false; document.body.classList.add("chat-on"); if(!(history.state&&history.state.chat)) history.pushState({chat:1},""); try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }
   function close(){ if(wrap){ wrap.hidden=true; } document.body.classList.remove("chat-on"); }
@@ -7561,7 +7561,7 @@ window.SDR_NOWFIRST=(r,H)=>{ if(!r||/moves in|by \d|winding/i.test(r.h)) return 
     const act=hit.some(e=>/action/.test(e.className)), h0=hit[0], nmE=h0&&h0.querySelector(".nm"), nm=nmE?(nmE.firstChild&&nmE.firstChild.nodeType===3?nmE.firstChild.nodeValue:nmE.textContent).replace(/\s+/g," ").trim():"", tmE=h0&&h0.querySelector(".tm"), tm=tmE?(tmE.firstChild?tmE.firstChild.nodeValue||"":"").trim()+" "+((tmE.querySelector("small")||{}).textContent||""):"";
     p.classList.toggle("ccwarn",!!hit.length&&!act); p.classList.toggle("ccact",act);
     bar.innerHTML=ev.length?`<i>${hit.length?(act?"⛔":"⚠️"):"✅"}</i><div><b>SCHEDULE WATCH <u class="ccn">${ev.length} EVENT${ev.length===1?"":"S"}</u></b><span>${hit.length?`<strong>${tm?tm.replace(":00","")+" · ":""}${nm}</strong>${hit.length>1?` +${hit.length-1} more`:""}`:"All clear · our team is watching every one"}</span></div><em>${p.classList.contains("cx")?"Open ›":"Close ▴"}</em>`
-      :`<i>📅</i><div><b>SCHEDULE WATCH</b><span>Tell us your schedule. We'll watch the weather for it.</span></div><em>${p.classList.contains("cx")?"Open ›":"Close ▴"}</em>`+`<div hidden class="pgpill"><i>✅</i><div><b>SCHEDULE WATCH <u class="ccn">ONLY ON SDR</u></b><span>Upload your schedule. Our team watches the weather for it.</span></div><em>${p.classList.contains("pgopen")?"Close ▴":"See how ›"}</em></div><div class="pg"><div class="pgt"><span class="pgx">ONLY ON SDR</span><b>✅ SCHEDULE WATCH</b></div><h3>Upload your schedule. We’ll watch the weather for it.</h3><p>Our team is proactive. We look for anything that could affect your plans and update you along the way, so you never have to go looking.</p><div class="pgtags"><span>Festivals</span><span>Parades</span><span>Road crews</span><span>Debris crews</span><span>Football games</span><span>Outdoor events</span><span>School dismissal</span><span>Shelters</span></div>
+      :`<i>📅</i><div><b>SCHEDULE WATCH</b><span>Add a game, practice, trip or event.</span></div><em>${p.classList.contains("cx")?"Open ›":"Close ▴"}</em>`+`<div hidden class="pgpill"><i>✅</i><div><b>SCHEDULE WATCH <u class="ccn">ONLY ON SDR</u></b><span>Upload your schedule. Our team watches the weather for it.</span></div><em>${p.classList.contains("pgopen")?"Close ▴":"See how ›"}</em></div><div class="pg"><div class="pgt"><span class="pgx">ONLY ON SDR</span><b>✅ SCHEDULE WATCH</b></div><h3>Upload your schedule. We’ll watch the weather for it.</h3><p>Our team is proactive. We look for anything that could affect your plans and update you along the way, so you never have to go looking.</p><div class="pgtags"><span>Festivals</span><span>Parades</span><span>Road crews</span><span>Debris crews</span><span>Football games</span><span>Outdoor events</span><span>School dismissal</span><span>Shelters</span></div>
         <ul class="pgs"><li><i class="hu"></i><b>Sat 10 AM</b><span>Fall Festival</span><em class="hu">High winds</em></li><li><i class="ta"></i><b>Fri 7 PM</b><span>Football game</span><em class="ta">Storms 6–8 PM</em></li><li><i class="ok"></i><b>Tue 7 AM</b><span>Road crews</span><em class="ok">Clear</em></li></ul>
         <span class="pgb">UPLOAD YOUR SCHEDULE ›</span><small>This is where you’ll upload it. A spreadsheet or a simple list works: date, time and what.</small></div>`; }
   // ---- around you: one bar ----
@@ -9327,7 +9327,7 @@ window.SDR_MAPCARD=function(xmc,o){ if(!xmc) return; let c=xmc.querySelector(".m
 (function(){ function put(){ const st=document.getElementById("status"); if(!st||document.getElementById("askbar")) return;
     const b=document.createElement("button"); b.id="askbar"; b.type="button";
     const rv=((window.CHANNEL||{}).chatMode)==="review";
-    b.innerHTML=`<em class="lv"><s></s>LIVE CHAT</em><span>${rv?"Ask our meteorologists":"Ask the forecast desk"}</span><em class="go">›</em>`;
+    b.innerHTML=`<em class="lv"><s></s>LIVE CHAT</em><span><b></b><small></small></span><em class="go">›</em>`; window.SDR_ASKPAINT=()=>{ const on=!!window._sdrStaffed; b.classList.toggle("on",on); b.querySelector("b").textContent=on?"Talk to our meteorologists":"Ask our meteorologists a question"; const sm=b.querySelector("small"); sm.textContent=on?"Live chat available now":""; sm.hidden=!on; }; SDR_ASKPAINT(); window.addEventListener("sdr-staff",SDR_ASKPAINT);
     b.onclick=()=>{ const t=document.querySelector('.tabs button[data-pane="chat"]'); if(t) t.click(); window.scrollTo(0,0); };
     const tw=document.querySelector("#pane-overview > .two"), after=tw||(document.getElementById("bstrip")&&!document.getElementById("bstrip").hidden?document.getElementById("bstrip"):st); after.insertAdjacentElement("afterend",b); }
   setTimeout(put,1200); setInterval(put,5000); })();
@@ -10051,14 +10051,23 @@ window.SDR_RG3=function(){ const B=window.SDR_BUCKET, el=document.getElementById
     const o=document.getElementById("pane-overview"); const tail=[...o.children].filter(e=>e.matches(".p-chat,.notes")); const last=[...o.children].filter(e=>!tail.includes(e)&&e!==g).pop(); if(last&&last.nextElementSibling!==g) last.insertAdjacentElement("afterend",g); }
 
   // ---- Schedule Watch: the hero next to chat
+  function pill(e){ const r=e.r; if(!r) return ["hold","Checking"]; if(r.long) return ["hold","Long range"]; if(r.lv===0) return ["ok","All clear"];
+    const t=String(r.reason||"").toLowerCase(), what=/storm|thunder/.test(t)?"storms":/snow|ice|sleet|freez/.test(t)?"snow":/heat|hot/.test(t)?"heat":/cold|frost|chill/.test(t)?"cold":/wind|gust/.test(t)?"wind":/rain|shower|wet/.test(t)?"rain":"";
+    return r.lv===2?["act",what==="storms"?"Storms likely":"Take action"]:["warn",what?"Watching "+what:"Heads up"]; }
+  function addOpen(){ if(window.SDR_GLANCE) SDR_GLANCE.open("sched"); setTimeout(()=>{ const n=document.getElementById("sw-say"); if(n){ n.scrollIntoView({block:"center"}); try{ n.focus({preventScroll:true}); }catch(x){} } },350); }
   function hero(sec){ const o=document.getElementById("pane-overview"), ask=document.getElementById("askbar"); if(!o) return; let h=document.getElementById("schedhero");
     if(!sec){ if(h) h.hidden=true; return; }
-    if(!h){ h=document.createElement("button"); h.type="button"; h.id="schedhero"; h.onclick=()=>window.SDR_GLANCE&&SDR_GLANCE.open("sched"); }
-    // what are we watching for them?
-    const L=window.SDR_SW?SDR_SW.list():[], n=L.length, bad=L.filter(e=>e.r&&e.r.lv>0), nx=bad[0]||L[0];
-    const line=!n?"We'll alert you to impacts and changes around it, so you don't have to.":bad.length?`${esc(nx.name)}: ${esc(nx.r.reason)}${bad.length>1?` · +${bad.length-1} more`:""}`:nx&&nx.r?`Next: ${esc(nx.name)} · ${esc(nx.r.reason)}`:"We'll alert you to weather impacts and changes around them.";
-    h.classList.toggle("warn",bad.some(e=>e.r.lv===1)&&!bad.some(e=>e.r.lv===2)); h.classList.toggle("act",bad.some(e=>e.r.lv===2));
-    const html=`<i>${IC.sched}</i><span><em>SCHEDULE WATCH</em><b>${n?(bad.length?`Heads up on ${bad.length} of ${n} event${n===1?"":"s"}`:`All clear · watching ${n} event${n===1?"":"s"}`):"Tell us your schedule."}</b><small>${line}</small></span><u>${n?"Open":"Add schedule"} ›</u>`;
+    if(!h){ h=document.createElement("section"); h.id="schedhero";
+      h.addEventListener("click",ev=>{ const r=ev.target.closest("[data-id]"); if(r){ window.SDR_SWBRIEF&&SDR_SWBRIEF.open(r.dataset.id); return; } if(ev.target.closest(".shadd")){ addOpen(); return; } if(ev.target.closest(".shall")) window.SDR_GLANCE&&SDR_GLANCE.open("sched"); }); }
+    const L=window.SDR_SW?SDR_SW.list():[], n=L.length;
+    const when=e=>{ const d=new Date(e.start), now=new Date(), dd=Math.round((new Date(d.toDateString())-new Date(now.toDateString()))/864e5);
+      const day=dd===0?"Today":dd===1?"Tomorrow":dd<7?d.toLocaleDateString("en-US",{weekday:"long"}):d.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"});
+      if(e.allday) return day; const h=d.getHours(), m=d.getMinutes(); const t=h===12&&!m?"Noon":h===0&&!m?"Midnight":d.toLocaleTimeString("en-US",{hour:"numeric",minute:m?"2-digit":undefined}); return `${day} · ${t}`; };
+    let html;
+    if(!n) html=`<button type="button" class="shadd shempty"><i>${IC.sched}</i><span><em>SCHEDULE WATCH</em><b>Add your plans</b><small>Tell us what's coming up. We'll watch the weather for you.</small></span><s>›</s></button>`;
+    else{ const rows=L.slice(0,2).map(e=>{ const [c,w]=pill(e); return `<button type="button" class="shr" data-id="${esc(e.id)}"><span><b>${esc(e.name)}</b><small>${esc(when(e))}${e.place?` · ${esc(e.place)}`:""}</small></span><u class="${c}">${w}</u></button>`; }).join("");
+      html=`<div class="shk"><i>${IC.sched}</i><em>SCHEDULE WATCH</em><button type="button" class="shall">${n>2?`All ${n}`:"View all"} ›</button></div><div class="shl">${rows}</div><button type="button" class="shadd">+ Add plans</button>`; }
+    h.classList.toggle("act",L.some(e=>e.r&&!e.r.long&&e.r.lv===2));
     if(h.dataset.h!==html){ h.innerHTML=html; h.dataset.h=html; } h.hidden=false;
     const anchor=ask&&ask.parentElement===o?ask:null; if(anchor){ if(anchor.nextElementSibling!==h) anchor.insertAdjacentElement("afterend",h); } else if(h.parentElement!==o) o.prepend(h); }
 
@@ -10121,15 +10130,30 @@ window.SDR_RG3=function(){ const B=window.SDR_BUCKET, el=document.getElementById
 #glance .glr em{font-style:normal;color:var(--muted);font-size:20px}
 @media(max-width:360px){#glance .gl3 .glw{grid-template-columns:1fr 1fr}}
 /* ---------- Schedule Watch hero ---------- */
-#schedhero{display:flex;align-items:center;gap:12px;width:100%;text-align:left;font:inherit;color:var(--fg);cursor:pointer;border:1px solid rgba(96,165,250,.35);border-radius:16px;padding:13px 14px;background:linear-gradient(180deg,rgba(47,124,246,.18),rgba(47,124,246,.06));-webkit-tap-highlight-color:transparent}
-#schedhero[hidden]{display:none}#schedhero.warn{border-color:rgba(245,184,0,.55);background:linear-gradient(180deg,rgba(245,184,0,.16),rgba(245,184,0,.05))}#schedhero.warn em{color:#F5C518}#schedhero.act{border-color:rgba(229,72,77,.6);background:linear-gradient(180deg,rgba(229,72,77,.2),rgba(229,72,77,.06))}#schedhero.act em{color:#FF8A8D}#schedhero:active{transform:scale(.99)}
-#schedhero>i{flex:none;width:40px;height:40px;border-radius:12px;background:rgba(96,165,250,.18);display:grid;place-items:center;color:#93C5FD}#schedhero>i svg{width:22px;height:22px}
-#schedhero span{flex:1;min-width:0}
-#schedhero em{display:block;font-style:normal;font-family:var(--display);font-weight:800;letter-spacing:.14em;font-size:11px;color:#93C5FD}
-#schedhero b{display:block;font-size:16px;font-weight:700;margin-top:2px}
-#schedhero small{display:block;font-size:13px;color:var(--muted);line-height:1.35;margin-top:2px}
-#schedhero u{flex:none;text-decoration:none;font-family:var(--display);font-weight:800;letter-spacing:.06em;font-size:12.5px;color:#fff;background:#2F7CF6;border-radius:999px;padding:8px 12px;white-space:nowrap}
-@media(max-width:600px){#schedhero u{display:none}#schedhero::after{content:"›";font-size:22px;color:var(--muted);flex:none}#schedhero small{font-size:12.5px}}
+#schedhero{display:block;width:100%;color:var(--fg);border:1px solid rgba(96,165,250,.3);border-radius:16px;padding:14px;background:linear-gradient(180deg,rgba(47,124,246,.14),rgba(47,124,246,.04));box-sizing:border-box}
+#schedhero[hidden]{display:none}#schedhero.act{border-color:rgba(229,72,77,.5)}
+#schedhero button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#schedhero .shk{display:flex;align-items:center;gap:8px}
+#schedhero .shk i{width:26px;height:26px;border-radius:8px;background:rgba(96,165,250,.18);display:grid;place-items:center;color:#93C5FD;flex:none}#schedhero .shk i svg{width:16px;height:16px}
+#schedhero .shk em{flex:1;font-style:normal;font-family:var(--display);font-weight:800;letter-spacing:.14em;font-size:11.5px;color:#93C5FD}
+#schedhero .shall{font-size:13.5px;font-weight:600;color:#93C5FD;padding:4px 0}
+#schedhero .sht{display:block;font-size:17px;font-weight:700;margin:10px 0 4px}
+#schedhero .shp{margin:0 0 12px;font-size:14px;line-height:1.4;color:var(--muted)}
+#schedhero .shl{margin:8px 0 4px}
+#schedhero .shr{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:10px 0;border-top:1px solid rgba(255,255,255,.08)}
+#schedhero .shr:first-child{border-top:0}
+#schedhero .shr span{flex:1;min-width:0}#schedhero .shr b{display:block;font-size:15.5px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#schedhero .shr small{display:block;font-size:13px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#schedhero .shr u{flex:none;text-decoration:none;font-size:12.5px;font-weight:700;border-radius:999px;padding:5px 10px;white-space:nowrap}
+#schedhero u.ok{background:rgba(35,165,127,.18);color:#4ADE9F}#schedhero u.warn{background:rgba(245,184,0,.16);color:#F5C518}#schedhero u.act{background:rgba(229,72,77,.2);color:#FF8A8D}#schedhero u.hold{background:rgba(148,163,184,.16);color:#CBD5E1}
+#schedhero .shadd{display:block;width:100%;text-align:left;padding:10px 0 2px;border-top:1px solid rgba(255,255,255,.08);color:#93C5FD;font-weight:600;font-size:14.5px}
+#schedhero:has(.shempty){padding:0}
+#schedhero .shempty{display:flex!important;align-items:center;gap:12px;border:0!important;padding:14px!important;text-align:left!important}
+#schedhero .shempty>i{flex:none;width:40px;height:40px;border-radius:12px;background:rgba(96,165,250,.16);display:grid;place-items:center;color:#93C5FD}#schedhero .shempty>i svg{width:22px;height:22px}
+#schedhero .shempty span{flex:1;min-width:0}#schedhero .shempty em{display:block;font-style:normal;font-family:var(--display);font-weight:800;letter-spacing:.14em;font-size:11px;color:#93C5FD}
+#schedhero .shempty b{display:block;font-size:17px;font-weight:700;color:var(--fg);margin-top:2px}#schedhero .shempty small{display:block;font-size:13.5px;color:var(--muted);line-height:1.35;margin-top:1px}
+#schedhero .shempty s{text-decoration:none;font-size:24px;color:var(--muted);flex:none}
+#schedhero .shadd.shbig{text-align:center;border:0;background:#2F7CF6!important;color:#fff;border-radius:12px;padding:12px;font-size:15px;font-weight:700}
 /* ---------- the sheet ---------- */
 #glsheet{position:fixed;inset:0;z-index:3200}
 #glsheet[hidden]{display:none}
@@ -10242,7 +10266,7 @@ body.wall #wallbar{display:flex;align-items:center;gap:14px;margin-left:auto}
   const ICON=["✅","⚠️","⛔"], WORD=["looking good","heads up","take action"];
   function push(title,body,tag){ try{ body=String(body); if(body.length<150) body+=" Tap for the full forecast."; if(window.SDR_NOTIFY) SDR_NOTIFY("sched",title,body,"overview","#schedhero",tag); }catch(e){} }
   // how often: "all" = every step (day 10, 7, 4, 1, the morning of, and any change) · "changes" = only when it changes (and the day before if it isn't all clear) · "off"
-  const MODEKEY="sdr-sw-mode"; const gMode=()=>{ try{ return localStorage.getItem(MODEKEY)||"all"; }catch(x){ return "all"; } };
+  const MODEKEY="sdr-sw-mode"; const gMode=()=>{ try{ return localStorage.getItem(MODEKEY)||"changes"; }catch(x){ return "changes"; } };
   const modeOf=e=>e.mode||gMode();
   const cap=t=>t[0].toUpperCase()+t.slice(1);
   function watch(e,R){ const now=Date.now(), s=+new Date(e.start); if(!R||s<now||s-now>16*864e5) return; const n=e.n||(e.n={}); const M=modeOf(e); if(M==="off") return;
@@ -10347,31 +10371,129 @@ body.wall #wallbar{display:flex;align-items:center;gap:14px;margin-left:auto}
       const H=await wx(ll[0],ll[1]); const R=rate(e,H); if(R){ e.r=R; const hh=e.h||(e.h=[]); const last=hh[hh.length-1]; if(!last||last.pop!==R.pop||last.lv!==R.lv||Date.now()-last.t>12*3600e3){ hh.push({t:Date.now(),pop:R.pop,lv:R.lv,hi:R.hi}); if(hh.length>12) hh.splice(0,hh.length-12); } watch(e,R); changed=true; } }
     if(changed) save(EV); render(); busy=false; }
   function add(list){ const now=Date.now(); let n=0; list.forEach(x=>{ if(!x||!x.start||+new Date(x.end||x.start)<now) return; if(EV.some(e=>e.name===x.name&&e.start===x.start)) return; EV.push(Object.assign({id:Math.random().toString(36).slice(2,9)},x)); n++; }); save(EV); render(); check(); return n; }
-  window.SDR_SW={add,parse,list:()=>rows(),check,count:()=>rows().length,rate,_fromLine:fromLine,setMode:(id,m)=>{ const e=EV.find(x=>x.id===id); if(e){ e.mode=m||undefined; save(EV); } },modeOf:id=>{ const e=EV.find(x=>x.id===id); return e?modeOf(e):gMode(); },_watch:watch};
+  window.SDR_SW={add,parse,_weekly:t=>fromWeekly(t),_expand:it=>expand(it),list:()=>rows(),check,count:()=>rows().length,rate,_fromLine:fromLine,setMode:(id,m)=>{ const e=EV.find(x=>x.id===id); if(e){ e.mode=m||undefined; save(EV); } },modeOf:id=>{ const e=EV.find(x=>x.id===id); return e?modeOf(e):gMode(); },_watch:watch};
 
-  // ---------- the add form (replaces the old upload button) ----------
+  // ---------- v313 tell us your schedule any way you like: type it, say it, paste it, or upload a photo, screenshot, PDF, spreadsheet, Word doc or calendar file ----------
+  const MODES={all:["Every step","10, 7, 4 and 1 day out, the morning of, and any change. Best for a wedding or a big day."],changes:["Important changes only","We speak up when the forecast changes in a way that matters, and the day before if it isn't all clear."],off:["Off","No alerts. Everything still shows here."]};
+  const DAYN=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"], rid=()=>Math.random().toString(36).slice(2,9);
+  const ymd=x=>`${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,"0")}-${String(x.getDate()).padStart(2,"0")}`;
+  const pd=v=>{ const m=String(v||"").match(/(\d{4})-(\d{2})-(\d{2})/); return m?new Date(+m[1],+m[2]-1,+m[3]):null; };
+  // our own reader for "every Tuesday and Wednesday at 9 AM until Dec 15" (used when the server can't be reached)
+  function fromWeekly(line){ const L=String(line).trim(), s=L.toLowerCase(); if(!/\b(every|each)\b|\b(sun|mon|tues?|wednes|thurs?|fri|satur)[a-z]*days\b|\bweekdays?\b|\bweekends?\b/.test(s)) return null;
+    let days=[]; if(/\bweekdays?\b/.test(s)) days=[1,2,3,4,5]; if(/\bweekends?\b/.test(s)) days=days.concat([0,6]);
+    (s.match(/\b(sun|mon|tues?|wed|thu(?:rs?)?|fri|sat)(?:day|days|s|\.)?\b|\b(?:sun|mon|tues|wednes|thurs|fri|satur)days?\b/g)||[]).forEach(w=>{ const k=WD[w.slice(0,3)]; if(k!=null&&!days.includes(k)) days.push(k); });
+    if(!days.length) return null; const t=tm(s); const um=s.match(/\b(?:until|through|thru|till|to)\s+([a-z]{3,9}\.?\s+\d{1,2}(?:st|nd|rd|th)?|\d{1,2}\/\d{1,2}(?:\/\d{2,4})?)/), fm=s.match(/\b(?:starting|from|beginning)\s+([a-z]{3,9}\.?\s+\d{1,2}(?:st|nd|rd|th)?|\d{1,2}\/\d{1,2}(?:\/\d{2,4})?|today|tomorrow)/);
+    const from=fm?dt(fm[1]):new Date(), until=um?dt(um[1]):null; let place=""; const at=L.match(/\s(?:@|at|in)\s+([A-Za-z .'-]+,\s*[A-Z]{2})\s*$/); if(at) place=at[1];
+    const name=L.replace(at?at[0]:"","").replace(um?new RegExp(um[0].replace(/[.*+?^${}()|[\]\\\/]/g,"\\$&"),"i"):/$^/,"").replace(fm?new RegExp(fm[0].replace(/[.*+?^${}()|[\]\\\/]/g,"\\$&"),"i"):/$^/,"")
+      .replace(/\b(every|each|on|and|at|from|weekdays?|weekends?|noon|midnight)\b/gi," ").replace(/\b(sun|mon|tues?|wed(nes)?|thu(rs?)?|fri|sat(ur)?)[a-z]*\b/gi," ").replace(/\b\d{1,2}(:\d{2})?\s*(a\.?m\.?|p\.?m\.?|a|p)\b/gi," ").replace(/[,&]/g," ").replace(/\s+/g," ").trim();
+    const f=from||new Date(); return {name:name?name[0].toUpperCase()+name.slice(1):"Event",date:null,weekly:{days:days.sort(),from:ymd(f),until:until?ymd(until):ymd(new Date(f.getFullYear(),f.getMonth(),f.getDate()+56)),skip:[]},start:t?`${String(t[0]).padStart(2,"0")}:${String(t[1]).padStart(2,"0")}`:null,end:null,place}; }
+  function localRead(txt,fname){ if(/BEGIN:VCALENDAR|BEGIN:VEVENT/.test(txt)||/\.(csv|tsv)$/i.test(fname||"")) return parse(txt,fname).map(toItem);
+    return String(txt).split(/\r?\n|;\s*/).map(l=>fromWeekly(l)||toItem(fromLine(l))).filter(Boolean); }
+  function toItem(e){ if(!e) return null; const s=new Date(e.start); return {name:e.name,date:ymd(s),weekly:null,start:e.allday?null:`${String(s.getHours()).padStart(2,"0")}:${String(s.getMinutes()).padStart(2,"0")}`,end:e.end?(x=>`${String(x.getHours()).padStart(2,"0")}:${String(x.getMinutes()).padStart(2,"0")}`)(new Date(e.end)):null,place:e.place||""}; }
+  // one item (single date or weekly rule) → the individual events we watch
+  function expand(it){ const at=(day,hm)=>{ const x=new Date(day); if(hm){ const [h,m]=hm.split(":").map(Number); x.setHours(h,m||0,0,0); } else x.setHours(9,0,0,0); return x; };
+    const one=day=>{ const s=at(day,it.start); let e=it.end?at(day,it.end):null; if(e&&e<=s) e=null; return {id:rid(),name:String(it.name||"Event").slice(0,80),start:s.toISOString(),end:e?e.toISOString():(it.start?null:at(day,"21:00").toISOString()),place:String(it.place||"").slice(0,80),allday:!it.start}; };
+    if(it.weekly&&Array.isArray(it.weekly.days)&&it.weekly.days.length){ const f=pd(it.weekly.from)||new Date(), u=pd(it.weekly.until)||new Date(f.getFullYear(),f.getMonth(),f.getDate()+56), sk=it.weekly.skip||[], g="g"+rid(), out=[];
+      for(let x=new Date(f);x<=u&&out.length<150;x.setDate(x.getDate()+1)) if(it.weekly.days.includes(x.getDay())&&!sk.includes(ymd(x))) out.push(Object.assign(one(new Date(x)),{grp:g})); return out; }
+    const d=pd(it.date); return d?[one(d)]:[]; }
+  const t12=hm=>{ if(!hm) return ""; const [h,m]=hm.split(":").map(Number); if(h===12&&!m) return "Noon"; if(h===0&&!m) return "Midnight"; return `${h%12||12}${m?":"+String(m).padStart(2,"0"):""} ${h<12?"AM":"PM"}`; };
+  const md=d=>d?d.toLocaleDateString("en-US",{month:"short",day:"numeric"}):"";
+  function describe(it){ if(it.weekly){ const n=expand(it).length; const dd=it.weekly.days.length===5&&[1,2,3,4,5].every(k=>it.weekly.days.includes(k))?"Weekdays":it.weekly.days.map(k=>["Sundays","Mondays","Tuesdays","Wednesdays","Thursdays","Fridays","Saturdays"][k]).join(" & ");
+      return `${dd}${it.start?" · "+t12(it.start):""} · ${md(pd(it.weekly.from))}–${md(pd(it.weekly.until))} · ${n} date${n===1?"":"s"}`; }
+    const d=pd(it.date); return `${d?d.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}):"No date"}${it.start?" · "+t12(it.start):""}`; }
+  // files: photos and PDFs go to the server as they are; spreadsheets and Word docs become text here first
+  const loadJS=src=>new Promise((ok,no)=>{ if(document.querySelector(`script[src="${src}"]`)) return setTimeout(ok,50); const x=document.createElement("script"); x.src=src; x.onload=ok; x.onerror=no; document.head.appendChild(x); });
+  const b64=buf=>{ let s="", u=new Uint8Array(buf); for(let i=0;i<u.length;i+=32768) s+=String.fromCharCode.apply(null,u.subarray(i,i+32768)); return btoa(s); };
+  async function shrink(file){ try{ const url=URL.createObjectURL(file); const im=await new Promise((ok,no)=>{ const i=new Image(); i.onload=()=>ok(i); i.onerror=no; i.src=url; }); const k=Math.min(1,2200/Math.max(im.width,im.height)); const c=document.createElement("canvas"); c.width=Math.round(im.width*k); c.height=Math.round(im.height*k); c.getContext("2d").drawImage(im,0,0,c.width,c.height); URL.revokeObjectURL(url); return {type:"image/jpeg",data:c.toDataURL("image/jpeg",.85).split(",")[1]}; }catch(e){ return {type:file.type||"image/jpeg",data:b64(await file.arrayBuffer())}; } }
+  async function fileToReq(file){ const n=file.name||"", ty=(file.type||"").toLowerCase();
+    if(/^image\//.test(ty)||/\.(heic|heif|jpe?g|png|webp|gif)$/i.test(n)){ const im=await shrink(file); return {file:Object.assign({name:n},im)}; }
+    if(ty==="application/pdf"||/\.pdf$/i.test(n)) return {file:{name:n,type:"application/pdf",data:b64(await file.arrayBuffer())}};
+    if(/\.(xlsx|xlsm|xls|numbers|ods)$/i.test(n)){ await loadJS("https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"); const wb=XLSX.read(await file.arrayBuffer(),{type:"array",cellDates:true}); return {text:wb.SheetNames.map(k=>`Sheet: ${k}\n`+XLSX.utils.sheet_to_csv(wb.Sheets[k],{blankrows:false})).join("\n\n"),name:n}; }
+    if(/\.docx$/i.test(n)){ await loadJS("https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"); const r=await mammoth.extractRawText({arrayBuffer:await file.arrayBuffer()}); return {text:r.value,name:n}; }
+    return {text:await file.text(),name:n,raw:true}; }
+  async function aiRead(req){ const C=window.CHANNEL||{}; if(!/^https?:/.test(C.aiChatUrl||"")) return null; try{ const v=venue(); const ac=new AbortController(); setTimeout(()=>ac.abort(),60000);
+      const r=await fetch(C.aiChatUrl.replace(/\/$/,"")+"/sched/parse",{method:"POST",headers:{"Content-Type":"application/json"},signal:ac.signal,body:JSON.stringify(Object.assign({today:new Date().toLocaleDateString("en-CA")+" ("+new Date().toLocaleDateString("en-US",{weekday:"long"})+")",here:v.name||""},req))});
+      if(!r.ok) return null; const j=await r.json(); return Array.isArray(j.events)?j:null; }catch(e){ return null; } }
+
   function ui(){ const p=document.querySelector(".p-sched"); if(!p||p.querySelector("#swui")) return; const old=p.querySelector(".upl"); if(old) old.hidden=true;
-    const d=document.createElement("div"); d.id="swui";
-    d.innerHTML=`<p class="swp">Tell us your schedule. We'll alert you to weather impacts and changes around it, so you don't have to.</p>
-      <div class="swmode"><b>HOW OFTEN SHOULD WE UPDATE YOU?</b>
-        <div class="swm" role="radiogroup">
-          <button type="button" data-m="all"><strong>Every step</strong><small>10 days out, 7, 4, the day before and the morning of, plus any change. Best for a wedding or a big day.</small></button>
-          <button type="button" data-m="changes"><strong>Only when it changes</strong><small>We speak up when the forecast changes, and the day before if it isn't all clear. Best for coaches with lots of practices.</small></button>
-          <button type="button" data-m="off"><strong>Off</strong><small>No alerts. Everything still shows here.</small></button></div>
-        <p class="swnote">If you're a coach with a lot of practices, you don't want an alert for every one, and we don't want you going numb to them. Pick what fits. You can change any single event from its forecast page.</p></div>
-      <div class="swf"><input id="sw-n" placeholder="What (Soccer practice, Olivia's birthday…)"><div class="swr"><label class="swl swd"><small>Date</small><input id="sw-d" type="date"></label><label class="swl"><small>Starts</small><input id="sw-t" type="time" value="10:00"></label><label class="swl"><small>Ends</small><input id="sw-e" type="time"></label></div><input id="sw-p" placeholder="Where (optional, like Clemson, SC). Leave blank for here."><button type="button" class="btn swadd" id="sw-add">ADD TO SCHEDULE WATCH</button></div>
-      <details class="swmore"><summary>Add a whole schedule at once</summary><textarea id="sw-paste" rows="4" placeholder="Paste a list, one per line:&#10;Sat 11/14 10am Soccer practice&#10;11/21 6:30pm Olivia's birthday @ Greer, SC&#10;Nov 28 noon Clemson vs South Carolina @ Clemson, SC"></textarea><div class="swr"><button type="button" class="btn" id="sw-pgo">ADD THESE</button><label class="btn">UPLOAD FILE<input type="file" id="sw-file" accept=".csv,.tsv,.txt,.ics,text/plain,text/csv,text/calendar" hidden></label></div><small>Works with a spreadsheet (CSV), a calendar file (.ics) or a plain list.</small></details>`;
-    p.appendChild(d); d.appendChild(d.querySelector(".swmode")); const $=id=>d.querySelector("#"+id);
-    const t=new Date(); t.setDate(t.getDate()+1); $("sw-d").value=t.toISOString().slice(0,10);
-    const paintM=()=>d.querySelectorAll(".swm button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.m===gMode())));
-    d.querySelectorAll(".swm button").forEach(b=>b.onclick=()=>{ window.SDR_SWMODE.set(b.dataset.m); paintM(); toast(b.dataset.m==="all"?"Every step: we'll update you at 10, 7, 4 and 1 day out, the morning of, and on any change.":b.dataset.m==="changes"?"Only when it changes. We'll stay quiet otherwise.":"Alerts off. Your schedule still shows here."); }); paintM();
-    const toast=m=>{ try{ (window.toast||window.SDR_TOAST||console.log)(m); }catch(e){} const s=document.createElement("div"); s.className="swtoast"; s.textContent=m; d.appendChild(s); setTimeout(()=>s.remove(),3500); };
-    $("sw-add").onclick=()=>{ const n=$("sw-n").value.trim(), dd=$("sw-d").value, st=$("sw-t").value, en=$("sw-e").value; if(!n||!dd){ toast("Add what it is and the date."); return; }
-      const [y,m,da]=dd.split("-").map(Number), s=new Date(y,m-1,da), e0=new Date(y,m-1,da); if(st){ const [h,mi]=st.split(":").map(Number); s.setHours(h,mi,0,0); } else s.setHours(9,0,0,0); let e=null; if(en){ const [h,mi]=en.split(":").map(Number); e0.setHours(h,mi,0,0); e=e0>s?e0:null; }
-      const k=add([{name:n,start:s.toISOString(),end:e?e.toISOString():null,place:$("sw-p").value.trim(),allday:!st}]); if(k){ $("sw-n").value=""; $("sw-p").value=""; toast(`Watching ${n}.`); } else toast("That one's already on your list, or it's in the past."); };
-    const bulk=L=>{ if(L.length>=4&&gMode()==="all") L.forEach(x=>{ if(x) x.mode="changes"; }); return L; };
-    $("sw-pgo").onclick=()=>{ const L=bulk(parse($("sw-paste").value)); const k=add(L); if(k>=4&&L[0]&&L[0].mode==="changes") setTimeout(()=>toast(`Set to "only when it changes" so ${k} events don't bury you in alerts. Change any one from its forecast page.`),1200); toast(k?`Added ${k} event${k===1?"":"s"}.`:"Couldn't find dates in that. Try one per line, like: Sat 11/14 10am Soccer practice"); if(k) $("sw-paste").value=""; };
-    $("sw-file").onchange=ev=>{ const f=ev.target.files&&ev.target.files[0]; if(!f) return; const rd=new FileReader(); rd.onload=()=>{ const k=add(bulk(parse(String(rd.result),f.name))); toast(k?`Added ${k} event${k===1?"":"s"} from ${f.name}.`:`Couldn't read dates in ${f.name}.`); ev.target.value=""; }; rd.readAsText(f); }; }
+    const d=document.createElement("div"); d.id="swui"; const DW=["S","M","T","W","T","F","S"];
+    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    d.innerHTML=`<div class="swsmart">
+        <div class="swin"><b class="swq">Tell us what's coming up.</b><p class="swsub">We'll watch the weather for you.</p>
+        <div class="swbox"><textarea id="sw-say" rows="3" placeholder="Tell us about your plans…&#10;Like: soccer practice every Tuesday and Thursday at 5:30 through December"></textarea>
+          <button type="button" class="swsend" id="sw-read" aria-label="Add"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button></div>
+        <div class="swtiles"><button type="button" class="swtile" id="sw-mic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span>Speak</span></button><label class="swtile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M12 18v-6M9 15l3-3 3 3"/></svg><span>Upload</span><input type="file" id="sw-file" accept="image/*,.pdf,.xlsx,.xls,.xlsm,.ods,.numbers,.docx,.csv,.tsv,.txt,.ics,application/pdf,text/calendar,text/csv" hidden></label><button type="button" class="swtile" id="sw-man"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span>Add manually</span></button></div>
+        <small class="swhint2">Upload a photo or screenshot of a schedule, a PDF, Excel, Word or calendar file.</small></div>
+        <div class="swstat" id="sw-stat" hidden></div>
+        <div class="swrev" id="sw-rev" hidden></div></div>
+      <details class="swopt swhand"><summary>Add manually</summary><div class="swf">
+        <label class="swl"><small>What</small><input id="sw-n" placeholder="Soccer practice, wedding, trip…" autocomplete="off"></label>
+        <div class="swr2"><label class="swl"><small>Date</small><input id="sw-d" type="date"></label><label class="swl"><small>Time</small><input id="sw-t" type="time" value="10:00"></label></div>
+        <label class="swl"><small>Where</small><input id="sw-p" placeholder="Like Clemson, SC. Leave blank for here." autocomplete="off"></label>
+        <div class="swr2"><label class="swl"><small>Ends (optional)</small><input id="sw-e" type="time"></label><span></span></div>
+        <label class="swchk"><input type="checkbox" id="sw-rep"><span>Repeats every week</span></label>
+        <div class="swrep" hidden><small class="swk">ON THESE DAYS</small><div class="swdays">${DW.map((x,i)=>`<button type="button" data-d="${i}" aria-pressed="false">${x}</button>`).join("")}</div>
+          <div class="swr2"><label class="swl"><small>Until</small><input id="sw-u" type="date"></label><span></span></div></div>
+        <button type="button" class="btn swadd" id="sw-add">Save</button></div></details>
+      <details class="swset"><summary>Alert settings <span id="sw-mn"></span></summary>
+        <div class="swm" role="radiogroup">${["changes","all","off"].map(m=>`<button type="button" data-m="${m}"><strong>${MODES[m][0]}</strong><small>${MODES[m][1]}</small></button>`).join("")}</div>
+        <p class="swnote">You can change any single event from its forecast page.</p></details>`;
+    p.appendChild(d); const $=id=>d.querySelector("#"+id);
+    const t=new Date(); t.setDate(t.getDate()+1); $("sw-d").value=ymd(t);
+    const stat=(m,cls)=>{ const e=$("sw-stat"); e.hidden=!m; e.className="swstat"+(cls?" "+cls:""); e.innerHTML=m||""; };
+    const paintM=()=>{ d.querySelectorAll(".swm button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.m===gMode()))); $("sw-mn").textContent="· "+MODES[gMode()][0]; };
+    d.querySelectorAll(".swm button").forEach(b=>b.onclick=()=>{ window.SDR_SWMODE.set(b.dataset.m); paintM(); }); paintM();
+    // show the forecast for what they just saved, as soon as we have it
+    const show=async(ids)=>{ const live=()=>SDR_SW.list().filter(e=>ids.includes(e.id)); const first=live()[0]; if(!first) return;
+      for(let i=0;i<40;i++){ const e=SDR_SW.list().find(x=>x.id===first.id); if(e&&e.r) break; if(i===8) check(); await new Promise(r=>setTimeout(r,250)); }
+      if(window.SDR_SWBRIEF) SDR_SWBRIEF.open(first.id,{saved:true,n:live().length}); };
+    // ---- say it
+    let rec=null;
+    $("sw-mic").onclick=()=>{ const ta=$("sw-say"); if(!SR){ ta.focus(); stat("Tap the microphone on your keyboard to talk."); return; }
+      if(rec){ rec.stop(); return; } rec=new SR(); rec.lang="en-US"; rec.continuous=true; rec.interimResults=true; const base=ta.value?ta.value.replace(/\s*$/," "):""; let fin="";
+      rec.onresult=ev=>{ let tmp=""; for(let i=ev.resultIndex;i<ev.results.length;i++){ const r=ev.results[i]; if(r.isFinal) fin+=r[0].transcript+" "; else tmp+=r[0].transcript; } ta.value=(base+fin+tmp).trim(); };
+      rec.onend=()=>{ rec=null; $("sw-mic").classList.remove("on"); $("sw-mic").querySelector("span").textContent="Speak"; stat(""); if($("sw-say").value.trim()) $("sw-read").click(); }; rec.onerror=()=>{ rec=null; $("sw-mic").classList.remove("on"); $("sw-mic").querySelector("span").textContent="Speak"; stat("Couldn't hear that. You can also tap the microphone on your keyboard."); };
+      try{ rec.start(); $("sw-mic").classList.add("on"); $("sw-mic").querySelector("span").textContent="Done"; stat("Listening… say your plans, then tap Done."); }catch(e){ rec=null; ta.focus(); } };
+    // ---- review what we found, then watch it
+    let found=[];
+    const inp=d.querySelector(".swin");
+    const review=(items,note)=>{ found=items.filter(it=>expand(it).length); const box=$("sw-rev");
+      if(!found.length){ box.hidden=true; inp.hidden=false; stat(note||"We couldn't find any upcoming dates in that. Try something like: soccer practice every Tuesday at 5:30 PM.","warn"); return; }
+      const total=found.reduce((n,it)=>n+expand(it).length,0), SHOW=4;
+      // flag what we had to fill in rather than quietly guessing
+      const flag=it=>!it.start?"No time listed. We'll watch the whole day.":(!it.weekly&&!pd(it.date))?"No date found.":"";
+      box.innerHTML=`<div class="swrh"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/></svg></i><b>${total} event${total===1?"":"s"} found</b></div><p class="swsub">Review your schedule before we start watching.</p>
+        <div class="swlist">${found.map((it,i)=>{ const f=flag(it); return `<label class="swit${i>=SHOW?" more":""}"${i>=SHOW?" hidden":""}><span><b>${esc(it.name)}</b><small>${esc(describe(it))}${it.place?` · ${esc(it.place)}`:""}</small>${f?`<em>${esc(f)}</em>`:""}</span><input type="checkbox" checked data-i="${i}"><u><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/></svg></u></label>`; }).join("")}</div>
+        ${found.length>SHOW?`<button type="button" class="swmorebtn">+ ${found.length-SHOW} more</button>`:""}${note?`<p class="swnote">${esc(note)}</p>`:""}
+        <button type="button" class="btn swadd swgo" id="sw-go"></button><button type="button" class="swlink" id="sw-x">Start over</button>`;
+      box.hidden=false; inp.hidden=true; stat("");
+      const mb=box.querySelector(".swmorebtn"); if(mb) mb.onclick=()=>{ box.querySelectorAll(".swit.more").forEach(x=>x.hidden=false); mb.remove(); };
+      const cnt=()=>{ const n=[...box.querySelectorAll(".swit input")].filter(c=>c.checked).reduce((k,c)=>k+expand(found[+c.dataset.i]).length,0); $("sw-go").textContent=n?`Start watching ${n} event${n===1?"":"s"}`:"Pick at least one"; $("sw-go").disabled=!n; };
+      box.querySelectorAll(".swit input").forEach(c=>c.onchange=cnt); cnt();
+      $("sw-x").onclick=()=>{ box.hidden=true; inp.hidden=false; found=[]; };
+      $("sw-go").onclick=()=>{ const L=[]; box.querySelectorAll(".swit input").forEach(c=>{ if(c.checked) L.push(...expand(found[+c.dataset.i])); }); const k=add(L);
+        box.hidden=true; inp.hidden=false; found=[]; $("sw-say").value=""; if(!k){ stat("Those are already on your list.","warn"); return; } show(L.map(x=>x.id)); }; };
+    const run=async(req,localTxt,fname)=>{ const btn=$("sw-read"); btn.disabled=true; stat(`<i class="swspin"></i>Reading your schedule…`); $("sw-rev").hidden=true;
+      try{ let j=null; if(!(req.raw&&/BEGIN:VCALENDAR/.test(req.text||""))) j=await aiRead(req.file?{file:req.file,text:$("sw-say").value}:{text:req.text}); 
+        if(j) review(j.events,j.note); else if(localTxt!=null) review(localRead(localTxt,fname)); else stat("We couldn't read that file right now. Try a screenshot of it, or type the dates in.","warn"); }
+      finally{ btn.disabled=false; } };
+    $("sw-read").onclick=()=>{ const txt=$("sw-say").value.trim(); if(rec) rec.stop(); if(!txt){ stat("Type or say what's coming up, or upload a schedule.","warn"); $("sw-say").focus(); return; } run({text:txt},txt); };
+    $("sw-file").onchange=async ev=>{ const f=ev.target.files&&ev.target.files[0]; ev.target.value=""; if(!f) return; stat(`<i class="swspin"></i>Opening ${esc(f.name||"your file")}…`);
+      try{ const req=await fileToReq(f); if(req.file&&req.file.data.length>8.5e6){ stat("That file is too big. Try a screenshot of the schedule instead.","warn"); return; }
+        await run(req.file?req:{text:(req.name?`File: ${req.name}\n`:"")+req.text,raw:req.raw},req.text!=null?req.text:null,req.name); }
+      catch(e){ stat("We couldn't open that file. Try a screenshot of it instead.","warn"); } };
+    // ---- by hand
+    $("sw-man").onclick=()=>{ const h=d.querySelector(".swhand"); h.open=true; setTimeout(()=>{ h.scrollIntoView({block:"start",behavior:"smooth"}); $("sw-n").focus({preventScroll:true}); },60); };
+    const dayBtns=[...d.querySelectorAll(".swdays button")];
+    const syncDay=()=>{ if(dayBtns.some(b=>b.getAttribute("aria-pressed")==="true")) return; const v=pd($("sw-d").value); if(v) dayBtns[v.getDay()].setAttribute("aria-pressed","true"); };
+    dayBtns.forEach(b=>b.onclick=()=>b.setAttribute("aria-pressed",String(b.getAttribute("aria-pressed")!=="true")));
+    $("sw-rep").onchange=()=>{ const on=$("sw-rep").checked; d.querySelector(".swrep").hidden=!on; if(on){ syncDay(); if(!$("sw-u").value){ const v=pd($("sw-d").value)||new Date(); $("sw-u").value=ymd(new Date(v.getFullYear(),v.getMonth(),v.getDate()+56)); } } };
+    $("sw-add").onclick=()=>{ const n=$("sw-n").value.trim(), dd=$("sw-d").value; if(!n||!dd){ (!n?$("sw-n"):$("sw-d")).focus(); return; }
+      const it={name:n,date:dd,weekly:null,start:$("sw-t").value||null,end:$("sw-e").value||null,place:$("sw-p").value.trim()};
+      if($("sw-rep").checked){ const on=dayBtns.filter(b=>b.getAttribute("aria-pressed")==="true").map(b=>+b.dataset.d); if(on.length) it.weekly={days:on,from:dd,until:$("sw-u").value||null,skip:[]}; }
+      const L=expand(it); const k=add(L); if(!k) return;
+      $("sw-n").value=""; $("sw-p").value=""; $("sw-e").value=""; $("sw-rep").checked=false; d.querySelector(".swrep").hidden=true; dayBtns.forEach(b=>b.setAttribute("aria-pressed","false")); $("sw-u").value=""; d.querySelector(".swhand").open=false;
+      show(L.map(x=>x.id)); }; }
 
   // the real Schedule Watch replaces the old sample/promo panel
   window.SDR_SCHED_PROMO=()=>false;
@@ -10400,7 +10522,59 @@ body.wall #wallbar{display:flex;align-items:center;gap:14px;margin-left:auto}
 #swui .swadd{background:#2F7CF6;border-color:#2F7CF6;color:#fff}
 #swui .swmore{margin-top:12px}#swui .swmore summary{cursor:pointer;color:#93C5FD;font-weight:600;font-size:14px}
 #swui .swmore textarea{margin:8px 0}#swui .swmore small{display:block;color:var(--muted);font-size:12.5px;margin-top:6px}
-#swui .swtoast{margin-top:8px;font-size:13.5px;color:#93C5FD}
+#swui .swtoast{margin-top:2px;font-size:13.5px;color:#FCD34D}
+#swui *{box-sizing:border-box}
+.p-sched .ph .k+.k{display:none}.p-sched:not(.swhas) .ph{display:none}
+#swui input{-webkit-appearance:none;appearance:none;max-width:100%;min-height:44px;display:block}
+#swui input[type=date],#swui input[type=time]{text-align:left}#swui input::-webkit-date-and-time-value{text-align:left}
+#swui input[type=checkbox]{width:20px;min-height:20px;height:20px;padding:0;-webkit-appearance:auto;appearance:auto;display:inline-block;accent-color:#2F7CF6;flex:none}
+#swui .swr2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+#swui .swl{display:block}
+#swui .swadd{min-height:48px;font-size:15px;letter-spacing:.08em;border-radius:12px;margin-top:4px}
+#swui details summary{list-style:none}#swui details summary::-webkit-details-marker{display:none}
+#swui details>summary::after{content:"›";margin-left:5px;display:inline-block;transition:transform .15s}#swui details[open]>summary::after{transform:rotate(90deg)}
+#swui .swopt summary{cursor:pointer;color:#93C5FD;font-weight:600;font-size:14px;padding:4px 2px}
+#swui .swopt[open]{display:grid;gap:10px}
+#swui .swchk{display:flex;align-items:center;gap:10px;font-size:15px;cursor:pointer}
+#swui .swrep{display:grid;gap:8px;padding:10px;border:1px solid var(--line);border-radius:12px}#swui .swrep[hidden]{display:none}
+#swui .swk{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--muted)}
+#swui .swdays{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+#swui .swdays button{min-height:38px;border-radius:10px;border:1.5px solid var(--line);background:none;color:var(--fg);font:inherit;font-weight:700;cursor:pointer;padding:0}
+#swui .swdays button[aria-pressed="true"]{background:#2F7CF6;border-color:#2F7CF6;color:#fff}
+#swui .swhint{font-size:12.5px;color:var(--muted)}
+#glsheet .p-sched>.cxbar i,#glsheet .p-sched>.cxbar div>span{display:none!important}
+#swui .swsmart{display:grid;gap:10px}#swui .swin{display:grid;gap:10px}#swui .swin[hidden]{display:none}
+#swui .swq{font-size:19px;font-weight:700;letter-spacing:-.01em}
+#swui .swsub{margin:-6px 0 0;font-size:14.5px;line-height:1.45;color:var(--muted)}
+#swui .swbox{position:relative;margin-top:4px}
+#swui .swbox textarea{min-height:112px;padding:14px 58px 14px 14px;font-size:16px;line-height:1.45;resize:none;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12)}
+#swui .swbox textarea:focus{outline:none;border-color:rgba(96,165,250,.6)}
+#swui .swsend{position:absolute;right:10px;bottom:10px;width:40px;height:40px;border-radius:50%;border:0;background:#2F7CF6;color:#fff;display:grid;place-items:center;cursor:pointer}#swui .swsend svg{width:20px;height:20px}#swui .swsend:disabled{opacity:.5}
+#swui .swtiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+#swui .swtile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:72px;border-radius:14px;border:0;background:rgba(255,255,255,.05);color:var(--fg);font:inherit;font-size:14px;font-weight:600;cursor:pointer;padding:8px 4px;text-align:center}
+#swui .swtile svg{width:20px;height:20px;color:#93C5FD}#swui .swtile:active{background:rgba(255,255,255,.09)}
+#swui .swtile.on{background:rgba(229,72,77,.18)}#swui .swtile.on svg{color:#FF8A8D;animation:swPulse2 1.2s ease-in-out infinite}
+@keyframes swPulse2{50%{opacity:.4}}
+#swui .swhint2{font-size:12.5px;color:var(--muted);line-height:1.4}
+#swui .swstat{font-size:14px;color:#BFDBFE;display:flex;align-items:center;gap:8px}#swui .swstat.warn{color:#FCD34D}#swui .swstat[hidden]{display:none}
+#swui .swspin{width:14px;height:14px;border-radius:50%;border:2px solid rgba(191,219,254,.3);border-top-color:#BFDBFE;animation:swSpin .8s linear infinite;flex:none}@keyframes swSpin{to{transform:rotate(360deg)}}
+#swui .swrev{display:grid;gap:10px}#swui .swrev[hidden]{display:none}
+#swui .swrh{display:flex;align-items:center;gap:10px}#swui .swrh i{color:#4ADE9F;display:grid}#swui .swrh i svg{width:24px;height:24px}#swui .swrh b{font-size:20px;font-weight:700}
+#swui .swlist{border-radius:14px;background:rgba(255,255,255,.04);padding:2px 14px}
+#swui .swit{display:flex;gap:12px;align-items:center;padding:12px 0;border-top:1px solid rgba(255,255,255,.07);cursor:pointer}#swui .swit:first-child{border-top:0}#swui .swit[hidden]{display:none}
+#swui .swit span{flex:1;min-width:0}#swui .swit b{display:block;font-size:16px;font-weight:600}#swui .swit small{display:block;font-size:13.5px;color:var(--muted);line-height:1.35;margin-top:2px}
+#swui .swit em{display:block;font-style:normal;font-size:12.5px;color:#FCD34D;margin-top:3px}
+#swui .swit input{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px}
+#swui .swit u{flex:none;color:rgba(255,255,255,.25);display:grid}#swui .swit u svg{width:24px;height:24px}#swui .swit input:checked+u{color:#4ADE9F}
+#swui .swit:has(input:not(:checked)) b{color:var(--muted)}
+#swui .swmorebtn{justify-self:start;border:0;background:none;color:#93C5FD;font:inherit;font-size:14.5px;font-weight:600;cursor:pointer;padding:2px 0}
+#swui #sw-add,#swui .swgo{text-align:center!important;justify-content:center}
+#swui #sw-add{letter-spacing:0;font-size:16px}
+#swui .swgo{min-height:52px!important;font-size:16px!important;letter-spacing:0!important;border-radius:14px!important;margin:4px 0 0!important}
+#swui .swlink{justify-self:center;border:0;background:none;color:var(--muted);font:inherit;font-size:14px;cursor:pointer;padding:4px}
+#swui .swhand:not([open]){display:none}#swui .swhand{margin-top:14px}#swui .swhand[open] .swf{margin-top:8px}
+#swui .swset{margin-top:12px}#swui .swset summary{cursor:pointer;color:#93C5FD;font-weight:600;font-size:14px}#swui .swset summary span{color:var(--muted);font-weight:500}
+#swui .swset .swm{margin-top:8px}
 .p-sched .ev{position:relative}
 .p-sched .ev .swx{border:0;background:none;color:var(--muted);font-size:13px;cursor:pointer;padding:4px 2px 4px 8px}
 .p-sched .ev .tm small{display:block;font-size:11px;color:var(--muted);letter-spacing:.02em}
@@ -10595,10 +10769,11 @@ ${o.body}
 
   // ---------- show it ----------
   let ov=null;
-  async function open(id){ if(!ov){ ov=document.createElement("div"); ov.id="swb"; ov.innerHTML=`<div class="swbt"><button type="button" class="swbx">‹ Back</button><label class="swbm"><span>UPDATES</span><select><option value="all">Every step</option><option value="changes">Only changes</option><option value="off">Off</option></select></label><button type="button" class="swbp">PRINT / SAVE PDF</button></div><iframe title="Event forecast"></iframe>`; document.body.appendChild(ov);
+  async function open(id,opt){ opt=opt||{}; if(!ov){ ov=document.createElement("div"); ov.id="swb"; ov.innerHTML=`<div class="swbt"><button type="button" class="swbx">‹ Back</button><label class="swbm"><span>UPDATES</span><select><option value="changes">Important changes</option><option value="all">Every step</option><option value="off">Off</option></select></label><button type="button" class="swbp">PRINT / SAVE PDF</button></div><div class="swbok" hidden></div><iframe title="Event forecast"></iframe>`; document.body.appendChild(ov);
       ov.querySelector(".swbx").onclick=()=>{ ov.hidden=true; document.body.style.overflow=""; };
       ov.querySelector(".swbp").onclick=()=>{ const f=ov.querySelector("iframe"); try{ f.contentWindow.focus(); f.contentWindow.print(); }catch(x){ const w=window.open("","_blank"); if(w){ w.document.write(f.srcdoc); w.document.close(); setTimeout(()=>w.print(),400); } } }; }
     ov.hidden=false; document.body.style.overflow="hidden"; const f=ov.querySelector("iframe");
+    const ok=ov.querySelector(".swbok"), ev=(window.SDR_SW?SDR_SW.list():[]).find(x=>x.id===id); ok.hidden=!opt.saved; if(opt.saved&&ev){ const nm=String(ev.name).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); ok.innerHTML=`<i>✓</i><span><b>Saved. We're watching ${nm}${opt.n>1?` (${opt.n} dates)`:""}.</b> We'll alert you if the forecast changes.</span>`; clearTimeout(ok._t); ok._t=setTimeout(()=>{ ok.hidden=true; },9000); }
     const sel=ov.querySelector(".swbm select"); sel.value=window.SDR_SW?SDR_SW.modeOf(id):"all"; sel.onchange=async()=>{ SDR_SW.setMode(id,sel.value); const r=await build(id); if(r) f.srcdoc=r.html; }; f.srcdoc=`<p style="font:15px -apple-system,Arial;color:#5A6B80;padding:24px">Building the forecast for your event…</p>`;
     const r=await build(id); f.srcdoc=r?r.html:`<p style="font:15px -apple-system,Arial;color:#5A6B80;padding:24px">Couldn't reach the forecast right now. Try again in a minute.</p>`; }
   window.SDR_SWBRIEF={open,build};
@@ -10614,9 +10789,18 @@ ${o.body}
 #swb .swbm select{background:#0A1428;color:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 10px;font:inherit;font-size:13px;min-width:0}
 #swb .swbt button{border:1px solid var(--line);background:none;color:#fff;border-radius:999px;padding:7px 12px;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
 #swb .swbt .swbp{background:#2F7CF6;border-color:#2F7CF6}
+@media(max-width:440px){#swb .swbm span{display:none}#swb .swbt{gap:6px;padding-left:8px;padding-right:8px}#swb .swbt button{padding:7px 10px;font-size:12.5px}#swb .swbm select{font-size:12.5px;padding:6px 8px}}
+#swb{grid-template-rows:auto auto 1fr}#swb .swbok{display:flex;gap:10px;align-items:center;padding:10px 14px;background:rgba(35,165,127,.16);border-bottom:1px solid rgba(74,222,159,.35);color:#E6FFF4;font-size:14px;line-height:1.35}#swb .swbok[hidden]{display:none}#swb .swbok i{flex:none;width:24px;height:24px;border-radius:50%;background:#23A57F;color:#fff;display:grid;place-items:center;font-style:normal;font-weight:800;font-size:13px}#swb .swbok b{font-weight:700}
 #swb iframe{width:100%;height:100%;border:0;background:#EEF2F7}
 .p-sched .ev[data-id]{cursor:pointer}
 .p-sched .ev[data-id] .nm::after{content:"Tap for the full forecast ›";display:block;font-size:11.5px;color:#93C5FD;margin-top:2px}
 </style>
 
+<style>
+#askbar span{display:block;min-width:0}#askbar span b{display:block;font-size:16px;font-weight:700;color:var(--fg)}#askbar span small{display:block;font-size:13px;color:#86EFC0;margin-top:1px;line-height:1.3}
+#askbar.off{border-color:rgba(148,163,184,.35)!important;background:rgba(148,163,184,.08)!important}#askbar.off em.lv{color:#CBD5E1}#askbar.off em.lv s{background:#94A3B8;animation:none}#askbar.off span small{color:var(--muted)}#askbar.off em.go{color:#CBD5E1}
+#askbar:not(.on) em.lv s{animation:none}
+@media(max-width:600px){#askbar{display:grid!important;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"lv go" "in go";gap:4px 10px;padding:12px 14px!important}#askbar em.lv{grid-area:lv;font-size:11.5px}#askbar span{grid-area:in}#askbar em.go{grid-area:go}}
+@media(min-width:900px){#askbar span{background:none!important;border:0!important;padding:0!important}#askbar span b{color:var(--fg)}}
+</style>
 </body></html>

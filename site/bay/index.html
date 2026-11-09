@@ -2579,7 +2579,7 @@ body.chan-on .tabs button[data-pane="live"]::before{content:"";position:absolute
 .chplay i{width:76px;height:76px;border-radius:50%;background:#E5484D;display:grid;place-items:center;box-shadow:0 8px 28px rgba(229,72,77,.45)}
 .chplay b{font-family:var(--display);font-weight:800;letter-spacing:.14em;font-size:13px}
 </style>
-<script>window.SDR_VER="314";</script><style>.shd .ver{margin-left:auto;margin-right:10px;font-family:var(--display);font-weight:700;letter-spacing:.1em;font-size:11px;color:var(--dim)}</style>
+<script>window.SDR_VER="318";</script><style>.shd .ver{margin-left:auto;margin-right:10px;font-family:var(--display);font-weight:700;letter-spacing:.1em;font-size:11px;color:var(--dim)}</style>
 <script>
 /* SDR_WEEKSTORY: on a quiet day, find what actually matters this week. Ranked: first frost/freeze, a big cooldown or warmup, the 6-10 day outlook, the next rain. */
 window.SDR_WEEKSTORY=function(D,MD,s,nh,thisFall){ try{ D=(D||[]).slice(0,8).filter(x=>x&&x.hi!=null); if(D.length<5) return null;
@@ -4349,7 +4349,7 @@ window.STRIPS = (function(){
       </div></div>`; };
   const lv = c => c>=3?"g":c===2?"o":"r";
   const seg = c => `<span class="agree ${lv(c)}">${[1,2,3,4,5].map(i=>`<i class="${i<=c?"on":""}"></i>`).join("")}</span>`;
-  const stat = (lab,val,unit,cls) => val==null||val===""?"":`<div class="st ${cls||""}${lab==="WIND"?" wide":""}${lab==="SKY"?" sky":""}"${({WIND:' data-chart="wind"',GUSTS:' data-chart="gust"',HIGH:' data-chart="temp"',LOW:' data-chart="temp"',"FEELS LIKE":' data-chart="temp"',SKY:' data-chart="sky"',RAIN:' data-chart="rain"',THUNDER:' data-chart="storm"',SNOW:' data-chart="snow"',ICE:' data-chart="ice"'})[lab]||""}><small>${lab}</small><b>${val}${unit?`<em>${unit}</em>`:""}</b></div>`;
+  const stat = (lab,val,unit,cls) => val==null||val===""?"":`<div class="st ${cls||""}${lab==="WIND"?" wide":""}${lab==="SKY"?" sky":""}"${({WIND:' data-chart="wind"',GUSTS:' data-chart="gust"',HIGH:' data-chart="temp"',LOW:' data-chart="temp"',"FEELS LIKE":' data-chart="feel"',SKY:' data-chart="sky"',RAIN:' data-chart="rain"',THUNDER:' data-chart="storm"',SNOW:' data-chart="snow"',ICE:' data-chart="ice"'})[lab]||""}><small>${lab}</small><b>${val}${unit?`<em>${unit}</em>`:""}</b></div>`;
   // v101 hour-by-hour for an opened day: a one-line "when" for rain, and charts (rain / temperature / wind / thunder) that open only when a number is tapped.
   const hoursOf=x=>{ const day=new Date(x.date||Date.now()).toDateString(); return (HOURS||[]).filter(h=>new Date(h.t).toDateString()===day); };
   // v109: feels-like (daytime extreme) and sky cover (daytime average) for the opened day, from the hourly forecast
@@ -4396,7 +4396,9 @@ window.STRIPS = (function(){
       const labs2=P2.filter(q=>(q[3]-K0)%step===0||(today&&q[3]===k0)).map(q=>peakTag(q[0],q[1]-9,q[2]+"°")).join("");
       const flK=(()=>{ const n=FL.findIndex((q,i2)=>Math.abs(q[1]-T[i2])>=3); if(n<0) return "FEELS LIKE"; return FL[n][1]<T[n]?"WIND CHILL":"HEAT INDEX"; })(); window._flK=flK;
       const flLine=diff?`<polyline points="${FLP.map(q=>q[0]+","+q[1]).join(" ")}" fill="none" stroke="#9FD8C9" stroke-width="3" stroke-dasharray="7 5" stroke-linejoin="round"/>${(()=>{ const ex=FLP.reduce((b,q,n)=>Math.abs(q[2]-T[n])>Math.abs(b[2]-T[FLP.indexOf(b)])?q:b,FLP[0]); const lo=window._flK==="WIND CHILL"?FLP.reduce((b,q)=>q[2]<b[2]?q:b,FLP[0]):window._flK==="HEAT INDEX"?FLP.reduce((b,q)=>q[2]>b[2]?q:b,FLP[0]):ex; return peakTag(Math.min(R-54,Math.max(L+54,lo[0])),lo[1]+(lo[2]<P2[FLP.indexOf(lo)][2]?18:-9),(window._flK==="WIND CHILL"?"WIND CHILL ":window._flK==="HEAT INDEX"?"HEAT INDEX ":"FEELS ")+lo[2]+"°"); })()}`:"";
-      C.temp=`<svg viewBox="0 0 ${W} ${Hh}"><defs><linearGradient id="tg${W}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFC857" stop-opacity=".32"/><stop offset="1" stop-color="#FFC857" stop-opacity="0"/></linearGradient></defs><polygon points="${area2}" fill="url(#tg${W})"/><polyline points="${pts2}" fill="none" stroke="#FFC857" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round"/>${flLine}${labs2}${axis}</svg>`; }
+      C.temp=`<svg viewBox="0 0 ${W} ${Hh}"><defs><linearGradient id="tg${W}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFC857" stop-opacity=".32"/><stop offset="1" stop-color="#FFC857" stop-opacity="0"/></linearGradient></defs><polygon points="${area2}" fill="url(#tg${W})"/><polyline points="${pts2}" fill="none" stroke="#FFC857" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round"/>${labs2}${axis}</svg>`;
+      if(diff){ const flab=FLP.filter(q=>(q[3]-K0)%step===0||(today&&q[3]===k0)).map(q=>peakTag(q[0],q[1]-9,q[2]+"°")).join(""), fpts=FLP.map(q=>q[0]+","+q[1]).join(" "), farea=`${FLP[0][0]},${bot} ${fpts} ${FLP[FLP.length-1][0]},${bot}`, fc=window._flK==="HEAT INDEX"?"#FF8A5B":"#7FD6E8";
+        C.feel=`<svg viewBox="0 0 ${W} ${Hh}"><defs><linearGradient id="fg${W}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${fc}" stop-opacity=".28"/><stop offset="1" stop-color="${fc}" stop-opacity="0"/></linearGradient></defs><polygon points="${farea}" fill="url(#fg${W})"/><polyline points="${pts2}" fill="none" stroke="#FFC857" stroke-opacity=".45" stroke-width="2" stroke-dasharray="5 5" stroke-linejoin="round"/><polyline points="${fpts}" fill="none" stroke="${fc}" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round"/>${flab}${axis}</svg><div class="ck"><span><i style="background:${fc}"></i>${window._flK==="FEELS LIKE"?"Feels like":window._flK==="WIND CHILL"?"Wind chill":"Heat index"}</span><span><i style="background:#FFC857;opacity:.5"></i>Actual temperature</span></div>`; } }
     if(H.some(h=>h.sky!=null)){ const Y=v=>bot-(bot-top)*v/100; C.sky=`<svg viewBox="0 0 ${W} ${Hh}">${[25,50,75].map(v=>`<line x1="${L}" x2="${R}" y1="${Y(v)}" y2="${Y(v)}" stroke="rgba(255,255,255,.12)" stroke-dasharray="3 4"/>`).join("")}${barsOf(h=>h.sky!=null?Math.round(h.sky):null,v=>v>=80?"#8FA3C2":v>=50?"#B9C6DB":v>=25?"#DCE6F5":"#FFE08A","%",100)}${axis}</svg>`; }
     const snowH=H.map(h=>h.snow||0), iceH=H.map(h=>h.ice||0);
     { let cum=0; const CS=snowH.map(v=>cum+=v), tot=cum; if(tot>=0.05) C.snow=`<svg viewBox="0 0 ${W} ${Hh}">${barsOf(h=>{ const v=CS[H.indexOf(h)]; return v>=0.05?+v.toFixed(1):null; },v=>v>=2?"#4D8CFF":"#8CC8FF",'"',Math.max(1,tot*1.15))}${axis}</svg><div class="ck"><span><i style="background:#8CC8FF"></i>Snow piling up through the day · about ${tot<0.1?"0.1":tot.toFixed(1)}" by midnight</span></div>`; }
@@ -4406,8 +4408,8 @@ window.STRIPS = (function(){
       C.gust=`<svg viewBox="0 0 ${W} ${Hh}">${barsOf(h=>Math.max(hrWind(h)||0,h.gust||0),v=>wcol(v),"",wmax)}${axis}</svg>`; }
     if(mt>0) C.storm=`<svg viewBox="0 0 ${W} ${Hh}">${barsOf(h=>h.thunder||0,v=>v>=50?"#F5A524":"#F5D76E","%",100)}${axis}</svg><div class="ck"><span><i style="background:#F5A524"></i>Chance of thunder</span></div>`;
     const def="";   // v119: a day opens clean; a chart opens only when its tile is tapped
-    const KEEP=which==="cond"?["temp","wind","gust","sky"]:["rain","storm","snow","ice"];
-    return `<div class="dcharts">${Object.keys(C).filter(k=>KEEP.includes(k)).map(k=>`<div class="dchart${k===def?" open":""}" data-k="${k}"><div class="dch"><b>${({rain:"RAIN CHANCE",temp:"TEMPERATURE"+(window._flK&&window._flK!=="FEELS LIKE"?" & "+window._flK:" & FEELS LIKE"),wind:"WIND SPEED",gust:"WIND GUSTS",storm:"THUNDER",sky:"CLOUD COVER",snow:"SNOW · RUNNING TOTAL",ice:"ICE · RUNNING TOTAL"})[k]}<em class="${(k==="rain"||k==="storm")&&thWin?"th":""}">${k==="rain"&&thWin?"⚡ THUNDER "+thWin:k==="storm"&&thWin?"⚡ "+thWin:(k==="wind"||k==="gust")?"HOUR BY HOUR · MPH":"HOUR BY HOUR"}</em></b><button type="button" data-chart="${k}" aria-label="Close">✕</button></div><div class="dcs">${C[k]}</div></div>`).join("")}</div>`; }
+    const KEEP=which==="cond"?["temp","feel","wind","gust","sky"]:["rain","storm","snow","ice"];
+    return `<div class="dcharts">${Object.keys(C).filter(k=>KEEP.includes(k)).map(k=>`<div class="dchart${k===def?" open":""}" data-k="${k}"><div class="dch"><b>${({rain:"RAIN CHANCE",temp:"TEMPERATURE",feel:(window._flK||"FEELS LIKE"),wind:"WIND SPEED",gust:"WIND GUSTS",storm:"THUNDER",sky:"CLOUD COVER",snow:"SNOW · RUNNING TOTAL",ice:"ICE · RUNNING TOTAL"})[k]}<em class="${(k==="rain"||k==="storm")&&thWin?"th":""}">${k==="rain"&&thWin?"⚡ THUNDER "+thWin:k==="storm"&&thWin?"⚡ "+thWin:(k==="wind"||k==="gust")?"HOUR BY HOUR · MPH":"HOUR BY HOUR"}</em></b><button type="button" data-chart="${k}" aria-label="Close">✕</button></div><div class="dcs">${C[k].split('<div class="ck">')[0]}</div>${C[k].includes('<div class="ck">')?'<div class="ck">'+C[k].split('<div class="ck">').slice(1).join('<div class="ck">'):""}</div>`).join("")}</div>`; }
   function renderDays(){
     const el=$("days"); if(!el) return; el.className="dlist sdr";
     const head=$("days-conf"); if(head){ const c3=DAYS.slice(0,3).map(confOf).filter(v=>v!=null); const c=c3.length?Math.round(c3.reduce((a,b)=>a+b,0)/c3.length):null; window.SDR_CONF=DAYS.map(x=>({date:x.date,conf:confOf(x),why:confOf(x)!=null&&confOf(x)<=2?confWhy(x):""}));
@@ -4479,7 +4481,7 @@ window.STRIPS = (function(){
       const hd=$("hdetail"); if(hd) hd.addEventListener("click", e=>{ if(e.target.closest("[data-hclose]")){ selH=-1; renderHours(); } }); }
     const ds=$("days"); if(ds && !ds._w){ ds._w=1; ds.addEventListener("click", e=>{ const fs=e.target.closest(".farm .fsum"); if(fs){ const sec=fs.closest(".farm"); const on=!sec.classList.contains("open"); sec.classList.toggle("open",on); fs.setAttribute("aria-expanded",on); try{ localStorage.setItem("sdr-farm-open",on?"1":"0"); }catch(x){} return; }
       const ft=e.target.closest(".farm .ft"); if(ft){ if(!e.target.closest(".fx")) ft.classList.toggle("open"); return; }
-      const dc=e.target.closest(".dexp [data-chart]"); if(dc){ const box=dc.closest(".dexp"), k=dc.dataset.chart, c=box.querySelector(`.dchart[data-k="${k}"]`); const was=c&&c.classList.contains("open");
+      const dc=e.target.closest(".dexp [data-chart]"); if(dc){ const box=dc.closest(".dexp"), k=dc.dataset.chart, c=box.querySelector(`.dchart[data-k="${k}"]`)||(k==="feel"?box.querySelector('.dchart[data-k="temp"]'):null); const was=c&&c.classList.contains("open");
       box.querySelectorAll(".dchart").forEach(x=>x.classList.remove("open")); if(c&&!was){ c.classList.add("open"); const sc=c.querySelector(".dcs"), sv=sc&&sc.querySelector("svg"); if(sc&&sv&&innerWidth<760){ const vb=(sv.getAttribute("viewBox")||"").split(" "), W=+vb[2]||0; const today=/NOW/.test(sv.innerHTML); sc.scrollLeft=today?0:Math.max(0,W/24*6-6); } setTimeout(()=>c.scrollIntoView({behavior:"smooth",block:"center"}),50); } window._dtab=c&&!was?k:null; return; }
       { const xc=e.target.closest("[data-dxclose]"); if(xc){ const i0=xc.dataset.dxclose, r0=ds.querySelector(`.drow[data-i="${i0}"]`); const y0=r0?r0.getBoundingClientRect().top:null; selD=-1; renderDays(); const r1=ds.querySelector(`.drow[data-i="${i0}"]`); if(r1&&y0!=null){ const hh=(document.querySelector(".top")||{offsetHeight:60}).offsetHeight; if(y0<hh+4) window.scrollTo(0, r1.getBoundingClientRect().top+window.scrollY-hh-8); else window.scrollBy(0, r1.getBoundingClientRect().top-y0); } return; } }   // v121: the row stays exactly where it was on screen
       const r=e.target.closest(".drow"); if(!r) return; const pr=e.target.closest(".drain")?"rain":e.target.closest(".dwind")?"wind":e.target.closest(".dt,.dlh")?"temp":null; window._dtab=pr; const closing=(selD===+r.dataset.i), i0=r.dataset.i, y0=r.getBoundingClientRect().top; selD = closing ? -1 : +r.dataset.i; renderDays();   // v120: tapping the open row closes it, whichever column
@@ -5391,7 +5393,7 @@ window.SITE_LL = window.__LOC?{lat:__LOC.la,lon:__LOC.lo}:(window.SITE_LL || { l
     ITEMS.filter(visible).sort((a,b)=>rank(a.ev)-rank(b.ev)).forEach(i=>{ const k=kind(i.ev), col=COLORS[i.ev]||"#8A9BB8", big=BIG.test(i.ev);
       let g=i.geom; if(k==="watch"&&boxMode){ if(i._hull===undefined) i._hull=hull(i.geom); if(i._hull) g=i._hull; }
       const svr=big||/^(Tornado|Severe Thunderstorm) Watch$/.test(i.ev)||i.ev==="Special Weather Statement", soft=!svr&&!/Flood|Hurricane|Tropical Storm|Storm Surge|Blizzard|Ice Storm/.test(i.ev);
-      L.geoJSON(g,{pane:"f"+k,interactive:false,renderer:FREND[k],style:{stroke:false,fillColor:col,fillOpacity:big?.45:soft?.16:k==="watch"?.22:.25}}).addTo(groups[k]);
+      L.geoJSON(g,{pane:"f"+k,interactive:false,renderer:FREND[k],style:{stroke:false,fillColor:col,fillOpacity:big?.45:soft?.5:k==="watch"?.22:.25}}).addTo(groups[k]);
       if(!soft||m.getZoom()>=9) L.geoJSON(g,{pane:"a"+k,interactive:false,renderer:REND[k],style:{color:col,weight:big?3.5:soft?1:k==="watch"?2.6:1.5,opacity:soft?.55:1,fill:false,className:big?"wpoly":""}}).addTo(groups[k]); }); }
   let _z9=m.getZoom()>=9; m.on("zoomend",()=>{ const z9=m.getZoom()>=9; if((boxMode!==null&&boxMode!==(m.getZoom()<8))||z9!==_z9){ _z9=z9; draw(); } });
   // legend: what's on screen right now
@@ -7091,7 +7093,7 @@ window.SDR_GL=(function(){
 
 <script>
 // v125: client chat layer
-(function(){ let wrap=null, fr=null; const CHATV="1794185270";
+(function(){ let wrap=null, fr=null; const CHATV="1794194679";
   function open(){ if(!wrap){ wrap=document.createElement("div"); wrap.id="chatwrap"; wrap.innerHTML='<iframe id="chatfr" title="Message the team" allow="camera"></iframe>'; document.body.appendChild(wrap); fr=wrap.querySelector("iframe"); fr.src="./chat.html?v="+CHATV; fr.addEventListener("load",()=>{ try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }); }
     wrap.hidden=false; document.body.classList.add("chat-on"); if(!(history.state&&history.state.chat)) history.pushState({chat:1},""); try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }
   function close(){ if(wrap){ wrap.hidden=true; } document.body.classList.remove("chat-on"); }
@@ -9190,6 +9192,7 @@ window.SDR_MAPCARD=function(xmc,o){ if(!xmc) return; let c=xmc.querySelector(".m
     if(x.className!=="nx-"+key) x.className="nx-"+key; if(x._h!==H){ x._h=H; x.innerHTML=H; } }
   const MOON=()=>{ const syn=29.530588, age=(((Date.now()-Date.UTC(2000,0,6,18,14))/864e5)%syn+syn)%syn, p=age/syn*2*Math.PI, c=Math.cos(p), r=9, cx=12, cy=12, rx=Math.abs(c)*r, wax=age<syn/2, cres=c>0;
     const lit=age<0.8||age>syn-0.8?"":wax?`M${cx} ${cy-r}A${r} ${r} 0 0 1 ${cx} ${cy+r}A${rx} ${r} 0 0 ${cres?0:1} ${cx} ${cy-r}Z`:`M${cx} ${cy-r}A${r} ${r} 0 0 0 ${cx} ${cy+r}A${rx} ${r} 0 0 ${cres?1:0} ${cx} ${cy-r}Z`;
+    if(age<2.5||age>syn-2.5) return `<path d="M15.2 3.6A8.6 8.6 0 1 0 20.4 16.6A7 7 0 0 1 15.2 3.6Z" fill="#F1F5FF" style="filter:drop-shadow(0 0 1.6px rgba(220,230,255,.9))"/><circle cx="19.2" cy="5.2" r=".9" fill="#F1F5FF" opacity=".9"/><circle cx="21.6" cy="10" r=".6" fill="#F1F5FF" opacity=".7"/>`;
     return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#C9D6EE" opacity=".05"/>${lit?`<path d="${lit}" fill="#F1F5FF" style="filter:drop-shadow(0 0 1.6px rgba(220,230,255,.9))"/>`:""}`; };
   const CLD='<path d="M9 21.5h10.5a3.5 3.5 0 0 0 .4-7 5 5 0 0 0-9.6-1.1A3.9 3.9 0 0 0 9 21.5z" fill="#C9D3E3" stroke="#0E1A33" stroke-width=".6"/>';
   const moonIco=k=>`<svg viewBox="0 0 24 24">${k==="pcn"?`<g transform="translate(-1 -1) scale(.8)">${MOON()}</g>${CLD}`:MOON()}</svg>`;
@@ -9687,7 +9690,7 @@ html body.desk-live .tabs button[data-pane="live"]::after{display:block!importan
 </style>
 <script>
 /* v301: legend under the temperature chart */
-(function(){ const add=()=>{ document.querySelectorAll('.dchart[data-k="temp"]').forEach(c=>{ if(c.querySelector(".ck")) return; const k=window._flK||"FEELS LIKE"; c.insertAdjacentHTML("beforeend",`<div class="ck"><span><i style="background:#FFC857"></i>Temperature</span><span><i style="background:#9FD8C9"></i>${k.charAt(0)+k.slice(1).toLowerCase()}</span></div>`); }); };
+(function(){ const add=()=>{ document.querySelectorAll('.dchart[data-k="temp-old"]').forEach(c=>{ if(c.querySelector(".ck")) return; const k=window._flK||"FEELS LIKE"; c.insertAdjacentHTML("beforeend",`<div class="ck"><span><i style="background:#FFC857"></i>Temperature</span><span><i style="background:#9FD8C9"></i>${k.charAt(0)+k.slice(1).toLowerCase()}</span></div>`); }); };
   new MutationObserver(add).observe(document.body,{childList:true,subtree:true}); })();
 </script>
 <script>
@@ -10365,7 +10368,7 @@ body.wall #wallbar{display:flex;align-items:center;gap:14px;margin-left:auto}
     // show the forecast for what they just saved, as soon as we have it
     const show=async(ids)=>{ const live=()=>SDR_SW.list().filter(e=>ids.includes(e.id)); const first=live()[0]; if(!first) return;
       for(let i=0;i<40;i++){ const e=SDR_SW.list().find(x=>x.id===first.id); if(e&&e.r) break; if(i===8) check(); await new Promise(r=>setTimeout(r,250)); }
-      if(window.SDR_SWBRIEF) SDR_SWBRIEF.open(first.id,{saved:true,n:live().length}); };
+      if(window.SDR_SWBRIEF) SDR_SWBRIEF.open(first.id,{saved:true,n:live().length,ids:live().map(x=>x.id)}); };
     // ---- say it
     let rec=null;
     $("sw-mic").onclick=()=>{ const ta=$("sw-say"); if(!SR){ ta.focus(); stat("Tap the microphone on your keyboard to talk."); return; }
@@ -10692,9 +10695,29 @@ ${o.body}
       ov.querySelector(".swbx").onclick=()=>{ ov.hidden=true; document.body.style.overflow=""; };
       ov.querySelector(".swbp").onclick=()=>{ const f=ov.querySelector("iframe"); try{ f.contentWindow.focus(); f.contentWindow.print(); }catch(x){ const w=window.open("","_blank"); if(w){ w.document.write(f.srcdoc); w.document.close(); setTimeout(()=>w.print(),400); } } }; }
     ov.hidden=false; document.body.style.overflow="hidden"; const f=ov.querySelector("iframe");
-    const ok=ov.querySelector(".swbok"), ev=(window.SDR_SW?SDR_SW.list():[]).find(x=>x.id===id); ok.hidden=!opt.saved; if(opt.saved&&ev){ const nm=String(ev.name).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); ok.innerHTML=`<i>✓</i><span><b>Saved. We're watching ${nm}${opt.n>1?` (${opt.n} dates)`:""}.</b> We'll alert you if the forecast changes.</span>`; clearTimeout(ok._t); ok._t=setTimeout(()=>{ ok.hidden=true; },9000); }
+    const ok=ov.querySelector(".swbok"); ok.hidden=true; if(opt.saved) done(id,opt);
     const sel=ov.querySelector(".swbm select"); sel.value=window.SDR_SW?SDR_SW.modeOf(id):"all"; sel.onchange=async()=>{ SDR_SW.setMode(id,sel.value); const r=await build(id); if(r) f.srcdoc=r.html; }; f.srcdoc=`<p style="font:15px -apple-system,Arial;color:#5A6B80;padding:24px">Building the forecast for your event…</p>`;
     const r=await build(id); f.srcdoc=r?r.html:`<p style="font:15px -apple-system,Arial;color:#5A6B80;padding:24px">Couldn't reach the forecast right now. Try again in a minute.</p>`; }
+  // "Got it!" — what happens now, right after they save
+  function done(id,opt){ const L=window.SDR_SW?SDR_SW.list():[], ev=L.find(x=>x.id===id); if(!ev) return; const E=x=>String(x).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+    const ids=opt.ids||[id], got=L.filter(x=>ids.includes(x.id)), names=[...new Set(got.map(x=>x.name))], n=got.length||1, one=n===1, many=names.length>1;
+    const when=x=>{ const d=new Date(x.start), h=d.getHours(), m=d.getMinutes(); const t=x.allday?"":(h===12&&!m?"Noon":h===0&&!m?"Midnight":d.toLocaleTimeString("en-US",{hour:"numeric",minute:m?"2-digit":undefined})); return d.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"})+(t?" · "+t:""); };
+    const head=one?`We're watching ${E(ev.name)}.`:many?`We're watching ${n} events.`:`We're watching ${n} dates of ${E(ev.name)}.`;
+    const sub=one?`${when(ev)}${ev.place?" · "+E(ev.place):""}`:many?E(names.slice(0,3).join(", ")+(names.length>3?` and ${names.length-3} more`:"")):`Starting ${when(got[0]||ev)}`;
+    const mode=window.SDR_SW?SDR_SW.modeOf(id):"changes", it=one?"your event":"your events";
+    const upd=mode==="all"?`You'll get updates 10, 7, 4 and 1 day out, the morning of, and any time the forecast changes.`:mode==="off"?`Alerts are off for ${it}. Turn them on any time in Alert settings.`:`You'll get updates along the way: when the forecast changes in a way that matters, and the day before if it isn't all clear.`;
+    const C=window.CHANNEL||{}, tok=+C.chatTokens>0;
+    const help=tok?`Need help deciding? Use one of your chat tokens to talk live with our meteorologists.`:`Need help deciding? Talk live with our meteorologists. We'll help you make the call.`;
+    let d=document.getElementById("swdone"); if(!d){ d=document.createElement("div"); d.id="swdone"; document.body.appendChild(d); }
+    const CK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 12.5l4 4 8-9"/></svg>';
+    d.innerHTML=`<div class="sd" role="dialog" aria-modal="true" aria-label="Saved"><i class="sdbig">${CK}</i><h3>Got it!</h3><p class="sdh">${head}</p><p class="sds">${sub}</p>
+      <b class="sdk">WHAT YOU CAN EXPECT</b><ul><li><i>${CK}</i><span>Our software and meteorologists watch the weather around ${it}, so you don't have to.</span></li><li><i>${CK}</i><span>${upd}</span></li><li><i>${CK}</i><span>${help}</span></li></ul>
+      <button type="button" class="sdgo">See the forecast</button><button type="button" class="sdask">Ask our meteorologists about ${one||!many?"this":"these"}</button></div>`;
+    d.hidden=false; const shut=()=>{ d.hidden=true; };
+    d.querySelector(".sdgo").onclick=shut; d.onclick=e=>{ if(e.target===d) shut(); };
+    d.querySelector(".sdask").onclick=()=>{ shut(); ov.hidden=true; document.body.style.overflow=""; if(window.SDR_GLANCE&&SDR_GLANCE.close) try{ SDR_GLANCE.close(); }catch(x){}
+      const t=document.querySelector('.tabs button[data-pane="chat"]'); if(t) t.click(); window.scrollTo(0,0);
+      const pre=()=>{ let ci=null; for(const fr of document.querySelectorAll("iframe")){ try{ if(/chat\.html/.test(fr.src)&&fr.contentDocument) ci=fr.contentDocument.getElementById("ci"); }catch(x){} if(ci) break; } ci=ci||document.getElementById("ci"); return ci; }; setTimeout(()=>{ const ci=pre(); if(ci){ ci.value=one||!many?`About ${ev.name} (${when(ev)}${ev.place?", "+ev.place:""}): `:`About my schedule: `; try{ ci.focus(); ci.setSelectionRange(ci.value.length,ci.value.length); ci.dispatchEvent(new Event("input",{bubbles:true})); }catch(x){} } },700); }; }
   window.SDR_SWBRIEF={open,build};
   // tap an event row to open its brief
   document.addEventListener("click",ev=>{ const row=ev.target.closest&&ev.target.closest(".p-sched .ev[data-id]"); if(!row||ev.target.closest(".swx")) return; open(row.dataset.id); });
@@ -10711,6 +10734,21 @@ ${o.body}
 @media(max-width:440px){#swb .swbm span{display:none}#swb .swbt{gap:6px;padding-left:8px;padding-right:8px}#swb .swbt button{padding:7px 10px;font-size:12.5px}#swb .swbm select{font-size:12.5px;padding:6px 8px}}
 #swb{grid-template-rows:auto auto 1fr}#swb .swbok{display:flex;gap:10px;align-items:center;padding:10px 14px;background:rgba(35,165,127,.16);border-bottom:1px solid rgba(74,222,159,.35);color:#E6FFF4;font-size:14px;line-height:1.35}#swb .swbok[hidden]{display:none}#swb .swbok i{flex:none;width:24px;height:24px;border-radius:50%;background:#23A57F;color:#fff;display:grid;place-items:center;font-style:normal;font-weight:800;font-size:13px}#swb .swbok b{font-weight:700}
 #swb iframe{width:100%;height:100%;border:0;background:#EEF2F7}
+#swdone{position:fixed;inset:0;z-index:3700;background:rgba(3,8,20,.62);display:flex;align-items:flex-end;justify-content:center;padding:12px;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}#swdone[hidden]{display:none}
+#swdone .sd{width:100%;max-width:440px;background:#0E1B33;border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:26px 20px calc(18px + env(safe-area-inset-bottom,0px));color:#F4F7FB;box-shadow:0 20px 60px rgba(0,0,0,.5);animation:sdUp .28s ease-out;max-height:calc(100dvh - 24px);overflow:auto}
+@keyframes sdUp{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+@media(min-width:700px){#swdone{align-items:center}}
+#swdone .sdbig{width:56px;height:56px;border-radius:50%;background:#23A57F;color:#fff;display:grid;place-items:center;margin:0 auto 12px}#swdone .sdbig svg{width:30px;height:30px}
+#swdone h3{margin:0;text-align:center;font-size:24px;font-weight:750;letter-spacing:-.01em}
+#swdone .sdh{margin:6px 0 0;text-align:center;font-size:17px;font-weight:600}
+#swdone .sds{margin:4px 0 0;text-align:center;font-size:14px;color:#94A3B8}
+#swdone .sdk{display:block;margin:22px 0 8px;font-size:11.5px;font-weight:800;letter-spacing:.12em;color:#93C5FD}
+#swdone ul{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+#swdone li{display:flex;gap:12px;align-items:flex-start;font-size:15px;line-height:1.4}
+#swdone li i{flex:none;width:22px;height:22px;border-radius:50%;background:rgba(35,165,127,.2);color:#4ADE9F;display:grid;place-items:center;margin-top:1px}#swdone li i svg{width:14px;height:14px}
+#swdone button{display:block;width:100%;border:0;font:inherit;cursor:pointer;border-radius:14px}
+#swdone .sdgo{margin-top:22px;min-height:52px;background:#2F7CF6;color:#fff;font-size:16px;font-weight:700}
+#swdone .sdask{margin-top:8px;min-height:48px;background:none;color:#93C5FD;font-size:15px;font-weight:600}
 .p-sched .ev[data-id]{cursor:pointer}
 .p-sched .ev[data-id] .nm::after{content:"Tap for the full forecast ›";display:block;font-size:11.5px;color:#93C5FD;margin-top:2px}
 </style>
@@ -10722,4 +10760,5 @@ ${o.body}
 @media(max-width:600px){#askbar{display:grid!important;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"lv go" "in go";gap:4px 10px;padding:12px 14px!important}#askbar em.lv{grid-area:lv;font-size:11.5px}#askbar span{grid-area:in}#askbar em.go{grid-area:go}}
 @media(min-width:900px){#askbar span{background:none!important;border:0!important;padding:0!important}#askbar span b{color:var(--fg)}}
 </style>
+<style>.dchart>.ck{padding:6px 16px 12px}</style>
 </body></html>

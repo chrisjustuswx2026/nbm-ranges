@@ -121,7 +121,8 @@ html,body{overflow-x:hidden}
 
 /* bottom: suggestions + compose */
 .bottom{display:grid;gap:8px;padding:8px 10px calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid rgba(255,255,255,.08);background:var(--bg)}
-.quick{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.quick{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;align-items:center}
+.app>.hd{grid-row:1}.app>.pin{grid-row:2}.app>.msgs{grid-row:3;min-height:0}.app>.bottom{grid-row:4}
 .quick::-webkit-scrollbar{display:none}
 .quick button{flex:none;font-size:14px;font-weight:500;border:1px solid var(--line);border-radius:999px;padding:6px 13px;color:var(--fg);background:var(--panel)}
 .quick button.brief{color:var(--accent);border-color:rgba(242,140,40,.6)}
@@ -139,7 +140,7 @@ html,body{overflow-x:hidden}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 .smp{font-size:11px;color:#6F7F9E;margin:-4px 0 8px 12px;letter-spacing:.02em}
 .img .svgpic{background:#0E1A33;line-height:0}.img .svgpic svg{width:100%;height:auto;display:block}
-.who b{white-space:nowrap}.who .lv{display:inline-flex;align-items:center;gap:5px;font-family:"Barlow Condensed",sans-serif;font-weight:800;font-size:11px;letter-spacing:.14em;color:#FF6B6F;margin-right:6px;vertical-align:1px}.who .lv i{width:7px;height:7px;border-radius:50%;background:#FF4D4D;animation:lvp 1.6s ease-in-out infinite}@keyframes lvp{0%,100%{opacity:1}50%{opacity:.35}}
+.who b{white-space:nowrap}.who .lv[hidden]{display:none!important}.who .lv{display:inline-flex;align-items:center;gap:5px;font-family:"Barlow Condensed",sans-serif;font-weight:800;font-size:11px;letter-spacing:.14em;color:#FF6B6F;margin-right:6px;vertical-align:1px}.who .lv i{width:7px;height:7px;border-radius:50%;background:#FF4D4D;animation:lvp 1.6s ease-in-out infinite}@keyframes lvp{0%,100%{opacity:1}50%{opacity:.35}}
 .pin.clear{background:var(--clear-bg);border-color:var(--clear-line)}.pin.clear .dot{background:var(--clear);box-shadow:0 0 0 4px rgba(34,197,94,.18)}.pin.clear .go{color:var(--clear)}
 .pin.action{background:var(--action-bg);border-color:var(--action-line)}.pin.action .dot{background:var(--action);box-shadow:0 0 0 4px rgba(229,72,77,.22)}.pin.action .go{color:#FF8A8E}
 .pin b .cw{font-family:"Barlow Condensed",sans-serif;font-weight:800;letter-spacing:.08em;margin-right:6px}.pin b .cw.clear{color:var(--clear)}.pin b .cw.headsup{color:var(--heads)}.pin b .cw.action{color:#FF8A8E}
@@ -149,7 +150,7 @@ html,body{overflow-x:hidden}
 <div class="app">
   <header class="hd">
     <button class="back" aria-label="Back to dashboard"><svg width="12" height="20" viewBox="0 0 12 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2 2 10l8 8"/></svg></button>
-    <div class="who"><span class="logo"><img id="logo" alt="SDR Weather Intelligence"></span><b><span class="lv"><i></i>LIVE CHAT</span> Meteorologist team</b><small id="promise">Usually replies within 15 min</small></div>
+    <div class="who"><span class="logo"><img id="logo" alt="SDR Weather Intelligence"></span><b><span class="lv" id="lvtag" hidden><i></i>LIVE</span> Our meteorologists</b><small id="promise">Ask our meteorologists a question.</small></div>
     <button class="more" aria-label="More">⋯</button>
   </header>
   <div class="pin" id="pin" hidden><span class="dot"></span><div><b id="pin-h"></b><small id="pin-s"></small><span class="nx" id="pin-n" hidden></span></div><span class="go">Dashboard ›</span></div>
@@ -708,7 +709,10 @@ var SDR_ENGINE=(function(){
   ci.addEventListener("keydown",function(e){ if(e.key==="Enter"&&!e.shiftKey&&!e.isComposing&&!/iPhone|iPad|Android/i.test(navigator.userAgent)){ e.preventDefault(); send(ci.value); ciFit(); } });
   var camB=document.getElementById("cam"); if(camB) camB.hidden=true;
   function mode(nt){night=nt;document.getElementById("d-day").classList.toggle("on",!nt);document.getElementById("d-night").classList.toggle("on",nt);
-    var p=document.getElementById("promise");p.textContent=nt?"After hours · back in the morning":"Usually replies within 15 min";p.classList.toggle("off",nt);}
+    var p=document.getElementById("promise");staffPaint();}
+  // v329 header wording: "Live chat available now" only while the desk is staffed; otherwise just the invitation (never "when we're back")
+  function staffPaint(){ var on=false; try{ on=!!(window.parent&&window.parent!==window&&window.parent._sdrStaffed); }catch(e){} var p=document.getElementById("promise"), t=document.getElementById("lvtag"); if(p){ p.textContent=on?"Live chat available now":"Ask our meteorologists a question."; p.classList.toggle("off",!on); } if(t) t.hidden=!on; }
+  setInterval(staffPaint,15000); setTimeout(staffPaint,800);
   document.getElementById("d-day").addEventListener("click",function(){mode(false);});
   document.getElementById("d-night").addEventListener("click",function(){mode(true);});
   document.getElementById("d-reset").addEventListener("click",function(){clearTimeout(helloT);clearTimeout(replyT);PLAYGEN++;typing(false);seed();});

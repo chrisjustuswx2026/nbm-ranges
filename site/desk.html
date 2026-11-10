@@ -789,7 +789,7 @@ body{font-size:16px}
       return `<div class="bp-pic${c?" crop":""}"${frame}><img alt="${esc(sec.label||"")}" loading="lazy" src="${esc(url(x))}"${x.w&&x.h?` width="${x.w}" height="${x.h}"`:""}${im}>${pl}${sec.label?ed(p+".label","span","bp-lab",sec.label):""}${sec.tag||sec.tagBig?`<span class="bp-tag" style="background:${TONE[sec.tone]||TONE.calm}">${sec.tag?ed(p+".tag","small","",sec.tag):""}${sec.tagBig?ed(p+".tagBig","b","",sec.tagBig):""}</span>`:""}</div>`; };
     const bullets=(sec,p)=>sec.bullets&&sec.bullets.length?`<ul class="bp-ul">${sec.bullets.slice(0,o.full?5:3).map((b,i)=>ed(p+".bullets."+i,"li","",b)).join("")}</ul>`:"";
     const stat=(sec,p)=>sec.stat?`<div class="bp-stat" style="--t:${TONEFG[sec.tone]||TONEFG.calm}">${sec.stat.label?ed(p+".stat.label","small","",sec.stat.label):""}${ed(p+".stat.big","b","",sec.stat.big||"")}</div>`:"";
-    const section=(sec,p,cls)=>!sec?"":`<section class="bp-sec ${cls}"><div class="bp-bar" style="background:${TONE[sec.tone]||TONE.calm}">${ed(p+".bar","span","",sec.bar||"")}</div>${sec.sub?`<div class="bp-subbar">${ed(p+".sub","span","",sec.sub)}</div>`:""}<div class="bp-body">${pic(sec,p)}${sec.foot?`<div class="bp-footbar">${ed(p+".foot","span","",sec.foot)}</div>`:""}<div class="bp-txt">${stat(sec,p)}${bullets(sec,p)}</div></div></section>`;
+    const section=(sec,p,cls)=>!sec?"":`<section class="bp-sec ${cls}${sec.finished?" fin":""}">${sec.bar||E?`<div class="bp-bar" style="background:${TONE[sec.tone]||TONE.calm}">${ed(p+".bar","span","",sec.bar||"")}</div>`:""}${sec.sub?`<div class="bp-subbar">${ed(p+".sub","span","",sec.sub)}</div>`:""}<div class="bp-body">${pic(sec,p)}${sec.foot?`<div class="bp-footbar">${ed(p+".foot","span","",sec.foot)}</div>`:""}<div class="bp-txt">${stat(sec,p)}${bullets(sec,p)}</div></div></section>`;
     const d=new Date(o.issued||Date.now()), issued=`ISSUED: ${d.toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric",year:"numeric"}).toUpperCase()} · ${d.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"}).replace(/^12:00 PM$/,"NOON").replace(/^12:00 AM$/,"MIDNIGHT")} ${(d.toLocaleTimeString("en-US",{timeZoneName:"short"}).split(" ").pop()||"ET")}`;
     const head=o.masthead===false?"":`<div class="bp-mast"><img class="bp-logo" alt="" src="${esc(o.logo||"./sdr-logo.png")}"><div class="bp-mt">${P.kicker?ed("kicker","div","bp-kick",P.kicker):""}${ed("title","h2","bp-title",P.title||"")}${P.sub?ed("sub","p","bp-sub",P.sub):""}<div class="bp-issued">${issued}</div></div><div class="bp-tagr">SDR<br>BRIEFING</div></div><div class="bp-rule"></div>`;
     return `<div class="bp${o.cj?" cj":""}">
@@ -878,7 +878,7 @@ body{font-size:16px}
 <style>
 #wb{max-width:1240px;margin:0 auto;padding:14px 14px 110px}
 .wbg{display:grid;gap:14px;grid-template-columns:minmax(0,1fr)}
-@media(min-width:1080px){ .wbg{grid-template-columns:400px minmax(0,1fr);align-items:start} .wbl{position:sticky;top:76px} }
+@media(min-width:1080px){ .wbg{grid-template-columns:minmax(440px,1fr) minmax(0,1.15fr);align-items:start} }
 .wc{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 16px 16px}
 .wc + .wc{margin-top:14px}
 .wh{display:flex;align-items:baseline;gap:10px;margin:0 0 10px}
@@ -889,7 +889,19 @@ body{font-size:16px}
 .wb-chips button[aria-pressed="true"]{color:#fff;border-color:var(--c,#3B82F6);background:color-mix(in srgb,var(--c,#3B82F6) 22%,transparent)}
 #wb input[type=url],#wb textarea{display:block;width:100%;margin:0;background:#0B1730;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:15.5px;line-height:1.42;outline:none}
 #wb input:focus,#wb textarea:focus{border-color:var(--blue)}
-#wb #wb-notes{min-height:170px;resize:vertical}
+#wb #wb-notes{min-height:320px;resize:vertical;font-size:17px;line-height:1.5;padding:14px 16px}
+.ntool{display:flex;gap:8px;align-items:center;margin:0 0 8px;flex-wrap:wrap}.ntool .btn{padding:7px 13px;font-size:12.5px}.ntool .btn.on{background:#E5484D;border-color:#E5484D;color:#fff}.ntool small{color:var(--dim);font-size:12.5px}
+.it input.cap{display:block;width:100%;border:0;border-top:1px solid var(--line);background:#0B1730;color:#fff;font:600 12.5px/1.2 var(--body,system-ui);padding:7px 8px;outline:none}.it input.cap:focus{background:#13224A}
+.it .kd{position:absolute;left:30px;top:6px;font:800 9.5px/1 var(--display);letter-spacing:.08em;padding:3px 5px;border-radius:4px;background:rgba(6,13,28,.85);color:#9FB0C8}.it .kd.fin{color:#5BD3A1}
+.imgs{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))!important}.it img{height:92px!important}
+.prog{margin-top:10px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:rgba(5,12,28,.4)}.prog[hidden]{display:none}
+.prog .ps{display:flex;align-items:center;gap:10px;padding:5px 0;color:var(--dim);font-size:14.5px}.prog .ps i{width:18px;height:18px;border-radius:50%;border:2px solid var(--line);flex:none}
+.prog .ps.on{color:#fff}.prog .ps.on i{border-color:#2F7CF6;border-top-color:transparent;animation:wbspin .8s linear infinite}.prog .ps.ok{color:#5BD3A1}.prog .ps.ok i{border-color:#5BD3A1;background:#5BD3A1}
+.prog .pt{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--dim);font-size:13px}.prog .perr{color:#FF8A8E;font-size:14px;margin-top:6px}@keyframes wbspin{to{transform:rotate(360deg)}}
+.grp{border-top:1px solid var(--line);padding:12px 14px}.grp pre{white-space:pre-wrap;font:15px/1.45 var(--body,system-ui);margin:6px 0 10px;color:#E6EDF7}
+.who .wb-chips button{font-size:12px;padding:6px 11px}.who h6{margin:12px 0 6px;font:800 11px/1 var(--display);letter-spacing:.14em;color:var(--muted)}
+.who .circ{display:flex;gap:8px;flex-wrap:wrap}.who .circ input{flex:1;min-width:140px;background:#0B1730;border:1px solid var(--line);border-radius:10px;padding:8px 10px;color:inherit;font:inherit}.who .circ input.mi{flex:0 0 90px;min-width:0}
+.who .whonow{margin-top:10px;font-size:14px;color:#5BD3A1}
 .wrow{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
 #wk{margin:0 0 12px;border:1px solid var(--line);border-radius:14px;padding:12px;background:rgba(5,12,28,.35)}
 .wkh b{display:block;font-family:var(--display);font-weight:800;letter-spacing:.14em;font-size:13px}.wkh small{display:block;color:var(--muted);font-size:13px;margin:2px 0 10px}
@@ -958,10 +970,10 @@ document.addEventListener("desk-ready",()=>{ const D=window.DESK; if(!D||window.
   const ytId=v=>{ v=String(v||"").trim(); const m=v.match(/(?:live\/|v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/); return m?m[1]:(/^[\w-]{11}$/.test(v)?v:""); };
   const imgUrl=x=>x.src||(D.url+"/img/"+x.id+".jpg");
   const stamp=t=>{ const d=new Date(t); return d.toLocaleDateString("en-US",{weekday:"short"}).toUpperCase()+" "+d.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"}).replace(/^12:00 PM$/,"noon").replace(/^12:00 AM$/,"midnight"); };
-  const blank=()=>({id:"",cat:"OUTLOOK",notes:"",video:"",images:[],page:null});
+  const blank=()=>({id:"",cat:"OUTLOOK",notes:"",video:"",images:[],page:null,states:[],aud:[],circle:null});
   let F=blank(); try{ const o=JSON.parse(ls("desk-wb-draft")||"null"); if(o) F=Object.assign(blank(),o,{images:(o.images||[]).filter(x=>x.id)}); }catch(e){}
   let LIST=[];
-  const keep=()=>ls("desk-wb-draft",JSON.stringify(Object.assign({},F,{images:F.images.filter(x=>x.id).map(({id,src,cap,w,h})=>({id,src:src&&src.startsWith("data:")?src:undefined,cap,w,h}))})));
+  const keep=()=>ls("desk-wb-draft",JSON.stringify(Object.assign({},F,{images:F.images.filter(x=>x.id).map(({id,src,cap,w,h,kind,mine,looked})=>({id,src:src&&src.startsWith("data:")?src:undefined,cap,w,h,kind,mine,looked}))})));
 
   wb.innerHTML=`<div id="wb-edit"></div><div class="wbg"><div class="wbl">
     <div class="wc"><div class="wh"><b>WHAT KIND</b></div><div class="wb-chips" id="wb-cat">${TYPES.map(([k,n,c])=>`<button type="button" data-c="${k}" style="--c:${c}" aria-pressed="false">${n.toUpperCase()}</button>`).join("")}</div></div>
@@ -975,21 +987,57 @@ document.addEventListener("desk-ready",()=>{ const D=window.DESK; if(!D||window.
         <div id="wk-custom" hidden><input type="text" id="wk-q" placeholder="City, ST (like Asheville, NC)"><button type="button" class="btn" id="wk-go">PULL</button></div>
         <div id="wk-body"></div>
       </div>
+      <div class="ntool"><button type="button" class="btn" id="wb-mic">🎙 DICTATE</button><label class="btn" style="cursor:pointer">⬆ UPLOAD NOTES<input type="file" id="wb-nfile" accept=".txt,.md,.docx,text/plain" hidden></label><small>Talk it through or bring a Word/text file. Say where each map goes.</small></div>
       <textarea id="wb-notes" placeholder="Dry and warm this week, highs in the 80s, 10–20° above normal, great for recovery work&#10;High pressure holds through the weekend, little rain&#10;Strong cold front next weekend, 15–20° below normal Sat&#10;First frost/freeze in the mountains Sunday morning, low 30s; upper 30s Greenville and Charlotte&#10;Next briefing Thursday"></textarea>
-      <div class="wrow"><button type="button" class="btn build" id="wb-build">BUILD THE BRIEFING</button></div>
+      <div class="wrow"><button type="button" class="btn build" id="wb-build">BUILD THE BRIEFING</button></div><div class="prog" id="wb-prog" hidden></div>
       <p class="hint" style="margin:8px 0 0">Builds the page from your notes and maps only. Tap any text on the page to fix a word. Read it all before you publish.</p></div>
     <div class="wc"><div class="wh"><b>3 · VIDEO</b><small>Upload to the SDR YouTube channel, paste the link</small></div>
       <input type="url" id="wb-video" placeholder="https://youtu.be/…">
       <div class="vprev" id="wb-vprev" hidden></div>
       <p class="hint" style="margin:8px 0 0">Leaves the front page after 36 hours; stays with the briefing in the library. You can add it after publishing.</p></div>
+    <div class="wc who"><div class="wh"><b>4 · WHO SEES THIS</b><small>Nothing picked = every dashboard</small></div>
+      <h6>STATES</h6><div class="wb-chips" id="wb-sts"></div>
+      <h6>OR A CIRCLE AROUND A PLACE</h6><div class="circ"><input id="wb-cc" placeholder="City, ST (like Asheville, NC)"><input id="wb-cm" class="mi" type="number" min="10" max="1500" placeholder="miles"><button type="button" class="btn" id="wb-cgo">SET</button><button type="button" class="btn" id="wb-cx">CLEAR</button></div>
+      <h6>WHO</h6><div class="wb-chips" id="wb-aud"></div><p class="hint" style="margin:6px 0 0">Client groups take effect once client accounts carry a type. States and circles work now.</p>
+      <div class="whonow" id="wb-who"></div></div>
     <div class="wc"><div class="wh"><b>ON DASHBOARDS NOW</b></div><div class="lst" id="wb-list"><div class="hint">Loading…</div></div></div>
-  </div><div><div class="wh" style="margin-left:2px"><b>WHAT CLIENTS SEE</b><small>Every SDR dashboard and the 24/7 channel</small></div><div class="pv" id="wb-pv"></div></div></div>
+  </div><div><div class="wh" style="margin-left:2px"><b>WHAT CLIENTS SEE</b><small id="wb-whosub">Every SDR dashboard and the 24/7 channel</small></div><div class="pv" id="wb-pv"></div></div></div>
   <div class="pub" id="wb-pub" hidden><span class="st" id="wb-st"></span><button type="button" class="btn go" id="wb-go">PUBLISH TO ALL DASHBOARDS</button></div>`;
   const $=id=>document.getElementById(id);
+  setTimeout(()=>{
+    $("wb-cgo").onclick=async()=>{ const q=$("wb-cc").value.trim(), mi=Math.max(10,Math.min(1500,+$("wb-cm").value||100)); if(!q) return;
+      try{ const j=await (await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q.split(",")[0])}&count=10&language=en&format=json&countryCode=US`)).json(); const R2=(j.results||[])[0]; if(!R2) throw 0;
+        F.circle={la:R2.latitude,lo:R2.longitude,mi,name:q}; keep(); whoPaint(); }catch(e){ D2toast("Couldn't find that place."); } };
+    $("wb-cx").onclick=()=>{ F.circle=null; $("wb-cc").value=""; $("wb-cm").value=""; keep(); whoPaint(); };
+    // dictate into the notes
+    const SR=window.SpeechRecognition||window.webkitSpeechRecognition; let rec=null;
+    $("wb-mic").onclick=()=>{ const b=$("wb-mic"), ta=$("wb-notes"); if(!SR){ D2toast("Dictation works in Chrome or Safari. You can also use your keyboard's mic."); return; }
+      if(rec){ rec.stop(); return; } rec=new SR(); rec.lang="en-US"; rec.continuous=true; rec.interimResults=true; const base=ta.value?ta.value.replace(/\s*$/,"\n"):""; let fin="";
+      rec.onresult=ev=>{ let tmp=""; for(let i=ev.resultIndex;i<ev.results.length;i++){ const r=ev.results[i]; if(r.isFinal) fin+=r[0].transcript.trim()+". "; else tmp+=r[0].transcript; } ta.value=(base+fin+tmp).trim(); F.notes=ta.value; keep(); };
+      rec.onend=()=>{ rec=null; b.classList.remove("on"); b.textContent="🎙 DICTATE"; }; rec.onerror=()=>{ rec=null; b.classList.remove("on"); b.textContent="🎙 DICTATE"; };
+      try{ rec.start(); b.classList.add("on"); b.textContent="● LISTENING · TAP TO STOP"; }catch(e){ rec=null; } };
+    // upload notes (.txt / .docx)
+    $("wb-nfile").onchange=async ev=>{ const f=ev.target.files&&ev.target.files[0]; ev.target.value=""; if(!f) return; let t="";
+      try{ if(/\.docx$/i.test(f.name)){ if(!window.mammoth) await new Promise((ok,no)=>{ const x=document.createElement("script"); x.src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"; x.onload=ok; x.onerror=no; document.head.appendChild(x); }); t=(await mammoth.extractRawText({arrayBuffer:await f.arrayBuffer()})).value; } else t=await f.text(); }
+      catch(e){ D2toast("Couldn't read that file."); return; }
+      const ta=$("wb-notes"); ta.value=(ta.value.trim()?ta.value.trim()+"\n\n":"")+t.trim(); F.notes=ta.value; keep(); D2toast("Notes added."); };
+    // the notes box grows with the writing
+    const grow=()=>{ const ta=$("wb-notes"); ta.style.height="auto"; ta.style.height=Math.max(320,ta.scrollHeight+4)+"px"; }; $("wb-notes").addEventListener("input",grow); setTimeout(grow,50);
+  },0);
   const fill=()=>{ $("wb-notes").value=F.notes||""; $("wb-video").value=F.video||""; $("wb-cat").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.c===F.cat)));
     $("wb-edit").innerHTML=F.id?`<div class="editing">Editing a published briefing. Publishing updates it on every dashboard.<button type="button" id="wb-new">Start a new one</button></div>`:"";
     const n=$("wb-new"); if(n) n.onclick=()=>{ F=blank(); keep(); fill(); drawImgs(); vprev(); paint(); };
-    $("wb-go").textContent=F.id?"UPDATE BRIEFING":"PUBLISH TO ALL DASHBOARDS"; };
+    whoPaint(); };
+  // ---- v305 WHO SEES THIS
+  const STATES=["SC","NC","GA","TN","AL","MS","LA","FL","VA","KY","TX","AR","WV","MD","OK","MO"], AUD=["Schools","Businesses","EMA","Cities & counties","Farms"];
+  function whoTxt(){ const p=[]; if(F.states.length) p.push(F.states.join(", ")); if(F.circle) p.push(`${F.circle.mi} mi around ${F.circle.name}`); return p.length?p.join(" + "):""; }
+  function whoPaint(){ const st=$("wb-sts"), au=$("wb-aud"); if(!st) return;
+    st.innerHTML=STATES.map(k=>`<button type="button" data-s="${k}" aria-pressed="${F.states.includes(k)}">${k}</button>`).join("")+`<button type="button" data-s="ALL">ALL</button>`;
+    au.innerHTML=AUD.map(k=>`<button type="button" data-a="${esc(k)}" aria-pressed="${F.aud.includes(k)}">${esc(k.toUpperCase())}</button>`).join("");
+    const t=whoTxt(); $("wb-who").textContent=t?`Goes to: ${t}${F.aud.length?" · "+F.aud.join(", "):""}`:"Goes to every dashboard and the 24/7 channel."; $("wb-whosub").textContent=t?`Dashboards in ${t}`:"Every dashboard and the 24/7 channel";
+    $("wb-go").textContent=F.id?"UPDATE BRIEFING":t?`PUBLISH TO ${t.length>28?"PICKED AREAS":t.toUpperCase()}`:"PUBLISH TO ALL DASHBOARDS"; }
+  wb.addEventListener("click",e=>{ const b=e.target.closest("#wb-sts button,#wb-aud button"); if(!b) return;
+    if(b.dataset.s==="ALL"){ F.states=[]; } else if(b.dataset.s){ const k=b.dataset.s; F.states=F.states.includes(k)?F.states.filter(x=>x!==k):F.states.concat(k); } else { const k=b.dataset.a; F.aud=F.aud.includes(k)?F.aud.filter(x=>x!==k):F.aud.concat(k); } keep(); whoPaint(); });
   $("wb-notes").addEventListener("input",()=>{ F.notes=$("wb-notes").value; keep(); });
   // v306b WEEK AHEAD: the chosen place's 7-day from its own forecast office, the things worth saying (pick and edit), and room for the bigger picture
   const WK={ll:null,name:"",days:[],alerts:[]};
@@ -1049,14 +1097,23 @@ document.addEventListener("desk-ready",()=>{ const D=window.DESK; if(!D||window.
   $("wb-cat").onclick=e=>{ const b=e.target.closest("button"); if(!b) return; F.cat=b.dataset.c; keep(); fill(); };
 
   // build the page
-  $("wb-build").onclick=async()=>{ const b=$("wb-build"); if(!F.notes.trim()){ D.toast("Type your notes first"); $("wb-notes").focus(); return; }
-    if(F.images.some(x=>x.busy)){ D.toast("Wait for the images to finish"); return; }
-    if(F.page&&!b.dataset.sure){ b.dataset.sure=1; b.textContent="TAP AGAIN · REPLACES THE PAGE"; setTimeout(()=>{ delete b.dataset.sure; b.textContent="BUILD THE BRIEFING"; },4000); return; }
-    delete b.dataset.sure; b.disabled=true; b.textContent="BUILDING… ABOUT 20 SECONDS";
-    try{ const j=await D.api("/desk/brief/build",{notes:F.notes,cat:F.cat,images:F.images.filter(x=>x.id).map(x=>({id:x.id,cap:x.cap,w:x.w,h:x.h}))}); if(!j.page) throw new Error("no page");
-      F.page=j.page; keep(); paint(); D.toast(j.mode==="none"&&F.images.length?"Built from your notes. The maps couldn't be read, so labels came from their file names.":"Built. Read every line, fix anything, then publish."); if(innerWidth<1080) $("wb-pv").scrollIntoView({behavior:"smooth",block:"start"}); }
-    catch(e){ if(e.status===401) return D.login("Wrong password."); D.toast("Couldn't build it: "+(e&&e.message||"no reply")); }
-    finally{ b.disabled=false; b.textContent=F.page?"BUILD IT AGAIN":"BUILD THE BRIEFING"; } };
+  // v305 build with real steps on screen: look at the maps, write, lay out. One build at a time; errors say so.
+  let building=false;
+  function prog(steps,cur,err){ const p=$("wb-prog"); p.hidden=false; p.innerHTML=steps.map((t,i)=>`<div class="ps${i<cur?" ok":i===cur&&!err?" on":""}"><i></i><span>${t}</span>${i===cur&&!err?'<span class="pt" id="wb-pt"></span>':""}</div>`).join("")+(err?`<div class="perr">${esc(err)}</div>`:""); }
+  function tick(){ const t0=Date.now(); const iv=setInterval(()=>{ const e=$("wb-pt"); if(e) e.textContent=Math.round((Date.now()-t0)/1000)+"s"; },500); return ()=>clearInterval(iv); }
+  $("wb-build").onclick=async()=>{ const b=$("wb-build"); if(building) return; if(!F.notes.trim()){ D.toast("Type or dictate your notes first"); $("wb-notes").focus(); return; }
+    if(F.images.some(x=>x.busy)){ D.toast("Wait for the images to finish uploading"); return; }
+    if(F.page&&!b.dataset.sure){ b.dataset.sure=1; b.textContent="TAP AGAIN · REPLACES THE PAGE"; setTimeout(()=>{ delete b.dataset.sure; b.textContent="BUILD IT AGAIN"; },4000); return; }
+    delete b.dataset.sure; building=true; b.disabled=true; b.textContent="WORKING…";
+    const imgs=F.images.filter(x=>x.id), S=[imgs.length?`Looking at your ${imgs.length} map${imgs.length===1?"":"s"}`:"Reading your notes","Writing the briefing and placing the maps","Laying out the page"]; let stop=()=>{};
+    try{ prog(S,0); stop=tick();
+      if(imgs.some(x=>!x.looked)){ await look(); }
+      stop(); prog(S,1); stop=tick();
+      const j=await D.api("/desk/brief/build",{notes:F.notes,cat:F.cat,images:imgs.map(x=>({id:x.id,cap:x.cap,w:x.w,h:x.h,kind:x.kind}))}); if(!j.page) throw new Error("no page came back");
+      stop(); prog(S,2); F.page=j.page; keep(); paint(); prog(S,3); setTimeout(()=>{ $("wb-prog").hidden=true; },2500);
+      D.toast("Built. Read every line, fix anything, then publish."); if(innerWidth<1080) $("wb-pv").scrollIntoView({behavior:"smooth",block:"start"}); }
+    catch(e){ stop(); if(e.status===401){ building=false; b.disabled=false; return D.login("Wrong password."); } prog(S,1,"It didn't finish: "+(e&&e.message||"no reply")+". Tap Build to try again; your notes and maps are saved."); }
+    finally{ building=false; b.disabled=false; b.textContent=F.page?"BUILD IT AGAIN":"BUILD THE BRIEFING"; } };
 
   function vprev(){ const v=ytId(F.video), box=$("wb-vprev"); if(!F.video.trim()){ box.hidden=true; return; } box.hidden=false;
     if(!v){ box.innerHTML='<span class="bad">That doesn\'t look like a YouTube link.</span>'; return; }
@@ -1071,9 +1128,17 @@ document.addEventListener("desk-ready",()=>{ const D=window.DESK; if(!D||window.
       if(D.demo){ x.src=await new Promise(r=>{ const fr=new FileReader(); fr.onload=()=>r(fr.result); fr.readAsDataURL(blob); }); x.id="img_demo"+Math.random().toString(36).slice(2,8); }
       else{ const r=await fetch(D.url+"/desk/img",{method:"POST",headers:{"Content-Type":"image/jpeg","X-Desk-Key":D.key()},body:blob}); const j=await r.json().catch(()=>({})); if(r.status===401) return D.login("Wrong password."); if(!r.ok||!j.id) throw new Error(j.error||r.status); x.id=j.id; x.src="";
         try{ const sm=await shrink(x.file,1000,0.8); await fetch(D.url+"/desk/img?small="+encodeURIComponent(x.id),{method:"POST",headers:{"Content-Type":"image/jpeg","X-Desk-Key":D.key()},body:sm.blob}); }catch(e){} }
-    }catch(e){ D.toast("Image didn't upload. Try again."); F.images.splice(F.images.indexOf(x),1); } x.busy=false; delete x.file; keep(); drawImgs(); paint(); }
-  function add(files){ [...files].filter(f=>/^image\//.test(f.type)).forEach(f=>{ if(F.images.length>=8){ D.toast("Up to 8 images (4 per page)"); return; } const x={file:f,cap:f.name.replace(/\.[a-z]+$/i,"").replace(/[_-]+/g," ").slice(0,60)}; F.images.push(x); upload(x); }); }
-  function drawImgs(){ const box=$("wb-imgs"); box.innerHTML=F.images.map((x,i)=>`<div class="it" data-i="${i}"><img alt="" src="${x.id?esc(imgUrl(x)):""}"><span class="n">${i+1}</span>${x.busy?'<div class="iw">Uploading…</div>':""}<button type="button" class="ix" aria-label="Remove">✕</button></div>`).join("");
+    }catch(e){ D.toast("Image didn't upload. Try again."); F.images.splice(F.images.indexOf(x),1); } x.busy=false; delete x.file; keep(); drawImgs(); paint(); lookSoon(); }
+  // v305 look at new maps: what each shows, raw screenshot or finished graphic; fills the label unless you typed one
+  let lookT=null; const lookSoon=()=>{ clearTimeout(lookT); lookT=setTimeout(look,700); };
+  async function look(){ const todo=F.images.filter(x=>x.id&&!x.looked&&!x.busy); if(!todo.length||F.images.some(x=>x.busy)) return todo.length?lookSoon():null;
+    todo.forEach(x=>x.looking=true); drawImgs();
+    try{ const j=await D.api("/desk/brief/look",{images:todo.map(x=>({id:x.id}))}); (j.looks||[]).forEach((l,i)=>{ const x=todo[i]; if(!x) return; x.kind=l.kind; x.looked=true; if(!x.mine&&l.label) x.cap=l.label; x.shows=l.shows; }); }
+    catch(e){ todo.forEach(x=>x.looked=true); }
+    todo.forEach(x=>delete x.looking); keep(); drawImgs(); }
+  function add(files){ [...files].filter(f=>/^image\//.test(f.type)).forEach(f=>{ if(F.images.length>=8){ D.toast("Up to 8 images (4 per page)"); return; } const x={file:f,cap:""}; F.images.push(x); upload(x); }); }
+  function drawImgs(){ const box=$("wb-imgs"); box.innerHTML=F.images.map((x,i)=>`<div class="it" data-i="${i}"><img alt="" src="${x.id?esc(imgUrl(x)):""}"><span class="n">${i+1}</span>${x.kind?`<span class="kd${x.kind==="finished"?" fin":""}">${x.kind==="finished"?"FINISHED":"RAW"}</span>`:""}${x.busy?'<div class="iw">Uploading…</div>':x.looking?'<div class="iw">Looking…</div>':""}<button type="button" class="ix" aria-label="Remove">✕</button><input class="cap" value="${esc(x.cap||"")}" placeholder="What is it?" aria-label="Label for map ${i+1}"></div>`).join("");
+    box.querySelectorAll("input.cap").forEach(el=>el.oninput=()=>{ const x=F.images[+el.parentElement.dataset.i]; x.cap=el.value.slice(0,60); x.mine=true; keep(); });
     box.querySelectorAll(".ix").forEach(b=>b.onclick=()=>{ const i=+b.parentElement.dataset.i; F.images.splice(i,1); if(F.page){ const fix=s=>{ if(!s||s.img==null) return; if(s.img===i+1) s.img=null; else if(s.img>i+1) s.img--; }; fix(F.page.hero); (F.page.cards||[]).forEach(fix); } keep(); drawImgs(); paint(); }); }
   const dz=$("wb-drop"), fi=$("wb-file"); dz.onclick=()=>fi.click(); fi.onchange=()=>{ add(fi.files); fi.value=""; };
   dz.ondragover=e=>{ e.preventDefault(); dz.classList.add("on"); }; dz.ondragleave=()=>dz.classList.remove("on"); dz.ondrop=e=>{ e.preventDefault(); dz.classList.remove("on"); add(e.dataTransfer.files); };
@@ -1083,10 +1148,11 @@ document.addEventListener("desk-ready",()=>{ const D=window.DESK; if(!D||window.
   function paint(){ const v=ytId(F.video), P=F.page, pv=$("wb-pv");
     pv.innerHTML=`<div class="pvh"><span>TEAM BRIEFING · ${stamp(Date.now())}</span><span>SOUTHEAST</span></div><div class="pvb">${!P?`<div class="pve">Add your maps and notes, then tap <b>Build the briefing</b>.<br>The finished page shows here.</div>`:`
       ${window.SDR_PAGE(P,F.images.filter(x=>x.id),{edit:true,imgUrl,logo:"./sdr-logo.png"})}`}</div>${P?`<div class="pvask"><div class="wh"><b>CHANGE SOMETHING</b><small>Tell it what you want, like you'd tell a producer</small></div><textarea id="wb-ask" placeholder="Lead with the frost. Headline is weak. Add what this means for road crews. Crop map 2 tighter on the Carolinas."></textarea><div class="wrow"><button type="button" class="btn ai" id="wb-revise">✦ MAKE THE CHANGE</button><span class="hint">Keeps everything else as it is.</span></div></div><div class="pvfix">Tap any text to fix a word. Changes save as you type.<button type="button" id="wb-drop-page">CLEAR THE PAGE</button></div>`:""}`;
+    if(P&&P.group){ pv.insertAdjacentHTML("beforeend",`<div class="grp"><div class="wh"><b>SEND-READY MESSAGE</b><small>For GroupMe or a text</small></div><pre id="wb-grp">${esc(P.group)}</pre><button type="button" class="btn" id="wb-grpc">COPY</button></div>`); $("wb-grpc").onclick=()=>{ try{ navigator.clipboard.writeText(P.group); D2toast("Copied"); }catch(e){} }; }
     if(v){ const r=pv.querySelector(".bp"); if(r) r.insertAdjacentHTML("afterbegin",`<div class="pvv"><img alt="" src="https://i.ytimg.com/vi/${v}/hqdefault.jpg"><i><svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg></i><em>WATCH THE BRIEFING</em></div>`); }
-    const rv=$("wb-revise"); if(rv) rv.onclick=async()=>{ const ask=($("wb-ask").value||"").trim(); if(!ask){ $("wb-ask").focus(); return; } read(); rv.disabled=true; rv.textContent="WORKING… ABOUT 20 SECONDS";
-      try{ const j=await D.api("/desk/brief/revise",{page:F.page,notes:F.notes,instruction:ask,images:F.images.filter(x=>x.id).map(x=>({id:x.id,cap:x.cap,w:x.w,h:x.h}))}); if(!j.page) throw new Error("no page"); F.page=j.page; keep(); paint(); D.toast("Changed. Read it over."); }
-      catch(e){ if(e.status===401) return D.login("Wrong password."); D.toast("Couldn't change it: "+(e&&e.message||"no reply")); rv.disabled=false; rv.textContent="✦ MAKE THE CHANGE"; } };
+    const rv=$("wb-revise"); if(rv) rv.onclick=async()=>{ const ask=($("wb-ask").value||"").trim(); if(!ask){ $("wb-ask").focus(); return; } read(); rv.disabled=true; const t0=Date.now(); clearInterval(window._wbIv); window._wbIv=setInterval(()=>{ rv.textContent=`WORKING… ${Math.round((Date.now()-t0)/1000)}s`; },500); rv.textContent="WORKING…";
+      try{ const j=await D.api("/desk/brief/revise",{page:F.page,notes:F.notes,instruction:ask,images:F.images.filter(x=>x.id).map(x=>({id:x.id,cap:x.cap,w:x.w,h:x.h,kind:x.kind}))}); if(!j.page) throw new Error("no page"); clearInterval(window._wbIv); F.page=j.page; keep(); paint(); D.toast("Changed. Read it over."); }
+      catch(e){ if(e.status===401) return D.login("Wrong password."); clearInterval(window._wbIv); D.toast("Couldn't change it: "+(e&&e.message||"no reply")); rv.disabled=false; rv.textContent="✦ MAKE THE CHANGE"; } };
     pv.querySelectorAll("[contenteditable]").forEach(el=>{ el.addEventListener("input",()=>{ read(); }); el.addEventListener("keydown",e=>{ if(e.key==="Enter"&&el.tagName!=="LI"&&el.tagName!=="P"){ e.preventDefault(); el.blur(); } }); });
     const cl=$("wb-drop-page"); if(cl) cl.onclick=()=>{ F.page=null; keep(); paint(); $("wb-build").textContent="BUILD THE BRIEFING"; };
     const ok=!!(P&&P.title)&&!F.images.some(x=>x.busy); $("wb-go").disabled=!ok; $("wb-st").textContent=!P?"Build the briefing first":F.images.some(x=>x.busy)?"Waiting for images…":""; }
@@ -1095,7 +1161,7 @@ document.addEventListener("desk-ready",()=>{ const D=window.DESK; if(!D||window.
   // publish (tap twice, no pop-ups)
   $("wb-go").onclick=async()=>{ const b=$("wb-go"); if(!b.classList.contains("sure")){ b.classList.add("sure"); b.textContent=F.id?"TAP AGAIN TO UPDATE":"TAP AGAIN · SENDS TO EVERY CLIENT"; setTimeout(()=>{ b.classList.remove("sure"); fill(); },4000); return; }
     b.classList.remove("sure"); b.disabled=true; b.textContent="PUBLISHING…"; read(); const P=F.page;
-    const body={id:F.id||undefined,cat:F.cat,area:"Southeast",title:P.title,sub:P.sub,lines:(P.hero&&P.hero.bullets)||[],bottom:P.bottom,video:F.video.trim(),images:F.images.filter(x=>x.id).map(x=>({id:x.id,cap:x.cap,w:x.w,h:x.h,src:D.demo?x.src:undefined})),page:P,by:D.met.value};
+    const body={id:F.id||undefined,cat:F.cat,area:whoTxt()||"Southeast",states:F.states,aud:F.aud,circle:F.circle,title:P.title,sub:P.sub,lines:(P.hero&&P.hero.bullets)||[],bottom:P.bottom,video:F.video.trim(),images:F.images.filter(x=>x.id).map(x=>({id:x.id,cap:x.cap,w:x.w,h:x.h,kind:x.kind,src:D.demo?x.src:undefined})),page:P,by:D.met.value};
     try{ const j=await D.api("/desk/brief/publish",body); LIST=j.briefs||LIST; D.toast(F.id?"Updated on every dashboard":"Published. Dashboards pick it up within 5 minutes.");
       F=blank(); keep(); fill(); drawImgs(); vprev(); paint(); $("wb-build").textContent="BUILD THE BRIEFING"; list(); window.scrollTo(0,0); }
     catch(e){ if(e.status===401) return D.login("Wrong password."); D.toast("Didn't publish. Try again."); }
@@ -1106,7 +1172,7 @@ document.addEventListener("desk-ready",()=>{ const D=window.DESK; if(!D||window.
     if(!LIST.length){ box.innerHTML='<div class="hint">Nothing published yet. Your first briefing shows up here.</div>'; return; }
     box.innerHTML=LIST.slice(0,10).map((x,i)=>{ const vf=x.video&&Date.now()-(x.videoAt||x.t)<36*3600e3; return `<div class="lr2" data-i="${i}"><div class="lt2"><b>${esc(x.title)}</b><small>${stamp(x.t)} · ${(TYPES.find(t=>t[0]===x.cat)||TYPES[0])[1]}${x.video?`<span class="vb">${vf?"▶ VIDEO ON FRONT PAGE":"▶ VIDEO · LIBRARY ONLY"}</span>`:""}</small></div><button type="button" class="ed">EDIT</button><button type="button" class="rm">REMOVE</button></div>`; }).join("");
     box.querySelectorAll(".lr2").forEach(el=>{ const x=LIST[+el.dataset.i];
-      el.querySelector(".ed").onclick=()=>{ F={id:x.id,cat:x.cat,notes:"",video:x.video?"https://youtu.be/"+x.video:"",images:(x.images||[]).map(i=>({id:i.id,src:i.src,cap:i.cap,w:i.w,h:i.h})),page:x.page||{title:x.title||"",sub:x.sub||"",hero:{img:null,bar:"",tone:"calm",bullets:x.lines||[]},cards:[],bottom:x.bottom||""}}; keep(); fill(); drawImgs(); vprev(); paint(); window.scrollTo(0,0); };
+      el.querySelector(".ed").onclick=()=>{ F={states:x.states||[],aud:x.aud||[],circle:x.circle||null,id:x.id,cat:x.cat,notes:"",video:x.video?"https://youtu.be/"+x.video:"",images:(x.images||[]).map(i=>({id:i.id,src:i.src,cap:i.cap,w:i.w,h:i.h,kind:i.kind,looked:true})),page:x.page||{title:x.title||"",sub:x.sub||"",hero:{img:null,bar:"",tone:"calm",bullets:x.lines||[]},cards:[],bottom:x.bottom||""}}; keep(); fill(); drawImgs(); vprev(); paint(); window.scrollTo(0,0); };
       const rm=el.querySelector(".rm"); rm.onclick=async()=>{ if(!rm.classList.contains("sure")){ rm.classList.add("sure"); rm.textContent="TAP TO CONFIRM"; setTimeout(()=>{ rm.classList.remove("sure"); rm.textContent="REMOVE"; },4000); return; }
         try{ const j=await D.api("/desk/brief/delete",{id:x.id}); LIST=j.briefs||[]; list(); D.toast("Removed from every dashboard"); }catch(e){ D.toast("Didn't remove. Try again."); } }; }); }
 

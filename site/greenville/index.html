@@ -2586,7 +2586,7 @@ body.chan-on .tabs button[data-pane="live"]::before{content:"";position:absolute
 .chplay i{width:76px;height:76px;border-radius:50%;background:#E5484D;display:grid;place-items:center;box-shadow:0 8px 28px rgba(229,72,77,.45)}
 .chplay b{font-family:var(--display);font-weight:800;letter-spacing:.14em;font-size:13px}
 </style>
-<script>window.SDR_VER="356";</script><style>.shd .ver{margin-left:auto;margin-right:10px;font-family:var(--display);font-weight:700;letter-spacing:.1em;font-size:11px;color:var(--dim)}</style>
+<script>window.SDR_VER="358";</script><style>.shd .ver{margin-left:auto;margin-right:10px;font-family:var(--display);font-weight:700;letter-spacing:.1em;font-size:11px;color:var(--dim)}</style>
 <script>
 /* SDR_WEEKSTORY: on a quiet day, find what actually matters this week. Ranked: first frost/freeze, a big cooldown or warmup, the 6-10 day outlook, the next rain. */
 window.SDR_NT=function(x){ try{ const d=new Date(x.date), n=new Date(), t=new Date(n); t.setDate(n.getDate()+1); return d.toDateString()===n.toDateString()?"tonight":d.toDateString()===t.toDateString()?"tomorrow night":(Math.round((new Date(+d).setHours(0,0,0,0)-new Date(+n).setHours(0,0,0,0))/864e5)>=6?"next ":"")+d.toLocaleDateString("en-US",{weekday:"long"})+" night"; }catch(e){ return "overnight"; } };
@@ -7105,7 +7105,7 @@ window.SDR_GL=(function(){
     const _urg = b.srv || /^(SEVERE|FLOOD|TROPICAL)$/.test(String(b.cat||"")) || /Warning|Watch/.test(String(b.title||"")), _quiet = !_urg && seen.routine && Date.now() - seen.routine < 90*60e3;
     if (b.cat === "DAILY") { const _k = new Date().toDateString() + (b.slot||"am"), _dup = seen.daily === _k; remember("daily", _k); if (_quiet || _dup) return; { const _hr=new Date().getHours(), _m=/(-?\d+)°/.exec(String(b.sub||"")); if(_hr>=22||_hr<6) return; if(/freez/i.test(String(b.title||""))&&_m&&+_m[1]>32) return; if(window.SDR_GATE&&!SDR_GATE.okToSend(b.title,b.sub)) return; } remember("routine", Date.now()); notify("daily", b.slot==="pm" ? `🌤️ ${new Date().getHours()>=17?"EVENING":"AFTERNOON"} UPDATE · ${SITE}` : `☀️ TODAY'S BRIEFING · ${SITE}`, `${b.title}${b.sub ? " — " + b.sub : ""}`.slice(0, 180), "briefing", "", "daily"); return; }
     if (_quiet) return; if (!_urg) remember("routine", Date.now());
-    if(!b.srv&&!b.team&&window.SDR_GATE&&!SDR_GATE.okToSend(b.title,b.sub)) return; const _short=(b.page&&b.page.push)||((b.title||"Weather update").split(/[.:;—–-]/)[0].trim().split(/\s+/).slice(0,7).join(" ")); notify("brief", b.srv?(b.video?"New briefing + video":"New briefing"):`New briefing · ${SITE}`, _short.slice(0,60), "briefing", "", "brief"); }, 30000);
+    if(!b.srv&&!b.team&&window.SDR_GATE&&!SDR_GATE.okToSend(b.title,b.sub)) return; if(b.quiet) return; const _short=(b.page&&b.page.push)||((b.title||"Weather update").split(/[.:;—–-]/)[0].trim().split(/\s+/).slice(0,7).join(" ")); notify("brief", b.srv?(b.video?"New briefing + video":"New briefing"):`New briefing · ${SITE}`, _short.slice(0,60), "briefing", "", "brief"); }, 30000);
 
   // 3) twice a day, if the app is open: the What's Next headline
   setInterval(() => { const d = new Date(), hm = d.getHours() * 60 + d.getMinutes(); const slot = hm >= 500 && hm < 540 ? "am" : hm >= 980 && hm < 1020 ? "pm" : null; if (!slot) return;
@@ -7137,7 +7137,7 @@ window.SDR_GL=(function(){
 
 <script>
 // v125: client chat layer
-(function(){ let wrap=null, fr=null; const CHATV="1794510313";
+(function(){ let wrap=null, fr=null; const CHATV="1794533978";
   function open(){ if(!wrap){ wrap=document.createElement("div"); wrap.id="chatwrap"; wrap.innerHTML='<iframe id="chatfr" title="Message the team" allow="camera"></iframe>'; document.body.appendChild(wrap); fr=wrap.querySelector("iframe"); fr.src="./chat.html?v="+CHATV; fr.addEventListener("load",()=>{ try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }); }
     wrap.hidden=false; document.body.classList.add("chat-on"); if(!(history.state&&history.state.chat)) history.pushState({chat:1},""); try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }
   function close(){ if(wrap){ wrap.hidden=true; } document.body.classList.remove("chat-on"); }

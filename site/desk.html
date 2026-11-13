@@ -998,6 +998,17 @@ body{font-size:16px}
 .it{position:relative;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#060D1C}
 .it img{display:block;width:100%;height:76px;object-fit:cover}
 .it .n{position:absolute;left:5px;top:5px;width:20px;height:20px;border-radius:50%;background:#F5B800;color:#241A00;font-family:var(--display);font-weight:800;font-size:12px;display:grid;place-items:center}
+.it .icr{position:absolute;right:4px;bottom:38px;font:800 10px/1 var(--display);letter-spacing:.1em;padding:6px 8px;border-radius:6px;background:rgba(6,13,28,.88);color:#fff;border:1px solid rgba(255,255,255,.35)}
+.it .itr{position:absolute;left:4px;bottom:38px;font:800 9.5px/1 var(--display);letter-spacing:.08em;padding:4px 6px;border-radius:4px;background:rgba(16,84,60,.92);color:#8FF0C4}
+.vopt{display:flex;gap:8px;align-items:center;margin:10px 0 0;font-size:14px;cursor:pointer}.vopt input,.pq input{width:18px;height:18px;flex:none}.vopt b{color:#FF8A8E;font-family:var(--display);letter-spacing:.08em}
+.pq{display:flex;gap:7px;align-items:center;font-size:13.5px;color:#C9D4E8;cursor:pointer;white-space:nowrap}
+#wb-cropm{position:fixed;inset:0;z-index:50;background:rgba(3,8,20,.82);display:flex;align-items:center;justify-content:center;padding:12px}#wb-cropm[hidden]{display:none}
+#wb-cropm .cm{background:#0B1730;border:1px solid var(--line);border-radius:16px;padding:16px;width:min(560px,100%);max-height:96dvh;overflow:auto;display:grid;gap:8px}
+#wb-cropm h3{margin:0;font:800 18px/1.1 var(--display);letter-spacing:.08em}#wb-cropm p{margin:0;color:#9FB0C8;font-size:13.5px;line-height:1.4}
+#wb-cropm .cv{position:relative;justify-self:center;line-height:0;max-width:100%}#wb-cropm .cv img{max-width:100%;max-height:48dvh;display:block;border-radius:6px}
+#wb-cropm .sh{position:absolute;left:0;right:0;background:rgba(229,72,77,.55);pointer-events:none}#wb-cropm .cst{top:0}#wb-cropm .csb{bottom:0}
+#wb-cropm label{display:grid;grid-template-columns:70px 1fr;gap:10px;align-items:center;font:800 11.5px/1 var(--display);letter-spacing:.1em;color:#9FB0C8}#wb-cropm input[type=range]{width:100%;height:28px}
+#wb-cropm .cb{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
 .it .ix{position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;background:rgba(6,13,28,.85);color:#fff;font-size:13px}
 .it .iw{position:absolute;inset:0;display:grid;place-items:center;background:rgba(6,13,28,.6);font-size:12px;color:var(--muted)}
 .pub{position:fixed;left:0;right:0;bottom:0;z-index:6;background:rgba(11,23,48,.96);border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));display:flex;gap:10px;align-items:center;justify-content:center}
@@ -1045,7 +1056,7 @@ document.addEventListener("desk-ready",()=>{ const D=window.DESK; if(!D||window.
   const blank=()=>({id:"",cat:"OUTLOOK",notes:"",video:"",images:[],page:null,states:[],aud:[],circle:null});
   let F=blank(); try{ const o=JSON.parse(ls("desk-wb-draft")||"null"); if(o) F=Object.assign(blank(),o,{images:(o.images||[]).filter(x=>x.id)}); }catch(e){}
   let LIST=[];
-  const keep=()=>ls("desk-wb-draft",JSON.stringify(Object.assign({},F,{images:F.images.filter(x=>x.id).map(({id,src,cap,w,h,kind,mine,looked})=>({id,src:src&&src.startsWith("data:")?src:undefined,cap,w,h,kind,mine,looked}))})));
+  const keep=()=>ls("desk-wb-draft",JSON.stringify(Object.assign({},F,{images:F.images.filter(x=>x.id).map(({id,src,cap,w,h,kind,mine,looked,clean,found})=>({id,src:src&&src.startsWith("data:")?src:undefined,cap,w,h,kind,mine,looked,clean,found}))})));
 
   wb.innerHTML=`<div id="wb-edit"></div><div class="wbg"><div class="wbl">
     <div class="wc"><div class="wh"><b>WHAT KIND</b></div><div class="wb-chips" id="wb-cat">${TYPES.map(([k,n,c])=>`<button type="button" data-c="${k}" style="--c:${c}" aria-pressed="false">${n.toUpperCase()}</button>`).join("")}</div></div>
@@ -1066,7 +1077,8 @@ document.addEventListener("desk-ready",()=>{ const D=window.DESK; if(!D||window.
     <div class="wc"><div class="wh"><b>3 · VIDEO</b><small>Upload to the SDR YouTube channel, paste the link</small></div>
       <input type="url" id="wb-video" placeholder="https://youtu.be/…">
       <div class="vprev" id="wb-vprev" hidden></div>
-      <p class="hint" style="margin:8px 0 0">Leaves the front page after 36 hours; stays with the briefing in the library. You can add it after publishing.</p></div>
+      <label class="vopt"><input type="checkbox" id="wb-urgent"> <b>URGENT</b> · plays first on the 24/7 channel for 4 hours, then drops off</label>
+      <p class="hint" style="margin:8px 0 0">Goes to the people you pick in step 4 and to the 24/7 channel. The channel plays the three newest videos; each one drops off after 36 hours and stays with its briefing in the library. You can add it after publishing.</p></div>
     <div class="wc who"><div class="wh"><b>4 · WHO SEES THIS</b><small>Nothing picked = every dashboard</small></div>
       <h6>STATES</h6><div class="wb-chips" id="wb-sts"></div>
       <h6>OR A CIRCLE AROUND A PLACE</h6><div class="circ"><input id="wb-cc" placeholder="City, ST (like Asheville, NC)"><input id="wb-cm" class="mi" type="number" min="10" max="1500" placeholder="miles"><button type="button" class="btn" id="wb-cgo">SET</button><button type="button" class="btn" id="wb-cx">CLEAR</button></div>
@@ -1074,7 +1086,7 @@ document.addEventListener("desk-ready",()=>{ const D=window.DESK; if(!D||window.
       <div class="whonow" id="wb-who"></div></div>
     <div class="wc"><div class="wh"><b>ON DASHBOARDS NOW</b></div><div class="lst" id="wb-list"><div class="hint">Loading…</div></div></div>
   </div><div><div class="wh" style="margin-left:2px"><b>WHAT CLIENTS SEE</b><small id="wb-whosub">Every SDR dashboard and the 24/7 channel</small></div><div class="pv" id="wb-pv"></div></div></div>
-  <div class="pub" id="wb-pub" hidden><span class="st" id="wb-st"></span><button type="button" class="btn go" id="wb-go">PUBLISH TO ALL DASHBOARDS</button></div>`;
+  <div class="pub" id="wb-pub" hidden><span class="st" id="wb-st"></span><label class="pq"><input type="checkbox" id="wb-quiet"> Send quietly (no push)</label><button type="button" class="btn go" id="wb-go">PUBLISH TO ALL DASHBOARDS</button></div>`;
   const $=id=>document.getElementById(id);
   setTimeout(()=>{
     $("wb-cgo").onclick=async()=>{ const q=$("wb-cc").value.trim(), mi=Math.max(10,Math.min(1500,+$("wb-cm").value||100)); if(!q) return;
@@ -1181,7 +1193,7 @@ document.addEventListener("desk-ready",()=>{ const D=window.DESK; if(!D||window.
     try{ prog(S,0); stop=tick();
       if(imgs.some(x=>!x.looked)){ await look(); }
       stop(); prog(S,1); stop=tick();
-      const j=await D.api("/desk/brief/build",{notes:F.notes,cat:F.cat,images:imgs.map(x=>({id:x.id,cap:x.cap,w:x.w,h:x.h,kind:x.kind}))}); if(!j.page) throw new Error("no page came back");
+      const j=await D.api("/desk/brief/build",{notes:F.notes,cat:F.cat,images:imgs.map(x=>({id:x.id,cap:x.cap,w:x.w,h:x.h,kind:x.kind,clean:!!x.clean}))}); if(!j.page) throw new Error("no page came back");
       stop(); prog(S,2); F.page=j.page; keep(); paint(); prog(S,3); setTimeout(()=>{ $("wb-prog").hidden=true; },2500);
       D.toast("Built. Read every line, fix anything, then publish."); if(innerWidth<1080) $("wb-pv").scrollIntoView({behavior:"smooth",block:"start"}); }
     catch(e){ stop(); if(e.status===401){ building=false; b.disabled=false; return D.login("Wrong password."); } prog(S,1,"It didn't finish: "+(e&&e.message||"no reply")+". Tap Build to try again; your notes and maps are saved."); }
@@ -1196,11 +1208,31 @@ document.addEventListener("desk-ready",()=>{ const D=window.DESK; if(!D||window.
   const loadImg=src=>new Promise((ok,no)=>{ const i=new Image(); i.onload=()=>ok(i); i.onerror=no; i.src=src; });
   async function shrink(file,W,q){ W=W||1600; q=q||0.88; const src=URL.createObjectURL(file); const im=await loadImg(src); URL.revokeObjectURL(src); const k=Math.min(1,W/im.width); const c=document.createElement("canvas"); c.width=Math.round(im.width*k); c.height=Math.round(im.height*k); c.getContext("2d").drawImage(im,0,0,c.width,c.height);
     return {blob:await new Promise(r=>c.toBlob(r,"image/jpeg",q)),w:c.width,h:c.height}; }
-  async function upload(x){ x.busy=true; drawImgs(); try{ const {blob,w,h}=await shrink(x.file); x.w=w; x.h=h;
-      if(D.demo){ x.src=await new Promise(r=>{ const fr=new FileReader(); fr.onload=()=>r(fr.result); fr.readAsDataURL(blob); }); x.id="img_demo"+Math.random().toString(36).slice(2,8); }
-      else{ const r=await fetch(D.url+"/desk/img",{method:"POST",headers:{"Content-Type":"image/jpeg","X-Desk-Key":D.key()},body:blob}); const j=await r.json().catch(()=>({})); if(r.status===401) return D.login("Wrong password."); if(!r.ok||!j.id) throw new Error(j.error||r.status); x.id=j.id; x.src="";
-        try{ const sm=await shrink(x.file,1000,0.8); await fetch(D.url+"/desk/img?small="+encodeURIComponent(x.id),{method:"POST",headers:{"Content-Type":"image/jpeg","X-Desk-Key":D.key()},body:sm.blob}); }catch(e){} }
-    }catch(e){ D.toast("Image didn't upload. Try again."); F.images.splice(F.images.indexOf(x),1); } x.busy=false; delete x.file; keep(); drawImgs(); paint(); lookSoon(); }
+  const toJ=(cv,W,q)=>{ const k=Math.min(1,W/cv.width), c=document.createElement("canvas"); c.width=Math.round(cv.width*k); c.height=Math.round(cv.height*k); c.getContext("2d").drawImage(cv,0,0,c.width,c.height); return new Promise(r=>c.toBlob(b=>r({blob:b,w:c.width,h:c.height}),"image/jpeg",q)); };
+  // v358: the picture is trimmed to the map BEFORE it is uploaded, so no page, PDF or channel ever sees phone or app controls. box = a crop you set by hand.
+  async function upload(x,box){ x.busy=true; x.step=box?"Cropping…":"Finding the map…"; drawImgs(); try{
+      const src=URL.createObjectURL(x.file), im=await loadImg(src); let bx=box, info=null;
+      if(!bx){ info=await window.SDR_CROP.find(im, D.demo?null:((p,b)=>D.api(p,b))); bx=info.box; }
+      const whole=bx.t<=0.002&&bx.b>=0.998&&bx.l<=0.002&&bx.r>=0.998, cv=whole?im:window.SDR_CROP.cut(im,bx);
+      const big=await toJ(cv,1600,0.88), sm=await toJ(cv,1000,0.8); URL.revokeObjectURL(src); x.w=big.w; x.h=big.h; x.cut=bx; x.step="Uploading…"; drawImgs();
+      if(info){ x.found=info.found||[]; if(info.kind){ x.kind=info.kind; x.looked=true; if(!x.mine&&info.label) x.cap=info.label; x.shows=info.shows; } else if(!whole) x.kind="raw"; }
+      x.clean=box?true:(!whole||x.kind==="raw");
+      if(D.demo){ x.src=await new Promise(r=>{ const fr=new FileReader(); fr.onload=()=>r(fr.result); fr.readAsDataURL(big.blob); }); x.id="img_demo"+Math.random().toString(36).slice(2,8); }
+      else{ const r=await fetch(D.url+"/desk/img",{method:"POST",headers:{"Content-Type":"image/jpeg","X-Desk-Key":D.key()},body:big.blob}); const j=await r.json().catch(()=>({})); if(r.status===401) return D.login("Wrong password."); if(!r.ok||!j.id) throw new Error(j.error||r.status); x.id=j.id; x.src="";
+        try{ await fetch(D.url+"/desk/img?small="+encodeURIComponent(x.id),{method:"POST",headers:{"Content-Type":"image/jpeg","X-Desk-Key":D.key()},body:sm.blob}); }catch(e){} }
+    }catch(e){ D.toast("Image didn't upload. Try again."); if(!x.id) F.images.splice(F.images.indexOf(x),1); } x.busy=false; delete x.step; keep(); drawImgs(); paint(); lookSoon(); }
+  // crop by hand: drag the four sliders, the shaded part is cut away
+  async function cropEdit(x){ if(!x.file){ try{ const r=await fetch(imgUrl(x)); x.file=await r.blob(); x.cut=null; }catch(e){ D.toast("Couldn't open that picture. Remove it and add it again."); return; } }
+    const src=URL.createObjectURL(x.file), b0=x.cut||{t:0,b:1,l:0,r:1}; let M=$("wb-cropm"); if(!M){ M=document.createElement("div"); M.id="wb-cropm"; document.body.appendChild(M); }
+    M.innerHTML=`<div class="cm"><h3>CROP THIS MAP</h3><p>Drag the sliders until only the map is inside the bright box. Anything shaded is cut off.</p><div class="cv"><img alt="" src="${src}"><i class="sh cst"></i><i class="sh csb"></i><i class="sh csl"></i><i class="sh csr"></i></div>
+      <label>TOP <input type="range" min="0" max="45" step="0.5" data-k="t" value="${(b0.t*100).toFixed(1)}"></label><label>BOTTOM <input type="range" min="0" max="45" step="0.5" data-k="b" value="${((1-b0.b)*100).toFixed(1)}"></label>
+      <label>LEFT <input type="range" min="0" max="30" step="0.5" data-k="l" value="${(b0.l*100).toFixed(1)}"></label><label>RIGHT <input type="range" min="0" max="30" step="0.5" data-k="r" value="${((1-b0.r)*100).toFixed(1)}"></label>
+      <div class="cb"><button type="button" class="btn go" data-a="use">USE THIS CROP</button><button type="button" class="btn" data-a="auto">FIND THE MAP AGAIN</button><button type="button" class="btn" data-a="whole">WHOLE PICTURE</button><button type="button" class="btn" data-a="x">CANCEL</button></div></div>`;
+    M.hidden=false; const v=k=>+M.querySelector(`input[data-k="${k}"]`).value/100, show=()=>{ M.querySelector(".cst").style.height=(v("t")*100)+"%"; M.querySelector(".csb").style.height=(v("b")*100)+"%"; const mid=`top:${v("t")*100}%;bottom:${v("b")*100}%;`; M.querySelector(".csl").style.cssText="position:absolute;background:rgba(229,72,77,.55);pointer-events:none;"+mid+`left:0;width:${v("l")*100}%`; M.querySelector(".csr").style.cssText="position:absolute;background:rgba(229,72,77,.55);pointer-events:none;"+mid+`right:0;width:${v("r")*100}%`; };
+    M.querySelectorAll("input").forEach(el=>el.oninput=show); show();
+    M.onclick=e=>{ const a=e.target&&e.target.dataset&&e.target.dataset.a; if(e.target===M||a==="x"){ M.hidden=true; URL.revokeObjectURL(src); return; } if(!a) return; M.hidden=true; URL.revokeObjectURL(src);
+      const old=F.images.indexOf(x); if(old<0) return; delete x.id; x.looked=!!x.mine;
+      if(a==="use") upload(x,{t:v("t"),b:1-v("b"),l:v("l"),r:1-v("r")}); else if(a==="whole") upload(x,{t:0,b:1,l:0,r:1}); else upload(x); }; }
   // v305 look at new maps: what each shows, raw screenshot or finished graphic; fills the label unless you typed one
   let lookT=null; const lookSoon=()=>{ clearTimeout(lookT); lookT=setTimeout(look,700); };
   async function look(){ const todo=F.images.filter(x=>x.id&&!x.looked&&!x.busy); if(!todo.length||F.images.some(x=>x.busy)) return todo.length?lookSoon():null;
@@ -1209,8 +1241,9 @@ document.addEventListener("desk-ready",()=>{ const D=window.DESK; if(!D||window.
     catch(e){ todo.forEach(x=>x.looked=true); }
     todo.forEach(x=>delete x.looking); keep(); drawImgs(); }
   function add(files){ [...files].filter(f=>/^image\//.test(f.type)).forEach(f=>{ if(F.images.length>=8){ D.toast("Up to 8 images (4 per page)"); return; } const x={file:f,cap:""}; F.images.push(x); upload(x); }); }
-  function drawImgs(){ const box=$("wb-imgs"); box.innerHTML=F.images.map((x,i)=>`<div class="it" data-i="${i}"><img alt="" src="${x.id?esc(imgUrl(x)):""}"><span class="n">${i+1}</span>${x.kind?`<span class="kd${x.kind==="finished"?" fin":""}">${x.kind==="finished"?"FINISHED":"RAW"}</span>`:""}${x.busy?'<div class="iw">Uploading…</div>':x.looking?'<div class="iw">Looking…</div>':""}<button type="button" class="ix" aria-label="Remove">✕</button><input class="cap" value="${esc(x.cap||"")}" placeholder="What is it?" aria-label="Label for map ${i+1}"></div>`).join("");
+  function drawImgs(){ const box=$("wb-imgs"); box.innerHTML=F.images.map((x,i)=>`<div class="it" data-i="${i}"><img alt="" src="${x.id?esc(imgUrl(x)):""}"><span class="n">${i+1}</span>${x.kind?`<span class="kd${x.kind==="finished"?" fin":""}">${x.kind==="finished"?"FINISHED":"RAW"}</span>`:""}${x.busy?`<div class="iw">${esc(x.step||"Uploading…")}</div>`:x.looking?'<div class="iw">Looking…</div>':""}<button type="button" class="ix" aria-label="Remove">✕</button>${x.id&&!x.busy?`<button type="button" class="icr" aria-label="Crop map ${i+1}">CROP</button>`:""}${x.id&&!x.busy&&x.clean&&x.found&&x.found.length?`<span class="itr" title="${esc(x.found.join("; "))}">TRIMMED</span>`:""}<input class="cap" value="${esc(x.cap||"")}" placeholder="What is it?" aria-label="Label for map ${i+1}"></div>`).join("");
     box.querySelectorAll("input.cap").forEach(el=>el.oninput=()=>{ const x=F.images[+el.parentElement.dataset.i]; x.cap=el.value.slice(0,60); x.mine=true; keep(); });
+    box.querySelectorAll(".icr").forEach(b=>b.onclick=()=>cropEdit(F.images[+b.parentElement.dataset.i]));
     box.querySelectorAll(".ix").forEach(b=>b.onclick=()=>{ const i=+b.parentElement.dataset.i; F.images.splice(i,1); if(F.page){ const fix=s=>{ if(!s||s.img==null) return; if(s.img===i+1) s.img=null; else if(s.img>i+1) s.img--; }; fix(F.page.hero); (F.page.cards||[]).forEach(fix); } keep(); drawImgs(); paint(); }); }
   const dz=$("wb-drop"), fi=$("wb-file"); dz.onclick=()=>fi.click(); fi.onchange=()=>{ add(fi.files); fi.value=""; };
   dz.ondragover=e=>{ e.preventDefault(); dz.classList.add("on"); }; dz.ondragleave=()=>dz.classList.remove("on"); dz.ondrop=e=>{ e.preventDefault(); dz.classList.remove("on"); add(e.dataTransfer.files); };
@@ -1223,7 +1256,7 @@ document.addEventListener("desk-ready",()=>{ const D=window.DESK; if(!D||window.
     if(P&&P.group){ pv.insertAdjacentHTML("beforeend",`<div class="grp"><div class="wh"><b>SEND-READY MESSAGE</b><small>For GroupMe or a text</small></div><pre id="wb-grp">${esc(P.group)}</pre><button type="button" class="btn" id="wb-grpc">COPY</button></div>`); $("wb-grpc").onclick=()=>{ try{ navigator.clipboard.writeText(P.group); D2toast("Copied"); }catch(e){} }; }
     if(v){ const r=pv.querySelector(".bp"); if(r) r.insertAdjacentHTML("afterbegin",`<div class="pvv"><img alt="" src="https://i.ytimg.com/vi/${v}/hqdefault.jpg"><i><svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg></i><em>WATCH THE BRIEFING</em></div>`); }
     const rv=$("wb-revise"); if(rv) rv.onclick=async()=>{ const ask=($("wb-ask").value||"").trim(); if(!ask){ $("wb-ask").focus(); return; } read(); rv.disabled=true; const t0=Date.now(); clearInterval(window._wbIv); window._wbIv=setInterval(()=>{ rv.textContent=`WORKING… ${Math.round((Date.now()-t0)/1000)}s`; },500); rv.textContent="WORKING…";
-      try{ const j=await D.api("/desk/brief/revise",{page:F.page,notes:F.notes,instruction:ask,images:F.images.filter(x=>x.id).map(x=>({id:x.id,cap:x.cap,w:x.w,h:x.h,kind:x.kind}))}); if(!j.page) throw new Error("no page"); clearInterval(window._wbIv); F.page=j.page; keep(); paint(); D.toast("Changed. Read it over."); }
+      try{ const j=await D.api("/desk/brief/revise",{page:F.page,notes:F.notes,instruction:ask,images:F.images.filter(x=>x.id).map(x=>({id:x.id,cap:x.cap,w:x.w,h:x.h,kind:x.kind,clean:!!x.clean}))}); if(!j.page) throw new Error("no page"); clearInterval(window._wbIv); F.page=j.page; keep(); paint(); D.toast("Changed. Read it over."); }
       catch(e){ if(e.status===401) return D.login("Wrong password."); clearInterval(window._wbIv); D.toast("Couldn't change it: "+(e&&e.message||"no reply")); rv.disabled=false; rv.textContent="✦ MAKE THE CHANGE"; } };
     pv.querySelectorAll("[contenteditable]").forEach(el=>{ el.addEventListener("input",()=>{ read(); }); el.addEventListener("keydown",e=>{ if(e.key==="Enter"&&el.tagName!=="LI"&&el.tagName!=="P"){ e.preventDefault(); el.blur(); } }); });
     const cl=$("wb-drop-page"); if(cl) cl.onclick=()=>{ F.page=null; keep(); paint(); $("wb-build").textContent="BUILD THE BRIEFING"; };
@@ -1233,7 +1266,7 @@ document.addEventListener("desk-ready",()=>{ const D=window.DESK; if(!D||window.
   // publish (tap twice, no pop-ups)
   $("wb-go").onclick=async()=>{ const b=$("wb-go"); if(!b.classList.contains("sure")){ b.classList.add("sure"); b.textContent=F.id?"TAP AGAIN TO UPDATE":"TAP AGAIN · SENDS TO EVERY CLIENT"; setTimeout(()=>{ b.classList.remove("sure"); fill(); },4000); return; }
     b.classList.remove("sure"); b.disabled=true; b.textContent="PUBLISHING…"; read(); const P=F.page;
-    const body={id:F.id||undefined,cat:F.cat,area:whoTxt()||"Southeast",states:F.states,aud:F.aud,circle:F.circle,title:P.title,sub:P.sub,lines:(P.hero&&P.hero.bullets)||[],bottom:P.bottom,video:F.video.trim(),images:F.images.filter(x=>x.id).map(x=>({id:x.id,cap:x.cap,w:x.w,h:x.h,kind:x.kind,src:D.demo?x.src:undefined})),page:P,by:D.met.value};
+    const body={id:F.id||undefined,cat:F.cat,area:whoTxt()||"Southeast",states:F.states,aud:F.aud,circle:F.circle,title:P.title,sub:P.sub,lines:(P.hero&&P.hero.bullets)||[],bottom:P.bottom,video:F.video.trim(),urgent:!!($("wb-urgent")&&$("wb-urgent").checked&&F.video.trim()),quiet:!!($("wb-quiet")&&$("wb-quiet").checked),images:F.images.filter(x=>x.id).map(x=>({id:x.id,cap:x.cap,w:x.w,h:x.h,kind:x.kind,src:D.demo?x.src:undefined})),page:P,by:D.met.value};
     try{ const j=await D.api("/desk/brief/publish",body); LIST=j.briefs||LIST; D.toast(F.id?"Updated on every dashboard":"Published. Dashboards pick it up within 5 minutes.");
       F=blank(); keep(); fill(); drawImgs(); vprev(); paint(); $("wb-build").textContent="BUILD THE BRIEFING"; list(); window.scrollTo(0,0); }
     catch(e){ if(e.status===401) return D.login("Wrong password."); D.toast("Didn't publish. Try again."); }
@@ -1253,6 +1286,55 @@ document.addEventListener("desk-ready",()=>{ const D=window.DESK; if(!D||window.
   let t0="q"; try{ t0=sessionStorage.getItem("desk-tab")||(/[?&]write\b/.test(location.search)?"w":"q"); }catch(e){} if(t0==="w"){ const b=tabs.querySelector('button[data-t="w"]'); if(b) b.click(); }
 });
 })();
+</script>
+<script>
+/* v358 CLEAN CROP: trims a raw app screenshot down to the map before it is uploaded, so nothing downstream ever sees phone or app controls.
+   Step 1 (always, no network): read the pixels. Finds the dark control panel and color-legend strip at the bottom, and the floating time box near the top.
+   Step 2 (when signed in): ask the vision model on a numbered grid, then check the cropped result and trim again if controls remain.
+   The tighter of the two wins on every edge. A designed graphic (not a tall phone screenshot, or one the model calls finished) is left whole. */
+window.SDR_CROP=(function(){
+  function small(src,W){ var k=Math.min(1,W/src.width), c=document.createElement("canvas"); c.width=Math.round(src.width*k); c.height=Math.round(src.height*k); c.getContext("2d").drawImage(src,0,0,c.width,c.height); return c; }
+  function pixels(src){ var c=small(src,330), W=c.width, H=c.height, out={t:0,b:1,l:0,r:1,found:[]}; if(H/W<1.45) return out;
+    var d=c.getContext("2d").getImageData(0,0,W,H).data, dark=new Float32Array(H), rain=new Uint8Array(H), run=new Float32Array(H);
+    for(var y=0;y<H;y++){ var nd=0, hb={}, ns=0, best=0, cur=0, x0=Math.round(W*0.12), x1=Math.round(W*0.88);
+      for(var x=0;x<W;x++){ var i=(y*W+x)*4, r=d[i], g=d[i+1], b=d[i+2], mx=Math.max(r,g,b), mn=Math.min(r,g,b), dk=mx<52; if(dk) nd++;
+        if(mx>90&&(mx-mn)/mx>0.55){ ns++; var h=mx===r?((g-b)/(mx-mn)+6)%6:mx===g?(b-r)/(mx-mn)+2:(r-g)/(mx-mn)+4; hb[Math.floor(h)]=1; }
+        if(x>=x0&&x<=x1){ if(dk){ cur++; if(cur>best) best=cur; } else cur=0; } }
+      dark[y]=nd/W; rain[y]=(ns/W>0.6&&Object.keys(hb).length>=3)?1:0; run[y]=best/W; }
+    // bottom: the control panel is the dark block that runs to the bottom of the screenshot
+    var suf=new Float32Array(H+1); for(var y2=H-1;y2>=0;y2--) suf[y2]=suf[y2+1]+dark[y2];
+    var panel=-1; for(var y3=Math.round(H*0.5);y3<H*0.97;y3++){ if(dark[y3]>=0.7&&suf[y3]/(H-y3)>=0.72){ panel=y3; break; } }
+    if(panel>=H*0.6){ var top=panel, k2=0; for(var y4=panel-1;y4>panel-H*0.035&&y4>0;y4--){ if(rain[y4]){ top=y4; k2++; } else if(k2&&panel-y4>2) break; }
+      out.b=Math.max(0.5,(top-H*0.03)/H); out.found.push(k2?"color bar and controls at the bottom":"controls at the bottom"); }
+    // top: the floating time box is a long dark bar across the middle of the top of the map
+    var last=-1, cnt=0; for(var y5=Math.round(H*0.03);y5<H*0.2;y5++){ if(run[y5]>=0.33){ cnt++; last=y5; } }
+    if(last>0&&cnt>=H*0.012){ out.t=Math.min(0.3,(last+H*0.028)/H); out.found.push("time box and buttons at the top"); }
+    else if(panel>=H*0.6){ out.t=0.058; out.found.push("status bar at the top"); }
+    return out; }
+  // the picture with a numbered grid on it: a vision model reads positions far more accurately off a ruler
+  function gridded(src){ var c=small(src,900), x=c.getContext("2d"), W=c.width, H=c.height; x.lineWidth=1; x.font="bold 15px Arial, Helvetica, sans-serif"; x.textBaseline="middle";
+    for(var p=5;p<100;p+=5){ var yy=Math.round(H*p/100), ten=p%10===0; x.strokeStyle=ten?"rgba(255,235,0,.95)":"rgba(255,235,0,.45)"; x.beginPath(); x.moveTo(0,yy+.5); x.lineTo(W,yy+.5); x.stroke();
+      if(ten){ [4,W-34].forEach(function(lx){ x.fillStyle="#000"; x.fillRect(lx-2,yy-10,32,20); x.fillStyle="#FFEB00"; x.fillText(String(p),lx+2,yy+1); }); } }
+    for(var q=10;q<100;q+=10){ var xx=Math.round(W*q/100); x.strokeStyle="rgba(0,255,255,.7)"; x.beginPath(); x.moveTo(xx+.5,0); x.lineTo(xx+.5,H); x.stroke(); x.fillStyle="#000"; x.fillRect(xx-15,2,30,18); x.fillStyle="#00FFFF"; x.fillText(String(q),xx-11,12); }
+    return c.toDataURL("image/jpeg",0.82).split(",")[1]; }
+  function cut(src,bx){ var c=document.createElement("canvas"), sx=Math.round(src.width*bx.l), sy=Math.round(src.height*bx.t), sw=Math.round(src.width*(bx.r-bx.l)), sh=Math.round(src.height*(bx.b-bx.t)); c.width=sw; c.height=sh; c.getContext("2d").drawImage(src,sx,sy,sw,sh,0,0,sw,sh); return c; }
+  var cl=function(v,a,b){ v=+v; return isFinite(v)?Math.max(a,Math.min(b,v)):a; };
+  // api(path, body) is the desk's signed-in call. Returns {box:{t,b,l,r}, kind, found:[...], by:"pixels"|"pixels+model"}
+  function find(src,api){ var px=pixels(src), box={t:px.t,b:px.b,l:0,r:1}, res={box:box,kind:"",found:px.found.slice(),by:"pixels"};
+    if(!api) return Promise.resolve(res);
+    return api("/desk/brief/cropbox",{jpeg:gridded(src)}).then(function(j){ if(!j||j.error) return res; res.kind=j.kind==="finished"?"finished":"raw"; res.label=j.label||""; res.shows=j.shows||"";
+        if(res.kind==="finished"&&!px.found.length){ res.box={t:0,b:1,l:0,r:1}; res.by="model"; return res; }
+        var m={t:cl(j.top,0,45)/100,b:cl(j.bottom,55,100)/100,l:cl(j.left,0,30)/100,r:cl(j.right,70,100)/100};
+        box.t=Math.max(box.t,m.t); box.b=Math.min(box.b,m.b); box.l=m.l; box.r=m.r; if(j.saw) res.found.push(String(j.saw).slice(0,140)); res.by="pixels+model";
+        if(box.b-box.t<0.3||box.r-box.l<0.5){ res.box={t:px.t,b:px.b,l:0,r:1}; res.by="pixels"; return res; }
+        // look at the result and trim again while controls are still showing (two more looks at most)
+        var round=function(n){ if(n>=2) return res; var cc=small(cut(src,res.box),800).toDataURL("image/jpeg",0.82).split(",")[1];
+          return api("/desk/brief/cropcheck",{jpeg:cc}).then(function(k){ if(!k||k.error||k.clean) return res; var bw=res.box.r-res.box.l, bh=res.box.b-res.box.t, T=cl(k.top,0,25)/100, B=cl(k.bottom,0,25)/100, L=cl(k.left,0,20)/100, R=cl(k.right,0,20)/100; if(T+B+L+R<0.005) return res;
+            var nb={t:res.box.t+bh*T,b:res.box.b-bh*B,l:res.box.l+bw*L,r:res.box.r-bw*R}; if(nb.b-nb.t<0.28||nb.r-nb.l<0.5) return res; res.box=nb; res.by="pixels+model+check"; return round(n+1); }).catch(function(){ return res; }); };
+        return round(0); }).catch(function(){ return res; }); }
+  return {pixels:pixels,gridded:gridded,cut:cut,find:find,small:small};
+})();
+
 </script>
 
 <style>
@@ -1296,7 +1378,7 @@ document.addEventListener("desk-ready",()=>{ const D=window.DESK; if(!D||window.
 #or .ortier{margin:18px 0 8px;font-family:var(--display);font-weight:800;letter-spacing:.12em;font-size:13px;color:var(--dim);display:flex;gap:8px;align-items:center}
 #or .ortier i{width:10px;height:10px;border-radius:50%;display:inline-block}
 #or .orc{background:var(--panel);border:1px solid var(--line);border-left:5px solid var(--line);border-radius:14px;padding:14px 16px;margin:0 0 10px}
-#or .orc.t1{border-left-color:#E5484D}#or .orc.t2{border-left-color:#F5B800}#or .orc.t3{border-left-color:#5B8DEF}#or .orc.t4{border-left-color:#B58CFF}
+#or .orc.t1{border-left-color:#E5484D}#or .orc.t2{border-left-color:#F5B800}#or .orc.t3{border-left-color:#5B8DEF}#or .orc.t4{border-left-color:#B58CFF}#or .orc.t5{border-left-color:#FF8A3D}
 #or .orc .ortop{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
 #or .orc h3{margin:0;font-size:19px;font-weight:800}
 #or .chip{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:2px 9px;font-size:11.5px;font-family:var(--display);font-weight:800;letter-spacing:.08em;color:var(--dim);white-space:nowrap}
@@ -1346,10 +1428,10 @@ document.addEventListener("desk-ready",()=>{ const D=window.DESK; if(!D||window.
   // ---- which alerts are worth a call. 1 = debris-producing and in effect or imminent; 2 = a watch, or a warning that mostly means water; 3 = everything else (shown folded)
   function tier(ev){ ev=String(ev||"");
     if(/^(Tornado Warning|Severe Thunderstorm Warning|Hurricane Warning|Tropical Storm Warning|Storm Surge Warning|Extreme Wind Warning|Ice Storm Warning|Winter Storm Warning|Blizzard Warning|High Wind Warning|Hurricane Force Wind Warning)$/.test(ev)) return 1;
-    if(/^(Tornado Watch|Severe Thunderstorm Watch|Hurricane Watch|Tropical Storm Watch|Storm Surge Watch|Winter Storm Watch|Ice Storm Watch|High Wind Watch|Flash Flood Warning|Flash Flood Emergency)$/.test(ev)) return 2;
+    if(/^(Tornado Watch|Severe Thunderstorm Watch|Hurricane Watch|Tropical Storm Watch|Storm Surge Watch|Winter Storm Watch|Ice Storm Watch|High Wind Watch|Flash Flood Warning|Flash Flood Emergency|Winter Weather Advisory|Wind Advisory|Flood Watch|Flood Warning|Lake Wind Advisory|Freezing Rain Advisory)$/.test(ev)) return 2;
     if(/Test|Marine|Small Craft|Rip Current|Beach|Surf|Air Quality|Special Weather Statement|Hazardous Weather Outlook|Short Term Forecast|Child Abduction|911|Administrative/i.test(ev)) return 0;
     return 3; }
-  var TN={1:"REACH OUT NOW",2:"COMING UP · WORTH A NOTE",3:"UNDER A LOWER-IMPACT ALERT"}, TC={1:"#E5484D",2:"#F5B800",3:"#5B8DEF"};
+  var TN={1:"REACH OUT NOW",2:"WATCHES AND ADVISORIES · WORTH A NOTE",3:"UNDER A LOWER-IMPACT ALERT"}, TC={1:"#E5484D",2:"#F5B800",3:"#5B8DEF"};
   // ---- names: "Aiken County" / "Acadia Parish" / "City of Norfolk" all reduce to one key so they can be matched to the official county list
   function norm(n){ n=String(n||"").toLowerCase().replace(/\./g,"").replace(/['’]/g,"").replace(/\bsaint\b/g,"st").replace(/\bste\b/g,"st").replace(/&/g,"and").replace(/[^a-z0-9 ]/g," ").replace(/\s+/g," ").trim();
     var city=/^city of /.test(n)||/ city$/.test(n)&&/\(/.test(String(arguments[0])); n=n.replace(/^city of /,"").replace(/ (county|parish|borough|census area|municipality)$/,"").trim(); return n.replace(/ /g,"")+(city?"|c":""); }
@@ -1374,7 +1456,14 @@ document.addEventListener("desk-ready",()=>{ const D=window.DESK; if(!D||window.
   // a follow-up is due 3 days after the first note, once. Sending it, logging a call, or "no follow-up needed" settles it.
   function fuDue(r){ if(!r||r.dnc||r.stage==="Won"||r.stage==="Lost") return false; var o=r.outreach||[], li=-1; for(var i=0;i<o.length;i++) if(o[i].kind==="email"||o[i].kind==="call") li=i; if(li<0||o[li].fu) return false;
     for(var j=li+1;j<o.length;j++) if(o[j].fu) return false; var d=days(o[li].t); return d>=FU_AFTER&&d<=21; }
-  function item(id){ var h=hit(id), r=rec(id); if(r&&fuDue(r)) return {r:r,t:h?h.t:4,al:h?h.al:[],fu:true}; return h; }
+  function item(id){ var h=hit(id), r=rec(id); if(r&&fuDue(r)) return {r:r,t:h?h.t:4,al:h?h.al:[],fu:true}; if(!h&&r&&!r.dnc&&reps(r).length) return {r:r,t:5,al:[],ps:true}; return h; }
+  var SPCR={}, spcAt=0;
+  function ckey(st,co){ return String(st||"").toUpperCase()+"|"+String(co||"").toLowerCase().replace(/^city of /,"").replace(/ (county|parish)$/,"").replace(/\bsaint\b/g,"st").replace(/[^a-z]/g,""); }
+  function loadSpc(){ if(Date.now()-spcAt<10*60e3||!window.DESK||!DESK.url) return Promise.resolve(); return fetch(DESK.url+"/spc?days=3").then(function(r){ if(!r.ok) throw 0; return r.json(); }).then(function(j){ var X={}; (j.reports||[]).forEach(function(q){ var k=ckey(q.st,q.co); (X[k]=X[k]||[]).push(q); }); SPCR=X; spcAt=Date.now(); }).catch(function(){}); }
+  // storm reports in this county in the last 2 days: the reason for an after-the-storm note
+  function reps(r){ var L=SPCR[ckey(r.state,r.name)]||[], cut=Date.now()-48*3600e3; return L.filter(function(q){ return q.ts>=cut&&q.ts<=Date.now()+3600e3; }).sort(function(a,b){ return b.ts-a.ts; }); }
+  function repLine(L){ var t=L.filter(function(q){ return q.k==="t"; }), w=L.filter(function(q){ return q.k==="w"; }), h=L.filter(function(q){ return q.k==="h"; }), near=function(q){ return q.loc?" near "+String(q.loc).replace(/^\d+\s+[NSEW]{1,3}\s+/,"").toLowerCase().replace(/\b[a-z]/g,function(c){ return c.toUpperCase(); }):""; };
+    if(t.length) return "a tornado report"+near(t[0]); var wm=w.filter(function(q){ return q.m; }).sort(function(a,b){ return b.m-a.m; })[0]; if(wm) return "a "+Math.round(wm.m)+" mph wind gust"+near(wm); if(w.length) return "wind damage"+near(w[0]); var hm=h.filter(function(q){ return q.m; }).sort(function(a,b){ return b.m-a.m; })[0]; if(hm) return hm.m+"-inch hail"+near(hm); return ""; }
   function quiet(r){ var l=last(r); return !!l&&Date.now()-l.t<QUIET*864e5; }
   function last(r){ var o=(r.outreach||[]).filter(function(x){ return x.kind==="email"||x.kind==="call"; }); return o.length?o[o.length-1]:null; }
   // ---- data
@@ -1387,7 +1476,7 @@ document.addEventListener("desk-ready",()=>{ const D=window.DESK; if(!D||window.
     var p=(loaded&&!force&&Date.now()-recsAt<10*60e3)?Promise.resolve():loadRecs().then(function(){ loaded=true; recsAt=Date.now(); });
     return p.then(function(){ var sts=Object.keys(STATES).filter(function(s){ return FIPS[s]; });
       return Promise.all(sts.map(function(st){ return Promise.all([getJ("https://api.weather.gov/alerts/active?area="+st).then(function(j){ ALERTS[st]=j.features||[]; }).catch(function(){ alertErr.push(st); ALERTS[st]=ALERTS[st]||null; }), zones(st).catch(function(){ zoneErr.push(st); })]); })); })
-    .then(dayLoad).then(function(){ match(); lastRun=Date.now(); }).catch(function(e){ root._err=(e&&e.status===401)?"signin":"load"; }).then(function(){ busy=false; paint(); }); }
+    .then(dayLoad).then(loadSpc).then(function(){ match(); lastRun=Date.now(); }).catch(function(e){ root._err=(e&&e.status===401)?"signin":"load"; }).then(function(){ busy=false; paint(); }); }
   function match(){ var by={}; RECS.forEach(function(r){ var st=r.state, z=ZONES[st], k=norm(r.name), ccc=z&&z[k]; if(z&&!ccc&&/\|c$/.test(k)&&!z[k.replace(/\|c$/,"")+"county"]){ var pl=k.replace(/\|c$/,""), dup=RECS.some(function(o){ return o!==r&&o.state===st&&norm(o.name)===pl; }); if(!dup) ccc=z[pl]; } r._same=ccc&&FIPS[st]?("0"+FIPS[st]+ccc):null; r._nk=k.replace(/\|c$/,""); r._city=/\|c$/.test(k); if(r._same) by[r._same]=r; });
     HITS=[]; var seen={};
     Object.keys(ALERTS).forEach(function(st){ (ALERTS[st]||[]).forEach(function(a){ var P=a.properties||{}, t=tier(P.event); if(!t) return; if(P.status&&P.status!=="Actual") return; if(P.messageType==="Cancel") return; var en=P.ends||P.expires; if(en&&+new Date(en)<Date.now()) return;
@@ -1400,7 +1489,7 @@ document.addEventListener("desk-ready",()=>{ const D=window.DESK; if(!D||window.
     var so={Won:0,Meeting:1,Proposal:1,Contacted:2,Target:3,Research:4,Lost:6};
     HITS.sort(function(a,b){ return a.t-b.t||((so[a.r.stage]==null?5:so[a.r.stage])-(so[b.r.stage]==null?5:so[b.r.stage]))||String(a.r.state+a.r.name).localeCompare(b.r.state+b.r.name); }); }
   // ---- the email. Short, plain, signed by the meteorologist who is signed in. A person reads it, edits it and sends it from their own mail app.
-  function draft(r,a,fu){ var P=(a&&a.properties)||{}, ev=P.event||"", m=me(), fn=firstName(r.emDirector), hr=new Date().getHours(), hi=(hr<12?"Good morning":hr<17?"Good afternoon":"Good evening")+(fn?" "+fn:"")+",";
+  function draft(r,a,fu,ps){ var RP=reps(r); var P=(a&&a.properties)||{}, ev=P.event||"", m=me(), fn=firstName(r.emDirector), hr=new Date().getHours(), hi=(hr<12?"Good morning":hr<17?"Good afternoon":"Good evening")+(fn?" "+fn:"")+",";
     var place=String(r.name||""), on=P.onset||P.effective, en=P.ends||P.expires, fut=on&&+new Date(on)>Date.now()+20*60e3;
     var when=(fut?"from "+fmtT(on):"now")+(en?" until "+fmtT(en):"");
     var what=""; var dsc=String(P.description||""), w=dsc.match(/\*\s*WHAT\.\.\.([\s\S]*?)(?:\n\s*\n|\*\s*WHERE)/); if(w) what=w[1].replace(/\s+/g," ").trim(); if(what.length>260){ var c=what.slice(0,260), i=c.lastIndexOf(". "); what=i>60?c.slice(0,i+1):c.replace(/\s+\S*$/,"")+"…"; }
@@ -1408,17 +1497,20 @@ document.addEventListener("desk-ready",()=>{ const D=window.DESK; if(!D||window.
     var named=m.name&&m.id!=="owner"&&!/^desk admin$/i.test(m.name)&&!/justus|wyff|cjwx/i.test(m.name+" "+(m.title||"")), ttl=String(m.title||"Meteorologist"), art=/^[aeiou]/i.test(ttl)?"an ":"a "; if(/^admin$/i.test(ttl)) ttl="Meteorologist", art="a ";
     if(quick) what="";
     var first=last(r), fday=first?new Date(first.t).toLocaleDateString("en-US",{weekday:"long"}):"";
-    var subj=fu?("Following up: weather briefings for "+place):!ev?("Weather update for "+place):quick?("Checking in after today's "+ev+" in "+place):(ev+" for "+place+": "+(fut?"starts "+fmtT(on):"in effect now")+(en?", until "+fmtT(en):""));
+    var after=!fu&&RP.length&&(ps||quick||!ev), rl=after?repLine(RP):"";
+    var subj=after?("Checking in after the storms in "+place):fu?("Following up: weather briefings for "+place):!ev?("Weather update for "+place):quick?("Checking in after today's "+ev+" in "+place):(ev+" for "+place+": "+(fut?"starts "+fmtT(on):"in effect now")+(en?", until "+fmtT(en):""));
     var L=[hi,"",
-      (named?"I'm "+m.name+", "+art+ttl.toLowerCase()+" with SDR Weather Intelligence.":"I'm writing from the meteorology team at SDR Weather Intelligence.")+(fu?" I wrote "+(fday?"on "+fday:"earlier")+(first&&first.alert?" when "+place+" was under "+(/^[AEIOU]/.test(first.alert)?"an ":"a ")+first.alert:"")+", and I wanted to follow up."+(ev&&!quick?" "+(/^[AEIOU]/.test(ev)?"An ":"A ")+ev+" is in effect for "+place+" "+when+".":""):!ev?"":quick?" "+place+" was under a "+ev+" today, and I wanted to check in once things settled.":" "+(/^[AEIOU]/.test(ev)?"An ":"A ")+ev+" is in effect for "+place+" "+when+".")];
+      (named?"I'm "+m.name+", "+art+ttl.toLowerCase()+" with SDR Weather Intelligence"+(after?", the weather division of Southern Disaster Recovery.":"."):"I'm writing from the meteorology team at SDR Weather Intelligence"+(after?", the weather division of Southern Disaster Recovery.":"."))+(after?" We were tracking the storms over "+place+". There "+(RP.length===1?"has been one storm report":"have been "+RP.length+" storm reports")+" in the county in the last two days"+(rl?", including "+rl:"")+".":fu?" I wrote "+(fday?"on "+fday:"earlier")+(first&&first.alert?" when "+place+" was under "+(/^[AEIOU]/.test(first.alert)?"an ":"a ")+first.alert:"")+", and I wanted to follow up."+(ev&&!quick?" "+(/^[AEIOU]/.test(ev)?"An ":"A ")+ev+" is in effect for "+place+" "+when+".":""):!ev?"":quick?" "+place+" was under a "+ev+" today, and I wanted to check in once things settled.":" "+(/^[AEIOU]/.test(ev)?"An ":"A ")+ev+" is in effect for "+place+" "+when+".")];
     if(what&&!fu) L.push("",what);
-    if(!quick||fu) L.push("",partner?"Today's weather briefing for "+place+" is attached.":"I've attached today's weather briefing for "+place+" so you can see exactly what we send.");
-    L.push("",partner&&quick?"If a weather update would help while you assess, reply and I'll send one right away.":partner?"We are watching this closely for you and will send an update if the forecast changes. If a short call would help with your planning, I'm glad to set one up."
+    if(after) L.push("","Here is what happened: I've attached a short summary of what has been reported in "+place+" so far. These are early reports and the count can change.");
+    else if(!quick||fu) L.push("",partner?"Today's weather briefing for "+place+" is attached.":"I've attached today's weather briefing for "+place+" so you can see exactly what we send.");
+    if(after) L.push("",partner?"If SDR can help with the debris, please let us know. SDR stands ready to serve.":"If SDR can help you with the debris, please let us know. SDR stands ready to serve.");
+    else L.push("",partner&&quick?"If a weather update would help while you assess, reply and I'll send one right away.":partner?"We are watching this closely for you and will send an update if the forecast changes. If a short call would help with your planning, I'm glad to set one up."
       :fu?"If briefings like this would help your office, reply and I'll add you. There is no cost."+(LINK?"\n\nYou can also sign up here:\n"+LINK:""):"We put together short weather briefings for counties in the path of events like this, written for emergency managers. There is no cost. If it would help, reply and I'll send yours and keep you updated as this develops."+(LINK?"\n\nYou can see what the briefings look like, and sign up, here:\n"+LINK:""));
-    if(t===1||t===2||fu) L.push("",partner?"If debris or right-of-way clearing becomes a need afterward, SDR stands ready to serve.":"If debris removal or right-of-way clearing becomes a need afterward, SDR stands ready to serve.");
+    if((t===1||t===2||fu)&&!after) L.push("",partner?"If debris or right-of-way clearing becomes a need afterward, SDR stands ready to serve.":"If debris removal or right-of-way clearing becomes a need afterward, SDR stands ready to serve.");
     L.push("",(named?m.name:"SDR Weather Intelligence"),(named?ttl+", SDR Weather Intelligence":""),MAILBOX,"","If you'd rather not get these notes, reply and we'll take you off the list.");
     var clean=function(x){ return String(x).replace(/[^.\n]*\b(Chris Justus|Justus|WYFF|CJWX)\b[^.\n]*\.?/gi,"").replace(/[ \t]{2,}/g," "); };
-    return {to:emails(r)[0]||"",subject:clean(subj),body:clean(L.filter(function(x,i,A){ return !(x===""&&A[i-1]===""); }).join("\n")).replace(/\n{3,}/g,"\n\n").trim(),event:ev,fu:!!fu}; }
+    return {to:emails(r)[0]||"",subject:clean(subj),body:clean(L.filter(function(x,i,A){ return !(x===""&&A[i-1]===""); }).join("\n")).replace(/\n{3,}/g,"\n\n").trim(),event:ev||(after?"Storm reports":""),fu:!!fu,after:!!after}; }
   // ---- drawing
   function card(h,r){ r=r||h.r; var fu=!!(h&&h.fu), a0=h&&h.al[0], lc=last(r), em=emails(r), recent=lc&&Date.now()-lc.t<QUIET*864e5, hid=false, sx=h?stat(r.id):"";
     var st=String(r.stage||"Research"), sc=st==="Won"?"won":st==="Target"?"target":"";
@@ -1426,14 +1518,14 @@ document.addEventListener("desk-ready",()=>{ const D=window.DESK; if(!D||window.
     var al=h?h.al.slice(0,3).map(function(a){ return '<div class="oral"><b>'+esc(a.properties.event)+'</b> · '+esc(span(a))+'</div>'; }).join(""):"";
     var who=[["EMERGENCY MANAGEMENT",r.emDirector],["ADMINISTRATOR",r.administrator],["PURCHASING",r.procurement]].filter(function(x){ return x[1]; }).map(function(x){ return '<div><span>'+x[0]+'</span>'+link(x[1])+'</div>'; }).join("")+(r.emEmail||r.emPhone?'<div><span>ADDED BY THE TEAM</span>'+link([r.emEmail,r.emPhone].filter(Boolean).join(" · "))+'</div>':"");
     var meta=[lc?('<span class="'+(recent?"warn":"")+'">Last contact: '+esc(ago(lc.t))+' by '+esc(lc.by||"the team")+' ('+esc(lc.kind)+')</span>'):"Never contacted", r.removalContractor?("Debris contractor: "+esc(String(r.removalContractor).slice(0,110))):"", (function(){ var d=endsIn(r); return d!=null&&d>=-30&&d<=120?('<span class="warn">Debris contract '+(d<0?"ended "+(-d)+" days ago":d===0?"ends today":"ends in "+d+" days")+'</span>'):(r.removalExpires?("Contract: "+esc(String(r.removalExpires).slice(0,110))):""); })(), bidOpen(r)?('<span class="warn">Open bid: '+esc(String(r.openBidNote||r.openBid).slice(0,140))+'</span>'):"", r.nextStep?("Next step: "+esc(String(r.nextStep).slice(0,160))):""].filter(Boolean).join(" · ");
-    var D=openDraft[r.id], dr=D?('<div class="ordraft"><label>TO</label><input class="d-to" value="'+esc(D.to)+'" placeholder="No email on file. Type one, or call instead."><label>SUBJECT</label><input class="d-sub" value="'+esc(D.subject)+'"><label>MESSAGE · read it and make it yours before sending</label><textarea class="d-body">'+esc(D.body)+'</textarea><div class="orpdf"><b>Briefing PDF</b><span class="pdfst">'+(D.pdf?esc(D.pdf.name):D.pdfErr?"Couldn't build it. Tap to try again.":"Getting it ready…")+'</span><button class="orbtn" data-a="pdf"'+(D.pdf||D.pdfErr?"":" disabled")+'>'+(D.pdfErr?"TRY AGAIN":"DOWNLOAD")+'</button></div><div class="oract">'+(D.pdf&&canShare(D.pdf)?'<button class="orbtn go" data-a="share">SEND WITH THE PDF</button><button class="orbtn" data-a="mail">OPEN IN MY MAIL APP</button>':'<button class="orbtn go" data-a="mail">OPEN IN MY MAIL APP</button>')+'<button class="orbtn" data-a="copy">COPY</button><button class="orbtn" data-a="sent">I SENT IT · LOG IT</button><button class="orbtn" data-a="close">CLOSE</button></div><p class="ornote">'+(D.pdf&&canShare(D.pdf)?'"Send with the PDF" opens your phone\'s share sheet with the briefing and the message. Pick Mail, then paste the address (it is copied for you).':'Download the PDF, tap "Open in my mail app", and attach the PDF.')+' Send it from '+MAILBOX+' if that mailbox is on your device. Then tap "I sent it".</p></div>'):"";
+    var D=openDraft[r.id], dr=D?('<div class="ordraft"><label>TO</label><input class="d-to" value="'+esc(D.to)+'" placeholder="No email on file. Type one, or call instead."><label>SUBJECT</label><input class="d-sub" value="'+esc(D.subject)+'"><label>MESSAGE · read it and make it yours before sending</label><textarea class="d-body">'+esc(D.body)+'</textarea><div class="orpdf"><b>'+(D.after?"After-storm report PDF":"Briefing PDF")+'</b><span class="pdfst">'+(D.pdf?esc(D.pdf.name):D.pdfErr?"Couldn't build it. Tap to try again.":"Getting it ready…")+'</span><button class="orbtn" data-a="pdf"'+(D.pdf||D.pdfErr?"":" disabled")+'>'+(D.pdfErr?"TRY AGAIN":"DOWNLOAD")+'</button></div><div class="oract">'+(D.pdf&&canShare(D.pdf)?'<button class="orbtn go" data-a="share">SEND WITH THE PDF</button><button class="orbtn" data-a="mail">OPEN IN MY MAIL APP</button>':'<button class="orbtn go" data-a="mail">OPEN IN MY MAIL APP</button>')+'<button class="orbtn" data-a="copy">COPY</button><button class="orbtn" data-a="sent">I SENT IT · LOG IT</button><button class="orbtn" data-a="close">CLOSE</button></div><p class="ornote">'+(D.pdf&&canShare(D.pdf)?'"Send with the PDF" opens your phone\'s share sheet with the briefing and the message. Pick Mail, then paste the address (it is copied for you).':'Download the PDF, tap "Open in my mail app", and attach the PDF.')+' Send it from '+MAILBOX+' if that mailbox is on your device. Then tap "I sent it".</p></div>'):"";
     var ed=root._edit===r.id?('<div class="ordraft"><label>STAGE</label><select class="e-stage">'+["Research","Target","Contacted","Meeting","Proposal","Won","Lost"].map(function(s){ return '<option'+(s===st?" selected":"")+'>'+s+'</option>'; }).join("")+'</select><label>EMAIL FOR THE EMERGENCY MANAGER</label><input class="e-email" value="'+esc(r.emEmail||"")+'" placeholder="name@county.gov"><label>PHONE</label><input class="e-phone" value="'+esc(r.emPhone||"")+'"><label>NEXT STEP</label><input class="e-next" value="'+esc(r.nextStep||"")+'"><label><input type="checkbox" class="e-dnc" style="width:auto;margin-right:8px"'+(r.dnc?" checked":"")+'>Do not contact (they asked us to stop)</label><div class="oract"><button class="orbtn go" data-a="save">SAVE</button><button class="orbtn" data-a="noedit">CANCEL</button></div></div>'):"";
-    return '<article class="orc t'+(h?h.t:0)+'" data-id="'+esc(r.id)+'"'+(hid?' hidden':'')+'><div class="ortop"><h3>'+esc(r.name)+', '+esc(r.state)+'</h3><span class="chip '+sc+'">'+esc(st.toUpperCase())+'</span>'+(fu?'<span class="chip target">FOLLOW-UP DUE</span>':'')+(sx==="mine"?'<span class="chip mine">YOURS</span>':'')+(r.dnc?'<span class="chip dnc">DO NOT CONTACT</span>':'')+(r._approx?'<span class="chip">MATCHED BY NAME</span>':'')+(!em.length&&!/\d{3}[-. )]\s?\d{3}/.test([r.emDirector,r.administrator,r.emPhone].join(" "))?'<span class="chip">NEEDS A CONTACT</span>':'')+'</div>'+al+'<div class="orwho">'+(who||'<div><span>CONTACT</span>None on file yet.</div>')+'</div><div class="ormeta">'+meta+'</div>'+(qk&&!r.dnc?'<p class="ornote" style="margin-top:8px">They are in a short-fuse warning right now and busy. The draft is written as a check-in to send after it passes.</p>':'')
-      +(D||ed||!h||r.dnc||(sx!=="open"&&sx!=="mine")?"":(function(){ var P=pre(r.id,r,h), ready=PDFC[r.id]&&Date.now()-PDFC[r.id].t<30*60e3; return '<div class="ortee"><div class="tl"><b>READY TO SEND</b><span class="teepdf">'+(ready?"Briefing PDF ready":"Briefing PDF builds when you open it")+'</span></div><div><span>To</span> '+(P.to?esc(P.to):'<i>no email on file · add one with EDIT, or call</i>')+'</div><div><span>Subject</span> '+esc(P.subject)+'</div><div class="tb">'+esc(P.body.split("\n").filter(function(x){ return x&&!/^Good (morning|afternoon|evening)/.test(x); })[0]||"")+'</div></div>'; })())
+    return '<article class="orc t'+(h?h.t:0)+'" data-id="'+esc(r.id)+'"'+(hid?' hidden':'')+'><div class="ortop"><h3>'+esc(r.name)+', '+esc(r.state)+'</h3><span class="chip '+sc+'">'+esc(st.toUpperCase())+'</span>'+(fu?'<span class="chip target">FOLLOW-UP DUE</span>':'')+(reps(r).length?'<span class="chip dnc">'+reps(r).length+(reps(r).length===1?' STORM REPORT':' STORM REPORTS')+'</span>':'')+(sx==="mine"?'<span class="chip mine">YOURS</span>':'')+(r.dnc?'<span class="chip dnc">DO NOT CONTACT</span>':'')+(r._approx?'<span class="chip">MATCHED BY NAME</span>':'')+(!em.length&&!/\d{3}[-. )]\s?\d{3}/.test([r.emDirector,r.administrator,r.emPhone].join(" "))?'<span class="chip">NEEDS A CONTACT</span>':'')+'</div>'+al+'<div class="orwho">'+(who||'<div><span>CONTACT</span>None on file yet.</div>')+'</div><div class="ormeta">'+meta+'</div>'+(qk&&!r.dnc?'<p class="ornote" style="margin-top:8px">They are in a short-fuse warning right now and busy. The draft is written as a check-in to send after it passes.</p>':'')
+      +(D||ed||!h||r.dnc||(sx!=="open"&&sx!=="mine")?"":(function(){ var P=pre(r.id,r,h), ready=PDFC[r.id]&&Date.now()-PDFC[r.id].t<30*60e3; return '<div class="ortee"><div class="tl"><b>READY TO SEND</b><span class="teepdf">'+(P.after?(ready?"After-storm report ready":"After-storm report builds when you open it"):(ready?"Briefing PDF ready":"Briefing PDF builds when you open it"))+'</span></div><div><span>To</span> '+(P.to?esc(P.to):'<i>no email on file · add one with EDIT, or call</i>')+'</div><div><span>Subject</span> '+esc(P.subject)+'</div><div class="tb">'+esc(P.body.split("\n").filter(function(x){ return x&&!/^Good (morning|afternoon|evening)/.test(x); })[0]||"")+'</div></div>'; })())
       +(D||ed?"":'<div class="oract">'+(r.dnc?"":'<button class="orbtn go" data-a="draft">'+(h&&(sx==="open"||sx==="mine")?"REVIEW & SEND":fu?"DRAFT FOLLOW-UP":"DRAFT AN EMAIL")+'</button>'+(sx==="open"?'<button class="orbtn" data-a="claim">CLAIM</button>':'')+'<button class="orbtn" data-a="call">LOG A CALL</button>')+(sx==="mine"?'<button class="orbtn" data-a="unclaim">RELEASE</button>':'')+(fu?'<button class="orbtn" data-a="nofu">NO FOLLOW-UP NEEDED</button>':'')+(h&&sx!=="done"&&!r.dnc?'<button class="orbtn" data-a="skip">SKIP TODAY</button>':'')+(canEdit()?'<button class="orbtn" data-a="edit">EDIT</button>':'')+'</div>')+dr+ed+'</article>'; }
-  function row(h,kind){ var r=h.r, e=DAY[r.id]||{}, x=(kind==="done"?e.d:kind==="skip"?e.s:e.c)||{t:Date.now()}, ev=h.al[0]?h.al[0].properties.event:"Follow-up";
+  function row(h,kind){ var r=h.r, e=DAY[r.id]||{}, x=(kind==="done"?e.d:kind==="skip"?e.s:e.c)||{t:Date.now()}, ev=h.al[0]?h.al[0].properties.event:h.ps||reps(h.r).length?"After the storm":"Follow-up";
     return '<div class="orrow" data-id="'+esc(r.id)+'"><b>'+esc(r.name)+', '+esc(r.state)+'</b><span>'+esc(ev)+'</span><span>'+(kind==="done"?(x.kind==="call"?"Called by ":x.kind==="note"?"Closed out by ":"Emailed by "):kind==="skip"?"Skipped by ":"Claimed by ")+esc(x.by||"the team")+' · '+esc(clock(x.t))+'</span>'+(kind==="skip"?'<button data-a="unskip">Bring back</button>':kind==="theirs"&&isAdm()?'<button data-a="unclaim">Release</button>':'')+'</div>'; }
-  function badge(){ var b=document.querySelector('#dtabs button[data-t="o"]'); if(!b) return; b.hidden=!allowed(); if(!allowed()) return; var n=loaded?HITS.filter(function(x){ return x.t<=2&&!x.r.dnc&&!fuDue(x.r)&&stat(x.r.id)==="open"; }).length+RECS.filter(function(r){ return fuDue(r)&&stat(r.id)==="open"; }).length:0; b.innerHTML="OUTREACH"+(n?'<span class="orbadge">'+n+'</span>':''); }
+  function badge(){ var b=document.querySelector('#dtabs button[data-t="o"]'); if(!b) return; b.hidden=!allowed(); if(!allowed()) return; var n=loaded?HITS.filter(function(x){ return x.t<=2&&!x.r.dnc&&!fuDue(x.r)&&stat(x.r.id)==="open"; }).length+RECS.filter(function(r){ return (fuDue(r)||(!r.dnc&&!hit(r.id)&&reps(r).length))&&stat(r.id)==="open"; }).length:0; b.innerHTML="OUTREACH"+(n?'<span class="orbadge">'+n+'</span>':''); }
   function paint(){ badge(); if(root.hidden) return; var isAdm=me().role==="admin", n=RECS.length, h='';
     h+='<div class="orh"><div><h2>OUTREACH</h2><p>Counties under an alert right now. Claim one, send the note, done.</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="orbtn" id="or-ref">'+(busy?"CHECKING…":"CHECK AGAIN")+'</button>'+(isAdm?'<button class="orbtn" id="or-hk">CONNECT RESEARCH</button><button class="orbtn" id="or-imp">IMPORT TRACKER FILE</button><input type="file" id="or-file" accept=".json,application/json" hidden>':'')+'</div></div>';
     if(root._hk) h+='<div class="orempty" style="margin-bottom:14px"><b>Research key made.</b> It is shown once. Copy this whole box and paste it into the Storm Watch chat.<textarea id="or-hktext" readonly style="width:100%;box-sizing:border-box;min-height:120px;margin:10px 0;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;color:var(--fg);font:13px/1.4 ui-monospace,monospace">'+esc("Send nightly county research to the Forecast Desk.\nPOST "+((window.DESK&&DESK.url)||"")+"/helper/prospects\nHeader: X-Helper-Key: "+root._hk+"\nBody: {\"records\":[ ...changed counties... ]}\nLive alerts: GET "+((window.DESK&&DESK.url)||"")+"/alerts/southeast")+'</textarea><div class="oract"><button class="orbtn go" id="or-hkcopy">COPY</button><button class="orbtn" id="or-hkdone">DONE</button></div></div>';
@@ -1443,6 +1535,8 @@ document.addEventListener("desk-ready",()=>{ const D=window.DESK; if(!D||window.
     else if(!loaded) h+='<div class="orempty">Loading the tracker and checking alerts…</div>';
     else { var FUL=RECS.filter(fuDue).map(function(r){ return item(r.id); }), fuId={}; FUL.forEach(function(x){ fuId[x.r.id]=1; });
       var act=HITS.filter(function(x){ return x.t<=2&&!x.r.dnc&&!fuId[x.r.id]; }).concat(FUL), inAct={}; act.forEach(function(x){ inAct[x.r.id]=1; });
+      // after the storm: counties with storm reports in the last two days that are no longer under an alert
+      var PSL=RECS.filter(function(r){ return !r.dnc&&!inAct[r.id]&&reps(r).length; }).sort(function(a,b){ return reps(b).length-reps(a).length; }).slice(0,40).map(function(r){ return {r:r,t:5,al:[],ps:true}; }); act=act.concat(PSL); act.forEach(function(x){ inAct[x.r.id]=1; });
       // anything finished today stays on the board under DONE TODAY, even if its alert has ended or its follow-up is now settled
       Object.keys(DAY).forEach(function(id){ if(DAY[id].d&&!inAct[id]){ var r=rec(id); if(r) act.push({r:r,t:4,al:(hit(id)||{al:[]}).al}); } });
       var _x=0, t3=HITS.filter(function(x){ return x.t===3||x.r.dnc; }), G={open:[],mine:[],theirs:[],done:[],skip:[],quiet:[]}; act.forEach(function(x){ G[stat(x.r.id)].push(x); });
@@ -1454,10 +1548,11 @@ document.addEventListener("desk-ready",()=>{ const D=window.DESK; if(!D||window.
       if(zoneErr.length) h+='<p class="ornote">County list not available for '+esc(zoneErr.sort().join(", "))+'; matched there by county name instead.</p>';
       if(view==="today"){ if(!act.length) h+='<div class="orempty">'+(alertErr.length?'No matches in the states that could be checked.':'No tracked county is under an alert right now.')+'</div>';
         if(G.mine.length) h+='<div class="ortier"><i style="background:var(--blue)"></i>YOURS · '+G.mine.length+'</div>'+G.mine.map(function(y){ return card(y); }).join("");
-        var oa=G.open.filter(function(y){ return !y.fu; }), of=G.open.filter(function(y){ return y.fu; });
+        var oa=G.open.filter(function(y){ return !y.fu&&!y.ps; }), of=G.open.filter(function(y){ return y.fu; }), op=G.open.filter(function(y){ return y.ps; });
         if(oa.length) h+='<div class="ortier"><i style="background:#E5484D"></i>OPEN · '+oa.length+' · claim one</div>'+oa.map(function(y){ return card(y); }).join("");
+        if(op.length) h+='<div class="ortier"><i style="background:#FF8A3D"></i>AFTER THE STORM · '+op.length+' · storm reports in the last two days</div>'+op.map(function(y){ return card(y); }).join("");
         if(of.length) h+='<div class="ortier"><i style="background:#B58CFF"></i>FOLLOW UP TODAY · '+of.length+' · first note went out '+FU_AFTER+' days ago or more</div>'+of.map(function(y){ return card(y); }).join("");
-        setTimeout(function(){ warm(G.mine.concat(oa.slice(0,6)).concat(of.slice(0,3))); },0);
+        setTimeout(function(){ warm(G.mine.concat(oa.slice(0,6)).concat(op.slice(0,4)).concat(of.slice(0,3))); },0);
         if(G.theirs.length) h+='<div class="ortier"><i style="background:#F5B800"></i>CLAIMED BY TEAMMATES · '+G.theirs.length+'</div>'+G.theirs.map(function(y){ return row(y,"theirs"); }).join("");
         if(G.done.length) h+='<div class="ortier"><i style="background:#3DD68C"></i>DONE TODAY · '+G.done.length+'</div>'+G.done.map(function(y){ return row(y,"done"); }).join("");
         if(G.quiet.length) h+='<details class="orlow" data-k="quiet"'+(root._quiet?" open":"")+'><summary>'+G.quiet.length+' under an alert but contacted in the last '+QUIET+' days · left alone</summary>'+G.quiet.map(function(y){ var l=last(y.r); return '<div class="orrow" data-id="'+esc(y.r.id)+'"><b>'+esc(y.r.name)+', '+esc(y.r.state)+'</b><span>'+esc(y.al[0].properties.event)+'</span><span>Last contact '+esc(ago(l.t))+' by '+esc(l.by||"the team")+'</span></div>'; }).join("")+'</details>';
@@ -1475,16 +1570,16 @@ document.addEventListener("desk-ready",()=>{ const D=window.DESK; if(!D||window.
   function hit(id){ for(var i=0;i<HITS.length;i++) if(HITS[i].r.id===id) return HITS[i]; return null; }
   function put(j){ if(j&&j.record){ var r=rec(j.record.id); if(r){ var keep={_same:r._same,_nk:r._nk,_city:r._city,_approx:r._approx}; Object.keys(r).forEach(function(k){ delete r[k]; }); Object.assign(r,j.record,keep); } } }
   var PRE={}, PDFC={}, pq=[], pbusy=false;
-  function pre(id,r,h){ var al=h&&h.al[0], k=(al?al.properties.event+"|"+(al.properties.onset||"")+"|"+(al.properties.ends||""):"-")+"|"+(h&&h.fu?1:0)+"|"+(me().name||""), c=PRE[id]; if(c&&c.k===k&&Date.now()-c.t<10*60e3) return c.d; var d=draft(r,al,!!(h&&h.fu)); PRE[id]={k:k,t:Date.now(),d:d}; return d; }
-  function pdfArgs(r,h){ var code=(ZONES[r.state]||{})[norm(r.name)]; return {name:r.name,state:r.state,zone:code?r.state+"C"+code:"",fips:code&&FIPS[r.state]?FIPS[r.state]+code:"",alerts:(h&&h.al)||[],by:(me().name&&!/justus|wyff|cjwx|^desk admin$/i.test(me().name))?me().name:"",link:LINK,mailbox:MAILBOX}; }
+  function pre(id,r,h){ var al=h&&h.al[0], k=(al?al.properties.event+"|"+(al.properties.onset||"")+"|"+(al.properties.ends||""):"-")+"|"+(h&&h.fu?1:0)+"|"+reps(r).length+"|"+(me().name||""), c=PRE[id]; if(c&&c.k===k&&Date.now()-c.t<10*60e3) return c.d; var d=draft(r,al,!!(h&&h.fu),!!(h&&h.ps)); PRE[id]={k:k,t:Date.now(),d:d}; return d; }
+  function pdfArgs(r,h){ var code=(ZONES[r.state]||{})[norm(r.name)]; return {name:r.name,state:r.state,reports:reps(r),zone:code?r.state+"C"+code:"",fips:code&&FIPS[r.state]?FIPS[r.state]+code:"",alerts:(h&&h.al)||[],by:(me().name&&!/justus|wyff|cjwx|^desk admin$/i.test(me().name))?me().name:"",link:LINK,mailbox:MAILBOX}; }
   // the briefing PDFs for your claims and the top of the open list are built quietly ahead of time, one at a time
   function warm(list){ list.forEach(function(h){ var id=h.r.id; if(PDFC[id]&&Date.now()-PDFC[id].t<30*60e3) return; if(pq.some(function(x){ return x.r.id===id; })) return; pq.push(h); }); pump(); }
-  function pump(){ if(pbusy||!pq.length||!window.SDR_BRIEFPDF) return; var h=pq.shift(); pbusy=true; SDR_BRIEFPDF.make(pdfArgs(h.r,h)).then(function(f){ PDFC[h.r.id]={t:Date.now(),f:f}; var e=root.querySelector('.orc[data-id="'+h.r.id+'"] .teepdf'); if(e) e.textContent="Briefing PDF ready"; }).catch(function(){}).then(function(){ pbusy=false; setTimeout(pump,400); }); }
+  function pump(){ if(pbusy||!pq.length||!window.SDR_BRIEFPDF) return; var h=pq.shift(); pbusy=true; var af=pre(h.r.id,h.r,h).after; SDR_BRIEFPDF[af?"makeAfter":"make"](pdfArgs(h.r,h)).then(function(f){ PDFC[h.r.id]={t:Date.now(),f:f,after:af}; var e=root.querySelector('.orc[data-id="'+h.r.id+'"] .teepdf'); if(e) e.textContent=af?"After-storm report ready":"Briefing PDF ready"; }).catch(function(){}).then(function(){ pbusy=false; setTimeout(pump,400); }); }
   function canShare(f){ try{ return !!(navigator.canShare&&navigator.share&&navigator.canShare({files:[f]})); }catch(e){ return false; } }
   function saveFile(f){ var u=URL.createObjectURL(f), a=document.createElement("a"); a.href=u; a.download=f.name; document.body.appendChild(a); a.click(); setTimeout(function(){ a.remove(); URL.revokeObjectURL(u); },4000); }
-  function makePdf(id,r,h){ var D=openDraft[id]; if(!D||!window.SDR_BRIEFPDF) return; var c=PDFC[id]; if(c&&Date.now()-c.t<30*60e3){ D.pdf=c.f; paint(); return; }
-    SDR_BRIEFPDF.make(pdfArgs(r,h))
-      .then(function(f){ PDFC[id]={t:Date.now(),f:f}; if(openDraft[id]!==D) return; D.pdf=f; var ar=root.querySelector('.orc[data-id="'+id+'"]'); if(ar&&ar.querySelector(".d-body")){ D.to=ar.querySelector(".d-to").value; D.subject=ar.querySelector(".d-sub").value; D.body=ar.querySelector(".d-body").value; } paint(); })
+  function makePdf(id,r,h){ var D=openDraft[id]; if(!D||!window.SDR_BRIEFPDF) return; var c=PDFC[id]; if(c&&Date.now()-c.t<30*60e3&&!!c.after===!!D.after){ D.pdf=c.f; paint(); return; }
+    SDR_BRIEFPDF[D.after?"makeAfter":"make"](pdfArgs(r,h))
+      .then(function(f){ PDFC[id]={t:Date.now(),f:f,after:!!D.after}; if(openDraft[id]!==D) return; D.pdf=f; var ar=root.querySelector('.orc[data-id="'+id+'"]'); if(ar&&ar.querySelector(".d-body")){ D.to=ar.querySelector(".d-to").value; D.subject=ar.querySelector(".d-sub").value; D.body=ar.querySelector(".d-body").value; } paint(); })
       .catch(function(){ if(openDraft[id]!==D) return; D.pdfErr=true; var ar=root.querySelector('.orc[data-id="'+id+'"]'); if(ar&&ar.querySelector(".d-body")){ D.to=ar.querySelector(".d-to").value; D.subject=ar.querySelector(".d-sub").value; D.body=ar.querySelector(".d-body").value; } paint(); }); }
   var T=function(s){ if(window.DESK&&DESK.toast) DESK.toast(s); };
   root.addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b) return; var ar=b.closest("[data-id]"), id=ar&&ar.getAttribute("data-id"), r=id&&rec(id), a=b.getAttribute("data-a");
@@ -1573,7 +1668,7 @@ document.addEventListener("desk-ready",()=>{ const D=window.DESK; if(!D||window.
       us.objects.counties.geometries.forEach(function(g){ var polys=g.type==="Polygon"?[g.arcs]:g.type==="MultiPolygon"?g.arcs:[], rings=polys.map(function(p){ return ring(p[0]); }), a=1e9,b=-1e9,c=1e9,e=-1e9; rings.forEach(function(rg){ rg.forEach(function(q){ a=Math.min(a,q[0]); b=Math.max(b,q[0]); c=Math.min(c,q[1]); e=Math.max(e,q[1]); }); }); G[String(g.id).padStart(5,"0")]={name:(g.properties||{}).name||"",rings:rings,bb:[a,c,b,e]}; });
       return G; }), new Promise(function(res){ setTimeout(function(){ res(null); },9000); })]).catch(function(){ return null; }); GEO.then(function(g){ if(!g) GEO=null; }); return GEO; }
   // draws the area around the county: every county in view, the ones under each alert shaded, this county outlined
-  function drawMap(d,G,o,al,x0,y0,w,h){ var me=G[o.fips]; if(!me) return false; var cx=(me.bb[0]+me.bb[2])/2, cy=(me.bb[1]+me.bb[3])/2, k=Math.cos(cy*Math.PI/180), span=Math.max(1.15,(me.bb[3]-me.bb[1])*2.4,(me.bb[2]-me.bb[0])*k*2.4*h/w), sc=h/span;
+  function drawMap(d,G,o,al,x0,y0,w,h,pts){ var me=G[o.fips]; if(!me) return false; var cx=(me.bb[0]+me.bb[2])/2, cy=(me.bb[1]+me.bb[3])/2, k=Math.cos(cy*Math.PI/180), span=Math.max(1.15,(me.bb[3]-me.bb[1])*2.4,(me.bb[2]-me.bb[0])*k*2.4*h/w), sc=h/span;
       var X=function(lon){ return x0+w/2+(lon-cx)*k*sc; }, Y=function(lat){ return y0+h/2-(lat-cy)*sc; }, lonSpan=w/(k*sc);
       var shade={}; al.forEach(function(a,i){ var P=a.properties, warn=/Warning|Emergency/.test(P.event); (((P.geocode||{}).SAME)||[]).forEach(function(c){ var f=String(c).slice(-5); if(!shade[f]||warn) shade[f]=warn?"0.96 0.72 0.72":"0.98 0.86 0.60"; }); });
       if(al.length&&!shade[o.fips]){ var w0=/Warning|Emergency/.test(al[0].properties.event); shade[o.fips]=w0?"0.96 0.72 0.72":"0.98 0.86 0.60"; }
@@ -1581,8 +1676,10 @@ document.addEventListener("desk-ready",()=>{ const D=window.DESK; if(!D||window.
       d.raw("q "+x0.toFixed(1)+" "+(H-y0-h).toFixed(1)+" "+w.toFixed(1)+" "+h.toFixed(1)+" re W n"); d.raw("0.93 0.95 0.97 rg "+x0.toFixed(1)+" "+(H-y0-h).toFixed(1)+" "+w.toFixed(1)+" "+h.toFixed(1)+" re f");
       var seen=[]; Object.keys(G).forEach(function(f){ var c=G[f]; if(c.bb[2]<cx-lonSpan/2||c.bb[0]>cx+lonSpan/2||c.bb[3]<cy-span/2||c.bb[1]>cy+span/2) return; seen.push(f); });
       seen.forEach(function(f){ d.raw((shade[f]||"1 1 1")+" rg 0.74 0.77 0.82 RG 0.5 w "+G[f].rings.map(path).join("")+"B"); });
-      d.raw("0.07 0.09 0.15 RG 1.8 w "+me.rings.map(path).join("")+"S"); d.raw("Q");
-      var nm=String(o.name).replace(/ (County|Parish)$/,"").replace(/^City of /,""); d.text(X(cx)-wid(nm,8.5,true)/2.08,Y(cy)+3,nm,8.5,true,"0.07 0.09 0.15");
+      d.raw("0.07 0.09 0.15 RG 1.8 w "+me.rings.map(path).join("")+"S");
+      (pts||[]).forEach(function(q){ var px=X(q.lo), py=H-Y(q.la), r=3.4, c=r*0.5523, f=function(n){ return n.toFixed(1); }; d.raw(q.col+" rg 1 1 1 RG 0.8 w "+f(px+r)+" "+f(py)+" m "+f(px+r)+" "+f(py+c)+" "+f(px+c)+" "+f(py+r)+" "+f(px)+" "+f(py+r)+" c "+f(px-c)+" "+f(py+r)+" "+f(px-r)+" "+f(py+c)+" "+f(px-r)+" "+f(py)+" c "+f(px-r)+" "+f(py-c)+" "+f(px-c)+" "+f(py-r)+" "+f(px)+" "+f(py-r)+" c "+f(px+c)+" "+f(py-r)+" "+f(px+r)+" "+f(py-c)+" "+f(px+r)+" "+f(py)+" c B"); });
+      d.raw("Q");
+      var nm=String(o.name).replace(/ (County|Parish)$/,"").replace(/^City of /,""); if(!(pts&&pts.length)) d.text(X(cx)-wid(nm,8.5,true)/2.08,Y(cy)+3,nm,8.5,true,"0.07 0.09 0.15");
       d.raw("0.74 0.77 0.82 RG 0.8 w "+x0.toFixed(1)+" "+(H-y0-h).toFixed(1)+" "+w.toFixed(1)+" "+h.toFixed(1)+" re S"); return true; }
   function make(o){ return Promise.all([logo(),forecast(o.zone),o.fips?counties():Promise.resolve(null)]).then(function(R){ var lg=R[0], fx=R[1], G=R[2], d=Doc(), now=new Date(), place=o.name+", "+o.state, CW=W-2*M;
       var DIM="0.38 0.42 0.50", INK="0.07 0.09 0.15", RED="0.80 0.16 0.18", AMB="0.85 0.55 0.05", BLU="0.13 0.38 0.78";
@@ -1613,7 +1710,31 @@ document.addEventListener("desk-ready",()=>{ const D=window.DESK; if(!D||window.
       var fy=H-58; d.box(M,fy-14,CW,1,"0.85 0.87 0.90"); d.text(M,fy,"Prepared "+now.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"})+(o.by?" by "+o.by+", Meteorologist":"")+" · SDR Weather Intelligence"+(o.mailbox?" · "+o.mailbox:""),9,false,DIM);
       d.text(M,fy+14,"SDR stands ready to serve.",9.5,true,"0.04 0.27 0.22"); d.text(W-M-wid("Forecasts change. Check for the latest update.",8.5,false)/1.04,fy+14,"Forecasts change. Check for the latest update.",8.5,false,DIM);
       var fn="SDR-Weather-Briefing-"+String(o.name).replace(/[^A-Za-z0-9]+/g,"-").replace(/^-|-$/g,"")+"-"+o.state+"-"+now.toISOString().slice(0,10)+".pdf"; return new File([d.out()],fn,{type:"application/pdf"}); }); }
-  window.SDR_BRIEFPDF={make:make,tidy:tidy};
+  // ---- AFTER THE STORM: what was reported in the county in the last two days (early reports from the public storm-report log)
+  var KN={t:"Tornado",w:"Wind",h:"Hail"}, KC={t:"0.80 0.16 0.18",w:"0.13 0.38 0.78",h:"0.10 0.55 0.30"};
+  function makeAfter(o){ return Promise.all([logo(),o.fips?counties():Promise.resolve(null)]).then(function(R){ var lg=R[0], G=R[1], d=Doc(), now=new Date(), place=o.name+", "+o.state, CW=W-2*M, L=(o.reports||[]).slice().sort(function(a,b){ return b.ts-a.ts; });
+      var DIM="0.38 0.42 0.50", INK="0.07 0.09 0.15";
+      if(lg){ d.setImg(lg); var lh=46, lw=lh*lg.w/lg.h; d.pic(M,M-8,lw,lh); }
+      d.text(W-M-wid("AFTER THE STORM",11,true)/1.04,M+10,"AFTER THE STORM",11,true,DIM); var ds=now.toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric",year:"numeric"}); d.text(W-M-wid(ds,10,false)/1.04,M+25,ds,10,false,DIM);
+      d.box(M,M+48,CW,2,"0.04 0.27 0.22");
+      var MW=214, MH=150, top=M+62, hasMap=!!(G&&G[o.fips]), LW=hasMap?CW-MW-18:CW;
+      if(hasMap) hasMap=drawMap(d,G,o,[],W-M-MW,top,MW,MH,L.map(function(q){ return {la:q.la,lo:q.lo,col:KC[q.k]||KC.w}; }));
+      var ts=26; while(ts>15&&wid(place,ts,true)>LW) ts-=1; d.y=top+ts; d.text(M,d.y,place,ts,true,INK); d.y+=20;
+      var nt=L.filter(function(q){ return q.k==="t"; }).length, nw=L.filter(function(q){ return q.k==="w"; }).length, nh=L.filter(function(q){ return q.k==="h"; }).length, gust=Math.max.apply(null,[0].concat(L.filter(function(q){ return q.k==="w"&&q.m; }).map(function(q){ return q.m; }))), hail=Math.max.apply(null,[0].concat(L.filter(function(q){ return q.k==="h"&&q.m; }).map(function(q){ return q.m; })));
+      d.para(M,(L.length===1?"One storm report":L.length+" storm reports")+" in the last two days."+(hasMap?" Each dot on the map is one report.":""),10.5,false,DIM,LW,14.5); d.y+=6;
+      [["t",nt,nt===1?"tornado report":"tornado reports",""],["w",nw,nw===1?"wind report":"wind reports",gust?"peak gust "+Math.round(gust)+" mph":""],["h",nh,nh===1?"hail report":"hail reports",hail?"largest "+hail+" inch":""]].forEach(function(x){ if(!x[1]) return; d.box(M,d.y-8,9,9,KC[x[0]]); d.text(M+15,d.y,x[1]+" "+x[2]+(x[3]?" · "+x[3]:""),10.5,true,INK); d.y+=16; });
+      d.y=Math.max(d.y,hasMap?top+MH+24:d.y+10);
+      d.text(M,d.y,"WHAT WAS REPORTED",9,true,DIM); d.y+=8; d.box(M,d.y,CW,1,"0.85 0.87 0.90"); d.y+=17;
+      L.slice(0,12).forEach(function(q){ if(d.y>H-110) d.page(); var t=new Date(q.ts), when=t.toLocaleDateString("en-US",{weekday:"short"})+" "+t.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"}), mag=q.k==="w"?(q.m?Math.round(q.m)+" mph":"damage"):q.k==="h"?(q.m?q.m+" in":""):(q.m?String(q.m):"");
+        d.box(M,d.y-7.5,7,7,KC[q.k]||KC.w); d.text(M+13,d.y,(KN[q.k]||"Report")+(mag?" · "+mag:""),10.5,true,INK); d.text(M+150,d.y,when,10,false,DIM); d.text(M+250,d.y,String(q.loc||"").slice(0,44),10,false,INK); d.y+=13.5;
+        var c=tidy(q.c); if(c){ d.para(M+13,c.charAt(0).toUpperCase()+c.slice(1),9.5,false,DIM,CW-20,12.5); } d.y+=5; d.box(M,d.y-8,CW,.6,"0.90 0.92 0.94"); d.y+=8; });
+      if(L.length>12){ d.text(M,d.y,"Plus "+(L.length-12)+" more.",10,false,DIM); d.y+=16; }
+      d.y+=4; d.para(M,"These are early reports and the count can change as more come in and damage is surveyed.",9.5,false,DIM,CW,13);
+      if(o.link&&d.y<=H-84){ d.y+=8; d.text(M,d.y,"See more and sign up:",10.5,true,INK); d.text(M+wid("See more and sign up: ",10.5,true)/1.04+4,d.y,o.link,10.5,false,"0.13 0.38 0.78"); }
+      var fy=H-58; d.box(M,fy-14,CW,1,"0.85 0.87 0.90"); d.text(M,fy,"Prepared "+now.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"})+(o.by?" by "+o.by+", Meteorologist":"")+" · SDR Weather Intelligence"+(o.mailbox?" · "+o.mailbox:""),9,false,DIM);
+      d.text(M,fy+14,"SDR stands ready to serve.",9.5,true,"0.04 0.27 0.22");
+      var fn="SDR-After-Storm-Report-"+String(o.name).replace(/[^A-Za-z0-9]+/g,"-").replace(/^-|-$/g,"")+"-"+o.state+"-"+now.toISOString().slice(0,10)+".pdf"; return new File([d.out()],fn,{type:"application/pdf"}); }); }
+  window.SDR_BRIEFPDF={make:make,makeAfter:makeAfter,tidy:tidy};
 })();
 </script>
 

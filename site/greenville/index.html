@@ -2586,7 +2586,7 @@ body.chan-on .tabs button[data-pane="live"]::before{content:"";position:absolute
 .chplay i{width:76px;height:76px;border-radius:50%;background:#E5484D;display:grid;place-items:center;box-shadow:0 8px 28px rgba(229,72,77,.45)}
 .chplay b{font-family:var(--display);font-weight:800;letter-spacing:.14em;font-size:13px}
 </style>
-<script>window.SDR_VER="367";</script><style>.shd .ver{margin-left:auto;margin-right:10px;font-family:var(--display);font-weight:700;letter-spacing:.1em;font-size:11px;color:var(--dim)}</style>
+<script>window.SDR_VER="371";</script><style>.shd .ver{margin-left:auto;margin-right:10px;font-family:var(--display);font-weight:700;letter-spacing:.1em;font-size:11px;color:var(--dim)}</style>
 <script>
 /* SDR_WEEKSTORY: on a quiet day, find what actually matters this week. Ranked: first frost/freeze, a big cooldown or warmup, the 6-10 day outlook, the next rain. */
 window.SDR_COLDOK=function(x){ try{ if(!x||x.lo==null||x.lo>36) return false; const nl=window._bsNL, first=window._bsFall===false, routine=nl!=null&&nl<=34; if(!routine||first) return true; return x.lo<=nl-8; }catch(e){ return true; } };
@@ -2629,8 +2629,14 @@ window.SDR_WEEKSTORY=function(D,MD,s,nh,thisFall){ try{ D=(D||[]).slice(0,8).fil
   { const NI=x=>D.indexOf(x), frA=D.slice(0,8).find(x=>x.lo!=null&&x.lo<=36&&x.lo>32&&SDR_COLDOK(x)), cA=[fz,frA].filter(Boolean).sort((a,b)=>NI(a)-NI(b)), c0=cA[0];
     if(c0&&(kind!=="cool"||NI(c0)<=1)){ const nm=x=>x.lo<=25?"hard freeze":x.lo<=32?"freeze":"frost", cp=t=>t.charAt(0).toUpperCase()+t.slice(1), was=kind, c1=cA[1]&&NI(cA[1])<=NI(c0)+2?cA[1]:null, soon=NI(c0)<=1, pos=soon?"":"possible ";
       kind="cold";
-      head=c1?`${first?"First "+nm(c0):cp(nm(c0))} ${pos}${SDR_NT(c0)}, ${nm(c1)} ${SDR_NT(c1)}`:`${first?"First "+nm(c0):cp(nm(c0))} ${pos}${SDR_NT(c0)}, low ${c0.lo}°`;
-      sub=(c1?`Lows near ${c0.lo}° ${SDR_NT(c0)} and ${c1.lo}° ${SDR_NT(c1)}.`:`Down to about ${c0.lo}°.`)+(cA.some(x=>x.lo<=32)?" Protect pipes and tender plants.":" Cover tender plants.")+(was==="warm"?` Then warming up: ${dec(D[lw].hi)} to ${dec(D[wm].hi)} by ${dn(D[wm])}.`:was==="cool"?` Highs only ${D[tr].hi}° by ${dn(D[tr])}.`:" Otherwise a quiet week.");
+      // v369 Home stays short: ONE headline (the soonest thing), one short line under it; everything else is a short note behind "more ahead"
+      const rk=x=>x.lo<=25?3:x.lo<=32?2:1, SW=!!(c1&&rk(c1)>rk(c0)&&NI(c1)<=NI(c0)+1), H0=SW?c1:c0;   // the colder kind of night leads when it is right behind the milder one
+      head=`${first?"First "+nm(H0):cp(nm(H0))} ${pos}${SDR_NT(H0)}, low ${H0.lo}°`;
+      sub=cA.some(x=>x.lo<=32)?"Protect pipes and tender plants.":"Cover tender plants.";
+      // v370 a note is added only for another BIG thing: a colder kind of night than the headline (a freeze after a frost, a hard freeze after a freeze),
+      // or a swing of 15 degrees or more. A second, milder cold night or a small warmup is not a note; the one headline covers it.
+      { const more=[]; if(c1&&!SW&&rk(c1)>rk(c0)) more.push(`<b>${cp(nm(c1))} ${SDR_NT(c1)}</b>, low ${c1.lo}°`);
+        if(was==="warm"&&D[wm].hi-D[lw].hi>=15) more.push(`<b>Warming up</b>, ${dec(D[lw].hi)} to ${dec(D[wm].hi)} by ${dn(D[wm])}`); else if(was==="cool"&&D[0].hi!=null&&D[0].hi-D[tr].hi>=15) more.push(`<b>Colder</b>, highs only ${D[tr].hi}° by ${dn(D[tr])}`); window.SDR_WSMORE={head,more}; }
       if(fz&&frA) top.push(`<b>Frost:</b> ${SDR_NT(frA)}, down to ${frA.lo}°. Cover tender plants.`);
       const isC=t=>/^<b>(First )?(freeze|frost)/i.test(t), fzFirst=!frA||!fz||NI(fz)<NI(frA); const C=top.filter(isC); if(!fzFirst) C.reverse(); top=C.concat(top.filter(t=>!isC(t)));
       if(soon) top=top.map(t=>isC(t)?t.replace(/^<b>(First )?(freeze|frost) possible:/i,(m,a,b)=>`<b>${a||""}${a?b:cp(b)}:`):t); } }
@@ -6144,7 +6150,7 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
     else if(has("radar")) hero={kind:"card",id:"radar",title:"Live radar",sub:"RIGHT NOW"};
     hero=null; const quietDay=!big||big.sc<40, c=context(), e=new Date(now); e.setHours(23,59,0,0);
     try{ const m367=/(\d+)[^.]*in a row/.exec(pv); if(m367&&window.SDR_ALMMILE&&!SDR_ALMMILE(+m367[1])) pv=""; }catch(e){}   // v367 a streak is mentioned on its milestone days, not every day
-    let ALM=null; try{ if(quietDay&&window.SDR_ALMPICK) ALM=await Promise.race([SDR_ALMPICK(),new Promise(r=>setTimeout(()=>r(null),5000))]); if(ALM&&ALM.p&&(!window.SDR_ALMMILE||SDR_ALMMILE(ALM.n))) pv=ALM.p.charAt(0).toUpperCase()+ALM.p.slice(1)+", through yesterday."; else ALM=null; }catch(e){ ALM=null; }
+    let ALM=null; try{ if(quietDay&&window.SDR_ALMPICK) ALM=await Promise.race([SDR_ALMPICK(),new Promise(r=>setTimeout(()=>r(null),5000))]); if(ALM&&ALM.p&&(!window.SDR_ALMMILE||SDR_ALMMILE(ALM.n))) pv=ALM.p.charAt(0).toUpperCase()+ALM.p.slice(1)+", and counting."; else ALM=null; }catch(e){ ALM=null; }
     // v367 storm reports can power the line too: a long quiet stretch, on its milestone day only, and only when it is calm
     try{ if(!pv&&quietDay&&window.SDR_CALM&&SDR_CALM()&&window.SDR_LSR&&SDR_LSR.sinceLast){ const q=SDR_LSR.sinceLast(); if(q&&[30,45,60,90,120,150,180].includes(q.n)) pv=`It has been ${q.n} days since the last severe weather report within ${q.mi} miles.`; } }catch(e){}
     const b={ t:Date.now(), expires:+e, cat:"DAILY", title:(()=>{ try{ const a=(typeof _active==="function"?_active():[]).find(x=>/\b(Advisory|Warning|Watch)\b/.test(x.title||"")); if(a) return String(a.title).replace(/\.$/,""); }catch(e){} return nh; })(),
@@ -7065,15 +7071,22 @@ window.SDR_GL=(function(){
     {id:"water",type:"fill",source:"omt","source-layer":"water",filter:["!=","intermittent",1],paint:{"fill-color":"#2A3052"}},
     {id:"rivers",type:"line",source:"omt","source-layer":"waterway",minzoom:8,filter:["in","class","river","canal"],paint:{"line-color":"#4C78C8","line-width":Z([8,0.7,11,1.4,14,2.4])}},
     {id:"county",type:"line",source:"omt","source-layer":"boundary",minzoom:7,filter:["all",["==","admin_level",6],["!=","maritime",1]],paint:{"line-color":"#2A2A2A","line-opacity":0.95,"line-width":Z([7,0.6,9,1,12,1.8])}},
+    {id:"street",type:"line",source:"omt","source-layer":"transportation",minzoom:12,filter:["all",["in","class","minor","service"],["!=","brunnel","tunnel"]],layout:{"line-join":"round","line-cap":"round"},paint:{"line-color":"#DADADA","line-opacity":0.5,"line-width":Z([12,0.4,14,1.1,16,3])}},
+    {id:"road2",type:"line",source:"omt","source-layer":"transportation",minzoom:10,filter:["all",["in","class","secondary","tertiary"],["!=","brunnel","tunnel"]],layout:{"line-join":"round","line-cap":"round"},paint:{"line-color":"#E6DDB4","line-opacity":0.6,"line-width":Z([10,0.5,13,1.6,16,4])}},
     {id:"hwy",type:"line",source:"omt","source-layer":"transportation",minzoom:8,filter:["all",["in","class","trunk","primary"],["!=","brunnel","tunnel"]],layout:{"line-join":"round","line-cap":"round"},paint:{"line-color":"#EFE3A8","line-opacity":0.7,"line-width":Z([8,0.8,11,1.8,14,3.6])}},
     {id:"inter-edge",type:"line",source:"omt","source-layer":"transportation",minzoom:6,filter:["all",["==","class","motorway"],["!=","brunnel","tunnel"]],layout:{"line-join":"round","line-cap":"round"},paint:{"line-color":"#13213D","line-width":Z([6,2.2,9,4.2,13,8])}},
     {id:"inter",type:"line",source:"omt","source-layer":"transportation",minzoom:6,filter:["all",["==","class","motorway"],["!=","brunnel","tunnel"]],layout:{"line-join":"round","line-cap":"round"},paint:{"line-color":"#4A8BE8","line-width":Z([6,1.1,9,2.4,13,5])}},
     {id:"state",type:"line",source:"omt","source-layer":"boundary",filter:["all",["==","admin_level",4],["!=","maritime",1]],layout:{"line-join":"round"},paint:{"line-color":"#000","line-width":Z([4,1.2,6,1.8,8,2.6,11,3.4])}},
     {id:"country",type:"line",source:"omt","source-layer":"boundary",filter:["all",["==","admin_level",2],["!=","maritime",1]],paint:{"line-color":"#000","line-width":Z([4,1.4,8,2.6])}}
   ]};
+  // the "over" version for maps that paint a picture on the land (rainfall, reports): no gray background, lines a touch stronger, and names
+  const TXT={"text-color":"#FFFFFF","text-halo-color":"#0B1220","text-halo-width":1.5}, NM=["coalesce",["get","name:en"],["get","name"]];
+  const OVER={version:8,name:"SDR over",glyphs:OFM+"/fonts/{fontstack}/{range}.pbf",sources:STYLE.sources,layers:STYLE.layers.filter(l=>l.id!=="bg").map(l=>l.id==="water"?Object.assign({},l,{paint:{"fill-color":"#2A3052","fill-opacity":0.55}}):l.id==="county"?Object.assign({},l,{paint:{"line-color":"#111","line-opacity":1,"line-width":Z([7,0.8,9,1.3,12,2.2,15,3])}}):l).concat([
+    {id:"roadname",type:"symbol",source:"omt","source-layer":"transportation_name",minzoom:12.5,layout:{"symbol-placement":"line","text-field":NM,"text-font":["Noto Sans Regular"],"text-size":Z([12.5,10,16,13.5]),"symbol-spacing":320},paint:TXT},
+    {id:"smallplace",type:"symbol",source:"omt","source-layer":"place",minzoom:11,filter:["in","class","village","hamlet","suburb","neighbourhood","quarter"],layout:{"text-field":NM,"text-font":["Noto Sans Bold"],"text-size":Z([11,11.5,15,14.5])},paint:TXT}])};
   const load=src=>new Promise((ok,no)=>{ const s=document.createElement("script"); s.src=src; s.onload=ok; s.onerror=()=>no(new Error("failed "+src)); document.head.appendChild(s); });
   let state="idle";
-  async function add(m){ if(!m||m._sdrGL) return; m._sdrGL=true; state="loading";
+  async function add(m,opt){ if(!m||m._sdrGL) return; m._sdrGL=true; state="loading"; const USE=opt&&opt.over?OVER:STYLE;
     try{ if(!window.maplibregl) await load("https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js");
          if(!(window.L&&L.maplibreGL)) await load("https://cdn.jsdelivr.net/npm/@maplibre/maplibre-gl-leaflet@0.0.22/leaflet-maplibre-gl.js"); }
     catch(e){ console.warn("vector basemap: scripts did not load, keeping the built-in map", e); m._sdrGL=false; state="failed"; return; }
@@ -7081,10 +7094,10 @@ window.SDR_GL=(function(){
     let layer=null, ok=false, dead=false;
     const giveUp=why=>{ if(ok||dead) return; dead=true; state="failed"; console.warn("vector basemap off:",why); try{ if(layer) m.removeLayer(layer); }catch(e){} m._sdrGL=false; };
     const t=setTimeout(()=>giveUp("no tiles within 15 s"),15000);
-    try{ layer=L.maplibreGL({style:STYLE,pane:"gl",interactive:false,attributionControl:false,padding:0.1}); layer.addTo(m); }
+    try{ layer=L.maplibreGL({style:USE,pane:"gl",interactive:false,attributionControl:false,padding:0.1}); layer.addTo(m); }
     catch(e){ giveUp(e); return; }
     const gl=layer.getMaplibreMap&&layer.getMaplibreMap(); if(!gl){ giveUp("no GL map"); return; }
-    gl.on("error",e=>{ const er=(e&&e.error)||{}; const st=er.status||0, msg=String(er.message||""); if(!ok&&(st>=400||/style|source|tilejson|Failed to fetch|NetworkError/i.test(msg))) giveUp(msg||("http "+st)); });
+    gl.on("error",e=>{ const er=(e&&e.error)||{}; const st=er.status||0, msg=String(er.message||""); if(/\/fonts\//.test(String(er.url||"")+" "+msg)) return;   /* a missing name font never takes the map down */ if(!ok&&(st>=400||/style|source|tilejson|Failed to fetch|NetworkError/i.test(msg))) giveUp(msg||("http "+st)); });
     const done=()=>{ if(ok||dead) return; let n=0; try{ if(gl.isStyleLoaded()&&gl.areTilesLoaded()) n=gl.queryRenderedFeatures().length; }catch(e){}
       if(n>0){ ok=true; clearTimeout(t); state="on"; window.SDR_GL_ON=true; m._gl=layer; window.dispatchEvent(new Event("sdr-gl-on")); } };
     gl.on("idle",done); gl.on("load",()=>setTimeout(done,50));
@@ -7204,7 +7217,7 @@ window.SDR_GL=(function(){
 
 <script>
 // v125: client chat layer
-(function(){ let wrap=null, fr=null; const CHATV="1794610812";
+(function(){ let wrap=null, fr=null; const CHATV="1794627907";
   function open(){ if(!wrap){ wrap=document.createElement("div"); wrap.id="chatwrap"; wrap.innerHTML='<iframe id="chatfr" title="Message the team" allow="camera"></iframe>'; document.body.appendChild(wrap); fr=wrap.querySelector("iframe"); fr.src="./chat.html?v="+CHATV; fr.addEventListener("load",()=>{ try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }); }
     wrap.hidden=false; document.body.classList.add("chat-on"); if(!(history.state&&history.state.chat)) history.pushState({chat:1},""); try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }
   function close(){ if(wrap){ wrap.hidden=true; } document.body.classList.remove("chat-on"); }
@@ -7874,7 +7887,7 @@ window.SDR_NOWFIRST=(r,H)=>{ if(!r||/moves in|by \d|winding/i.test(r.h)) return 
     sec.querySelector(".cxbar").onclick=()=>{ sec.classList.toggle("cx"); sec.querySelector(".cxbar em").textContent=sec.classList.contains("cx")?"Open ›":"Close ▴"; if(!sec.classList.contains("cx")){ draw(); days(); } };
     days(); }
   setTimeout(mount,5000); setInterval(()=>{ const s=document.querySelector(".p-alm"); if(!s) mount(); else if(!s.classList.contains("cx")) days(); },15*60000);
-  window.SDR_ALMANAC={ draw, days, station, ymd, month };
+  window.SDR_ALMANAC={ draw, days, station, ymd, month, obsDay };
 })();
 </script>
 
@@ -8033,6 +8046,17 @@ html.hf-lock,html.hf-lock body{overflow:hidden!important}html.hf-lock body::afte
       if(sdry>=7) add("dry",sdry,`${sdry} dry days in a row`,18+sdry*2); if(swet>=4) add("wet",swet,`${swet} days in a row with rain`,28+swet*4);
       if(D&&D.n>=5) add(D.dir>0?"warm":"cool",D.n,`${D.n} days in a row ${D.dir>0?"warmer":"cooler"} than normal`,20+D.n*2.5);
       if(D&&D.mo>=10&&Math.max(D.w,D.c)/D.mo>=0.8) add("mo",Math.max(D.w,D.c),`${Math.max(D.w,D.c)} of ${D.mo} days this month ${D.w>D.c?"warmer":"cooler"} than normal`,24);
+      // v368 TODAY COUNTS. The records end yesterday, so before a streak is used anywhere it is checked against today: what has been measured so far and today's forecast high.
+      // today===true: today is breaking it (it reads "ended today" and is never a headline). false: today keeps it going. null: cannot tell yet (not a headline either).
+      try{ const now=new Date(), t0=new Date(now); t0.setHours(0,0,0,0); const [O,R]=await Promise.all([SDR_ALMANAC.obsDay?SDR_ALMANAC.obsDay(t0,now).catch(()=>null):null, records(st).catch(()=>null)]);
+        const FD=((window.STRIPS&&STRIPS.days&&STRIPS.days())||[]).find(x=>x&&x.d!=="TONIGHT"&&x.date&&new Date(x.date).toDateString()===now.toDateString()), hr=now.getHours();
+        const hi=Math.max(O&&O.hi!=null?O.hi:-99, FD&&FD.hi!=null?FD.hi:-99), lo=O&&O.lo!=null?O.lo:null, known=hi>-99&&(hr>=15||!!FD);
+        out.forEach(f=>{ let brk=null;
+          if(f.key==="warm"||f.key==="cool"){ if(known&&R&&R.nh!=null&&R.nl!=null){ const dep=lo!=null?((hi+Math.min(lo,hi))-(R.nh+R.nl))/2:hi-R.nh; brk=f.key==="warm"?dep<0.5:dep>-0.5; } }
+          else if(f.key==="s90"){ if(known) brk=hi<90; } else if(f.key==="s32"){ if(lo!=null&&hr>=8) brk=lo>32; }
+          else if(f.key==="dry"){ const fp=FD?Math.max(FD.pp||0,FD.ppN||0):null; if(O&&O.r!=null) brk=O.r>=0.01?true:((fp==null||fp<50)?false:null); else if(fp!=null&&fp<30) brk=false; }
+          else if(f.key==="wet"){ if(O&&O.r!=null) brk=O.r>=0.01?false:(hr>=20?true:null); } else brk=false;
+          f.today=brk; if(brk===true){ f.ended=true; f.p=f.p+", ended today"; f.score=1; } }); }catch(e){ out.forEach(f=>{ f.today=null; }); }
       out.sort((a,b)=>b.score-a.score); window.SDR_ALMF=out; return out; }catch(e){ return []; } };
   async function fill(){ const sec=document.querySelector(".p-alm"); if(!sec||sec.classList.contains("cx")) return; const body=sec.querySelector(".almb"); if(!body) return;
     let x=body.querySelector(".almx"); if(!x){ x=document.createElement("div"); x.className="almx"; body.insertBefore(x,body.querySelector(".almcal")); }
@@ -8046,7 +8070,7 @@ html.hf-lock,html.hf-lock body{overflow:hidden!important}html.hf-lock body::afte
         x.querySelector(".axr").innerHTML=`<h5>TODAY IN HISTORY · ${now.toLocaleDateString("en-US",{month:"long",day:"numeric"}).toUpperCase()}</h5><div class="ag"><div class="ac"><small>RECORD HIGH</small>${f(R.hi,"hi")}</div><div class="ac"><small>RECORD LOW</small>${f(R.lo,"lo")}</div><div class="ac"><small>RECORD RAIN</small>${f(R.p,"rn")}</div><div class="ac"><small>NORMAL</small><b>${R.nh!=null?Math.round(R.nh)+"° / "+Math.round(R.nl)+"°":"—"}</b><em>${R.since?"records since "+R.since:""}</em></div></div>`; }).catch(()=>{});
       hist(st).then(H=>{ if(!H.length) return; const S2=since(H), F=freeze(H), Y=now.getFullYear();
         x.querySelector(".axs").innerHTML=`<h5>STREAKS & DAYS SINCE</h5><div class="chips">${S2.map(c=>`<span class="chip${c.hot?" hot":""}">${c.t}</span>`).join("")}</div>`;
-        SDR_ALMFINDS().then(Z=>{ const f=Z.filter(z=>/^(warm|cool|mo|wet)$/.test(z.key)), c=x.querySelector(".axs .chips"); if(f.length&&c&&!c.querySelector(".nrm")) c.insertAdjacentHTML("afterbegin",f.map(z=>`<span class="chip hot nrm">${z.p.replace(/^(\d+ (?:of \d+ )?days(?: in a row)?)/,"<b>$1</b>")}</span>`).join("")); }).catch(()=>{});
+        SDR_ALMFINDS().then(Z=>{ const f=Z.filter(z=>/^(warm|cool|mo|wet)$/.test(z.key)), c=x.querySelector(".axs .chips"); if(f.length&&c&&!c.querySelector(".nrm")) c.insertAdjacentHTML("afterbegin",f.map(z=>`<span class="chip ${z.ended?"":"hot "}nrm">${z.p.replace(/^(\d+ (?:of \d+ )?days(?: in a row)?)/,"<b>$1</b>")}</span>`).join("")); }).catch(()=>{});
         const fa=F.fallAvg?fromDoy(F.fallAvg,F.sy):null, sa=F.springAvg?fromDoy(F.springAvg,Y):null;
         const tf=F.thisFall?`${md(F.thisFall+"T12:00")}${fa?(()=>{ const dd=Math.round((new Date(F.thisFall+"T12:00")-fa)/864e5); return Math.abs(dd)<=1?" (right on time)":` (${Math.abs(dd)} days ${dd<0?"early":"late"})`; })():""}`:(now.getMonth()>=6?"not yet":"—");
         x.querySelector(".axf").innerHTML=`<h5>FREEZE DATES</h5><div class="ag"><div class="ac"><small>AVG FIRST FALL FREEZE</small><b>${fa?md(fa):"—"}</b></div><div class="ac"><small>FIRST FREEZE THIS FALL</small><b>${tf}</b></div><div class="ac"><small>AVG LAST SPRING FREEZE</small><b>${sa?md(sa):"—"}</b></div><div class="ac"><small>LAST FREEZE THIS SPRING</small><b>${F.thisSpring?md(F.thisSpring+"T12:00"):"—"}</b></div></div>`; }).catch(()=>{});
@@ -8441,15 +8465,19 @@ html.hf-lock,html.hf-lock body{overflow:hidden!important}html.hf-lock body::afte
       .forEach(a=>out.push([/Warning/.test(a.event)?"r":"y",`<b>${a.event}</b> starts ${dn(a.onset)} ${hm(a.onset)}`])); }catch(e){}
     const first=(d,f)=>{ const k=new Date(d).toDateString(); const h=H.find(q=>new Date(q.t).toDateString()===k&&+new Date(q.t)>=now-1800e3&&f(q)); return h?h.t:null; };
     const nxh=((document.getElementById("nx-h")||{}).textContent||""), nowHead=/\buntil\b|\bnow\b|on and off/i.test(nxh);
-    D.slice(0,6).forEach((x,i)=>{ if(!x||!x.date||out.length>=3) return; if(i===0&&x.d!=="TONIGHT"&&new Date().getHours()>=20) return; if(i===0&&nowHead) return;
+    D.slice(0,8).forEach((x,i)=>{ if(!x||!x.date||out.length>=3) return; if(i===0&&x.d!=="TONIGHT"&&new Date().getHours()>=20) return; if(i===0&&nowHead) return;
+      if(i>=6&&!((x.thunder||0)>=40||(x.rr&&x.rr[1]>=100)||(x.snowP||0)>=50)) return;   /* a week out, only the big ones: storms, an inch of rain, snow */
       const day=x.d==="TONIGHT"?"tonight":dn(x.date), pp=Math.max(x.pp||0,x.ppN||0), r=x.rr?x.rr[1]/100:(x.qpf||0);
+      const hl=nxh.toLowerCase(), same=re=>hl.indexOf(day.toLowerCase())>=0&&re.test(hl);   // the headline already says this, for this day
+      if(same(/snow|flurr/)&&((x.snowP||0)>=40||(x.sr&&x.sr[1]>=50))) return; if(same(/storm|thunder/)&&(x.thunder||0)>=30) return; if(same(/rain|shower|soak|downpour/)&&(x.thunder||0)<30&&(r>=0.5||pp>=50)) return; if(same(/gust|wind/)&&(x.gust||0)>=35&&r<0.5&&(x.thunder||0)<30) return;
       if((x.snowP||0)>=40||(x.sr&&x.sr[1]>=50)){ out.push(["b",`<b>Snow ${day}</b>${x.sr&&x.sr[1]>=10?`, about ${(x.sr[1]/100).toFixed(1)}"`:""}`]); return; }
       if((x.iceP||0)>=30){ out.push(["r",`<b>Ice possible ${day}</b>`]); return; }
       if((x.thunder||0)>=30){ const t=first(x.date,q=>(q.thunder||0)>=30||(q.pop||0)>=50); out.push([(x.thunder||0)>=60?"r":"y",`<b>Storms ${day}</b>${t?(+new Date(t)<=now?"":new Date(t).getHours()<5?" early morning":` after ${hm(t)}`):""} · ${Math.round(pp/10)*10}%${r>=0.25?` · about ${r.toFixed(2)}"`:""}`]); return; }
       if(r>=0.5){ out.push(["y",`<b>Soaking rain ${day}</b>, about ${r.toFixed(2)}"`]); return; }
       if((x.gust||0)>=35){ out.push(["y",`<b>Gusts to ${Math.ceil(x.gust/5)*5} mph</b> ${day}`]); return; }
-      if(pp>=50&&i<=2){ out.push(["y",`<b>Rain ${day}</b> · ${Math.round(pp/10)*10}%`]); } });
+      if(pp>=60&&i<=2&&!out.some(o=>/^<b>Rain /.test(o[1]))&&!/\brain\b|shower/i.test(nxh)){ out.push(["y",`<b>Rain ${day}</b> · ${Math.round(pp/10)*10}%`]); } });
     try{ const c=window.SDR_COLD&&SDR_COLD(D,4), hh=(nxh+" "+((document.getElementById("nx-p")||{}).textContent||"")).toLowerCase(); if(c&&!/freez|frost/.test(hh)&&out.length<3) out.push(["b",c]); }catch(e){}
+    try{ const W=window.SDR_WSMORE; if(W&&W.head&&nxh.trim().indexOf(W.head)===0) W.more.forEach(t=>{ const k=t.replace(/<[^>]+>/g,"").slice(0,12); if(out.length<3&&!out.some(o=>o[1].replace(/<[^>]+>/g,"").indexOf(k)===0)) out.push(["b",t]); }); }catch(e){}
     let ul=nx.querySelector("#nxb"); const html=out.slice(0,3).map(([c,t])=>`<li class="${c}">${t}</li>`).join("");
     if(!html){ if(ul) ul.remove(); nx.classList.remove("hasb"); return; }
     if(!ul){ ul=document.createElement("ul"); ul.id="nxb"; nx.appendChild(ul); } if(ul.innerHTML!==html) ul.innerHTML=html; nx.classList.add("hasb"); }
@@ -9952,7 +9980,7 @@ html body.desk-live .tabs button[data-pane="live"]::after{display:block!importan
     wrap.innerHTML=`<div class="xph"><div class="xpplq">${L0.src?`<span class="xplg${L0.cj?" cj":""}"><img src="${L0.src}" alt=""></span>`:""}<div><b class="xpt"></b><small class="xps"></small></div></div><button type="button" class="xpx" aria-label="Close">✕</button></div><div class="xpz"></div><div class="xpm"></div><div class="xpf"></div>`;
     document.body.appendChild(wrap);
     wrap.querySelector(".xpx").onclick=close; document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&wrap&&!wrap.hidden) close(); });
-    const el=wrap.querySelector(".xpm"); const touch=matchMedia("(pointer:coarse)").matches; map=L.map(el,{zoomControl:!touch,attributionControl:false,minZoom:3,maxZoom:12,zoomSnap:.5});
+    const el=wrap.querySelector(".xpm"); const touch=matchMedia("(pointer:coarse)").matches; map=L.map(el,{zoomControl:!touch,attributionControl:false,minZoom:3,maxZoom:16,zoomSnap:.5});
     el.style.background="#405170"; map.createPane("land").style.zIndex=150; const ln=map.createPane("lines"); ln.style.zIndex=350; ln.style.pointerEvents="none";
     const G=window.GEO_STATES, Wd=window.GEO_WORLD;
     if(Wd) L.geoJSON(Wd,{pane:"land",interactive:false,style:{stroke:false,fillColor:"#878787",fillOpacity:1}}).addTo(map);
@@ -9973,7 +10001,7 @@ html body.desk-live .tabs button[data-pane="live"]::after{display:block!importan
     // Works from both town lists (the built-in one and the national one), so a missing or odd population number can never leave a map blank.
     const MST={Charleston:"SC",Columbia:"SC",Greenville:"SC",Wilmington:"NC",Jacksonville:"FL",Albany:"NY",Richmond:"VA",Burlington:"VT","Ocean City":"MD",Portland:"OR",Washington:"DC",Springfield:"MO",Columbus:"OH",Aurora:"CO","Kansas City":"MO"};
     const isMetro=r=>METRO.includes(r[0])&&(!MST[r[0]]||MST[r[0]]===r[1]);
-    const cities=()=>{ lbl.clearLayers(); const z=map.getZoom(), b=map.getBounds().pad(.02), sz=map.getSize(), ph=innerWidth<700, placed=[], maxN=ph?18:30, minN=ph?10:14;
+    const cities=()=>{ lbl.clearLayers(); const z=map.getZoom(), b=map.getBounds().pad(.02), sz=map.getSize(), ph=innerWidth<700, placed=[], maxN=ph?(z>=9?26:18):(z>=9?40:30), minN=ph?10:14;
       const blocks=[{x:0,y:30,w:70},{x:0,y:90,w:70}]; if(you){ const yp=map.latLngToContainerPoint(you.getLatLng()); blocks.push({x:yp.x-8,y:yp.y,w:70}); }
       const seen=new Set(), ALL=[]; [(window.GEO_PLACES0||[]),(window.GEO_PLACES||[])].forEach(Ls=>Ls.forEach(r=>{ if(!r||!isFinite(+r[3])||!isFinite(+r[4])) return; const k=r[0]+"|"+(+r[3]).toFixed(1)+"|"+(+r[4]).toFixed(1); if(seen.has(k)) return; seen.add(k); if(b.contains([+r[3],+r[4]])&&(!window.SDR_CITY_OK||SDR_CITY_OK(r))) ALL.push(r); }));
       const pop=r=>+r[2]||0; ALL.sort((a,c)=>(isMetro(c)-isMetro(a))||(pop(c)-pop(a)));
@@ -9987,8 +10015,11 @@ html body.desk-live .tabs button[data-pane="live"]::after{display:block!importan
     // v324 the view we asked for sticks even if the phone lays the page out late; a finger on the map ends that
     el.addEventListener("touchstart",()=>{ want=null; },{passive:true}); el.addEventListener("mousedown",()=>{ want=null; }); el.addEventListener("wheel",()=>{ want=null; },{passive:true});
     if(window.ResizeObserver) new ResizeObserver(()=>{ if(want&&!wrap.hidden&&el.clientWidth){ map.invalidateSize(); want(); } }).observe(el);
-    layer=L.layerGroup().addTo(map); map.createPane("rain").style.zIndex=250; map.on("moveend",()=>{ if(mode==="fire") loadFires(); if(mode==="rain") rainPic(); }); map.on("click",e=>{ if(mode==="rain") rainTap(e.latlng); }); map.on("zoomend moveend",thin);
-    try{ if(window.SDR_GL) SDR_GL.add(map); }catch(e){} }
+    layer=L.layerGroup().addTo(map); map.createPane("rain").style.zIndex=152;   /* v368 under the roads, county lines and names (the vector map sits at 155), over the land */ map.on("moveend",()=>{ if(mode==="fire") loadFires(); if(mode==="rain") rainPic(); }); map.on("click",e=>{ if(mode==="rain") rainTap(e.latlng); }); map.on("zoomend moveend",thin);
+    map.on("zoomend",()=>{ try{ layer.eachLayer(m=>{ if(m._lsrk&&m.setRadius) m.setRadius(dotR(m._lsrk)); }); }catch(e){} });
+    try{ if(window.SDR_GL) SDR_GL.add(map,{over:true}); }catch(e){} }
+  // v368 report dots grow as you zoom in, so they are easy to tap at street level
+  const dotR=k=>{ const z=map?map.getZoom():7, b=z<7?6.5:z<9?8:z<11?11:z<13?14:17; return k==="t"?b+1.5:b; };
   // v319 spots thin out when zoomed out (no pile-ups around Savannah); names only once there's room
   function thin(){ if(!map||!layer) return; const z=map.getZoom(), pts=[], keep=[]; wrap._spots=[];
     layer.eachLayer(m=>{ if(!m.getLatLng||!m._sdr) return; const p=map.latLngToContainerPoint(m.getLatLng()); const near=m._sdr!==2&&keep.some(q=>Math.hypot(q.x-p.x,q.y-p.y)<(z<7?26:18));
@@ -10061,9 +10092,9 @@ html body.desk-live .tabs button[data-pane="live"]::after{display:block!importan
   const rj=async(u,ms)=>{ const c=new AbortController(), t=setTimeout(()=>c.abort(),ms||9000); try{ const r=await fetch(u,{signal:c.signal}); if(!r.ok) throw 0; return await r.json(); } finally{ clearTimeout(t); } };
   async function rainLegend(P){ const k=P.fn||("r"+P.id); if(LEG[k]!==undefined) return LEG[k]; LEG[k]=null;
     try{ const j=await rj(P.fn?`${MR}/legend?renderingRule=${enc({rasterFunction:P.fn})}&f=json`:`${RF}/legend?f=json`); const Ls=j.layers||[]; const Lr=P.fn?Ls[0]:Ls.find(x=>x.layerId===P.id);
-      let g=((Lr&&Lr.legend)||[]).filter(x=>x.imageData&&x.label&&/\d/.test(x.label)); if(g.length>8){ const st=(g.length-1)/7; g=[0,1,2,3,4,5,6,7].map(i=>g[Math.round(i*st)]); }
-      LEG[k]=g.length>=3?g.map(x=>`<span><img src="data:${x.contentType||"image/png"};base64,${x.imageData}" alt="">${esc(String(x.label).replace(/\s*-\s*/g,"–").replace(/\.00\b/g,""))}</span>`).join(""):""; }catch(e){ LEG[k]=""; } return LEG[k]; }
-  function rainFoot(msg){ const ft=wrap.querySelector(".xpf"), P=RP[1]; ft.innerHTML=`<b>${msg||`Estimated rain, last ${RP[0]}`}</b>`+(LEG[P.fn||("r"+P.id)]||"<span>inches</span>"); }
+      let g=((Lr&&Lr.legend)||[]).filter(x=>x.imageData&&x.label&&/\d/.test(x.label)); if(g.length>11){ const st=(g.length-1)/10; g=[0,1,2,3,4,5,6,7,8,9,10].map(i=>g[Math.round(i*st)]); } if(g.length&&/greater/i.test(g[0].label)) g.reverse();
+      LEG[k]=g.length>=3?g.map(x=>`<span><img src="data:${x.contentType||"image/png"};base64,${x.imageData}" alt="">${esc(String(x.label).replace(/Greater than or equal to\s*/i,"").replace(/^([\d.]+)$/,"$1+").replace(/Less than\s*/i,"under ").replace(/\s*-\s*/g,"–").replace(/\.00\b/g,""))}</span>`).join(""):""; }catch(e){ LEG[k]=""; } return LEG[k]; }
+  function rainFoot(msg){ const ft=wrap.querySelector(".xpf"), P=RP[1]; ft.innerHTML=`<b>${msg||`Estimated rain, last ${RP[0]} · ${P.fn?"half-mile squares":"2.5-mile squares"}`}</b>`+(LEG[P.fn||("r"+P.id)]||"<span>inches</span>"); }
   function rainPic(force){ if(mode!=="rain"||!map) return; const P=RP[1], b=map.getBounds().pad(.15), sz=map.getSize(), dpr=Math.min(2,window.devicePixelRatio||1), w=Math.round(sz.x*1.3*dpr), h=Math.round(sz.y*1.3*dpr);
     const box=[Math.max(-179,b.getWest()),Math.max(-80,b.getSouth()),Math.min(179,b.getEast()),Math.min(80,b.getNorth())].map(v=>+v.toFixed(3)); const key=RP[0]+"|"+box.join(","); if(key===rainKey&&!force) return; rainKey=key; const seq=++rainSeq;
     const u=P.fn?`${MR}/exportImage?bbox=${box.join(",")}&bboxSR=4326&imageSR=3857&size=${w},${h}&format=png32&transparent=true&interpolation=RSP_NearestNeighbor&renderingRule=${enc({rasterFunction:P.fn})}&f=image&_=${Math.floor(Date.now()/9e5)}`
@@ -10088,7 +10119,7 @@ html body.desk-live .tabs button[data-pane="live"]::after{display:block!importan
 
   // ---- v325 storm reports: tornado red, hail green, wind blue; tornadoes drawn last so they sit on top
   function loadLsr(){ const S=window.SDR_LSR; const R=(S&&S.list())||[]; layer.clearLayers(); const ft=wrap.querySelector(".xpf"); const ord={w:0,h:1,t:2};
-    R.slice().sort((a,b)=>ord[a.k]-ord[b.k]).forEach(r=>{ const mk=L.circleMarker([r.la,r.lo],{radius:r.k==="t"?8:6.5,color:"#0B1730",weight:1.5,fillColor:S.COL[r.k],fillOpacity:.95}).addTo(layer); mk._sdr=2;
+    R.slice().sort((a,b)=>ord[a.k]-ord[b.k]).forEach(r=>{ const mk=L.circleMarker([r.la,r.lo],{radius:dotR(r.k),color:"#0B1730",weight:1.5,fillColor:S.COL[r.k],fillOpacity:.95}).addTo(layer); mk._sdr=2; mk._lsrk=r.k;
       mk.on("click",()=>card({col:S.COL[r.k],tagFg:"#fff",tag:"Storm report",title:S.what(r),sub:[`${S.place?S.place(r):r.loc}${r.co?`, ${r.co} Co.`:""}${r.st?`, ${r.st}`:""}`,dist(r.la,r.lo)?dist(r.la,r.lo)+" from you":""].filter(Boolean).join(" · "),
         what:`${S.dayLab(r.ts)} at ${S.tm(r.ts)}`,stats:[],html:r.c?`<p style="margin:8px 0 0;font-size:14px;line-height:1.45">${esc(r.c)}</p>`:""})); });
     const n=S?S.days():7; ft.innerHTML=`<b>${R.length} report${R.length===1?"":"s"} · ${n===1?"today":`last ${n} days`}</b><span><i style="background:#E5484D;border-radius:50%"></i>Tornado</span><span><i style="background:#22C55E;border-radius:50%"></i>Hail</span><span><i style="background:#3B82F6;border-radius:50%"></i>Wind</span>`; }
@@ -11328,7 +11359,7 @@ details.hfmore>summary::after{content:" ›";display:inline-block;transition:tra
     const c={}; n.forEach(r=>{ const b=bkOf(r.k); c[b]=(c[b]||0)+1; }); const parts=BK.filter(b=>c[b[0]]).map(b=>`${c[b[0]]} ${b[1].toLowerCase()}`);
     return parts.length===1?`${parts[0]} report${n.length===1?"":"s"} within ${MI} miles ${span()}.`:`${n.length} storm reports within ${MI} miles ${span()}: ${parts.join(", ")}.`; }
   function chip(k,v,cur,lab){ return `<button type="button" data-${k}="${v}" aria-pressed="${v===cur}">${lab}</button>`; }
-  function row(r){ return `<li><i style="background:${COL[r.k]}"></i><div><b>${esc(what(r))}</b><span>${esc(place(r))}${r.st?`, ${esc(r.st)}`:""} · ${Math.round(r.d)} mi ${r.dir} of you · ${tm(r.ts)}</span>${r.c?`<p>${esc(r.c)}</p>`:""}</div></li>`; }
+  function row(r){ return `<li><i style="background:${COL[r.k]}"></i><div><b>${esc(what(r))}</b><span>${esc(place(r))}${r.st?`, ${esc(r.st)}`:""} · ${Math.round(r.d)} mi ${r.dir} of you · ${tm(r.ts)}</span>${/[a-z]{3}/i.test(r.c||"")?`<p>${esc(r.c)}</p>`:""}</div></li>`; }
   function paint(){ const sec=SEC; if(!sec) return; const P=pick(), s=summary(P); const bar=sec.querySelector(".cxbar span"); if(bar&&bar.textContent!==s) bar.textContent=s;
     const body=sec.querySelector(".lsrb"); if(!body) return;
     let h=`<div class="lsrc"><div>${chip("d",1,DAYS,"Today")}${chip("d",3,DAYS,"3 days")}${chip("d",7,DAYS,"7 days")}${chip("d",30,DAYS,"30 days")}</div><div>${chip("m",25,MI,"25 mi")}${chip("m",50,MI,"50 mi")}${chip("m",100,MI,"100 mi")}</div></div><div class="lsrbk"><span>SHOW</span>${BK.map(b=>`<button type="button" data-bk="${b[0]}" aria-pressed="${ON[b[0]]!==false}"><i style="background:${COL[b[2][0]]}"></i>${b[1]}</button>`).join("")}</div>`;
@@ -12124,7 +12155,7 @@ body.no-outdoors #gl-o{display:none!important}
 </script>
 <style>
 body.live-down #pane-live .vid.chan>*, body.live-down .deskchan .vid>*{display:none!important}
-body.live-down #pane-live .vid.chan::before, body.live-down .deskchan .vid::before{content:"The live channel is taking a short break. Check back soon.";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;font-size:17px;line-height:1.45;color:#C9D4EA;background:#0E1B3D}
+body.live-down #pane-live .vid.chan::before, body.live-down .deskchan .vid::before{content:"Live weather video will resume soon.";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;font-size:17px;line-height:1.45;color:#C9D4EA;background:#0E1B3D}
 body.live-down #pip{display:none!important}
 body.live-down .tabs button[data-pane="live"]::after{display:none!important}body.live-down .tabs button[data-pane="live"]{color:inherit!important;animation:none!important}
 body.live-down #live-flag, body.live-down .deskline, body.live-down .lrlive, body.live-down .pipl{display:none!important}
@@ -12244,9 +12275,9 @@ body.live-down #live-flag, body.live-down .deskline, body.live-down .lrlive, bod
   const calm=()=>{ try{ const nx=document.getElementById("next"); if(!nx||document.querySelector("#nxb li")) return false; const pill=document.querySelector("#nowx .nxpill"); if(pill&&!/ALL CLEAR/i.test(pill.textContent||"")) return false;
       if(typeof window._active==="function"&&window._active().length) return false;
       const D=(window.STRIPS&&STRIPS.days&&STRIPS.days())||[]; if(!D.length) return false; return !D.slice(0,3).some(x=>Math.max(x.pp||0,x.ppN||0)>=60||(x.thunder||0)>=30||(x.snowP||0)>=30||(x.iceP||0)>=20||(x.gust||0)>=40); }catch(e){ return false; } };
-  window.SDR_ALMPICK=async function(){ try{ if(!window.SDR_ALMFINDS||!calm()) return null; const F=await SDR_ALMFINDS(), f=F.find(z=>z.n>=(BIG[z.key]||99)&&z.n<=200); return f||null; }catch(e){ return null; } };
+  window.SDR_ALMPICK=async function(){ try{ if(!window.SDR_ALMFINDS||!calm()) return null; const F=await SDR_ALMFINDS(), f=F.find(z=>z.n>=(BIG[z.key]||99)&&z.n<=200&&z.today===false); return f||null; }catch(e){ return null; } };
   window.SDR_ALMMILE=MILE; window.SDR_CALM=calm;
-  async function run(){ try{ if(!window.SDR_ALMFINDS) return; const F0=await SDR_ALMFINDS(); window.SDR_ALMTOP=F0.find(z=>z.n>=(BIG[z.key]||99)&&z.n<=200)||null;   // v367 the most pressing streak, shown on the almanac tile (no bar on Home)
+  async function run(){ try{ if(!window.SDR_ALMFINDS) return; const F0=await SDR_ALMFINDS(); window.SDR_ALMTOP=F0.find(z=>z.n>=(BIG[z.key]||99)&&z.n<=200&&z.today===false)||null;   // v367 the most pressing streak, shown on the almanac tile (no bar on Home)
       const f=await SDR_ALMPICK(); if(!f) return; const st={};
       st.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg><span><b>FROM THE ALMANAC</b><u>${cap(f.p)}</u></span><em>Calendar →</em>`;
       const hr=new Date().getHours(), dk="sdr-almpush-day-"+new Date().toDateString(); if(window.SDR_NOTIFY&&MILE(f.n)&&hr>=7&&hr<20&&!localStorage.getItem(dk)){ const k="sdr-almpush-"+f.key+"-"+f.n+"-"+new Date().toISOString().slice(0,7); if(!localStorage.getItem(k)){ localStorage.setItem(k,"1"); localStorage.setItem(dk,"1"); SDR_NOTIFY("daily","📅 "+f.p.toUpperCase(),"Through yesterday. Tap to see it on the calendar.","overview","#sdrgo-alm","alm-"+f.key); } }

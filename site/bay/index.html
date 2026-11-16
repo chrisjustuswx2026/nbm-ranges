@@ -2586,7 +2586,7 @@ body.chan-on .tabs button[data-pane="live"]::before{content:"";position:absolute
 .chplay i{width:76px;height:76px;border-radius:50%;background:#E5484D;display:grid;place-items:center;box-shadow:0 8px 28px rgba(229,72,77,.45)}
 .chplay b{font-family:var(--display);font-weight:800;letter-spacing:.14em;font-size:13px}
 </style>
-<script>window.SDR_VER="381";</script><style>.shd .ver{margin-left:auto;margin-right:10px;font-family:var(--display);font-weight:700;letter-spacing:.1em;font-size:11px;color:var(--dim)}</style>
+<script>window.SDR_VER="383";</script><style>.shd .ver{margin-left:auto;margin-right:10px;font-family:var(--display);font-weight:700;letter-spacing:.1em;font-size:11px;color:var(--dim)}</style>
 <script>
 /* SDR_WEEKSTORY: on a quiet day, find what actually matters this week. Ranked: first frost/freeze, a big cooldown or warmup, the 6-10 day outlook, the next rain. */
 window.SDR_COLDOK=function(x){ try{ if(!x||x.lo==null||x.lo>36) return false; const nl=window._bsNL, first=window._bsFall===false, routine=nl!=null&&nl<=34; if(!routine||first) return true; return x.lo<=nl-8; }catch(e){ return true; } };
@@ -3620,8 +3620,8 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
     if (warn) {
       key="action"; why = `${warn.properties.event} until ${hhmm(new Date(warn.properties.ends||warn.properties.expires))}. ${(window.SDR_WARNDO&&SDR_WARNDO(warn.properties.event))||"Get outdoor crews and beachgoers inside."}`;
       ni="ts"; nh = `All clear after ${hhmm(new Date(warn.properties.ends||warn.properties.expires))}`; np = "Hold until the warning ends.";
-    } else if (watch || soon || (near && near.d<=SITE.watchMi) || (window.RADAR_NEAR&&!window.RADAR_NEAR.none&&window.RADAR_NEAR.d<=SITE.watchMi)) {
-      key="headsup"; const RN=window.RADAR_NEAR&&!window.RADAR_NEAR.none&&window.RADAR_NEAR.d<=SITE.watchMi?window.RADAR_NEAR:null;
+    } else if (watch || soon || (near && near.d<=SITE.watchMi) || (window.RADAR_NEAR&&!window.RADAR_NEAR.none&&!window.RADAR_NEAR.light&&window.RADAR_NEAR.d<=SITE.watchMi)) {
+      key="headsup"; const RN=window.RADAR_NEAR&&!window.RADAR_NEAR.none&&!window.RADAR_NEAR.light&&window.RADAR_NEAR.d<=SITE.watchMi?window.RADAR_NEAR:null;
       why = watch ? `${watch.properties.event==="Special Weather Statement"?window.ALERTINFO.shortLine(watch):watch.properties.event} until ${_ud(watch.properties.ends||watch.properties.expires)}.` :
             RN ? (RN.d<3 ? `${cap(RN.kind)} at ${SITE.name} right now.` : RN.heavy ? `Storms within 30 miles: ${Math.round(RN.d)} miles to your ${RN.dir}, closing in. Have the plan ready.` : `Rain in the area: ${Math.round(RN.d)} miles ${RN.dir}${RN.light?", light":""}.`) :
             near && near.d<=SITE.watchMi ? `${near.a.properties.event} ${near.d.toFixed(0)} miles away (${(near.a.properties.areaDesc||"").split(";")[0]}).` :
@@ -3629,7 +3629,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
       ni = ico((soon||nextWet||{}).shortForecast||"storm"); nh = soon ? `${soon.shortForecast} ~${hhmm(new Date(soon.startTime))}` : "Watching the next 3 hours"; np = nextWet ? `${nextWet.shortForecast}, ${nextWet.probabilityOfPrecipitation.value}% at ${hhmm(new Date(nextWet.startTime))}.` : "We'll update you before anything gets inside 30 miles.";
     } else {
       key="clear";
-      { const RN=window.RADAR_NEAR; why = RN&&!RN.none ? `${cap(RN.kind)} ${Math.round(RN.d)} miles to your ${RN.dir}.` : near ? `Nearest warning ${near.d.toFixed(0)} miles away. Nothing here.` : "No watches or warnings nearby."; }
+      { const RN=window.RADAR_NEAR; why = RN&&!RN.none&&!RN.light ? `${cap(RN.kind)} ${Math.round(RN.d)} miles to your ${RN.dir}.` : near ? `Nearest warning ${near.d.toFixed(0)} miles away. Nothing here.` : "No watches or warnings nearby."; }
       if(nextWet){ ni = ico(nextWet.shortForecast); nh = `${nextWet.shortForecast} ~${hhmm(new Date(nextWet.startTime))}`; np = `${nextWet.probabilityOfPrecipitation.value}% chance. Quiet until then.`; }
       else { const d2 = days.find(x=>x.pp>=40); ni = d2 ? d2.ico : "sun"; nh = d2 ? `${d2.d==="TONIGHT"?"Tonight":d2.d}: ${d2.pp}% rain` : "Quiet through the week"; np = d2 ? "Dry until then." : "Nothing on the 7-day worth planning around."; }
     }
@@ -3671,12 +3671,12 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
   // ground truth: up to 6 nearest reporting sites within 35 miles; wet if any measured rain in the last hour or is reporting rain now
   window.OBS_WET=null; let _owAt=0;
   window.OBS_WET_CHECK=async function(){ if(Date.now()-_owAt<9*60000) return; _owAt=Date.now(); try{ const st=(window.NWS_STATIONS&&NWS_STATIONS.features||[]).filter(f=>{ const c=f.geometry&&f.geometry.coordinates; if(!c) return false; const d=Math.hypot((c[1]-SITE.lat)*69,(c[0]-SITE.lon)*69*Math.cos(SITE.lat*Math.PI/180)); f._mi=d; return d<=35; }).slice(0,6);
-      const hits=[]; await Promise.all(st.map(async f=>{ try{ const o=await (await fetch(f.id+"/observations/latest",{headers:{Accept:"application/geo+json"}})).json(); const p=o.properties||{}; const age=(Date.now()-new Date(p.timestamp))/60000; if(age>75) return;
+      const hits=[], clr=[]; await Promise.all(st.map(async f=>{ try{ const o=await (await fetch(f.id+"/observations/latest",{headers:{Accept:"application/geo+json"}})).json(); const p=o.properties||{}; const age=(Date.now()-new Date(p.timestamp))/60000; if(age>75) return;
         const mm=p.precipitationLastHour&&p.precipitationLastHour.value; const txt=String(p.textDescription||""); const wx=/rain|drizzle|shower|thunder|snow|sleet|ice/i.test(txt);
-        if((mm!=null&&mm>0.2)||wx) hits.push({name:f.properties&&f.properties.name||f.id.split("/").pop(),mi:Math.round(f._mi),txt,mm}); }catch(e){} }));
-      window.OBS_WET={wet:hits.length>0,hits,checked:st.length,at:Date.now()}; }catch(e){} };
+        if((mm!=null&&mm>0.2)||wx) hits.push({name:f.properties&&f.properties.name||f.id.split("/").pop(),mi:Math.round(f._mi),txt,mm}); else if(/^(clear|fair|sunny|mostly clear|mostly sunny)\b/i.test(txt.trim())) clr.push(1); }catch(e){} }));
+      window.OBS_WET={wet:hits.length>0,hits,checked:st.length,clear:clr.length,at:Date.now()}; }catch(e){} };
   setInterval(()=>window.OBS_WET_CHECK&&OBS_WET_CHECK(),10*60000);
-  async function radarNear(){ try{ if(window.OBS_WET_CHECK) OBS_WET_CHECK();
+  async function radarNear(){ try{ if(window.OBS_WET_CHECK) await OBS_WET_CHECK();
     const MI=45, la=SITE.lat, lo=SITE.lon, dLat=MI/69, dLon=MI/(69*Math.cos(la*Math.PI/180)), N=200;
     const E=20037508.342789244, mx=x=>x*E/180, my=y=>Math.log(Math.tan((90+y)*Math.PI/360))/(Math.PI/180)*E/180;
     const cv=document.createElement("canvas"); cv.width=cv.height=N; const cx=cv.getContext("2d",{willReadFrequently:true});
@@ -3710,7 +3710,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
     else { const ang=(Math.atan2(best.dx,best.dy)*180/Math.PI+360)%360, DIRS=["north","northeast","east","southeast","south","southwest","west","northwest"];
       const sw=storm30>=2?"storms":best.lvl>=2?"heavy rain":"rain";   // v149: storms = real storm cores, not just heavier rain
       const groundWet=!!(window.OBS_WET&&OBS_WET.wet);
-      const light=best.lvl<2&&heavy30<3&&!groundWet;   // v119: green only, nothing measured at the ground = virga / drizzle / clutter, not a call
+      const skyClear=!!(window.OBS_WET&&!OBS_WET.wet&&(OBS_WET.clear||0)>=2), light=!groundWet&&storm30<2&&((best.lvl<2&&heavy30<3)||skyClear);   // v119: green only, nothing measured at the ground = virga / drizzle / clutter, not a call
       window.RADAR_NEAR={d:best.d,dir:DIRS[Math.round(ang/45)%8],kind:light?"light returns":sw,heavy:storm30>=2,light,groundWet,at:Date.now()}; }
     const rl=document.getElementById("rd-line"); const R=window.RADAR_NEAR;
     if(rl){ rl.textContent = R.none ? "Radar quiet within 45 miles" : R.light ? `Light returns ${Math.round(R.d)} miles ${R.dir} · nothing measured at the ground` : R.d<3 ? `${cap(R.kind)} at ${SITE.name}` : `${cap(R.kind)} ${Math.round(R.d)} miles ${R.dir}${R.groundWet&&OBS_WET.hits[0]?` · ${OBS_WET.hits[0].name} reporting rain`:""}`; }
@@ -6364,7 +6364,7 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
     const kind=x=>((x.snowP||0)>=40||(window.SDR_PTYPE&&SDR_PTYPE(x)==="snow"&&pp(x)>=40)||(window.SDR_SNOWY&&SDR_SNOWY(x)))?"snow":(x.thunder||0)>=30?"storms":rn(x)>=1?"soaking rain":pp(x)>=40?"rain":"showers";
     const sec=[], wet=D.slice(0,7).map(x=>({x,v:rn(x)})).filter(o=>o.v>=0.05);
     if(quiet){ const nextWet=D.slice(1,10).find(x=>pp(x)>=30), hs=D.slice(0,5).map(x=>x.hi).filter(v=>v!=null), adj=h=>h>=88?"hot":h>=76?"warm":h>=60?"mild":"cool";
-      const _wetNow=(()=>{ try{ const RN=window.RADAR_NEAR, H0=((window.STRIPS&&STRIPS.hours&&STRIPS.hours())||[]).filter(h=>Math.abs(+new Date(h.t)-Date.now())<3*3600e3); return (RN&&!RN.none&&RN.d<=10)||(window.OBS_WET&&OBS_WET.wet)||H0.some(h=>(h.pop||0)>=50); }catch(e){ return false; } })();
+      const _wetNow=(()=>{ try{ const RN=window.RADAR_NEAR, H0=((window.STRIPS&&STRIPS.hours&&STRIPS.hours())||[]).filter(h=>Math.abs(+new Date(h.t)-Date.now())<3*3600e3); return (RN&&!RN.none&&!RN.light&&RN.d<=10)||(window.OBS_WET&&OBS_WET.wet)||H0.some(h=>(h.pop||0)>=50); }catch(e){ return false; } })();
       const head=nextWet?`Dry until ${dn(nextWet)}`:_wetNow?`Drying out, dry stretch ahead`:`Dry stretch ahead`, sub=`${cap(adj(Math.max(...hs)))} and dry${nextWet?`; the next rain chance is ${dn(nextWet)} (${r10(pp(nextWet))}%)`:" for the week ahead"}.`;
       const ST=window.SDR_WEEKSTORY?SDR_WEEKSTORY(D,MD,s,window._bsNH,window._bsFall):null; window._bsStory=ST;
       let AL=/\b(Advisory|Warning|Watch|Statement)\b/.test(String(b.title||""))?String(b.title):""; try{ if(!AL){ const a=_active().find(x=>/\b(Advisory|Warning|Watch)\b/.test(x.title||"")); if(a) AL=String(a.title).replace(/\.$/,""); } }catch(e){}
@@ -7104,7 +7104,7 @@ window.SDR_GL=(function(){
     {id:"smallplace",type:"symbol",source:"omt","source-layer":"place",minzoom:11,filter:["in","class","village","hamlet","suburb","neighbourhood","quarter"],layout:{"text-field":NM,"text-font":["Noto Sans Bold"],"text-size":Z([11,11.5,15,14.5])},paint:TXT}])};
   const load=src=>new Promise((ok,no)=>{ const s=document.createElement("script"); s.src=src; s.onload=ok; s.onerror=()=>no(new Error("failed "+src)); document.head.appendChild(s); });
   let state="idle";
-  async function add(m,opt){ if(!m||m._sdrGL) return; m._sdrGL=true; state="loading"; const USE=opt&&opt.over?OVER:STYLE;
+  async function add(m,opt){ if(!m||m._sdrGL) return; m._sdrGL=true; state="loading"; const USE=opt&&opt.over?OVER:Object.assign({},STYLE,{glyphs:OVER.glyphs,layers:STYLE.layers.concat(OVER.layers.filter(l=>l.type==="symbol"))});
     try{ if(!window.maplibregl) await load("https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js");
          if(!(window.L&&L.maplibreGL)) await load("https://cdn.jsdelivr.net/npm/@maplibre/maplibre-gl-leaflet@0.0.22/leaflet-maplibre-gl.js"); }
     catch(e){ console.warn("vector basemap: scripts did not load, keeping the built-in map", e); m._sdrGL=false; m._glDead=true; try{ if(m.getMaxZoom()>13) m.setMaxZoom(13); }catch(e){} state="failed"; return; }
@@ -7120,7 +7120,7 @@ window.SDR_GL=(function(){
       if(n>0){ ok=true; clearTimeout(t); state="on"; window.SDR_GL_ON=true; m._gl=layer; window.dispatchEvent(new Event("sdr-gl-on")); } };
     gl.on("idle",done); gl.on("load",()=>setTimeout(done,50));
   }
-  (function(){ const go=()=>{ if(document._rmap) add(document._rmap); else setTimeout(go,500); }; setTimeout(go,900); })();
+  (function(){ const go=()=>{ const r=document._rmap, c=r&&r.getContainer(); if(r&&c&&c.offsetWidth>0&&c.offsetHeight>0&&c.getClientRects().length){ r.invalidateSize(); add(r); } else setTimeout(go,700); }; setTimeout(go,900); })();
   return { add, state:()=>state, style:STYLE };
 })();
 </script>
@@ -7235,7 +7235,7 @@ window.SDR_GL=(function(){
 
 <script>
 // v125: client chat layer
-(function(){ let wrap=null, fr=null; const CHATV="1794770592";
+(function(){ let wrap=null, fr=null; const CHATV="1794832946";
   function open(){ if(!wrap){ wrap=document.createElement("div"); wrap.id="chatwrap"; wrap.innerHTML='<iframe id="chatfr" title="Message the team" allow="camera"></iframe>'; document.body.appendChild(wrap); fr=wrap.querySelector("iframe"); fr.src="./chat.html?v="+CHATV; fr.addEventListener("load",()=>{ try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }); }
     wrap.hidden=false; document.body.classList.add("chat-on"); if(!(history.state&&history.state.chat)) history.pushState({chat:1},""); try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }
   function close(){ if(wrap){ wrap.hidden=true; } document.body.classList.remove("chat-on"); }
@@ -8567,9 +8567,9 @@ window.SDR_BMAP=function(box,W,H,lay,o){ o=o||{}; if(!window.MAPROOM||!MAPROOM.s
   // title plaque (logo + title), top-left, like the Map Room
   const lg=document.querySelector('img[alt="SDR Weather Intelligence"]'), src=lg&&lg.src||"", ar=lg&&lg.naturalWidth&&lg.naturalHeight?lg.naturalWidth/lg.naturalHeight:2.6, CJ=/Chris Justus/i.test(document.title||"");
   if(o.title!==false&&(src||o.title)){ const pad=7*k, lh=20*k, lw=src?lh*ar:0, chipW=src?lw+(CJ?0:10*k):0, ts=11.5*k, ss=8.5*k, tw=o.title?Math.max(String(o.title).length*ts*.66,String(o.sub||"").length*ss*.74):0;
-    const pwid=pad*2+chipW+(o.title?10*k+tw:0), ph=lh+pad*2+(CJ?0:4*k); let x0=8*k, y0=8*k;
-    if(site){ const [sx0,sy0]=P(site.lo,site.la), sw=String(site.label||"").length*9.5*k*.68+30*k; if(sx0-10*k<x0+pwid&&sx0+sw>x0&&sy0<y0+ph+16*k) y0=H-ph-8*k; }
-    if(o.avoid&&o.avoid.length){ const hits=(x,y)=>o.avoid.some(q=>{ const [ax,ay]=P(q.lo,q.la), r=(q.r||16)*k; return ax+r>x&&ax-r<x+pwid&&ay+r>y&&ay-r<y+ph; }); if(hits(x0,y0)){
+    const pwid=pad*2+chipW+(o.title?10*k+tw:0), ph=lh+pad*2+(CJ?0:4*k); let x0=8*k, y0=8*k; const KEEPTOP=!!o.plqTop;
+    if(site&&!KEEPTOP){ const [sx0,sy0]=P(site.lo,site.la), sw=String(site.label||"").length*9.5*k*.68+30*k; if(sx0-10*k<x0+pwid&&sx0+sw>x0&&sy0<y0+ph+16*k) y0=H-ph-8*k; }
+    if(!KEEPTOP&&o.avoid&&o.avoid.length){ const hits=(x,y)=>o.avoid.some(q=>{ const [ax,ay]=P(q.lo,q.la), r=(q.r||16)*k; return ax+r>x&&ax-r<x+pwid&&ay+r>y&&ay-r<y+ph; }); if(hits(x0,y0)){
       const ok=[[8*k,H-ph-8*k],[W-pwid-8*k,8*k],[W-pwid-8*k,H-ph-8*k]].find(([x,y])=>!hits(x,y)); if(ok){ x0=ok[0]; y0=ok[1]; } } }
     out+=`<!--PLQ--><rect x="${x0}" y="${y0}" width="${pwid}" height="${ph}" rx="${8*k}" fill="#0F1B33" fill-opacity=".92" stroke="rgba(255,255,255,.18)" stroke-width="${k}"/>`;
     if(src){ const cx=x0+pad, cy=y0+pad; if(!CJ) out+=`<rect x="${cx}" y="${cy}" width="${chipW}" height="${lh+4*k}" rx="${5*k}" fill="#fff"/>`; out+=`<image href="${src}" x="${cx+(CJ?0:5*k)}" y="${cy+(CJ?0:2*k)}" width="${lw}" height="${lh}" preserveAspectRatio="xMidYMid meet"/>`; }
@@ -9471,7 +9471,7 @@ window.SDR_MAPCARD=function(xmc,o){ if(!xmc) return; let c=xmc.querySelector(".m
     const night=/night|pcn/.test(O.ico||""); let cond=fog==="Dense fog"?"Dense fog":String(O.cond||fog||window._NOWFC||({clearnight:"Clear",sun:"Sunny",pc:"Partly cloudy",pcn:"Partly cloudy",rn:"Rain",ts:"Thunderstorms",sn:"Snow",fog:"Fog"}[O.ico]||"")).replace("Fog/Mist","Fog and mist");
     cond=cond.replace(/^Clear$/i,night?"Clear night":"Clear skies").replace(/^Mostly Clear$/i,"Mostly clear skies").replace(/^Fair$/i,night?"Clear night":"Fair skies").replace(/^Partly Cloudy$/i,"Partly cloudy").replace(/^Mostly Cloudy$/i,"Mostly cloudy").replace(/^Overcast$/i,"Cloudy skies").replace(/^Light Rain$/i,"Light rain").replace(/^Haze$/i,"Hazy");
     cond=cond.replace(/\b(slight\s+)?chance\s+(of\s+)?/ig,"").replace(/\s+likely\b/ig,"").replace(/\b(isolated|scattered|areas of|patchy)\s+/ig,"").replace(/\s{2,}/g," ").trim(); cond=cond?cond[0].toUpperCase()+cond.slice(1).toLowerCase():cond;
-    try{ const RN=window.RADAR_NEAR; if(RN&&!RN.none&&RN.d<=3&&!/rain|shower|drizzle|storm|thunder|snow|sleet|ice|mix/i.test(cond)) cond=/sprinkle|light/.test(RN.cls||"")?"Light rain":"Rain"; }catch(e){}
+    try{ const RN=window.RADAR_NEAR; if(RN&&!RN.none&&!RN.light&&RN.d<=3&&!/rain|shower|drizzle|storm|thunder|snow|sleet|ice|mix/i.test(cond)) cond=/sprinkle|light/.test(RN.cls||"")?"Light rain":"Rain"; }catch(e){}
     try{ if(O&&O._i0) O.ico=O._i0; const RN=window.RADAR_NEAR, hm=parseInt(O.hum,10), dryAir=isFinite(hm)&&hm<=50, quietR=RN&&(RN.none||RN.d>10);
       if((quietR||dryAir)&&/rain|shower|drizzle|sprinkle/i.test(cond)&&!/thunder|storm|snow|sleet|ice|mix|freez/i.test(cond)){
         let fc=String(window._NOWFC||""); if(!fc||/rain|shower|drizzle|storm|thunder|snow|sleet|ice|mix|chance|likely/i.test(fc)) fc="Partly cloudy";
@@ -10011,7 +10011,7 @@ html body.desk-live .tabs button[data-pane="live"]::after{display:block!importan
   const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
   let wrap=null, map=null, layer=null, mode="", busy=false, lastBox="", CTY=null, ctyBusy=false;
   const WF="https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Incident_Locations_Current/FeatureServer/0/query";
-  const TITLES={fire:["ACTIVE WILDFIRES","Tap a fire for details"],beach:["BEACH & BOATING","Tap a beach or lake"],ski:["SKI CONDITIONS","Tap a resort"],lsr:["STORM REPORTS","Tap a report for details"],rain:["RAINFALL MAP","Tap anywhere for the amount"]};
+  const TITLES={fire:["ACTIVE WILDFIRES","Tap a fire for details"],beach:["BEACH & BOATING","Tap a beach or lake"],ski:["SKI CONDITIONS","Tap a resort"],lsr:["STORM REPORTS","Tap a report for details"],rain:["RAINFALL MAP","Tap anywhere for the amount"],obs:["WHAT HAPPENED","Tap a station for details"]};
   const FIREZ=[["Near me",null],["Southeast",[-84.5,33.5,9]],["West",[-115,40,18]],["U.S.",[-97,38.5,34]]];
   const logo=()=>{ const lg=document.querySelector('img[alt="SDR Weather Intelligence"]'); return {src:lg&&lg.src||"", cj:/Chris Justus/i.test(document.title||"")}; };
   const venue=()=>{ try{ const v=(window.DASH&&DASH.venue&&DASH.venue())||{}; if(isFinite(+v.la)) return {la:+v.la,lo:+v.lo}; }catch(e){} const L=window.__LOC||{}; return isFinite(+L.la)?{la:+L.la,lo:+L.lo}:null; };
@@ -10049,19 +10049,19 @@ html body.desk-live .tabs button[data-pane="live"]::after{display:block!importan
     const isMetro=r=>METRO.includes(r[0])&&(!MST[r[0]]||MST[r[0]]===r[1]);
     const cities=()=>{ lbl.clearLayers(); const z=map.getZoom(), b=map.getBounds().pad(.02), sz=map.getSize(), ph=innerWidth<700, placed=[], maxN=ph?(z>=9?26:18):(z>=9?40:30), minN=ph?10:14;
       const blocks=[{x:0,y:30,w:70},{x:0,y:90,w:70}]; if(you){ const yp=map.latLngToContainerPoint(you.getLatLng()); blocks.push({x:yp.x-8,y:yp.y,w:70}); }
-      const seen=new Set(), ALL=[]; [(window.GEO_PLACES0||[]),(window.GEO_PLACES||[])].forEach(Ls=>Ls.forEach(r=>{ if(!r||!isFinite(+r[3])||!isFinite(+r[4])) return; const k=r[0]+"|"+(+r[3]).toFixed(1)+"|"+(+r[4]).toFixed(1); if(seen.has(k)) return; seen.add(k); if(b.contains([+r[3],+r[4]])&&(!window.SDR_CITY_OK||SDR_CITY_OK(r))) ALL.push(r); }));
+      const seen=new Set(), ALL=[]; [(window.GEO_PLACES0||[]),(window.GEO_PLACES||[])].forEach(Ls=>Ls.forEach(r=>{ if(!r||!isFinite(+r[3])||!isFinite(+r[4])) return; const k=r[0]+"|"+(+r[3]).toFixed(1)+"|"+(+r[4]).toFixed(1); if(seen.has(k)) return; seen.add(k); if(b.contains([+r[3],+r[4]])&&(!window.SDR_CITY_OK||SDR_CITY_OK(r))&&(mode!=="obs"||isMetro(r))) ALL.push(r); }));
       const pop=r=>+r[2]||0; ALL.sort((a,c)=>(isMetro(c)-isMetro(a))||(pop(c)-pop(a)));
       const put=r=>{ const pt=map.latLngToContainerPoint([+r[3],+r[4]]), metro=pop(r)>=250000||isMetro(r), big=!metro&&pop(r)>=60000, fs=metro?17:big?15:13, w=String(r[0]).length*fs*.58+10, x0=pt.x-w/2;
         if(x0<4||x0+w>sz.x-4||pt.y<16||pt.y>sz.y-16) return false; if(blocks.concat(placed).some(q=>Math.abs(q.y-pt.y)<fs+10&&x0+w>q.x-8&&x0<q.x+q.w+8)) return false; placed.push({x:x0,y:pt.y,w});
         L.marker([+r[3],+r[4]],{interactive:false,keyboard:false,icon:L.divIcon({className:"",html:"",iconSize:[0,0]})}).addTo(lbl).bindTooltip(esc(r[0]),{permanent:true,direction:"center",className:metro?"lbl3 metro xpl":big?"lbl3 big xpl":"lbl3 xpl"}); return true; };
       for(const r of ALL){ if(placed.length>=maxN) break; if(pop(r)>=minPop(z)||(isMetro(r)&&(pop(r)>=40000||!pop(r)))) put(r); }
-      if(placed.length<minN) for(const r of ALL){ if(placed.length>=minN) break; put(r); } };
+      if(placed.length<minN&&mode!=="obs") for(const r of ALL){ if(placed.length>=minN) break; put(r); } wrap._lblRects=placed; };
     wrap._cities=cities;
     map.on("zoomend",cty); map.on("zoomend moveend",cities); setTimeout(cities,120); window.addEventListener("sdr-places",()=>{ if(!wrap.hidden) cities(); });
     // v324 the view we asked for sticks even if the phone lays the page out late; a finger on the map ends that
     el.addEventListener("touchstart",()=>{ want=null; },{passive:true}); el.addEventListener("mousedown",()=>{ want=null; }); el.addEventListener("wheel",()=>{ want=null; },{passive:true});
     if(window.ResizeObserver) new ResizeObserver(()=>{ if(want&&!wrap.hidden&&el.clientWidth){ map.invalidateSize(); want(); } }).observe(el);
-    layer=L.layerGroup().addTo(map); map.createPane("rain").style.zIndex=162;   /* v368 under the roads, county lines and names (the vector map sits at 155), over the land */ map.on("moveend",()=>{ if(mode==="fire") loadFires(); if(mode==="rain") rainPic(); }); map.on("click",e=>{ if(mode==="rain") rainTap(e.latlng); }); map.on("zoomend moveend",thin);
+    layer=L.layerGroup().addTo(map); map.createPane("rain").style.zIndex=162;   /* v368 under the roads, county lines and names (the vector map sits at 155), over the land */ map.on("moveend",()=>{ if(mode==="fire") loadFires(); if(mode==="rain") rainPic(); if(mode==="obs") obsDraw(); }); map.on("click",e=>{ if(mode==="rain") rainTap(e.latlng); }); map.on("zoomend moveend",thin);
     map.on("zoomend",()=>{ try{ layer.eachLayer(m=>{ if(m._lsrk&&m.setRadius) m.setRadius(dotR(m._lsrk)); }); }catch(e){} });
     // v373 the SAME base the drought monitor uses: shaded terrain, county lines, lakes, rivers, interstates and highways.
     // (The vector map never drew on these full-screen maps, and it was hiding their county lines. It is no longer used here.)
@@ -10082,16 +10082,71 @@ html body.desk-live .tabs button[data-pane="live"]::after{display:block!importan
     el.innerHTML=list.map(z=>`<button type="button" aria-pressed="${z[0]===active}" data-z="${esc(z[0])}">${esc(z[0])}</button>`).join("");
     el.querySelectorAll("button").forEach(b=>b.onclick=()=>{ el.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",String(x===b))); const c=wrap.querySelector(".mpc"); if(c) c.remove(); fn(list.find(z=>z[0]===b.dataset.z)); }); }
 
+  // ===== v383 WHAT HAPPENED: observed lows, highs, peak wind, rain, snow and feels-like at airport weather stations (plus volunteer rain and
+  // snow gauges where they report), state by state as you move the map. The most extreme readings get the room first; more appear as you zoom in.
+  const OBSV=[["Low","min_tmpf","temp","MORNING LOWS","LOWS"],["High","max_tmpf","temp","HIGHS","HIGHS"],["Peak wind","max_gust","wind","PEAK WIND GUSTS","PEAK WIND GUSTS"],
+    ["Rain","precip","rain","RAIN TOTALS","RAIN TOTALS"],["Snow","snow","snow","SNOW TOTALS","SNOW TOTALS"],["Feels like","min_feel","temp","COLDEST FEELS-LIKE","COLDEST FEELS-LIKE"]];
+  let OV=OBSV[0], ODAY=0, OSEQ=0; const OCACHE={};
+  const STB={AL:[-88.5,30.1,-84.9,35],AZ:[-114.9,31.3,-109,37],AR:[-94.7,33,-89.6,36.5],CA:[-124.5,32.5,-114.1,42],CO:[-109.1,36.9,-102,41],CT:[-73.8,40.9,-71.8,42.1],DE:[-75.8,38.4,-75,39.9],FL:[-87.7,24.4,-80,31],GA:[-85.7,30.3,-80.8,35],ID:[-117.3,41.9,-111,49],IL:[-91.6,36.9,-87.4,42.6],IN:[-88.1,37.7,-84.7,41.8],IA:[-96.7,40.3,-90.1,43.6],KS:[-102.1,36.9,-94.5,40],KY:[-89.6,36.4,-81.9,39.2],LA:[-94.1,28.9,-88.8,33.1],ME:[-71.1,43,-66.9,47.5],MD:[-79.5,37.9,-75,39.8],MA:[-73.6,41.2,-69.9,42.9],MI:[-90.5,41.6,-82.4,48.3],MN:[-97.3,43.4,-89.4,49.4],MS:[-91.7,30.1,-88.1,35],MO:[-95.8,35.9,-89.1,40.7],MT:[-116.1,44.3,-104,49],NE:[-104.1,39.9,-95.3,43.1],NV:[-120,35,-114,42],NH:[-72.6,42.7,-70.6,45.4],NJ:[-75.6,38.9,-73.8,41.4],NM:[-109.1,31.3,-103,37],NY:[-79.8,40.4,-71.8,45.1],NC:[-84.4,33.8,-75.4,36.6],ND:[-104.1,45.9,-96.5,49],OH:[-84.9,38.4,-80.5,42],OK:[-103.1,33.6,-94.4,37.1],OR:[-124.7,41.9,-116.4,46.3],PA:[-80.6,39.7,-74.6,42.3],RI:[-71.9,41.1,-71.1,42.1],SC:[-83.4,32,-78.5,35.3],SD:[-104.1,42.4,-96.4,45.95],TN:[-90.4,34.9,-81.6,36.7],TX:[-106.7,25.8,-93.5,36.6],UT:[-114.1,36.9,-109,42],VT:[-73.5,42.7,-71.4,45.1],VA:[-83.7,36.5,-75.2,39.5],WA:[-124.8,45.5,-116.9,49],WV:[-82.7,37.2,-77.7,40.7],WI:[-92.9,42.4,-86.8,47.1],WY:[-111.1,40.9,-104,45.1],DC:[-77.2,38.8,-76.9,39],AK:[-170,51,-129,71.5],HI:[-160.6,18.8,-154.7,22.3]};
+  const oNum=v=>{ const n=+v; return v==null||v===""||!isFinite(n)?null:n; }, oYMD=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  const oDate=()=>{ const d=new Date(); d.setDate(d.getDate()-ODAY); return oYMD(d); };
+  const oName=s=>{ s=String(s||"").replace(/\s+/g," ").trim(); if(s===s.toUpperCase()) s=s.toLowerCase().replace(/\b[a-z]/g,c=>c.toUpperCase()); return s.replace(/\b(Intl|Arpt|Rgnl|Muni|Airport|Regional|International|Municipal|Field|Fld|Apt|Afb|Co)\b.*$/i,"").replace(/[\/(-]+\s*$/,"").trim()||s; };
+  function obsState(st,date){ const k=st+"|"+date+"|"+(ODAY?0:Math.floor(Date.now()/6e5)); if(OCACHE[k]) return OCACHE[k];
+    OCACHE[k]=(async()=>{ const out=[]; const get=async net=>{ try{ const r=await fetch(`https://mesonet.agron.iastate.edu/api/1/daily.geojson?network=${net}&date=${date}`); if(!r.ok) return; const j=await r.json();
+        (j.features||[]).forEach(f=>{ const p=f.properties||{}, g=f.geometry&&f.geometry.coordinates; if(!g||!isFinite(+g[0])||!isFinite(+g[1])) return;
+          out.push({lo:+g[0],la:+g[1],nm:oName(p.name||p.station||""),st,id:net+":"+(p.station||p.id||g.join(",")),vol:/COCORAHS/.test(net),
+            min_tmpf:oNum(p.min_tmpf),max_tmpf:oNum(p.max_tmpf),max_gust:oNum(p.max_gust),precip:oNum(p.precip),snow:oNum(p.snow),min_feel:oNum(p.min_feel)}); }); }catch(e){} };
+      await Promise.all([get(st+"_ASOS"),get(st+"_COCORAHS")]); return out; })(); return OCACHE[k]; }
+  // the value shown for a station, or null when it has nothing sensible to show
+  const oVal=s=>{ let v=s[OV[1]]; if(v==null) return null; if(OV[2]==="temp") return v<-70||v>135?null:Math.round(v); if(OV[2]==="wind"){ v=v*1.15078; return v<1||v>220?null:Math.round(v); }
+    if(OV[2]==="rain") return v<0.01||v>30?null:v; if(OV[2]==="snow") return v<0.1||v>90?null:v; return v; };
+  const oTxt=v=>OV[2]==="rain"?v.toFixed(2).replace(/^0(?=\.)/,""):OV[2]==="snow"?(v>=10?Math.round(v)+"":v.toFixed(1)):String(v);
+  const OCOL={temp:[[-99,"#5B2A86"],[0,"#6F3FB0"],[10,"#4F5FD6"],[20,"#3D7FE0"],[25,"#7FB4F0"],[30,"#DCEBFA"],[35,"#BDE7DA"],[40,"#93D69B"],[50,"#E3E27A"],[60,"#F5C45A"],[70,"#F49B47"],[80,"#EC6B3B"],[90,"#D53B3B"],[100,"#A11D4B"]],
+    wind:[[0,"#C9DCEB"],[20,"#93C4E6"],[30,"#F2D46A"],[40,"#F49B47"],[50,"#E4572E"],[58,"#B5179E"]], rain:[[0,"#D4EDCB"],[0.25,"#97D99C"],[0.5,"#4FB55B"],[1,"#2E86DE"],[2,"#6C5CE7"],[3,"#C2185B"]], snow:[[0,"#E3EEFB"],[1,"#AFD1F3"],[3,"#74A9E8"],[6,"#4B6FD8"],[12,"#8E44AD"]]};
+  const oCol=v=>{ const T=OCOL[OV[2]]; let c=T[0][1]; T.forEach(([t,k])=>{ if(v>=t) c=k; }); return c; }, oDark=c=>{ const n=parseInt(c.slice(1),16), r=n>>16, g=n>>8&255, b=n&255; return (r*299+g*587+b*114)/1000<150; };
+  const oLeg=()=>{ const T=OCOL[OV[2]], u=OV[2]==="wind"?" mph":OV[2]==="temp"?"°":'"'; return T.map(([t,c],i,A)=>{ const n=A[i+1]; if(t===-99) return `<span><i style="background:${c}"></i>Below 0°</span>`; const a=OV[2]==="rain"?(t?t.toFixed(2).replace(/^0/,""):".01"):t; const lab=n?`${a}–${OV[2]==="temp"?n[0]-1:OV[2]==="rain"?(n[0]-.01).toFixed(2).replace(/^0/,""):n[0]}`:`${a}+`; return `<span><i style="background:${c}"></i>${lab}${u}</span>`; }).join(""); };
+  function oHead(){ const d=new Date(); d.setDate(d.getDate()-ODAY); const day=d.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}).toUpperCase();
+    wrap.querySelector(".xpt").textContent=ODAY?OV[4]:OV[3]; wrap.querySelector(".xps").textContent=`${day} · ${ODAY?"YESTERDAY":OV[1]==="min_tmpf"?"THIS MORNING":"TODAY SO FAR"}`; }
+  async function obsDraw(){ if(mode!=="obs"||!map) return; const seq=++OSEQ, date=oDate(), b=map.getBounds().pad(.05), z=map.getZoom();
+    const sts=Object.keys(STB).filter(k=>{ const q=STB[k]; return !(q[2]<b.getWest()||q[0]>b.getEast()||q[3]<b.getSouth()||q[1]>b.getNorth()); });
+    const f=wrap.querySelector(".xpf"); if(z<4.5){ layer.clearLayers(); obsFoot("Zoom in to see the stations."); return; }
+    if(sts.length>16) obsFoot("Loading stations…"); const lists=[]; for(let i=0;i<sts.length;i+=8){ lists.push(...await Promise.all(sts.slice(i,i+8).map(s=>obsState(s,date)))); if(seq!==OSEQ) return; }
+    const seen=new Set(), ALL=[]; lists.flat().forEach(s=>{ if(seen.has(s.id)) return; seen.add(s.id); const v=oVal(s); if(v==null) return; s._v=v; ALL.push(s); });
+    const low=OV[1]==="min_tmpf"||OV[1]==="min_feel"; ALL.sort((a,c)=>low?a._v-c._v:c._v-a._v);
+    const inView=ALL.filter(s=>b.contains([s.la,s.lo])); if(wrap._cities) wrap._cities();
+    layer.clearLayers(); const sz=map.getSize(), placed=(wrap._lblRects||[]).map(q=>({x:q.x,y:q.y-10,w:q.w,h:20})), names=z>=8, fs=z<6?13:z<8?14:15;
+    if(you){ const yp=map.latLngToContainerPoint(you.getLatLng()); placed.push({x:yp.x-8,y:yp.y-8,w:60,h:16}); }
+    let n=0; for(const s of inView){ if(n>=420) break; const p=map.latLngToContainerPoint([s.la,s.lo]), t=oTxt(s._v), w=Math.max(t.length*fs*.62+12,26), h=fs+8+(names?13:0), x=p.x-w/2, y=p.y-(fs+8)/2;
+      if(x<2||y<2||x+w>sz.x-2||y+h>sz.y-2) continue; if(placed.some(q=>x<q.x+q.w+2&&x+w+2>q.x&&y<q.y+q.h+2&&y+h+2>q.y)) continue; placed.push({x,y,w,h}); n++;
+      const bg=oCol(s._v), fg=oDark(bg)?"#fff":"#0B1730";
+      const m=L.marker([s.la,s.lo],{keyboard:false,zIndexOffset:500,icon:L.divIcon({className:"obx",iconSize:[w,fs+8],iconAnchor:[w/2,(fs+8)/2],html:`<b style="background:${bg};color:${fg};font-size:${fs}px">${esc(t)}</b>${names&&s.nm?`<i>${esc(s.nm)}</i>`:""}`})}).addTo(layer);
+      m.on("click",()=>{ const u=k=>s[k]==null?null:k; const L2=[s.max_tmpf!=null?`High ${Math.round(s.max_tmpf)}°`:"",s.min_tmpf!=null?`Low ${Math.round(s.min_tmpf)}°`:"",s.max_gust!=null&&s.max_gust>0?`Gust ${Math.round(s.max_gust*1.15078)} mph`:"",s.precip!=null&&s.precip>=0.01?`Rain ${s.precip.toFixed(2)}"`:"",s.snow!=null&&s.snow>=0.1?`Snow ${s.snow.toFixed(1)}"`:""].filter(Boolean).join(" · ");
+        card({col:bg,tagFg:fg,tag:`${OV[0]} ${t}${OV[2]==="wind"?" mph":OV[2]==="temp"?"°":'"'}`,title:`${s.nm||"Station"}, ${s.st}`,sub:(L2||"")+(s.vol?" · volunteer gauge":"")}); }); }
+    // the line people screenshot: how many, the extremes in view
+    let sum=""; if(inView.length){ const a=inView[0], z2=inView[inView.length-1], u=OV[2]==="wind"?" mph":OV[2]==="temp"?"°":'"';
+      if(OV[2]==="temp"){ const fr=inView.filter(s=>s._v<=32).length; sum=`${OV[1]==="max_tmpf"?"Warmest":"Coldest"} ${oTxt(a._v)}° ${a.nm}, ${a.st} · ${OV[1]==="max_tmpf"?"coolest":"mildest"} ${oTxt(z2._v)}° ${z2.nm}, ${z2.st}${OV[1]!=="max_tmpf"&&fr?` · ${fr} at 32° or colder`:""}`; }
+      else sum=`Most ${oTxt(a._v)}${u} ${a.nm}, ${a.st} · ${inView.length} reporting`; }
+    else sum=OV[2]==="rain"||OV[2]==="snow"?`No ${OV[0].toLowerCase()} reported in view`:"No readings in view yet";
+    obsFoot(sum); }
+  function obsFoot(sum){ const f=wrap.querySelector(".xpf"); if(!f) return; f.dataset.obs="1";
+    f.innerHTML=`<div class="obf1"><b>${esc(sum)}</b></div><div class="obf2">${oLeg()}</div><div class="obf3"><span class="obday"><button type="button" aria-pressed="${!ODAY}" data-d="0">Today</button><button type="button" aria-pressed="${!!ODAY}" data-d="1">Yesterday</button></span><small>Airport weather stations${OV[2]==="rain"||OV[2]==="snow"?" and volunteer gauges":""} · preliminary</small></div>`;
+    f.querySelectorAll(".obday button").forEach(x=>x.onclick=()=>{ ODAY=+x.dataset.d; oHead(); obsDraw(); }); }
+  function obsOpen(opt){ const v=opt&&opt.v&&OBSV.find(x=>x[0]===opt.v); OV=v||(new Date().getHours()>=15?OBSV[1]:OBSV[0]); ODAY=0; oHead();
+    pills(OBSV,OV[0],x=>{ OV=x; oHead(); obsDraw(); }); obsDraw(); }
+  // for the Map Room card: the Carolinas, this morning
+  window.SDR_OBS={ carolinas:async()=>{ const d=oYMD(new Date()); const L0=(await Promise.all(["NC","SC"].map(s=>obsState(s,d)))).flat().filter(s=>s.min_tmpf!=null&&!s.vol&&s.min_tmpf>-70&&s.min_tmpf<135); return L0.sort((a,c)=>a.min_tmpf-c.min_tmpf); } };
+
   function open(kind,center,zoom,opt){ opt=opt||{}; build(); if(wrap.hidden!==false||!wrap._y) wrap._y=scrollY; mode=kind; lastBox=""; wrap.hidden=false; document.body.classList.add("xplore-on"); document.body.style.overflow="hidden";
     const T=TITLES[kind]||["",""]; wrap.querySelector(".xpt").textContent=T[0]; wrap.querySelector(".xps").textContent=T[1];
-    layer.clearLayers(); const c=wrap.querySelector(".mpc"); if(c) c.remove(); if(RIMG&&kind!=="rain"){ try{ map.removeLayer(RIMG); }catch(e){} RIMG=null; rainKey=""; }
+    layer.clearLayers(); const c=wrap.querySelector(".mpc"); if(c) c.remove(); { const f=wrap.querySelector(".xpf"); if(f&&f.dataset.obs&&kind!=="obs"){ f.innerHTML=""; delete f.dataset.obs; } } OSEQ++; if(RIMG&&kind!=="rain"){ try{ map.removeLayer(RIMG); }catch(e){} RIMG=null; rainKey=""; }
     want=()=>map.setView(center,zoom||6,{animate:false}); [350,900].forEach(t=>setTimeout(()=>{ if(want&&!wrap.hidden){ map.invalidateSize(); want(); } },t)); hint();
     setTimeout(()=>{ map.invalidateSize(); if(want) want(); home(); if(wrap._glOn) wrap._glOn();
       if(kind==="fire"){ pills(FIREZ,"Near me",z=>{ if(!z[1]){ const v=venue(); if(v) map.setView([v.la,v.lo],6.5); } else flyBox(z[1]); }); loadFires(); }
       else if(kind==="beach"){ const Z=(window.SDR_BEACHES&&SDR_BEACHES.zones)||[]; pills(Z,opt.zone,z=>flyBox(z[1])); loadSpots(); }
       else if(kind==="lsr"){ const S=window.SDR_LSR, DZ=[["Today",1],["3 days",3],["7 days",7],["30 days",30]], cur=(DZ.find(x=>x[1]===(S&&S.days()))||DZ[2])[0]; pills(DZ,cur,async z=>{ try{ if(S&&S.setDays) await S.setDays(z[1]); }catch(e){} loadLsr(); }); loadLsr(); }
       else if(kind==="rain"){ let cur="24 hours"; try{ cur=localStorage.getItem("sdr-rainper")||cur; }catch(e){} RP=RAINZ.find(z=>z[0]===cur)||RAINZ[0]; pills(RAINZ,RP[0],z=>{ RP=z; try{ localStorage.setItem("sdr-rainper",z[0]); }catch(e){} layer.clearLayers(); rainPic(true); }); rainPic(true); }
-      else if(kind==="ski"){ const Z=(window.SDR_SKI&&SDR_SKI.zones)||[]; pills(Z,opt.zone,z=>flyBox(z[1])); loadSki(); } },60); }
+      else if(kind==="ski"){ const Z=(window.SDR_SKI&&SDR_SKI.zones)||[]; pills(Z,opt.zone,z=>flyBox(z[1])); loadSki(); }
+      else if(kind==="obs") obsOpen(opt); },60); }
   // v324 a quiet hint, gone after a few seconds or the first touch
   function hint(){ let h=wrap.querySelector(".xphint"); if(!h){ h=document.createElement("div"); h.className="xphint"; wrap.querySelector(".xpm").appendChild(h); }
     h.textContent=matchMedia("(pointer:coarse)").matches?"Pinch to zoom · drag to move":"Scroll to zoom · drag to move"; h.classList.add("on"); clearTimeout(h._t); h._t=setTimeout(()=>h.classList.remove("on"),3200); }
@@ -11422,7 +11477,7 @@ details.hfmore>summary::after{content:" ›";display:inline-block;transition:tra
         let cur=""; h+=`<ul class="lsrl">`; n.slice(0,80).forEach(r=>{ const dl=dayLab(r.ts); if(dl!==cur){ cur=dl; h+=`<li class="lsrd">${esc(dl)}</li>`; } h+=row(r); }); h+=`</ul>`; if(n.length>80) h+=`<p class="lsre">Showing the newest 80.</p>`; }
       else h+=`<p class="lsre">Nothing reported nearby. ${P.all.length?`${P.all.length} report${P.all.length===1?"":"s"} elsewhere in the country.`:""}</p>`;
       // v345 the map, right in the sheet: where the reports are around you, with town names. Tap it for the full-screen map.
-      try{ const v=venue(); if(v&&window.SDR_MAPAROUND){ const ord={r:0,s:0,i:0,f:0,nw:0,w:0,h:1,t:2}, mk=n.slice(0,60).sort((a,b)=>ord[a.k]-ord[b.k]).map(r=>({lo:r.lo,la:r.la,col:COL[r.k],shape:r.k==="t"?"tri":""})); const m=SDR_MAPAROUND(v,MI,mk,"STORM REPORTS",`${MI} MILES · ${span().replace(/^in the /,"").toUpperCase()}`,720,470,{max:16}); if(m) h+=`<button type="button" class="lsrpm" aria-label="Open the full map">${m}<span>Tap for the full map ›</span></button>`; } }catch(e){}
+      try{ const v=venue(); if(v&&window.SDR_MAPAROUND){ const ord={r:0,s:0,i:0,f:0,nw:0,w:0,h:1,t:2}, mk=n.slice(0,60).sort((a,b)=>ord[a.k]-ord[b.k]).map(r=>({lo:r.lo,la:r.la,col:COL[r.k],shape:r.k==="t"?"tri":""})); const m=SDR_MAPAROUND(v,MI,mk,"STORM REPORTS",`${MI} MILES · ${span().replace(/^in the /,"").toUpperCase()}`,720,470,{max:16,plqTop:true}); if(m) h+=`<button type="button" class="lsrpm" aria-label="Open the full map">${m}<span>Tap for the full map ›</span></button>`; } }catch(e){}
       if(n.length) h+=`<button type="button" class="lsraar"><b>After the Storm report</b><span>Times, places and distances in one page you can save or send ›</span></button>`;
       h+=`<button type="button" class="lsrmap">See ${P.all.length?"every report":"the map"} ›</button>`; }
     h+=`<p class="lsrsrc">Reports from storm spotters, emergency managers and the public. Preliminary; times are when it was seen or measured. Snow and rain show at ${MIN.s} inches or more.${DATA&&DATA.extraErr?" Snow, ice, rain and flooding reports aren't available right now.":""}</p>`;
@@ -11649,7 +11704,7 @@ html.snscene body>*:not(#snscene){display:none!important}
     marks.forEach(m=>{ const [x,y]=PX(m.lo,m.la); if(x<8||y<8||x>W-8||y>H-8) return; const r=11*k;
       g+=(m.shape==="tri"?`<path d="M${x},${y-r*1.25} L${x+r*1.15},${y+r*.8} L${x-r*1.15},${y+r*.8}Z" fill="${m.col}" stroke="#fff" stroke-width="${1.6*k}"/>`:`<circle cx="${x}" cy="${y}" r="${r}" fill="${m.col}" stroke="#fff" stroke-width="${1.6*k}"/>`)+
         (m.n!=null?`<text x="${x}" y="${y+(m.shape==="tri"?r*.55:r*.38)}" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-weight="800" font-size="${12*k}" fill="#fff">${m.n}</text>`:""); });
-    return SDR_BMAP(box,W,H,(extra&&extra.layers)||[],{points:[{lo:v.lo,la:v.la,fill:"#F28C28",r:6,label:(extra&&extra.you)||"YOU"}].concat((extra&&extra.towns)||[]),cities:!(extra&&extra.towns&&extra.towns.length),avoid:marks.map(m=>({lo:m.lo,la:m.la,r:14})),title,sub,disp:W/k,max:(extra&&extra.max)||12,gap:(extra&&extra.gap)||0,under:ring+((extra&&typeof extra.under==="function")?extra.under(box,W,H):""),over:g}); }
+    return SDR_BMAP(box,W,H,(extra&&extra.layers)||[],{points:[{lo:v.lo,la:v.la,fill:"#F28C28",r:6,label:(extra&&extra.you)||"YOU"}].concat((extra&&extra.towns)||[]),cities:!(extra&&extra.towns&&extra.towns.length),avoid:marks.map(m=>({lo:m.lo,la:m.la,r:14})),title,sub,disp:W/k,max:(extra&&extra.max)||12,gap:(extra&&extra.gap)||0,under:ring+((extra&&typeof extra.under==="function")?extra.under(box,W,H):""),over:g,plqTop:!!(extra&&extra.plqTop)}); }
 
   window.SDR_MAPAROUND=mapAround;
 
@@ -11960,8 +12015,8 @@ html.snscene body>*:not(#snscene){display:none!important}
 <script>
 /* v343 Map Room in groups (Storms, Rain, Snow, Outlooks) inside the All-maps sheet; home tiles on/off from Settings */
 (function(){
-  const GR=[["Storms",/^(radar|spc|md|watch|tropics|lsr)/,/radar|severe|storm|tropic|tornado/i],["Rain",/^(ero|qpf|rivers|drought)/,/rain|flood|river|drought/i],["Snow",/^(snow|wpc|ice|winter)/,/snow|ice|winter/i],["Outlooks",/^(cpc|mon|seas)/,/6.10|8.14|outlook|month|season/i]];
-  const kind=c=>{ const id=c.dataset.id||"", t=((c.querySelector(".mlab b")||c.querySelector(".mlab")||{}).textContent||""); for(let i=0;i<GR.length;i++) if(GR[i][1].test(id)) return i; if(/snow|ice/i.test(t)) return 2; for(let i=0;i<GR.length;i++) if(GR[i][2].test(t)) return i; return 3; };
+  const GR=[["What happened",/^obs/,/(?!)/],["Storms",/^(radar|spc|md|watch|tropics|lsr)/,/radar|severe|storm|tropic|tornado/i],["Rain",/^(ero|qpf|rivers|drought)/,/rain|flood|river|drought/i],["Snow",/^(snow|wpc|ice|winter)/,/snow|ice|winter/i],["Outlooks",/^(cpc|mon|seas)/,/6.10|8.14|outlook|month|season/i]];
+  const kind=c=>{ const id=c.dataset.id||"", t=((c.querySelector(".mlab b")||c.querySelector(".mlab")||{}).textContent||""); for(let i=0;i<GR.length;i++) if(GR[i][1].test(id)) return i; if(/snow|ice/i.test(t)) return 3; for(let i=0;i<GR.length;i++) if(GR[i][2].test(t)) return i; return 4; };
   let busy=false; function group(){ const box=document.getElementById("mrPrev"); if(!box||busy) return; const cards=[...box.querySelectorAll(".mcard")]; if(cards.length<4) return; busy=true;
     try{ box.querySelectorAll(".mrg").forEach(x=>x.remove()); const B=GR.map(()=>[]); cards.forEach(c=>{ c.style.order=c.dataset.i||0; B[kind(c)].push(c); });
       B.forEach((L,i)=>{ if(!L.length) return; const h=document.createElement("div"); h.className="mrg"; h.textContent=GR[i][0]; box.appendChild(h); L.forEach(c=>box.appendChild(c)); }); }catch(e){}
@@ -12376,7 +12431,7 @@ window.SDR_ALMPIC=async function(pane,b){ try{ const A=window.SDR_ALMANAC; if(!A
       try{ const pick=[[0,0],[1,2],[2,3]].find(([n])=>R[n]&&R[n].v!=null&&R[n].v>=0.1), old=document.getElementById("bkhero");
         if(!pick||!window.SDR_MAPAROUND||!X.rainURL){ if(old) old.remove(); }
         else { const [n,i]=pick, val=R[n].v, lab=X.rainLabel(i), W=720, H=440; let url="";
-          const svg=SDR_MAPAROUND({la:+v.la,lo:+v.lo},16,[],"RAINFALL",`LAST ${lab.toUpperCase()}`,W,H,{noRing:true,you:`YOU · ${val.toFixed(2)}"`,
+          const svg=SDR_MAPAROUND({la:+v.la,lo:+v.lo},16,[],"RAINFALL",`LAST ${lab.toUpperCase()}`,W,H,{noRing:true,plqTop:true,you:`YOU · ${val.toFixed(2)}"`,
             under:(box,w,h)=>{ url=X.rainURL(i,box,w*2,h*2); return `<image href="${url.replace(/&/g,"&amp;")}" x="0" y="0" width="${w}" height="${h}" preserveAspectRatio="none" opacity=".82"/>`; }});
           if(svg&&url){ const im=new Image(); im.onload=async()=>{ let el=document.getElementById("bkhero"); if(!el){ el=document.createElement("div"); el.id="bkhero"; const bar=sec.querySelector(".bkbar")||sec.firstElementChild; bar.insertAdjacentElement("afterend",el); }
               el.innerHTML=`<button type="button" class="bkmap" aria-label="Open the rainfall map">${svg}<span>Tap to zoom in to street level ›</span></button><div class="bkleg"></div>`;
@@ -12528,7 +12583,9 @@ window.SDR_ALMPIC=async function(pane,b){ try{ const A=window.SDR_ALMANAC; if(!A
       const up=mx&&mx.hi-ref.hi>=12?mx:null, down=mn&&ref.hi-mn.hi>=12?mn:null, pickDown=down&&(!up||down.i<up.i);
       if(pickDown){ const st=later.find(d=>ref.hi-d.hi>=8)||down; if(!E.some(e=>e.fam==="cold"&&Math.abs(e.i-st.i)<=1)&&!(st.snowy||st.icy)) pat=ev({k:"cool",fam:"temp",i:st.i,s:50,lvl:"clear",ico:"pc",text:`Turning colder ${dn(st.i)}, highs in the ${dec(down.hi)}`}); }
       else if(up&&!E.some(e=>e.fam==="heat")){ const st=later.find(d=>d.hi-ref.hi>=8)||up, wetBefore=(ctx.nowWet||ctx.lead||[...wetIdx].some(i=>i<st.i)), dryRun=days.filter(d=>d.i>=st.i&&d.i<=up.i).every(d=>d.pp<30);
-        pat=ev({k:"warm",fam:"temp",i:st.i,s:44,lvl:"clear",ico:"sun",text:`${wetBefore&&dryRun?"Drier and warmer":"Warming up"} by ${dn(up.i)}, highs near ${Math.round(up.hi)}°`,dry:wetBefore&&dryRun}); } }
+        // v383 name the day the warm-up gets there (within 3 degrees of the warmest day), not the warmest day itself: a climb that is nearly done by Thursday reads "by Thursday", not "by Sunday"
+        const reach=later.find(d=>d.i>=st.i&&d.hi>=up.hi-3)||up, rh=Math.round(reach.hi), near5=Math.abs(rh-Math.round(rh/5)*5)<=1?Math.round(rh/5)*5:rh;
+        pat=ev({k:"warm",fam:"temp",i:st.i,s:44,lvl:"clear",ico:"sun",text:`${wetBefore&&dryRun?"Drier and warmer":"Warming up"} by ${dn(reach.i)}, highs near ${near5}°`,dry:wetBefore&&dryRun}); } }
 
     let almPat=false;
     // v375 almanac: "Warmest day since October" / "Coolest day since April" takes the place of the plain warm-up or cool-down line (45 days or more back)
@@ -12618,5 +12675,32 @@ window.SDR_EVEWX=function(x,H){ try{ if(!x||x.d==="TONIGHT") return false; const
 #bkhero .bkmap span{position:absolute;right:8px;bottom:8px;font-family:var(--display);font-weight:800;letter-spacing:.06em;font-size:12px;color:#fff;background:rgba(11,23,48,.86);border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:6px 11px}
 #bkhero .bkleg{display:flex;flex-wrap:wrap;gap:4px 10px;margin:8px 2px 0;font-size:12px;color:var(--muted)}
 #bkhero .bkleg span{display:inline-flex;align-items:center;gap:4px}#bkhero .bkleg img{width:14px;height:10px;border-radius:2px}
+</style>
+<script>
+/* v383 WHAT HAPPENED card in the Map Room: this morning's lows across the Carolinas; tap for the full map (lows, highs, peak wind, rain, snow, feels-like, anywhere in the country) */
+(function(){ let L0=null, at=0;
+  const tc=v=>v<=0?"#6F3FB0":v<10?"#4F5FD6":v<20?"#3D7FE0":v<25?"#7FB4F0":v<30?"#DCEBFA":v<35?"#BDE7DA":v<40?"#93D69B":v<50?"#E3E27A":v<60?"#F5C45A":v<70?"#F49B47":v<80?"#EC6B3B":"#D53B3B";
+  async function data(){ if(L0&&Date.now()-at<10*60000) return L0; try{ if(window.SDR_OBS){ L0=await SDR_OBS.carolinas(); at=Date.now(); } }catch(e){} return L0; }
+  function card(big,L){ const W=big?720:300, H=big?420:175, box=[-84.6,31.9,-75.3,36.9];
+    const pts=(L||[]).slice(0,big?14:7).map(s=>({lo:s.lo,la:s.la,fill:tc(s.min_tmpf),r:big?6:4,label:Math.round(s.min_tmpf)+"°"}));
+    let svg=""; try{ svg=window.SDR_BMAP?SDR_BMAP(box,W,H,[],{cities:true,points:pts}):""; }catch(e){}
+    const a=L&&L[0], z=L&&L[L.length-1], lg=document.querySelector('img[alt="SDR Weather Intelligence"]'), logo=lg&&lg.src?`<img src="${lg.src}" alt="SDR Weather Intelligence">`:"";
+    const line=a?`This morning: coldest ${Math.round(a.min_tmpf)}° ${a.nm}, ${a.st} · mildest ${Math.round(z.min_tmpf)}° ${z.nm}, ${z.st}`:"Highs, lows, peak wind, rain and snow";
+    return `<span class="mimg">${svg}<span class="tvc">${logo}<span style="display:grid;gap:1px;min-width:0"><b>What Happened</b><span>Observed · this morning</span></span></span></span><span class="mlab"><b>WHAT HAPPENED</b><small>Lows · highs · wind · rain · snow</small><em>${line}</em></span>`; }
+  let busy=false; async function put(){ if(busy) return; busy=true; try{ const L=await data();
+    ["mrPrev","mrFull"].forEach(id=>{ const box=document.getElementById(id); if(!box||!box.querySelector(".mcard:not(.obscard)")) return; let b=box.querySelector(".obscard");
+      if(!b){ b=document.createElement("button"); b.type="button"; b.className="mcard obscard"; b.dataset.id="obs"; b.dataset.i="-1"; b.onclick=e=>{ e.stopPropagation(); if(window.SDR_EXPLORE) SDR_EXPLORE.open("obs",[34.4,-80.1],innerWidth<700?5.9:6.6); }; box.insertBefore(b,box.firstChild); }
+      const h=card(id==="mrFull",L); if(b.dataset.h!==h){ b.innerHTML=h; b.dataset.h=h; } }); }catch(e){} busy=false; }
+  ["mrPrev","mrFull"].forEach(id=>{ const box=document.getElementById(id); if(box) new MutationObserver(()=>{ if(!box.querySelector(".obscard")) setTimeout(put,50); }).observe(box,{childList:true}); });
+  setTimeout(put,3000); setInterval(put,10*60000); })();
+</script>
+<style>
+/* v383 the What Happened map's number boxes, legend and day switch */
+.obx{background:none;border:0}.obx b{display:block;min-width:26px;padding:3px 6px;border-radius:6px;font-family:var(--display),system-ui;font-weight:800;line-height:1.05;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.45);border:1.5px solid rgba(11,23,48,.55);white-space:nowrap}
+.obx i{display:block;margin-top:2px;font-style:normal;font-size:10.5px;font-weight:700;color:#fff;text-align:center;white-space:nowrap;text-shadow:0 0 3px #000,0 0 3px #000;letter-spacing:.02em}
+#xplore .xpf .obf1 b{font-size:13px;color:#fff;font-weight:700}#xplore .xpf .obf2{display:flex;flex-wrap:wrap;gap:4px 10px;margin:4px 0}
+#xplore .xpf .obf3{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}#xplore .xpf .obf3 small{color:var(--muted);font-size:11px}
+#xplore .xpf .obday{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}#xplore .xpf .obday button{border:0;background:none;color:var(--muted);font:700 12px var(--display),system-ui;padding:5px 11px;letter-spacing:.04em}
+#xplore .xpf .obday button[aria-pressed="true"]{background:#2F7BF6;color:#fff}
 </style>
 </body></html>

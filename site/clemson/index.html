@@ -2586,7 +2586,7 @@ body.chan-on .tabs button[data-pane="live"]::before{content:"";position:absolute
 .chplay i{width:76px;height:76px;border-radius:50%;background:#E5484D;display:grid;place-items:center;box-shadow:0 8px 28px rgba(229,72,77,.45)}
 .chplay b{font-family:var(--display);font-weight:800;letter-spacing:.14em;font-size:13px}
 </style>
-<script>window.SDR_VER="383";</script><style>.shd .ver{margin-left:auto;margin-right:10px;font-family:var(--display);font-weight:700;letter-spacing:.1em;font-size:11px;color:var(--dim)}</style>
+<script>window.SDR_VER="385";</script><style>.shd .ver{margin-left:auto;margin-right:10px;font-family:var(--display);font-weight:700;letter-spacing:.1em;font-size:11px;color:var(--dim)}</style>
 <script>
 /* SDR_WEEKSTORY: on a quiet day, find what actually matters this week. Ranked: first frost/freeze, a big cooldown or warmup, the 6-10 day outlook, the next rain. */
 window.SDR_COLDOK=function(x){ try{ if(!x||x.lo==null||x.lo>36) return false; const nl=window._bsNL, first=window._bsFall===false, routine=nl!=null&&nl<=34; if(!routine||first) return true; return x.lo<=nl-8; }catch(e){ return true; } };
@@ -4530,7 +4530,7 @@ window.STRIPS = (function(){
       const [cls,word,why]=callOf(x), dateLab = x.date ? x.date.toLocaleDateString("en-US",{month:"numeric",day:"numeric"}) : "";
       const eve = i===0 && x.d!=="TONIGHT" && x.date && new Date(x.date).toDateString()===new Date().toDateString() && new Date().getHours()>=17, night = x.d==="TONIGHT"||eve;
       const dayLab = night ? "TONIGHT" : /^today$/i.test(x.long||x.d||"") ? "TODAY" : (x.long||x.d||"").slice(0,3).toUpperCase();
-      const rain = night ? (x.ppN||0) : Math.max(x.pp||0, x.ppN||0), mlo = window.SDR_MLO?SDR_MLO(i):x.lo, nico = night ? ({sun:"clearnight",pc:"pcn"}[x.ico]||x.ico) : x.ico;
+      const rain = night ? (x.ppN||0) : Math.max(x.pp||0, x.ppN||0), mlo = window.SDR_MLO?SDR_MLO(i):x.lo, nico0 = night ? ({sun:"clearnight",pc:"pcn"}[x.ico]||x.ico) : x.ico, nico = (()=>{ try{ return window.SDR_DAYICO?SDR_DAYICO(x,night,rain,nico0,hoursOf(x)):nico0; }catch(e){ return nico0; } })();
       const row = `<div class="drow ${cls}" data-i="${i}" aria-expanded="${i===selD}">
         <span class="dn${night?" tn":""}"><b>${dayLab}</b><small>${dateLab}</small></span>
         <span class="dic">${svg(nico)}${(()=>{ const amt=x.rr&&x.rr[1]!=null?x.rr[1]/100:(x.qpf||0), sn=(()=>{ try{ if(x.sr) return x.sr[1]>=10?x.sr[1]/100:0; const _h=hoursOf(x); if(_h.length>=12&&_h.every(h=>h._bl)) return (/snow|flurr|wintry|sleet/i.test((x.short||"")+" "+(x.dayTxt||"")+" "+(x.nightTxt||""))||(x.snowP||0)>=20)?_h.reduce((q,h)=>q+(h.snow||0),0):0; }catch(e){} return x.sr&&x.sr[1]>=10?x.sr[1]/100:0; })(); return (sn>=0.1?`<em class="dpop sn">${sn>=1?sn.toFixed(0):sn.toFixed(1)}"</em>`:amt>=0.01?`<em class="dpop">${amt<0.1?amt.toFixed(2).replace(/^0/,""):amt.toFixed(amt>=1?1:2).replace(/^0/,"")}"</em>`:"")+(rain>=20?`<small class="dpp pct">${rain}%</small>`:""); })()}</span>
@@ -5920,11 +5920,11 @@ window.SITE_LL = window.__LOC?{lat:__LOC.la,lon:__LOC.lo}:(window.SITE_LL || { l
       const fm=x=>new Date(x).toLocaleDateString("en-US",{month:"short",day:"numeric",timeZone:"UTC"});
       const st=all2.map(x=>+new Date(x.start)).filter(isFinite), en=all2.map(x=>+new Date(x.end)).filter(isFinite);
       const range=st.length&&en.length?`${fm(Math.min(...st))}–${fm(Math.max(...en))}`:"the next two weeks";
-      const odds=(p,w)=>p>=60?`Plan on ${w}`:p>=50?`Expect ${w}`:p>=40?`A good chance of ${w}`:`We're leaning toward ${w}`;
+      const odds=(p,w)=>p>=60?`Plan on ${w}`:p>=50?`Expect ${w}`:p>=40?`Leaning ${w}`:`A slight lean toward ${w}`;
       // v111 the wording firms up as the odds climb (never "we favor"): lean → good chance → expect → plan on
       const pMax=Math.max(0,...[...(T||[]),...(P||[])].map(x=>+x.prob||0));
       const lead=vary("cpclead", pMax>=60?["Plan on","Count on","Expect"]:pMax>=50?["Expect","Most likely,","Look for"]:pMax>=40?["A good chance of","Pretty good chance of","A better-than-even chance of"]:["We're leaning toward","Better chance of","The odds tilt toward"]);
-      const per=a=>a.map(x=>`${Math.round(x.prob)}% for ${fm(x.start)}–${fm(x.end)}`).join(", ");
+      const per=a=>{ const x=a.slice().sort((p,q)=>(+q.prob||0)-(+p.prob||0)||(+new Date(p.start)-+new Date(q.start)))[0]; return x?`${Math.round((+x.prob||0)/10)*10}% chance, ${`${fm(x.start)}–${fm(x.end)}`.replace(/^([A-Z][a-z]+) (\d+)–\1 /,"$1 $2–")}`:""; };
       // v88 what changed since the last outlook: higher odds, lower odds, or a flip (said plainly, up front)
       const WD={t:{above:"warmer",below:"cooler"},p:{above:"wetter",below:"drier"}}, NM={t:{above:"above-normal temperatures",below:"below-normal temperatures"},p:{above:"above-normal rain",below:"below-normal rain"}};
       const chg=cpcNew.map(c=>{ const [pc,pp]=String(c.prev||"").split(":"), [nc,np]=String(c.v).split(":"), side=/above/i.test(nc)?"above":"below";
@@ -5958,9 +5958,9 @@ window.SITE_LL = window.__LOC?{lat:__LOC.la,lon:__LOC.lo}:(window.SITE_LL || { l
       if(tw||pw) sub=sub||`${lead} ${[tw,pw].filter(Boolean).join(" and ")} than normal from ${range.replace("–"," through ")}.`;
       const city=(N&&N.city)||s;
       if(tw){ const tt=T.filter(x=>(tl==="above")===/above/i.test(x.cat)); L.push(`<b>Temperatures:</b> ${odds(Math.max(...tt.map(x=>x.prob)),tw)} than normal (${per(tt)}).`);
-        if(N&&N.hi!=null) L.push(`<b>What's normal:</b> highs near ${N.hi}° and lows near ${N.lo}° in ${city} this time of year. ${tw==="warmer"?"Warmer than normal means days, nights or both running above that.":"Cooler than normal means days, nights or both running below that."}`); }
+        if(N&&N.hi!=null) L.push(`<b>What's normal:</b> for ${range.replace(/^([A-Z][a-z]+) (\d+)–\1 /,"$1 $2–")}, highs near ${N.hi}° and lows near ${N.lo}° in ${city}${N.today!=null&&Math.abs(N.today-N.hi)>=2?` (today's normal high is ${N.today}°; normals keep ${N.today>N.hi?"falling":"rising"} this time of year)`:""}. ${tw==="warmer"?"Warmer than normal means days, nights or both running above that.":"Cooler than normal means days, nights or both running below that."}`); }
       if(pw){ const pp=P.filter(x=>(pl==="above")===/above/i.test(x.cat)); L.push(`<b>Rain:</b> ${odds(Math.max(...pp.map(x=>x.prob)),pw)} than normal (${per(pp)}).`);
-        if(N&&N.pcpn!=null) L.push(`<b>Normal rain</b> for ${range} is about ${N.pcpn.toFixed(1)}". ${pw==="wetter"?(pMax>=50?"Expect more than that.":"Better chance of more than that."):(pMax>=50?"Expect less than that.":"Better chance of less than that.")}`); }
+        if(N&&N.pcpn!=null) L.push(`<b>Normal rain</b> for ${range.replace(/^([A-Z][a-z]+) (\d+)–\1 /,"$1 $2–")} is about ${N.pcpn.toFixed(1)}". ${(()=>{ const pr=Math.max(0,...pp.map(x=>+x.prob||0)); return pw==="wetter"?(pr>=50?"Expect more than that.":"Better chance of more than that."):(pr>=50?"Expect less than that.":"Better chance of less than that."); })()}`); }
       tail=tail||((tw||pw)?`Watching a ${[tw,pw].filter(Boolean).join(", ")} pattern ${st.length?"starting "+fm(Math.min(...st)):"next week"}.`:sT?`Watching a ${sT.first} stretch, then a ${sT.then} signal.`:"");
       // v61 intro + outro paragraphs in our voice
       const lean2=[tw,pw].filter(Boolean).join(" and ");
@@ -5978,7 +5978,16 @@ window.SITE_LL = window.__LOC?{lat:__LOC.la,lon:__LOC.lo}:(window.SITE_LL || { l
       outro=outro||O.join(" ");
       if(cat==="UPDATE") cat="OUTLOOK";
       const code=x=>x&&(x.lab.startsWith("6")?"610":"814");
-      H({kind:"cpc2", t:T[0]?"t"+code(T[0]):null, p:P[0]?"p"+code(P[0]):null},1); }
+      // v384 WHY IT MATTERS: up to 3 almanac numbers that bear on this outlook, and one sentence. Nothing if nothing stands out.
+      const TL=[]; let why=""; try{ if(N){ const cp=t=>t.charAt(0).toUpperCase()+t.slice(1), rp=N.n30>0.5&&N.p30!=null?Math.round(N.p30/N.n30*100):null, rpT=rp!=null?Math.round(rp/10)*10:null, soak=N.soak!=null&&N.soak>=14?N.soak:null, dry=N.dry!=null&&N.dry>=7?N.dry:null, lowR=rp!=null&&rp<=70, hiR=rp!=null&&rp>=140;
+        if(pw){ if(soak) TL.push([String(soak),'DAYS SINCE AN INCH OF RAIN']); if(dry) TL.push([String(dry),"DRY DAYS IN A ROW"]); if(lowR||hiR) TL.push([N.p30.toFixed(1)+'"',`RAIN IN 30 DAYS · NORMAL ${N.n30.toFixed(1)}"`]);
+          const f=soak?`it's been ${soak} days since ${city} had an inch of rain in a day${lowR?`, and the last 30 days brought just ${N.p30.toFixed(1)}" of rain (normal is ${N.n30.toFixed(1)}")`:dry?`, and it's been dry ${dry} days in a row`:""}`:dry?`${city} has gone ${dry} days in a row without rain${lowR?`, and the last 30 days brought just ${N.p30.toFixed(1)}" of rain (normal is ${N.n30.toFixed(1)}")`:""}`:lowR?`the last 30 days brought just ${N.p30.toFixed(1)}" of rain to ${city} (normal is ${N.n30.toFixed(1)}")`:"";
+          if(f) why=pw==="wetter"?`${cp(f)}. A wetter pattern is the best shot at turning that around.`:`${cp(f)}, and this pattern doesn't look like the fix.`;
+          else if(hiR) why=pw==="wetter"?`The ground is already wet: ${N.p30.toFixed(1)}" of rain in the last 30 days (normal is ${N.n30.toFixed(1)}"). More rain on top of that runs off faster.`:`After a wet stretch (${N.p30.toFixed(1)}" of rain in the last 30 days; normal is ${N.n30.toFixed(1)}"), a drier pattern gives the ground a chance to dry out.`; }
+        if(tw){ const sk=N.streak; if(sk){ const wd=sk.dir==="warm"?"warmer":"cooler", same=wd===tw; TL.push([String(sk.n),`DAYS IN A ROW ${wd.toUpperCase()} THAN NORMAL`]); if(!why) why=same?`${city} has been ${wd} than normal ${sk.n} days in a row, and this outlook says that keeps going.`:`After ${sk.n} days in a row ${wd} than normal, this would be a real change for ${city}.`; }
+          const F=N.F, mo=new Date().getMonth(); if(tw==="cooler"&&F&&!F.thisFall&&F.fallAvg&&mo>=9&&mo<=11){ const a=new Date(F.sy||new Date().getFullYear(),0,F.fallAvg).toLocaleDateString("en-US",{month:"short",day:"numeric"}); TL.push(["NONE",`FREEZE YET · AVERAGE FIRST ${a.toUpperCase()}`]); if(!why) why=`No freeze yet this fall in ${city}; the first one usually comes around ${a}. A cooler pattern could bring it.`; } } } }catch(e){}
+      if(why) L.push(`<b>Why it matters:</b> ${why}`);
+      H({kind:"cpc2", t:T[0]?"t"+code(T[0]):null, p:P[0]?"p"+code(P[0]):null, tiles:TL.slice(0,3), why},1); }
     const local=changed.some(c=>["spc","md","watch","cpc","ero","spc48","alert","blend"].includes(c.kind)&&c.v!=="none"&&c.v!=="normal"&&c.v!=="0"||(c.kind==="trop"&&c.mine)||(c.kind==="spc"||c.kind==="ero")&&c.prev&&c.prev!=="none"&&c.prev!=="0");
     return {L,cat,title,hero,sub,dayIdx,tail,intro,outro,local}; }
 
@@ -6109,7 +6118,11 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
     T.forEach(t=>seen[t.k]=t.v); try{ localStorage.setItem(KEY+"-seen",JSON.stringify(seen)); }catch(e){}
     if(changed.length){ let N=null; const cn=changed.filter(c=>c.kind==="cpc"&&c.v!=="normal");
       if(cn.length){ const all2=T.filter(t=>t.kind==="cpc"&&t.v!=="normal"), st=all2.map(x=>+new Date(x.start)).filter(isFinite), en=all2.map(x=>+new Date(x.end)).filter(isFinite);
-        if(st.length&&en.length){ N=await normals(v(),Math.min(...st),Math.max(...en)); } if(N) N.city=cityName(); else N={city:cityName()}; }
+        if(st.length&&en.length){ N=await normals(v(),Math.min(...st),Math.max(...en)); } if(N) N.city=cityName(); else N={city:cityName()};
+        try{ const N0=await normals(v(),Date.now(),Date.now()); if(N0&&N0.hi!=null) N.today=N0.hi; }catch(e){}
+        try{ const n30=await normals(v(),Date.now()-30*864e5,Date.now()-864e5); if(n30&&n30.pcpn!=null) N.n30=n30.pcpn; }catch(e){}
+        try{ const Z=window.SDR_ALMFINDS?await Promise.race([SDR_ALMFINDS(),new Promise(r=>setTimeout(()=>r([]),5000))]):[]; const w=(Z||[]).find(z=>(z.key==="warm"||z.key==="cool")&&!z.ended&&z.n>=5); if(w) N.streak={n:w.n,dir:w.key}; }catch(e){}
+        try{ const X=window.SDR_PXD?await Promise.race([SDR_PXD(),new Promise(r=>setTimeout(()=>r(null),5000))]):null; if(X){ N.soak=X.soak; N.dry=X.dry; N.F=X.F; N.p30=X.p30; } }catch(e){} }
       // v67 local changes and regional changes become separate briefings
       // v68 one briefing per threat: each regional change on its own, then local threats; the most urgent is written last so it sits on top
       const gOf=c=>c.kind==="rst"||c.kind==="rspc"?"R:"+c.k:["spc","md","watch","spc48"].includes(c.kind)?"severe":c.kind==="ero"||(c.kind==="alert"&&c.cat==="FLOOD")?"flood":c.kind==="cpc"?"outlook":c.kind==="trop"||(c.kind==="alert"&&c.cat==="TROPICAL")?"trop":c.kind==="alert"?"al:"+c.cat:c.kind==="blend"?({freeze:"al:FREEZE",frost:"al:FREEZE",winter:"al:WINTER",heat:"al:HEAT",wind:"al:WIND"}[c.what]||"bl:"+c.what):"other";
@@ -6131,7 +6144,7 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
             const F0=((isE?D0.ero:D0.spc)||[])[R.hero.d]||[]; const rnd=r=>{ const st=Math.max(1,Math.ceil(r.length/250)); return r.filter((_,i)=>i%st===0||i===r.length-1).map(([x,y])=>[Math.round(x*100)/100,Math.round(y*100)/100]); };
             R.hero.snap=F0.map(f=>{ const g=f.geometry||{}; const P=g.type==="Polygon"?[g.coordinates]:g.type==="MultiPolygon"?g.coordinates:[]; const o={type:"Feature",properties:{LABEL:(f.properties||{}).LABEL,fill:(f.properties||{}).fill},geometry:{type:"MultiPolygon",coordinates:P.map(p=>p.map(rnd))}}; if(f._lvl) o._lvl=f._lvl; return o; }); R.hero.isE=isE; }catch(e){} }
         const sw=(R.hero&&["spc","md","watch"].includes(R.hero.kind))?stormWin(R.dayIdx!=null?R.dayIdx:0):(R.hero&&R.hero.kind==="ero")?rainWin(R.dayIdx!=null?R.dayIdx:0):"";
-        const b={ expires:exp, t:Date.now(), title:title||"Weather update", cat, sum:ctx.sum, timing:sw||(cat==="UPDATE"&&R.local!==false?ctx.timing:""), bottom:R.local===false?`No changes for ${cityName()}. We're tracking it in case it shifts.`:(R.hero&&R.hero.kind==="ero"&&R.tail)?R.tail:ctx.bottom+(R.tail?" "+R.tail:""), lines:L, hero:R.hero, sub:(R.intro&&R.hero&&R.hero.kind==="cpc2")?(R.intro+(ctx.sum?" Closer in, our forecast: "+ctx.sum.replace(/^Our forecast: /,"").replace(/^(.)/,m=>m.toLowerCase()):"")):R.sub, outro:(R.hero&&["cpc2","ero","spc48","trop"].includes(R.hero.kind))?(R.outro||""):"", dayIdx:R.dayIdx, local:R.local };
+        const b={ expires:exp, t:Date.now(), title:title||"Weather update", cat, sum:ctx.sum, timing:sw||(cat==="UPDATE"&&R.local!==false?ctx.timing:""), bottom:R.local===false?`No changes for ${cityName()}. We're tracking it in case it shifts.`:(R.hero&&R.hero.kind==="ero"&&R.tail)?R.tail:ctx.bottom+(R.tail?" "+R.tail:""), lines:L, hero:R.hero, sub:(R.intro&&R.hero&&R.hero.kind==="cpc2")?R.intro:R.sub, outro:(R.hero&&["cpc2","ero","spc48","trop"].includes(R.hero.kind))?(R.outro||""):"", dayIdx:R.dayIdx, local:R.local };
         if(R.intro&&R.hero&&R.hero.kind==="cpc2") b.sum="";
         if(R.local!==false&&R.hero&&["spc","md","watch","ero","alert"].includes(R.hero.kind)||cat==="HEAT"){ try{ const X=await extras(R.dayIdx!=null?R.dayIdx:0,[b.title,b.sub,...b.lines].join(" ")); if(X.meters.length) b.meters=X.meters; b.lines=b.lines.concat(X.lines); }catch(e){} }
         // a newer briefing on the same threat (same kind, same day, same place) replaces the older one: one tile per threat
@@ -6159,7 +6172,7 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
     let pv=""; if(X){ const rain=big&&big.x.rr&&big.x.rr[1]>=60;
       if(X.s90>=3) pv=`This is day ${X.s90} in a row at 90° or hotter.`; else if(X.s32>=3) pv=`${X.s32} freezing nights in a row.`;
       else if(rain&&X.soak!=null&&X.soak>=21) pv=`It's been ${X.soak} days since a 1-inch rain. The ground is hard, so expect runoff early and a lot of the first inch not to soak in.`;
-      else if(X.dry>=10) pv=`${X.dry} dry days in a row${X.soak!=null?`, ${X.soak} since a good soaking`:""}.`;
+      else if(X.dry>=7) pv=`${X.dry} dry days in a row${X.soak!=null?`, ${X.soak} since a good soaking`:""}.`;
       else if(X.F&&X.F.fallAvg&&!X.F.thisFall&&now.getMonth()>=9){ const a=new Date(X.F.sy,0,X.F.fallAvg); pv=`No freeze yet this fall. The average first freeze is ${a.toLocaleDateString("en-US",{month:"short",day:"numeric"})}.`; }
       else if(X.R&&X.R.hi&&d0&&d0.hi!=null&&d0.hi>=X.R.hi.v-3) pv=`Today's record high is ${Math.round(X.R.hi.v)}°, set in ${X.R.hi.y}. We're close.`;
       else if(X.R&&X.R.lo&&D[0]&&D[0].lo!=null&&D[0].lo<=X.R.lo.v+3) pv=`Tonight's record low is ${Math.round(X.R.lo.v)}°, set in ${X.R.lo.y}. We'll be close.`;
@@ -6480,12 +6493,24 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
       if(HK==="spc"||HK==="rspc"||b.cat==="SEVERE"){ const F=((M.spc||[])[d])||[]; if(!F.length) return ""; const SC={TSTM:"#C1E9C1",MRGL:"#7FC57F",SLGT:"#F6F67F",ENH:"#E6C27F",MDT:"#E67F7F",HIGH:"#FF7FFF"}, NM={MRGL:"1 Marginal",SLGT:"2 Slight",ENH:"3 Enhanced",MDT:"4 Moderate",HIGH:"5 High"}, has=new Set(F.map(f=>(f.properties||{}).LABEL));
         const zb=zbox([],11,5.2); return SDR_BMAP(zb,720,_mh,[{features:F,style:f=>({fill:(f.properties||{}).fill||SC[(f.properties||{}).LABEL]||"#C1E9C1",stroke:"#333",w:1,fo:.72})}],{points:zpts(zb),title:"SEVERE STORM RISK",sub:kName})+`<div class="bslg">${Object.keys(NM).filter(k=>has.has(k)).map(k=>`<span><i style="background:${SC[k]}"></i>${NM[k]} severe risk</span>`).join("")}</div>`; }
       return ""; }catch(e){ return ""; } })();
+    let _br384=""; if(HK==="cpc2"&&!b.daily){ try{ const C=(MD0||{}).cpc||{}, bx=[s.lo-13,s.la-7.5,s.lo+13,s.la+7.5], pin=[{lo:s.lo,la:s.la,fill:"#F28C28",r:7,label:city.toUpperCase()}];
+        const dts=k=>{ const f=(C[k]||[]).find(x=>x.properties&&(x.properties.start_date||x.properties.START_DATE)), p=f&&f.properties; if(!p) return k.endsWith("610")?"6–10 DAYS":"8–14 DAYS"; const fm=x=>new Date(x).toLocaleDateString("en-US",{month:"short",day:"numeric",timeZone:"UTC"}).toUpperCase(); return `${fm(p.start_date||p.START_DATE)}–${fm(p.end_date||p.END_DATE)}`.replace(/^([A-Z]+) (\d+)–\1 /,"$1 $2–"); };
+        const sw=(k,c,pr)=>window.MRX?MRX.cpcCol({properties:{cat:c,prob:pr}},k):"#ccc";
+        const one=(k,lab)=>{ const F=k&&C[k]; if(!F||!F.length||!window.SDR_BMAP) return ""; const t=k[0]; return `<figure class="bsol"><div class="bsolm">${SDR_BMAP(bx,720,560,[{features:F,style:f=>({fill:MRX.cpcCol(f,t),stroke:"none",fo:.85})}],{points:pin,cities:true,title:lab,sub:dts(k)})}</div><div class="bslg">${t==="t"?`<span><i style="background:${sw("t","Below",60)}"></i>Cooler</span><span><i style="background:${sw("t","Above",60)}"></i>Warmer</span>`:`<span><i style="background:${sw("p","Below",60)}"></i>Drier</span><span><i style="background:${sw("p","Above",60)}"></i>Wetter</span>`}</div></figure>`; };
+        const catAt=k=>{ try{ const f=(C[k]||[]).find(f=>f.geometry&&at(f.geometry,s)); const c=f?String((f.properties||{}).cat||(f.properties||{}).CAT||""):""; return /above/i.test(c)?"A":/below/i.test(c)?"B":""; }catch(e){ return ""; } }, c6=catAt("t610"), c8=catAt("t814"), split=c6&&c8&&c6!==c8;
+        const mp=split?one("t610","TEMPERATURE · FIRST")+one("t814","TEMPERATURE · THEN"):one(b.hero.t,"TEMPERATURE")+one(b.hero.p,"RAIN");
+        if(mp) h+=bar("THE OUTLOOK","t",b.hero.t&&b.hero.p?"Darker = more likely":"")+`<div class="bsolw">${mp}</div>`;
+        const TL=b.hero.tiles||[], WY=b.hero.why||""; if(TL.length||WY) h+=bar("WHY IT MATTERS","t")+`<div class="bswhy">${TL.length?`<div class="bswt n${TL.length}">${TL.map(([v,k])=>`<div><b>${v}</b><small>${k}</small></div>`).join("")}</div>`:""}${WY?`<p>${WY}</p>`:""}</div>`;
+        const wt=weekTemps(D,cw); if(wt){ const D7=D.slice(0,7).filter(x=>x.hi!=null), lo7=D7.reduce((a,x)=>x.hi<a.hi?x:a,D7[0]), hi7=D7.reduce((a,x)=>x.hi>a.hi?x:a,D7[0]), nmS=x=>new Date(x.date).toDateString()===new Date().toDateString()?"today":new Date(x.date).toLocaleDateString("en-US",{weekday:"long"});
+          const trend=hi7.hi-lo7.hi>=6&&D7.indexOf(hi7)>D7.indexOf(lo7)?`<li><b>Already turning:</b> highs climb from ${lo7.hi}° ${nmS(lo7)} to ${hi7.hi}° ${nmS(hi7)}.</li>`:hi7.hi-lo7.hi>=6&&D7.indexOf(hi7)<D7.indexOf(lo7)?`<li><b>Before it turns:</b> highs drop from ${hi7.hi}° ${nmS(hi7)} to ${lo7.hi}° ${nmS(lo7)}.</li>`:"";
+          const nw=D.slice(0,10).find(x=>Math.max(x.pp||0,x.ppN||0)>=40||(x.thunder||0)>=30), nwT=nw?`<li><b>Next rain chance:</b> ${new Date(nw.date).toLocaleDateString("en-US",{weekday:"long"})} (${_r10(Math.max(nw.pp||0,nw.ppN||0))}%)</li>`:`<li><b>Next rain chance:</b> none in our 10-day yet.</li>`;
+          _br384=bar("OUR FORECAST · NEXT 7 DAYS","n")+`<div class="bspan"><div class="bsch">${wt}<div class="bslg"><span><i style="background:#F2A65A"></i>High</span><span><i style="background:#7FB0F2"></i>Low</span></div></div><div class="bsside"><small>THE BRIDGE</small><ul>${trend}${nwT}<li>The outlook picks up after this.</li></ul></div></div>`; } }catch(e){} }
     if(TROP&&FX) h+=bar("WHAT'S NEW","t")+`<div class="bsev">${evMap?`<div class="bsdraw">${evMap}</div>`:""}<div class="bssec">${SDR_FXHTML(FX)}</div></div>`;
     else if(TROP) h+=bar("WHAT'S NEW","t")+`<div class="bsev">${evMap?`<div class="bsdraw">${evMap}</div>`:""}<div class="bssec"><small>WHAT WE'RE WATCHING</small><ul>${(b.lines||[]).slice(0,3).map(l=>`<li>${l}</li>`).join("")}</ul></div><div class="bssec"><small>WHAT IT MEANS FOR YOU</small><ul><li>${/cone|Tropical Storm (Watch|Warning)|Hurricane (Watch|Warning)/i.test((b.lines||[]).join(" ")+b.title)?`<b>The track matters.</b> Impacts depend on the exact path and strength; we'll walk you through each update.</li>${(()=>{ const W=D.slice(0,5).map((x,i)=>({x,i})).filter(o=>_rain(o.x)>=0.5||(o.x.gust||0)>=35); if(!W.length) return ""; const top=W.reduce((a,o)=>_rain(o.x)>_rain(a.x)?o:a,W[0]), g=Math.max(...W.map(o=>o.x.gust||0)), dn=top.i===0?"today":top.i===1?"tomorrow":new Date(top.x.date).toLocaleDateString("en-US",{weekday:"long"});
         return `<li><b>Here, on the current track:</b> about ${_in(_rain(top.x))} of rain ${dn}${top.x.rr&&top.x.rr[2]>top.x.rr[0]?` (as much as ${_in(top.x.rr[2]/100)})`:""}${g>=30?` and gusts to ${Math.ceil(g/5)*5} mph`:""}.</li><li><b>What to do:</b> Secure loose equipment and debris-prone areas early; expect downed trees and limbs where gusts top 40 mph.`; })()}`:`<b>No impact on ${city}</b> from the tropics right now. Early on, track and strength can change a lot; if anything points toward you, you'll hear it from us first.`}</li></ul></div></div>`;
     else if(!b.daily) h+=bar(evMap?"WHAT'S NEW":FX?"WHAT'S NEW":"WHAT IT MEANS FOR YOU","t")+`<div class="bsev">${evMap?`<div class="bsdraw">${evMap}</div>`:""}${FX?`<div class="bssec">${SDR_FXHTML(FX)}</div>`:(()=>{ const hcE=hourChart(kx,H,cw)||(ki===0&&D[1]?hourChart(D[1],H,cw):null), OUT=HZ==="severe"&&HK==="spc"&&(()=>{ try{ let n=0; ((((MD0||{}).spc||[])[HD!=null?HD:ki])||[]).forEach(f=>{ const l=LV[(f.properties||{}).LABEL]; if(l&&at(f.geometry,s)) n=Math.max(n,l[0]); }); return n===0; }catch(e){ return false; } })(),
-      ME=(OUT?[`<b>Just outside the risk area.</b> ${city} sits right at its edge; storms that form nearby could still drift in.`]:[]).concat(HZ==="flood"?_means(kx,hcE,H,kName,city,true):HZ==="other"?_means(kx,hcE,H,kName,city,false):_meansHZ(HZ,b,kx,H,kName,city,hcE)), keep=(b.lines||[]).filter(l=>/Looking ahead|Heat first|inside the watch|watch is in effect/i.test(l)).slice(0,1), all=(ME.length?ME:(b.lines||[]).slice(0,3)).map(x=>window.SDR_MDFIX?SDR_MDFIX(x):x).concat(keep).slice(0,4); return all.length?`<div class="bssec">${evMap?"<small>WHAT IT MEANS FOR YOU</small>":""}<ul>${all.map(l=>`<li>${l}</li>`).join("")}</ul></div>`:(b.sub?`<div class="bssec"><ul><li>${b.sub}</li></ul></div>`:""); })()}</div>`;
-    const AX=TH.A.filter(a=>a.title!==b.title&&!(/frost|freez/i.test(String(b.title||""))&&/frost|freez/i.test(String(a.title||""))&&!/\b(Advisory|Warning|Watch)\b/.test(String(a.title||"")))); if(b.daily&&AX.length) h+=bar("ALSO IN EFFECT","t")+`<div class="bsev"><div class="bssec"><ul>${AX.slice(0,3).map(a=>`<li><b>${a.title}.</b> ${a.sub?String(a.sub).replace(/<[^>]+>/g,"").split(/(?<=\.)\s/)[0]:""}</li>`).join("")}</ul></div></div>`;
+      ME=(OUT?[`<b>Just outside the risk area.</b> ${city} sits right at its edge; storms that form nearby could still drift in.`]:[]).concat(HZ==="flood"?_means(kx,hcE,H,kName,city,true):HZ==="other"?_means(kx,hcE,H,kName,city,false):_meansHZ(HZ,b,kx,H,kName,city,hcE)), keep=(b.lines||[]).filter(l=>/Looking ahead|Heat first|inside the watch|watch is in effect/i.test(l)).slice(0,1), all=(ME.length?ME:(b.lines||[]).filter(l=>!(HK==="cpc2"&&/^<b>Why it matters/.test(l))).slice(0,HK==="cpc2"?5:3)).map(x=>window.SDR_MDFIX?SDR_MDFIX(x):x).concat(keep).slice(0,HK==="cpc2"?5:4); return all.length?`<div class="bssec">${evMap?"<small>WHAT IT MEANS FOR YOU</small>":""}<ul>${all.map(l=>`<li>${l}</li>`).join("")}</ul></div>`:(b.sub?`<div class="bssec"><ul><li>${b.sub}</li></ul></div>`:""); })()}</div>`;
+    h+=_br384; const AX=TH.A.filter(a=>a.title!==b.title&&!(/frost|freez/i.test(String(b.title||""))&&/frost|freez/i.test(String(a.title||""))&&!/\b(Advisory|Warning|Watch)\b/.test(String(a.title||"")))); if(b.daily&&AX.length) h+=bar("ALSO IN EFFECT","t")+`<div class="bsev"><div class="bssec"><ul>${AX.slice(0,3).map(a=>`<li><b>${a.title}.</b> ${a.sub?String(a.sub).replace(/<[^>]+>/g,"").split(/(?<=\.)\s/)[0]:""}</li>`).join("")}</ul></div></div>`;
     h+=`<!--status-->`;
     // the week at a glance
     const picks=[0,1,(!quiet&&ki>=2?ki:2)].filter((x,i,a)=>D[x]&&a.indexOf(x)===i);
@@ -6513,12 +6538,14 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
         if(ST&&ST.cpc&&F&&F.length&&window.MRX&&window.SDR_BMAP){ const bx=[s.lo-13,s.la-7.5,s.lo+13,s.la+7.5];
           const mp=SDR_BMAP(bx,720,pw<=520?470:360,[{features:F,style:f=>({fill:MRX.cpcCol(f,"t"),stroke:"none",fo:.8})}],{points:[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:city.toUpperCase()}],cities:true,title:`${ST.cpc.lab.toUpperCase()} TEMPERATURE OUTLOOK`,sub:ST.cpc.rng||""});
           h+=bar(`THE BIGGER PICTURE · ${ST.cpc.warm?"WARMER":"COOLER"} THAN NORMAL`,"n")+`<div class="bsev"><div class="bsdraw">${mp}<div class="bslg"><span><i style="background:#3B6FD8"></i>Cooler than normal</span><span><i style="background:#D8603B"></i>Warmer than normal</span><span>Darker = more likely</span></div></div><div class="bssec"><ul><li>${ST.cpc.pr>=50?"Favors":"Leans"} ${ST.cpc.warm?"warmer":"cooler"} than normal here${ST.cpc.rng?`, ${ST.cpc.rng}`:""} (${Math.round(ST.cpc.pr/10)*10}%).</li>${ST.kind==="cool"&&!ST.cpc.warm?"<li>It lines up with the cooldown in our forecast: the chill holds rather than bouncing right back.</li>":ST.kind==="warm"&&ST.cpc.warm?"<li>It lines up with the warmup in our forecast.</li>":""}</ul></div></div>`; } }catch(e){} }
-    if(hc&&!TROP&&!tc&&!_far&&HZ!=="regional"&&!(quiet&&b.daily)){ const r=_rain(hx), rr=hx.rr, pts=[];
+    if(hc&&!TROP&&!tc&&!_far&&HZ!=="regional"&&!(quiet&&b.daily)&&!(HK==="cpc2"&&!b.daily)){ const r=_rain(hx), rr=hx.rr, pts=[];
       if(hc.start) pts.push(`<b>${HZ==="winter"?"Snow":"Rain"} moves in:</b> around ${hc.start}`); if(hc.win&&!(b.sub||"").includes(hc.win)) pts.push(`<b>Most likely:</b> ${hc.win}`);
       if(hc.pk>=20) pts.push(`<b>Peak chance:</b> ${_r10(hc.pk)}%`); if(hc.twin) pts.push(`<b>Thunder:</b> ${hc.twin}`);
-      pts.push(`<b>Temps:</b> ${hc.lo}° to ${hc.hi}°`); if(hx.conf!=null) pts.push(`<b>Model agreement:</b> ${hx.conf} of 5`); if(hc.gust>=25) pts.push(`<b>Gusts:</b> to ${Math.round(hc.gust/5)*5} mph`);
+      const _sp=(()=>{ if(hn!=="Tonight") return null; const t9=new Date(); t9.setDate(t9.getDate()+1); t9.setHours(9,0,0,0); const W=H.filter(q=>{ const t=+new Date(q.t); return t>=Date.now()-3600e3&&t<Date.now()+16*3600e3; }), A=W.filter(q=>+new Date(q.t)<+t9), B=W.filter(q=>+new Date(q.t)>=+t9);
+        return A.length&&B.length>=2?{lo:Math.min(...A.map(q=>q.temp)),hi:Math.max(...B.map(q=>q.temp))}:null; })();
+      pts.push(_sp?`<b>Low tonight:</b> ${_sp.lo}°`:`<b>Temps:</b> ${hc.lo}° to ${hc.hi}°`); if(_sp) pts.push(`<b>High tomorrow:</b> ${_sp.hi}°`); if(hx.conf!=null) pts.push(`<b>Model agreement:</b> ${hx.conf} of 5`); if(hc.gust>=25) pts.push(`<b>Gusts:</b> to ${Math.round(hc.gust/5)*5} mph`);
       const sr=hx.sr, AT=window.SDR_AMTTXT||(v=>v.toFixed(1)+'"'), sT=window.SDR_STORMAMT?SDR_STORMAMT(hx,"snow"):(sr?sr[1]/100:0), rT=window.SDR_STORMAMT?SDR_STORMAMT(hx,"rain"):r, one=v=>Math.abs(v-r)<0.05; const big2=HZ==="winter"&&((sr&&sr[2]>=10)||sT>=0.1)?`<small>SNOW EXPECTED</small><b class="bsbig">${AT(sT)}</b>${sr&&sr[2]>sr[0]&&Math.abs(sT-sr[1]/100)<0.05?`<small class="rg">could be ${AT(sr[0]/100)}–${AT(sr[2]/100)}</small>`:""}`:r>=0.05?`<small>RAIN EXPECTED</small><b class="bsbig">${AT(rT)}</b>${one(rT)&&rr&&rr[2]>rr[0]?`<small class="rg">likely range ${_in(rr[0]/100)}–${_in(rr[2]/100)}</small>`:""}`:hc.pk>=50||hc.twin?`<small>RAIN EXPECTED</small><b class="bsbig">${hc.twin?"Storms":"Showers"}</b><small class="rg">${r>0?`about ${_in(Math.max(r,0.05))} on average, `:""}heavier where storms hit</small>`:hc.pk>=30?`<small>RAIN EXPECTED</small><b class="bsbig">Spotty</b><small class="rg">light where it falls</small>`:`<small>RAIN EXPECTED</small><b class="bsbig g">None</b>`;
-      h+=bar(`${hn.toUpperCase()} · HOUR BY HOUR`,quiet?"n":"t")+`<div class="bspan"><div class="bsch">${hc.svg}<div class="bslg"><span><i style="background:#3B82F6"></i>${HZ==="winter"?"Precip chance":"Rain chance"}</span>${hc.twin?`<span><i style="background:#E8920C"></i>Thunder ⚡</span>`:""}<span><i class="ln"></i>Temperature</span>${hc.start?`<span><i class="dl"></i>${HZ==="winter"?"Snow":"Rain"} moves in</span>`:""}</div></div>
+      h+=bar(`${_sp?"TONIGHT INTO TOMORROW":hn.toUpperCase()} · HOUR BY HOUR`,quiet?"n":"t")+`<div class="bspan"><div class="bsch">${hc.svg}<div class="bslg"><span><i style="background:#3B82F6"></i>${HZ==="winter"?"Precip chance":"Rain chance"}</span>${hc.twin?`<span><i style="background:#E8920C"></i>Thunder ⚡</span>`:""}<span><i class="ln"></i>Temperature</span>${hc.start?`<span><i class="dl"></i>${HZ==="winter"?"Snow":"Rain"} moves in</span>`:""}</div></div>
         <div class="bsside">${big2}<ul>${pts.map(p=>`<li>${p}</li>`).join("")}</ul></div></div>`; }
     // v191: printable pages. Page 1 = the call (risks, glance, hour by hour, the team's write-up, bottom line). Page 2 = the maps and the numbers.
     const kind=!b.daily?`${String(b.cat||"WEATHER").toUpperCase()} UPDATE`:b.slot==="pm"?(new Date(b.t||Date.now()).getHours()>=17?"EVENING UPDATE":"AFTERNOON UPDATE"):"DAILY BRIEFING", foot=`<div class="bsft"><span>${kind}</span><span>SDR WEATHER INTELLIGENCE DIVISION</span><span>NEXT BRIEFING: ${nxt}</span></div>`;
@@ -6531,7 +6558,7 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
     // by the numbers (the perspective line)
     const pv=(b.lines||[]).find(l=>/^<b>Perspective:<\/b>/.test(l)), pvt=AI&&AI.perspective?_esc(AI.perspective):pv?pv.replace(/^<b>Perspective:<\/b>\s*/,""):""; if(!FX&&pvt&&(quiet||HZ==="flood"||TH.main==="flood"||_rain(kx)>=1)) h+=`<div class="bsbox"><b>BY THE NUMBERS:</b> ${pvt}</div>`;
     const twB=(hc&&hc.win)||(_dayHrs(kx||D[0],H).length?_win(_dayHrs(kx||D[0],H),h=>(h.pop||0)>=50||(h.thunder||0)>=30):"")||"", wnB=/^(today|tonight|tomorrow)$/i.test(kName)?kName.toLowerCase():kName;
-    const BL=FX&&FX.bottom?FX.bottom:b.team?(b.bottom||""):quiet&&b.daily&&(!TH.A.length||(window._bsStory&&_bsStory.bottom))?((window._bsStory&&_bsStory.bottom)||"Normal operations."):_bottom(HZ==="daily"&&TH.main==="flood"?"flood":HZ,b,TH,city,twB,wnB);
+    const BL=HK==="cpc2"&&!b.daily&&!b.team&&!FX?("No action needed now."+(((String(b.bottom||"").match(/Watching an? [^.]*\./)||[""])[0])?" "+(String(b.bottom||"").match(/Watching an? [^.]*\./)||[""])[0]+" We'll sharpen the timing in our 10-day as it gets closer.":"")):FX&&FX.bottom?FX.bottom:b.team?(b.bottom||""):quiet&&b.daily&&(!TH.A.length||(window._bsStory&&_bsStory.bottom))?((window._bsStory&&_bsStory.bottom)||"Normal operations."):_bottom(HZ==="daily"&&TH.main==="flood"?"flood":HZ,b,TH,city,twB,wnB);
     h+=`<div class="bsbl"><small>BOTTOM LINE</small><p>${(BL||"").replace(/\s*SDR stands ready to (serve|help)\.?\s*$/i,"")} SDR stands ready to serve.</p></div>${foot}</div>`; h=`<div class="bsprint"><button type="button" onclick="SDR_PRINTBRIEF()">PRINT / SAVE AS PDF</button></div>`+h;
     if(tok!==_rdTok) return; let box=pane.querySelector(".bdx"); if(!box){ box=document.createElement("div"); box.className="bdx"; const anchor=pane.querySelector(".bsub")||pane.querySelector(".hl"); if(!anchor) throw new Error("no anchor"); anchor.insertAdjacentElement("afterend",box); }
     h=h.replace(/(^|[^:\d])12 AM\b/g,"$1midnight").replace(/(^|[^:\d])12 PM\b/g,"$1noon").replace(/\b12:00 AM\b/g,"midnight").replace(/\b12:00 PM\b/g,"noon");   // house rule: noon and midnight
@@ -7316,7 +7343,7 @@ window.SDR_GL=(function(){
 
 <script>
 // v125: client chat layer
-(function(){ let wrap=null, fr=null; const CHATV="1794832944";
+(function(){ let wrap=null, fr=null; const CHATV="1794951775";
   function open(){ if(!wrap){ wrap=document.createElement("div"); wrap.id="chatwrap"; wrap.innerHTML='<iframe id="chatfr" title="Message the team" allow="camera"></iframe>'; document.body.appendChild(wrap); fr=wrap.querySelector("iframe"); fr.src="./chat.html?v="+CHATV; fr.addEventListener("load",()=>{ try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }); }
     wrap.hidden=false; document.body.classList.add("chat-on"); if(!(history.state&&history.state.chat)) history.pushState({chat:1},""); try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }
   function close(){ if(wrap){ wrap.hidden=true; } document.body.classList.remove("chat-on"); }
@@ -7698,7 +7725,7 @@ window.SDR_NOWFIRST=(r,H)=>{ if(!r||/moves in|by \d|winding/i.test(r.h)) return 
 (function(){
   const $=s=>document.querySelector(s);
   // ---- 10-day: first 5 days, then "Show all 10 days" ----
-  let allDays=false;
+  let allDays=!!(window.matchMedia&&matchMedia("(min-width:900px)").matches);
   function days(){ const el=$("#days"); if(!el) return; const rows=[...el.querySelectorAll(".drow")]; el.classList.toggle("anyrain",!!el.querySelector(".dtot:not(.dry)")); if(rows.length<=6){ const b=$("#cxmore"); if(b) b.remove(); rows.forEach(r=>r.classList.remove("cxh")); return; }
     rows.forEach((r,i)=>r.classList.toggle("cxh",!allDays&&i>=5&&r.getAttribute("aria-expanded")!=="true"));
     let b=$("#cxmore"); if(!b){ b=document.createElement("button"); b.id="cxmore"; b.type="button"; b.className="cxmore"; el.insertAdjacentElement("afterend",b); b.onclick=()=>{ allDays=!allDays; days(); if(!allDays) el.scrollIntoView({block:"nearest"}); }; }
@@ -8125,8 +8152,11 @@ html.hf-lock,html.hf-lock body{overflow:hidden!important}html.hf-lock body::afte
     const lastWhere=f=>{ for(let i=L-1;i>=0;i--) if(f(H[i])) return H[i]; return null; };
     const streak=f=>{ let n=0; for(let i=L-1;i>=0&&f(H[i]);i--) n++; return n; };
     const out=[]; const add=(lab,r,hot)=>{ if(!r) return; const n=daysAgo(r.d); out.push({t:`<b>${n} day${n===1?"":"s"}</b> since ${lab} (${md(r.d+"T12:00")}${n>300?", "+r.d.slice(0,4):""})`,hot}); };
-    add('rain of 0.10" or more',lastWhere(r=>r.p!=null&&r.p>=0.10)); add('a 1" soaking',lastWhere(r=>r.p!=null&&r.p>=1)); add("a freeze",lastWhere(r=>r.lo!=null&&r.lo<=32)); add("measurable snow",lastWhere(r=>r.sn!=null&&r.sn>=0.1));
-    const now=new Date(); if(now.getMonth()>=3&&now.getMonth()<=9) add("a 90° day",lastWhere(r=>r.hi!=null&&r.hi>=90));
+    const mo0=new Date().getMonth(), cold=mo0>=10||mo0<=2, sy0=(mo0>=6?new Date().getFullYear():new Date().getFullYear()-1)+"-07-01", ok=(r,f)=>r&&f(daysAgo(r.d))?r:null;
+    const r10=lastWhere(r=>r.p!=null&&r.p>=0.10), r1=lastWhere(r=>r.p!=null&&r.p>=1), fz=lastWhere(r=>r.lo!=null&&r.lo<=32), sn=lastWhere(r=>r.sn!=null&&r.sn>=0.1);
+    add('rain of 0.10" or more',ok(r10,n=>n>=7),daysAgo((r10||{d:ymd(new Date())}).d)>=14); add('a 1" soaking',ok(r1,n=>n>=14),daysAgo((r1||{d:ymd(new Date())}).d)>=30);
+    add("a freeze",cold&&fz&&fz.d>=sy0?ok(fz,n=>n>=10):null); add("measurable snow",cold?ok(sn,n=>n>=14):null);
+    const now=new Date(); if(now.getMonth()>=3&&now.getMonth()<=9) add("a 90° day",ok(lastWhere(r=>r.hi!=null&&r.hi>=90),n=>n>=7&&n<=200));
     const s90=streak(r=>r.hi!=null&&r.hi>=90), s32=streak(r=>r.lo!=null&&r.lo<=32), sdry=streak(r=>r.p!=null&&r.p<0.01), s0=streak(r=>r.p!=null&&r.p<0.10);
     const st=[]; if(s90>=3) st.push({t:`<b>${s90} days in a row</b> at 90° or hotter`,hot:1}); if(s32>=3) st.push({t:`<b>${s32} freezing nights in a row</b>`,hot:1});
     if(sdry>=7) st.push({t:`<b>${sdry} dry days in a row</b>`,hot:sdry>=14}); else if(s0>=10) st.push({t:`<b>${s0} days in a row</b> without 0.10" of rain`,hot:s0>=21});
@@ -8183,8 +8213,8 @@ html.hf-lock,html.hf-lock body{overflow:hidden!important}html.hf-lock body::afte
       records(st).then(R=>{ const f=(b,u)=>b?`<b class="${u}">${b.v>0&&b.v<0.01?"Trace":u==="rn"?b.v.toFixed(2)+'"':Math.round(b.v)+"°"}</b><em>set in ${b.y}</em>`:"<b>—</b>";
         x.querySelector(".axr").innerHTML=`<h5>TODAY IN HISTORY · ${now.toLocaleDateString("en-US",{month:"long",day:"numeric"}).toUpperCase()}</h5><div class="ag"><div class="ac"><small>RECORD HIGH</small>${f(R.hi,"hi")}</div><div class="ac"><small>RECORD LOW</small>${f(R.lo,"lo")}</div><div class="ac"><small>RECORD RAIN</small>${f(R.p,"rn")}</div><div class="ac"><small>NORMAL</small><b>${R.nh!=null?Math.round(R.nh)+"° / "+Math.round(R.nl)+"°":"—"}</b><em>${R.since?"records since "+R.since:""}</em></div></div>`; }).catch(()=>{});
       hist(st).then(H=>{ if(!H.length) return; const S2=since(H), F=freeze(H), Y=now.getFullYear();
-        x.querySelector(".axs").innerHTML=`<h5>STREAKS & DAYS SINCE</h5><div class="chips">${S2.map(c=>`<span class="chip${c.hot?" hot":""}">${c.t}</span>`).join("")}</div>`;
-        SDR_ALMFINDS().then(Z=>{ const f=Z.filter(z=>/^(warm|cool|mo|wet)$/.test(z.key)), c=x.querySelector(".axs .chips"); if(f.length&&c&&!c.querySelector(".nrm")) c.insertAdjacentHTML("afterbegin",f.map(z=>`<span class="chip ${z.ended?"":"hot "}nrm">${z.p.replace(/^(\d+ (?:of \d+ )?days(?: in a row)?)/,"<b>$1</b>")}</span>`).join("")); }).catch(()=>{});
+        x.querySelector(".axs").innerHTML=`<h5>STREAKS & DAYS SINCE</h5><div class="chips">${S2.length?S2.map(c=>`<span class="chip${c.hot?" hot":""}">${c.t}</span>`).join(""):`<span class="chip none">Nothing streaky right now</span>`}</div>`;
+        SDR_ALMFINDS().then(Z=>{ const f=Z.filter(z=>/^(warm|cool|mo|wet)$/.test(z.key)), c=x.querySelector(".axs .chips"); if(f.length&&c&&!c.querySelector(".nrm")) { const nn=c.querySelector(".none"); if(nn) nn.remove(); } c.insertAdjacentHTML("afterbegin",f.map(z=>`<span class="chip ${z.ended?"":"hot "}nrm">${z.p.replace(/^(\d+ (?:of \d+ )?days(?: in a row)?)/,"<b>$1</b>")}</span>`).join("")); }).catch(()=>{});
         const fa=F.fallAvg?fromDoy(F.fallAvg,F.sy):null, sa=F.springAvg?fromDoy(F.springAvg,Y):null;
         const tf=F.thisFall?`${md(F.thisFall+"T12:00")}${fa?(()=>{ const dd=Math.round((new Date(F.thisFall+"T12:00")-fa)/864e5); return Math.abs(dd)<=1?" (right on time)":` (${Math.abs(dd)} days ${dd<0?"early":"late"})`; })():""}`:(now.getMonth()>=6?"not yet":"—");
         x.querySelector(".axf").innerHTML=`<h5>FREEZE DATES</h5><div class="ag"><div class="ac"><small>AVG FIRST FALL FREEZE</small><b>${fa?md(fa):"—"}</b></div><div class="ac"><small>FIRST FREEZE THIS FALL</small><b>${tf}</b></div><div class="ac"><small>AVG LAST SPRING FREEZE</small><b>${sa?md(sa):"—"}</b></div><div class="ac"><small>LAST FREEZE THIS SPRING</small><b>${F.thisSpring?md(F.thisSpring+"T12:00"):"—"}</b></div></div>`; }).catch(()=>{});
@@ -8211,7 +8241,8 @@ html.hf-lock,html.hf-lock body{overflow:hidden!important}html.hf-lock body::afte
   window.SDR_PXD=async function(){ try{ const st=window.SDR_ALMANAC&&await SDR_ALMANAC.station(); if(!st) return null; const [R,H]=await Promise.all([records(st).catch(()=>null),hist(st).catch(()=>null)]); if(!H||!H.length) return {R};
       const L=H.length, ago=f=>{ for(let i=L-1;i>=0;i--) if(f(H[i])) return Math.round((new Date(ymd(new Date())+"T12:00")-new Date(H[i].d+"T12:00"))/864e5); return null; }, run=f=>{ let n=0; for(let i=L-1;i>=0&&f(H[i]);i--) n++; return n; };
       const now=new Date(), mo=H.filter(r=>r.d.slice(0,7)===ymd(now).slice(0,7)), sm=X=>X.reduce((a,r)=>a+(r.p&&r.p>=0.01?r.p:0),0);
-      return {R,F:freeze(H),soak:ago(r=>r.p!=null&&r.p>=1),wet10:ago(r=>r.p!=null&&r.p>=0.10),frz:ago(r=>r.lo!=null&&r.lo<=32),s90:run(r=>r.hi!=null&&r.hi>=90),s32:run(r=>r.lo!=null&&r.lo<=32),dry:run(r=>r.p!=null&&r.p<0.01),y:H[L-1],station:st.name}; }catch(e){ return null; } };
+      const c30=ymd(new Date(Date.now()-30*864e5)), R30=H.filter(r=>r.d>=c30&&r.d<ymd(now)), p30=R30.length>=27?R30.reduce((a,r)=>a+(r.p&&r.p>0?r.p:0),0):null;
+      return {R,F:freeze(H),p30,soak:ago(r=>r.p!=null&&r.p>=1),wet10:ago(r=>r.p!=null&&r.p>=0.10),frz:ago(r=>r.lo!=null&&r.lo<=32),s90:run(r=>r.hi!=null&&r.hi>=90),s32:run(r=>r.lo!=null&&r.lo<=32),dry:run(r=>r.p!=null&&r.p<0.01),y:H[L-1],station:st.name}; }catch(e){ return null; } };
 
   // ---------- HUNT & FISH ----------
   async function press(){ try{ const st=(window.NWS_STATIONS&&NWS_STATIONS.features||[])[0]; if(!st) return null; const a=new Date(Date.now()-7*3600e3);
@@ -12466,7 +12497,7 @@ body.live-down #live-flag, body.live-down .deskline, body.live-down .lrlive, bod
 /* v365 on a quiet day the almanac's best stand-out gets a bar under What's Next (tap: the calendar) and, on milestone days, one push.
    Quiet = nothing notable listed under What's Next. A streak has to be long enough to be worth a tap. */
 (function(){
-  const BIG={s90:3,s32:5,dry:10,wet:4,warm:8,cool:8,mo:99}, MILE=n=>n===5||n===7||n===14||n===21||(n>=10&&n%10===0);   // v367 milestones only: 5, 7, 10, 14, 20, 21, 30, 40…
+  const BIG={s90:3,s32:5,dry:7,wet:4,warm:8,cool:8,mo:99}, MILE=n=>n===5||n===7||n===14||n===21||(n>=10&&n%10===0);   // v367 milestones only: 5, 7, 10, 14, 20, 21, 30, 40…
   const cap=t=>t.charAt(0).toUpperCase()+t.slice(1);
   function openAlm(){ try{ if(window.SDR_GLANCE&&SDR_GLANCE.open) SDR_GLANCE.open("alm"); setTimeout(()=>{ const c=document.querySelector(".p-alm .almcal"); if(c) c.scrollIntoView({block:"center",behavior:"smooth"}); },1200); }catch(e){} }
   // SAFETY NETS. A stand-out is only used when ALL of these hold: the streak is long enough and believable, the records reach yesterday,
@@ -12783,5 +12814,54 @@ window.SDR_EVEWX=function(x,H){ try{ if(!x||x.d==="TONIGHT") return false; const
 #xplore .xpf .obf3{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}#xplore .xpf .obf3 small{color:var(--muted);font-size:11px}
 #xplore .xpf .obday{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}#xplore .xpf .obday button{border:0;background:none;color:var(--muted);font:700 12px var(--display),system-ui;padding:5px 11px;letter-spacing:.04em}
 #xplore .xpf .obday button[aria-pressed="true"]{background:#2F7BF6;color:#fff}
+</style>
+<style>
+.bsolw{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 14px}
+.bsol{margin:0;border:1px solid rgba(27,36,51,.1);border-radius:10px;overflow:hidden;background:#fff}
+.bsolm svg{display:block;width:100%;height:auto}
+.bsol .bslg{padding:6px 8px;justify-content:center}
+.bswhy{padding:12px 14px}.bswt{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.bswt.n1{grid-template-columns:1fr}.bswt.n2{grid-template-columns:1fr 1fr}
+.bswt div{background:#FFF8E6;border:1px solid rgba(245,184,0,.45);border-radius:10px;padding:10px 8px;text-align:center}
+.bswt b{display:block;font-size:28px;line-height:1.05;font-weight:900;color:#B45309}.bswt small{display:block;margin-top:4px;font-size:10.5px;font-weight:800;letter-spacing:.06em;color:#5A6B80}
+.bswhy p{margin:10px 2px 0;font-size:15px;line-height:1.45;color:#1B2433}
+</style>
+<script>
+/* v384c one rule for every 10-day row, days 1-10 alike:
+   rain chance under 30%: the sky decides (mostly sunny / partly cloudy / cloudy from the hourly cloud cover; fog, frost and wind icons stay)
+   30-59%: sun-and-cloud with rain (or a storm, or snow)   60% and up: rain (or storms, or snow) */
+(function(){ try{ if(window.DASH&&DASH.ICO&&!DASH.ICO.cl) DASH.ICO.cl=`<svg viewBox="0 0 24 24"><path d="M9.5 13h8a3.2 3.2 0 0 0 .4-6.4A4.8 4.8 0 0 0 8.8 7.6a2.8 2.8 0 0 0 .7 5.4z" fill="#8FA0BC"/><path d="M6 20h10a4 4 0 0 0 .5-8A6 6 0 0 0 5 13a3.5 3.5 0 0 0 1 7z" fill="#B9C7E0"/></svg>`; }catch(e){}
+  window.SDR_DAYICO=(x,night,R,base,H)=>{ base=base||(night?"clearnight":"sun");
+    const wint=/^(sn|mix|ice|tsn)$/.test(base)||(x.snowP||0)>=30||(x.iceP||0)>=30, thun=/^(ts|pcts|pctsn|tsn)$/.test(base)||(x.thunder||0)>=30;
+    const hs=(H||[]).filter(h=>{ const hr=new Date(h.t).getHours(); return h.sky!=null&&(night?(hr>=19||hr<=6):(hr>=8&&hr<=17)); }), sky=hs.length>=4?hs.reduce((a,h)=>a+(+h.sky||0),0)/hs.length:null;
+    if(R<30){ if(/^(fog|frost|wind)$/.test(base)) return base; if(sky==null) return /^(sun|clearnight|pc|pcn|cl)$/.test(base)?base:(night?"pcn":"pc"); return sky>=75?"cl":sky>=30?(night?"pcn":"pc"):(night?"clearnight":"sun"); }
+    if(wint) return /^(mix|ice|tsn)$/.test(base)?base:"sn";
+    if(thun) return R>=60?"ts":(night?"pctsn":"pcts");
+    return R>=60?"rn":(night?"pcrnn":"pcrn"); };
+})();
+</script>
+<style id="sdr-385">
+@media (min-width:900px){
+  /* the old 1fr rows split leftover height evenly, so the tall lower-right column inflated the radar row; every row now fits its content */
+  #pane-overview{grid-template-rows:repeat(9,auto)!important}
+  /* 900-1199px (small laptops, tablets sideways) used the same grid without unwrapping the radar pair, so pieces fell out of place */
+  #pane-overview>.two{display:contents!important}
+  #pane-overview .radar:not(.rfull){grid-area:radar!important}
+  #pane-overview .deskchan{grid-area:chan!important}
+  #pane-overview>.p-hours{grid-area:hours!important}
+  #pane-overview>.p-days{grid-area:days!important}
+  #pane-overview .radar:not(.rfull){align-self:stretch!important;display:flex!important;flex-direction:column}
+  #pane-overview .radar:not(.rfull) .map{flex:1 1 auto;min-height:380px!important;max-height:640px}
+  #pane-overview .radar:not(.rfull) #rmap{height:100%!important;min-height:380px!important;max-height:640px!important}
+}
+</style>
+<style id="sdr-385b">
+@media (min-width:900px){
+  #cxmore{display:none!important}
+  #glance #gl-a .glw{grid-template-columns:none!important;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr)}
+  /* the 10-day fills its column to the bottom: rows share the extra height evenly (capped so they never look stretched) */
+  #pane-overview>.p-days{display:flex!important;flex-direction:column}
+  #pane-overview>.p-days>#days{flex:1 1 auto;display:flex!important;flex-direction:column}
+  #pane-overview>.p-days>#days>.drow{flex:1 1 auto;max-height:84px}
+}
 </style>
 </body></html>

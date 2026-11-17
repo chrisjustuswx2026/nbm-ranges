@@ -1,8 +1,31 @@
 {
- "youtubeLiveLink": "https://youtube.com/live/0kJsmlz95V0",
+ "youtubeChannelId": "",
+ "youtubeLiveLink": "https://youtube.com/live/MG_47lMtrYQ",
  "deskLive": false,
  "deskNote": "",
- "aiChatUrl": "",
- "chatMode": "auto",
- "how_to": "youtubeLiveLink: when the stream restarts, paste the new YouTube Live link (keep the quotes). deskLive: true while a meteorologist is on air (red flashing LIVE), false when off air. deskNote: optional line shown while live, e.g. Tracking storms west of Greenville. aiChatUrl: the chat server address (https://\u2026.workers.dev) \u2014 leave empty to use the built-in answers. chatMode: auto (answers go out right away, labeled SDR Forecast Desk) or review (a meteorologist sends every answer from desk.html). Commit, and dashboards update within 2 minutes. Never paste the stream key here."
+ "aiChatUrl": "https://sdr-chat.raspy-bonus-f476.workers.dev",
+ "chatMode": "review",
+ "sponsors": {
+  "ski": {
+   "name": "",
+   "logo": "",
+   "url": ""
+  },
+  "beach": {
+   "name": "",
+   "logo": "",
+   "url": ""
+  },
+  "hunt": {
+   "name": "",
+   "logo": "",
+   "url": ""
+  },
+  "fire": {
+   "name": "",
+   "logo": "",
+   "url": ""
+  }
+ },
+ "how_to": "NEW LIVE LINK: paste it in the Desk (desk.html, NEW LIVE LINK row) and dashboards switch within 2 minutes; nothing to change here. youtubeChannelId: leave blank while the stream is unlisted; once streams are public, put the channel ID (UCPcO5wcZDqsnZYEexKvsXhg) here and dashboards find each new stream on their own. youtubeLiveLink: fallback only. deskLive: true while a meteorologist is on air (red flashing LIVE), false when off air. deskNote: optional line shown while live, e.g. Tracking storms west of Greenville. aiChatUrl: the chat server address (https://\u2026.workers.dev) \u2014 type off to use only the built-in answers. chatMode: auto (answers go out right away, labeled SDR Forecast Desk) or review (a meteorologist sends every answer from desk.html). Commit, and dashboards update within 2 minutes. sponsors: for each section (ski, beach, hunt) type the sponsor name, optionally a logo image link and their website; leave blank to show nothing. Never paste the stream key here."
 }

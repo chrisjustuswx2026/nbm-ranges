@@ -11,7 +11,9 @@ self.addEventListener("notificationclick", e => {
     const all = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
     const here = all.find(c => c.url.indexOf(self.registration.scope) === 0) || all[0];
     if (here) { try { await here.focus(); } catch (x) {} here.postMessage({ sdr: "open", pane: data.pane || "overview", target: data.target || "" }); return; }
-    const url = self.registration.scope + (data.pane ? "#" + data.pane : "");
+    // v331: carry "what to open" through a cold start (the page reads ?go= and opens that briefing or report)
+    const go = /^#sdrgo-/.test(data.target || "") ? "?go=" + data.target.slice(7) : "";
+    const url = self.registration.scope + go + (data.pane ? "#" + data.pane : "");
     await self.clients.openWindow(url);
   })());
 });

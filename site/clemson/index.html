@@ -2586,7 +2586,7 @@ body.chan-on .tabs button[data-pane="live"]::before{content:"";position:absolute
 .chplay i{width:76px;height:76px;border-radius:50%;background:#E5484D;display:grid;place-items:center;box-shadow:0 8px 28px rgba(229,72,77,.45)}
 .chplay b{font-family:var(--display);font-weight:800;letter-spacing:.14em;font-size:13px}
 </style>
-<script>window.SDR_VER="385";</script><style>.shd .ver{margin-left:auto;margin-right:10px;font-family:var(--display);font-weight:700;letter-spacing:.1em;font-size:11px;color:var(--dim)}</style>
+<script>window.SDR_VER="390";</script><style>.shd .ver{margin-left:auto;margin-right:10px;font-family:var(--display);font-weight:700;letter-spacing:.1em;font-size:11px;color:var(--dim)}</style>
 <script>
 /* SDR_WEEKSTORY: on a quiet day, find what actually matters this week. Ranked: first frost/freeze, a big cooldown or warmup, the 6-10 day outlook, the next rain. */
 window.SDR_COLDOK=function(x){ try{ if(!x||x.lo==null||x.lo>36) return false; const nl=window._bsNL, first=window._bsFall===false, routine=nl!=null&&nl<=34; if(!routine||first) return true; return x.lo<=nl-8; }catch(e){ return true; } };
@@ -4552,7 +4552,8 @@ window.STRIPS = (function(){
         <div class="dx-grid">
           <section><h4>CONDITIONS</h4>
             <div class="sts">${(()=>{ const m=window.SDR_MLO?SDR_MLO(i):x.lo; return x.hi!=null&&x.d!=="TONIGHT"?`<div class="st wide" data-chart="temp"><small>TEMPERATURE</small><b>${m!=null?m+"° → ":""}${x.hi}°</b></div>`:""; })()}${stat(x.d==="TONIGHT"?"LOW":"LOW TONIGHT", x.lo!=null?x.lo+"°":null)}${(()=>{ const fl=feelOf(x); return fl!=null&&x.hi!=null&&Math.abs(fl-x.hi)>=3?stat("FEELS LIKE", fl+"°", "", fl>=100?"bad":fl>=90?"warn":""):""; })()}${(()=>{ const sk=skyOf(x); if(sk==null) return ""; const ic=sk.pct<=30?"sun":"pc"; return `<div class="st skyi" data-chart="sky" title="${sk.lab}"><small>CLOUD COVER</small><b><span class="ski">${svg(ic)}</span>${sk.pct}%<em>${sk.lab.toLowerCase()}</em></b></div>`; })()}
-            ${stat("WIND", wfmt(x.wind)||null, "mph")}${stat("GUSTS", x.gust!=null?g5(x.gust):null, "mph", x.gust>=35?"bad":x.gust>=25?"warn":"")}${stat("DEW POINT", x.dew!=null?x.dew+"°":null)}${x.wbgt?stat("WBGT", x.wbgt+"°","est",x.wbgt>=87?"bad":x.wbgt>=82?"warn":""):""}${x.uv!=null?stat("UV", Math.round(x.uv), uvLab(x.uv), uvCls(x.uv)):""}</div>
+            ${stat("WIND", wfmt(x.wind)||null, "mph")}${stat("GUSTS", x.gust!=null?g5(x.gust):null, "mph", x.gust>=35?"bad":x.gust>=25?"warn":"")}${stat("DEW POINT", x.dew!=null?x.dew+"°":null)}${(()=>{ try{ const V=_H.filter(h=>h.vis!=null&&h.vis<=3); if(V.length<2) return ""; const lo=Math.min(...V.map(h=>h.vis)), w=V.reduce((a,h)=>h.vis<a.vis?h:a,V[0]), hr=new Date(w.t).getHours(), when=hr<6||hr>=21?"overnight":hr<11?"morning":hr<17?"afternoon":"evening";
+        const txt=lo<=0.25?"¼":lo<=0.5?"½":lo<1?"¾":String(Math.round(lo)); return stat("VISIBILITY", (lo<=0.25?"under ":"as low as ")+txt, "mi "+when, lo<=0.25?"bad":lo<=1?"warn":""); }catch(e){ return ""; } })()}${x.wbgt?stat("WBGT", x.wbgt+"°","est",x.wbgt>=87?"bad":x.wbgt>=82?"warn":""):""}${x.uv!=null?stat("UV", Math.round(x.uv), uvLab(x.uv), uvCls(x.uv)):""}</div>
           </section>
           ${chartsOf(x,"cond")}
           <section><h4>PRECIPITATION</h4>
@@ -4741,7 +4742,7 @@ window.MAPROOM = (function(){
     const P=(lo,la)=>[(ox+(lo-lo0)*kx*s).toFixed(1),(oy+(la1-la)*s).toFixed(1)];
     const lines=g=>!g?[]:g.type==="LineString"?[g.coordinates]:g.type==="MultiLineString"?g.coordinates:[];
     const path=g=>polys(g).map(p=>p.map(r=>"M"+r.map(([x,y])=>P(x,y).join(" ")).join("L")+"Z").join("")).join("")+lines(g).map(r=>"M"+r.map(([x,y])=>P(x,y).join(" ")).join("L")).join("");
-    const inView=f=>{ let a=180,b=-180,c=90,d=-90; polys(f.geometry).forEach(p=>p[0].forEach(([x,y])=>{a=Math.min(a,x);b=Math.max(b,x);c=Math.min(c,y);d=Math.max(d,y);})); return !(b<lo0-2||a>lo1+2||d<la0-2||c>la1+2); };
+    const inView=f=>{ let a=180,b=-180,c=90,d=-90; polys(f.geometry).forEach(p=>p[0].forEach(([x,y])=>{a=Math.min(a,x);b=Math.max(b,x);c=Math.min(c,y);d=Math.max(d,y);})); const mx=ox/(kx*s)+2, my=oy/s+2; return !(b<lo0-mx||a>lo1+mx||d<la0-my||c>la1+my); };
     const land=[...((window.GEO_WORLD||{}).features||[]),...((window.GEO_STATES||{}).features||[])].filter(inView);
     let out=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img"><rect width="${W}" height="${H}" fill="#405170"/>`;
     out+=land.map(f=>`<path d="${path(f.geometry)}" fill="#878787"/>`).join("");
@@ -4908,7 +4909,13 @@ window.CHANNEL = { youtubeChannelId: "", youtubeVideoId: "0kJsmlz95V0" };
   const live=document.querySelector("#pane-live .vid.chan"); if(live&&url){ let loud=url.replace("&mute=1","");
     const IF=u=>`<iframe src="${u}" title="SDR Weather Intelligence 24/7" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen style="position:absolute;inset:0;width:100%;height:100%;border:0"></iframe>`;
     live.innerHTML=IF(url)+`<button type="button" class="chsnd" aria-label="Turn sound on"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M19 12a7 7 0 0 0-3-5.7M16.5 12a4 4 0 0 0-1.5-3"/></svg>SOUND ON</button>`;
-    live.querySelector(".chsnd").onclick=()=>{ loud=(window.__SDR_URL||url).replace("&mute=1",""); live.innerHTML=IF(loud); }; }
+    live.querySelector(".chsnd").onclick=()=>{ loud=(window.__SDR_URL||url).replace("&mute=1",""); live.innerHTML=IF(loud); try{ sessionStorage.setItem("sdr-sound","1"); }catch(e){} };
+    const btn=live.querySelector(".chsnd").outerHTML, sound=()=>{ try{ return sessionStorage.getItem("sdr-sound")==="1"; }catch(e){ return false; } };
+    const start=()=>{ const u=window.__SDR_URL||url; live.innerHTML=IF(u)+btn; /* always muted on open: phones only autoplay muted, so sound-on here could leave it paused */ const b=live.querySelector(".chsnd"); if(b) b.onclick=()=>{ live.innerHTML=IF((window.__SDR_URL||url).replace("&mute=1","")); try{ sessionStorage.setItem("sdr-sound","1"); }catch(e){} }; };
+    const stop=()=>{ live.innerHTML=`<div style="position:absolute;inset:0;background:#000"></div>`+btn; };
+    let shown=null; const vis=()=>{ const r=live.getBoundingClientRect(); return live.offsetParent!==null&&r.width>0&&r.height>0&&document.visibilityState==="visible"; };
+    const check=()=>{ const v=vis(); if(v===shown) return; shown=v; v?start():stop(); };
+    try{ new IntersectionObserver(check,{threshold:0}).observe(live); }catch(e){} document.addEventListener("visibilitychange",check); setInterval(check,1500); setTimeout(check,300); }
 })();
 </script>
 <script>
@@ -6505,7 +6512,8 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
           const trend=hi7.hi-lo7.hi>=6&&D7.indexOf(hi7)>D7.indexOf(lo7)?`<li><b>Already turning:</b> highs climb from ${lo7.hi}° ${nmS(lo7)} to ${hi7.hi}° ${nmS(hi7)}.</li>`:hi7.hi-lo7.hi>=6&&D7.indexOf(hi7)<D7.indexOf(lo7)?`<li><b>Before it turns:</b> highs drop from ${hi7.hi}° ${nmS(hi7)} to ${lo7.hi}° ${nmS(lo7)}.</li>`:"";
           const nw=D.slice(0,10).find(x=>Math.max(x.pp||0,x.ppN||0)>=40||(x.thunder||0)>=30), nwT=nw?`<li><b>Next rain chance:</b> ${new Date(nw.date).toLocaleDateString("en-US",{weekday:"long"})} (${_r10(Math.max(nw.pp||0,nw.ppN||0))}%)</li>`:`<li><b>Next rain chance:</b> none in our 10-day yet.</li>`;
           _br384=bar("OUR FORECAST · NEXT 7 DAYS","n")+`<div class="bspan"><div class="bsch">${wt}<div class="bslg"><span><i style="background:#F2A65A"></i>High</span><span><i style="background:#7FB0F2"></i>Low</span></div></div><div class="bsside"><small>THE BRIDGE</small><ul>${trend}${nwT}<li>The outlook picks up after this.</li></ul></div></div>`; } }catch(e){} }
-    if(TROP&&FX) h+=bar("WHAT'S NEW","t")+`<div class="bsev">${evMap?`<div class="bsdraw">${evMap}</div>`:""}<div class="bssec">${SDR_FXHTML(FX)}</div></div>`;
+    if(TROP&&FX) h+=bar("WHAT'S NEW","t")+`<div class="bsev">${evMap?`<div class="bsdraw">${evMap}</div>`:""}<div class="bssec">${SDR_FXHTML(Array.isArray(FX)?FX.filter(x=>!/^<b>What it means/i.test(x)):Object.assign({},FX,{facts:(FX.facts||[]).filter(x=>!/^<b>What it means/i.test(x))}))}</div></div>`+bar("WHAT IT MEANS FOR YOU","n")+`<div class="bsev"><div class="bssec"><ul><li>${/cone|Tropical Storm (Watch|Warning)|Hurricane (Watch|Warning)/i.test((b.lines||[]).join(" ")+b.title)?`<b>The track matters.</b> Impacts depend on the exact path and strength; we'll walk you through each update.</li>${(()=>{ const W=D.slice(0,5).map((x,i)=>({x,i})).filter(o=>_rain(o.x)>=0.5||(o.x.gust||0)>=35); if(!W.length) return ""; const top=W.reduce((a,o)=>_rain(o.x)>_rain(a.x)?o:a,W[0]), g=Math.max(...W.map(o=>o.x.gust||0)), dn=top.i===0?"today":top.i===1?"tomorrow":new Date(top.x.date).toLocaleDateString("en-US",{weekday:"long"});
+        return `<li><b>Here, on the current track:</b> about ${_in(_rain(top.x))} of rain ${dn}${top.x.rr&&top.x.rr[2]>top.x.rr[0]?` (as much as ${_in(top.x.rr[2]/100)})`:""}${g>=30?` and gusts to ${Math.ceil(g/5)*5} mph`:""}.</li><li><b>What to do:</b> Secure loose equipment and debris-prone areas early; expect downed trees and limbs where gusts top 40 mph.`; })()}`:`<b>No impact on ${city}</b> from the tropics right now. Early on, track and strength can change a lot; if anything points toward you, you'll hear it from us first.`}</li></ul></div></div>`;
     else if(TROP) h+=bar("WHAT'S NEW","t")+`<div class="bsev">${evMap?`<div class="bsdraw">${evMap}</div>`:""}<div class="bssec"><small>WHAT WE'RE WATCHING</small><ul>${(b.lines||[]).slice(0,3).map(l=>`<li>${l}</li>`).join("")}</ul></div><div class="bssec"><small>WHAT IT MEANS FOR YOU</small><ul><li>${/cone|Tropical Storm (Watch|Warning)|Hurricane (Watch|Warning)/i.test((b.lines||[]).join(" ")+b.title)?`<b>The track matters.</b> Impacts depend on the exact path and strength; we'll walk you through each update.</li>${(()=>{ const W=D.slice(0,5).map((x,i)=>({x,i})).filter(o=>_rain(o.x)>=0.5||(o.x.gust||0)>=35); if(!W.length) return ""; const top=W.reduce((a,o)=>_rain(o.x)>_rain(a.x)?o:a,W[0]), g=Math.max(...W.map(o=>o.x.gust||0)), dn=top.i===0?"today":top.i===1?"tomorrow":new Date(top.x.date).toLocaleDateString("en-US",{weekday:"long"});
         return `<li><b>Here, on the current track:</b> about ${_in(_rain(top.x))} of rain ${dn}${top.x.rr&&top.x.rr[2]>top.x.rr[0]?` (as much as ${_in(top.x.rr[2]/100)})`:""}${g>=30?` and gusts to ${Math.ceil(g/5)*5} mph`:""}.</li><li><b>What to do:</b> Secure loose equipment and debris-prone areas early; expect downed trees and limbs where gusts top 40 mph.`; })()}`:`<b>No impact on ${city}</b> from the tropics right now. Early on, track and strength can change a lot; if anything points toward you, you'll hear it from us first.`}</li></ul></div></div>`;
     else if(!b.daily) h+=bar(evMap?"WHAT'S NEW":FX?"WHAT'S NEW":"WHAT IT MEANS FOR YOU","t")+`<div class="bsev">${evMap?`<div class="bsdraw">${evMap}</div>`:""}${FX?`<div class="bssec">${SDR_FXHTML(FX)}</div>`:(()=>{ const hcE=hourChart(kx,H,cw)||(ki===0&&D[1]?hourChart(D[1],H,cw):null), OUT=HZ==="severe"&&HK==="spc"&&(()=>{ try{ let n=0; ((((MD0||{}).spc||[])[HD!=null?HD:ki])||[]).forEach(f=>{ const l=LV[(f.properties||{}).LABEL]; if(l&&at(f.geometry,s)) n=Math.max(n,l[0]); }); return n===0; }catch(e){ return false; } })(),
@@ -7343,7 +7351,7 @@ window.SDR_GL=(function(){
 
 <script>
 // v125: client chat layer
-(function(){ let wrap=null, fr=null; const CHATV="1794951775";
+(function(){ let wrap=null, fr=null; const CHATV="1795093728";
   function open(){ if(!wrap){ wrap=document.createElement("div"); wrap.id="chatwrap"; wrap.innerHTML='<iframe id="chatfr" title="Message the team" allow="camera"></iframe>'; document.body.appendChild(wrap); fr=wrap.querySelector("iframe"); fr.src="./chat.html?v="+CHATV; fr.addEventListener("load",()=>{ try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }); }
     wrap.hidden=false; document.body.classList.add("chat-on"); if(!(history.state&&history.state.chat)) history.pushState({chat:1},""); try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }
   function close(){ if(wrap){ wrap.hidden=true; } document.body.classList.remove("chat-on"); }
@@ -7979,7 +7987,7 @@ window.SDR_NOWFIRST=(r,H)=>{ if(!r||/moves in|by \d|winding/i.test(r.h)) return 
   async function wx(y,m){ const k=y+"-"+m; if(WX[k]) return WX[k]; try{ const st=(window.NWS_STATIONS&&NWS_STATIONS.features||[]).map(f=>(f.properties||{}).stationIdentifier||"").find(x=>/^K[A-Z0-9]{3}$/.test(x)); if(!st) return (WX[k]={});
       const e=new Date(y,m+1,1), u=`https://mesonet.agron.iastate.edu/cgi-bin/request/asos.py?station=${st.slice(1)}&data=wxcodes&year1=${y}&month1=${m+1}&day1=1&year2=${e.getFullYear()}&month2=${e.getMonth()+1}&day2=1&tz=America%2FNew_York&format=onlycomma&latlon=no&missing=empty&trace=empty&report_type=3&report_type=4`;
       const t=await (await fetch(u)).text(), out={}; t.split("\n").slice(1).forEach(l=>{ const c=l.split(","); if(c.length<3||!c[2]) return; const d=+c[1].slice(8,10), w=c[2]; const o=out[d]||(out[d]={});
-        if(/FZRA|FZDZ/.test(w)) o.zr=1; if(/(^|[^A-Z])PL|PL$|\bPL/.test(w)) o.pl=1; if(/SN|SG/.test(w)&&!/BLSN/.test(w)) o.sn=1; }); return (WX[k]=out); }catch(e){ return (WX[k]={}); } }
+        if(/FZRA|FZDZ/.test(w)) o.zr=1; if(/(^|[^A-Z])PL|PL$|\bPL/.test(w)) o.pl=1; if(/SN|SG/.test(w)&&!/BLSN/.test(w)) o.sn=1; if(/RA|DZ|SN|SG|PL|GR|GS|UP|TS/.test(w.replace(/BLSN|VCSH|VCTS/g,""))) o.wet=1; }); return (WX[k]=out); }catch(e){ return (WX[k]={}); } }
   const tint=dep=>{ if(dep==null) return "rgba(255,255,255,.03)"; const a=Math.min(.75,Math.abs(dep)/14*.75+.12); if(Math.abs(dep)<2) return "rgba(255,255,255,.05)"; return dep>0?`rgba(229,72,77,${a})`:`rgba(47,123,255,${a})`; };
   async function draw(){ const sec=document.querySelector(".p-alm"); if(!sec||sec.classList.contains("cx")) return; const now=new Date();
     if(!MON) MON={y:now.getFullYear(),m:now.getMonth()};
@@ -7990,11 +7998,11 @@ window.SDR_NOWFIRST=(r,H)=>{ if(!r||/moves in|by \d|winding/i.test(r.h)) return 
     let warm=0,cool=0,rain=0,snow=0; for(let k=1;k<=n;k++){ const r=by[k], tdy=MON.y===now.getFullYear()&&MON.m===now.getMonth()&&k===now.getDate();
       if(!r||r.hi==null){ cells+=`<div class="c${tdy?" tdy":""}"><i>${k}</i></div>`; continue; }
       const dep=(r.nh!=null&&r.nl!=null&&r.lo!=null)?((r.hi+r.lo)-(r.nh+r.nl))/2:null; if(dep!=null){ if(dep>=2) warm++; else if(dep<=-2) cool++; } if(r.p) rain+=r.p; if(r.sn) snow+=r.sn;
-      cells+=`<div class="c${tdy?" tdy":""}" style="background:${tint(dep)}" title="${dep!=null?(dep>0?"+":"")+dep.toFixed(0)+"° vs normal":""}"><i>${k}</i><b>${r.hi}°<em>/${r.lo}°</em></b>${r.p?`<u>💧${r.p<0.01?"T":r.p.toFixed(2)}</u>`:""}${r.sn&&r.sn>=0.1?`<s>❄️${r.sn.toFixed(1)}"</s>`:(X[k]&&X[k].sn?`<s>❄️ flakes</s>`:"")}${X[k]&&(X[k].zr||X[k].pl)?(iceD++,`<s class="ice">🧊 ${X[k].zr?"ice":"sleet"}</s>`):""}</div>`; }
+      cells+=`<div class="c${tdy?" tdy":""}" style="background:${tint(dep)}" title="${dep!=null?(dep>0?"+":"")+dep.toFixed(0)+"° vs normal":""}"><i>${k}</i><b>${r.hi}°<em>/${r.lo}°</em></b>${r.p&&(r.p>=0.01||(X[k]&&X[k].wet))?`<u>💧${r.p<0.01?"T":r.p.toFixed(2)}</u>`:""}${r.sn&&r.sn>=0.1?`<s>❄️${r.sn.toFixed(1)}"</s>`:(X[k]&&X[k].sn?`<s>❄️ flakes</s>`:"")}${X[k]&&(X[k].zr||X[k].pl)?(iceD++,`<s class="ice">🧊 ${X[k].zr?"ice":"sleet"}</s>`):""}</div>`; }
     const label=new Date(MON.y,MON.m,1).toLocaleDateString("en-US",{month:"long",year:"numeric"}).toUpperCase(), isNow=MON.y===now.getFullYear()&&MON.m===now.getMonth();
     body.querySelector(".almcal").innerHTML=`<div class="almm"><button type="button" data-mv="-1" aria-label="Previous month">‹</button><b>${label}</b><button type="button" data-mv="1" aria-label="Next month" ${isNow?"disabled":""}>›</button></div>
       <div class="almc">${cells}</div><div class="almk"><span><i style="background:rgba(229,72,77,.6)"></i>Warmer than normal</span><span><i style="background:rgba(47,123,255,.6)"></i>Cooler than normal</span><span>💧 rain · ❄️ snow · 🧊 ice / sleet</span></div>
-      <p class="alms">${warm} warmer and ${cool} cooler days than normal${D.rows.length?`, ${rain>0&&rain<0.01?"a trace":inch(rain)} of rain`:""}${snow>=0.1?`, ${snow.toFixed(1)}" of snow`:""}${iceD?`, ${iceD} day${iceD>1?"s":""} with ice or sleet`:""}. Official records from ${SID?SID.name.replace(/\b(\w)(\w*)/g,(a,b,c)=>b+c.toLowerCase()).replace(/\bAp\b\.?/i,"Airport").replace(/\bIntl\b\.?/i,"International"):"the nearest station"}.</p>`;
+      <p class="alms">${warm} warmer and ${cool} cooler days than normal${D.rows.length?`, ${rain>0&&rain<0.01?(Object.values(X||{}).some(o=>o&&o.wet)?"a trace of rain":"no rain"):inch(rain)+" of rain"}`:""}${snow>=0.1?`, ${snow.toFixed(1)}" of snow`:""}${iceD?`, ${iceD} day${iceD>1?"s":""} with ice or sleet`:""}. Official records from ${SID?SID.name.replace(/\b(\w)(\w*)/g,(a,b,c)=>b+c.toLowerCase()).replace(/\bAp\b\.?/i,"Airport").replace(/\bIntl\b\.?/i,"International"):"the nearest station"}.</p>`;
     body.querySelectorAll("[data-mv]").forEach(b=>b.onclick=()=>{ const d=new Date(MON.y,MON.m+ +b.dataset.mv,1); MON={y:d.getFullYear(),m:d.getMonth()}; draw(); }); }
   async function days(){ const sec=document.querySelector(".p-alm"); if(!sec) return; const now=new Date(), t0=new Date(now); t0.setHours(0,0,0,0); const y0=new Date(+t0-864e5);
     let [td,yd,M]=await Promise.all([obsDay(t0,now),obsDay(y0,t0),month(y0.getFullYear(),y0.getMonth()).catch(()=>null)]);
@@ -8216,7 +8224,7 @@ html.hf-lock,html.hf-lock body{overflow:hidden!important}html.hf-lock body::afte
         x.querySelector(".axs").innerHTML=`<h5>STREAKS & DAYS SINCE</h5><div class="chips">${S2.length?S2.map(c=>`<span class="chip${c.hot?" hot":""}">${c.t}</span>`).join(""):`<span class="chip none">Nothing streaky right now</span>`}</div>`;
         SDR_ALMFINDS().then(Z=>{ const f=Z.filter(z=>/^(warm|cool|mo|wet)$/.test(z.key)), c=x.querySelector(".axs .chips"); if(f.length&&c&&!c.querySelector(".nrm")) { const nn=c.querySelector(".none"); if(nn) nn.remove(); } c.insertAdjacentHTML("afterbegin",f.map(z=>`<span class="chip ${z.ended?"":"hot "}nrm">${z.p.replace(/^(\d+ (?:of \d+ )?days(?: in a row)?)/,"<b>$1</b>")}</span>`).join("")); }).catch(()=>{});
         const fa=F.fallAvg?fromDoy(F.fallAvg,F.sy):null, sa=F.springAvg?fromDoy(F.springAvg,Y):null;
-        const tf=F.thisFall?`${md(F.thisFall+"T12:00")}${fa?(()=>{ const dd=Math.round((new Date(F.thisFall+"T12:00")-fa)/864e5); return Math.abs(dd)<=1?" (right on time)":` (${Math.abs(dd)} days ${dd<0?"early":"late"})`; })():""}`:(now.getMonth()>=6?"not yet":"—");
+        const tf=F.thisFall?`${md(F.thisFall+"T12:00")}${fa?(()=>{ const dd=Math.round((new Date(F.thisFall+"T12:00")-new Date(fa.getFullYear(),fa.getMonth(),fa.getDate(),12))/864e5); return Math.abs(dd)<=1?" (right on time)":` (${Math.abs(dd)} days ${dd<0?"early":"late"})`; })():""}`:(now.getMonth()>=6?"not yet":"—");
         x.querySelector(".axf").innerHTML=`<h5>FREEZE DATES</h5><div class="ag"><div class="ac"><small>AVG FIRST FALL FREEZE</small><b>${fa?md(fa):"—"}</b></div><div class="ac"><small>FIRST FREEZE THIS FALL</small><b>${tf}</b></div><div class="ac"><small>AVG LAST SPRING FREEZE</small><b>${sa?md(sa):"—"}</b></div><div class="ac"><small>LAST FREEZE THIS SPRING</small><b>${F.thisSpring?md(F.thisSpring+"T12:00"):"—"}</b></div></div>`; }).catch(()=>{});
     }catch(e){} }
   document.addEventListener("click",e=>{ if(e.target.closest(".p-alm .cxbar")) setTimeout(fill,50); });
@@ -8862,8 +8870,13 @@ window.SDR_MDHTML=f=>{ const inf=(window._MDINFO||{})[f._num], C=inf&&window.SDR
     // ---- tropics: the outlook's chances and where; no comparison to the site
     if(hk==="trop"){ const T=MD.tropics||{areas:[],cones:[]}; const A=(T.areas||[]).map(f=>{ const p=f.properties||{}, c=cen(f.geometry); return {f,p7:pct(p.prob7day||p.PROB7DAY),p2:pct(p.prob2day||p.PROB2DAY),w:where(c[0],c[1])}; }).sort((x,y)=>(y.p7||0)-(x.p7||0));
       (T.cones||[]).slice(0,2).forEach(f=>{ const p=f.properties||{}; F.push(`<b>${p.stormname||p.STORMNAME||"Active storm"}:</b> forecast cone ${where(...cen(f.geometry))}${p.advisnum||p.ADVISNUM?` (advisory ${p.advisnum||p.ADVISNUM})`:""}.`); });
-      A.slice(0,3).forEach(x=>F.push(`<b>Area ${x.w}:</b> ${x.p7!=null?`${x.p7}% chance of development in 7 days`:"chance of development"}${x.p2!=null?` (${x.p2}% in 2 days)`:""}.`));
-      if(!F.length) return null; const top=A[0];
+      const _cardTop=!(T.cones||[]).length&&A[0]&&A[0].p7!=null; /* the top area is already the big card: don't say it again as a row */
+      A.slice(_cardTop?1:0,3).forEach(x=>F.push(`<b>Area ${x.w}:</b> ${x.p7!=null?`${x.p7}% chance of development in 7 days`:"chance of development"}${x.p2!=null?` (${x.p2}% in 2 days)`:""}.`));
+      try{ const mi=(g)=>{ const P=[]; const walk=a=>Array.isArray(a)&&typeof a[0]==="number"?P.push(a):Array.isArray(a)&&a.forEach(walk); walk(g&&g.coordinates); const R=3958.8, rad=x=>x*Math.PI/180;
+          return Math.min(...P.map(([lo,la])=>{ const dla=rad(la-s.la), dlo=rad(lo-s.lo), q=Math.sin(dla/2)**2+Math.cos(rad(s.la))*Math.cos(rad(la))*Math.sin(dlo/2)**2; return 2*R*Math.asin(Math.sqrt(q)); })); };
+        const near=[...(T.cones||[]),...(T.areas||[])].map(f=>({f,d:mi(f.geometry)})).filter(o=>isFinite(o.d)).sort((a,b)=>a.d-b.d)[0];
+        if(near&&!pIn(near.f.geometry,s.lo,s.la)) F.push(`<b>Closest to ${city}:</b> about ${near.d>=100?Math.round(near.d/50)*50:Math.max(10,Math.round(near.d/10)*10)} miles away.`); }catch(e){}
+      if(!F.length&&!_cardTop) return null; const top=A[0];
       return {card:top&&top.p7!=null?{tag:"TROPICS",big:`${top.p7}% CHANCE OF DEVELOPMENT`,col:top.p7>=60?"#E53935":top.p7>=40?"#F28C28":"#F5C518",line:`${top.w.charAt(0).toUpperCase()+top.w.slice(1)}, over the next 7 days${top.p2!=null?` (${top.p2}% in 2 days)`:""}.`}:null, title:(T.cones||[]).length?"Tropics: active storm":top&&top.p7!=null?`Tropics: ${top.p7}% chance in 7 days`:"Tropics: an area to watch", sub:(T.cones||[]).length?`An active storm ${where(...cen(T.cones[0].geometry))}.`:top&&top.p7!=null?`An area ${top.w} has a ${top.p7}% chance of development in the next 7 days${top.p2!=null?` (${top.p2}% in 2 days)`:""}.`:"", facts:F, bottom:top&&top.p7!=null?`${top.p7}% chance of development ${top.w} over the next 7 days.`:"Tropical activity is being monitored."}; }
     // ---- outlook changes near (not at) the site: where and how far, nothing else
     if(hk==="rst"||hk==="rspc"){ const sub=String(b.sub||"").replace(/\s*No change[^.]*\.?/i,"").replace(/\s*We'?ll[^.]*\.?/i,"").trim(); const L=(b.lines||[]).map(x=>String(x).replace(/the SDR Weather Intelligence Division is (monitoring|watching|tracking) an? /i,"").replace(/^(<b>[^<]+<\/b>\s*)([a-z])/,(m,a,c)=>a+c.toUpperCase())).filter(x=>!/\b(plan|should|we'll|you'll|stay|make sure)\b/i.test(x.replace(/<[^>]+>/g,""))).slice(0,3);
@@ -12686,7 +12699,12 @@ window.SDR_ALMPIC=async function(pane,b){ try{ const A=window.SDR_ALMANAC; if(!A
     days.forEach(d=>{ const ok=d.hi!=null&&!(d.i===0&&hrNow>=17)&&(d.hi>=95||(nh!=null&&d.hi>=nh+15&&d.hi>=88)||d===HN); if(ok&&(!hg||d.i-hg[hg.length-1].i===1)) (hg=hg||[]).push(d); else { flushH(); if(ok) hg=[d]; } }); flushH();
 
     // ---- fog in the next day and a half
-    try{ const f=H.find(h=>{ const t=+new Date(h.t); return t>now+36e5&&t<now+36*36e5&&((h.vis!=null&&h.vis<1)||/\bfog\b/i.test(h.short||""))&&!/patchy/i.test(h.short||""); });
+    // v386: one model hour under a mile was enough before, which flagged clear, calm nights the forecast never called foggy.
+    //   Now it takes the forecast wording ("Fog" / "Areas of fog", not "patchy"), or the visibility forecast at half a mile or less
+    //   for 3 hours in a row with the air nearly saturated (temperature within 2° of the dew point; a quarter mile if there's no dew point).
+    try{ const W=H.filter(h=>{ const t=+new Date(h.t); return t>now+36e5&&t<now+36*36e5; });
+      let f=W.find(h=>/\bfog\b/i.test(h.short||"")&&!/patchy/i.test(h.short||""));
+      if(!f){ let run=[]; for(const h of W){ const sat=h.temp!=null&&h.dew!=null, ok=h.vis!=null&&(sat?(h.vis<=0.5&&h.temp-h.dew<=2):h.vis<=0.25); if(ok){ run.push(h); if(run.length>=3){ f=run[0]; break; } } else run=[]; } }
       if(f){ const t=new Date(f.t), i=idx(t), hr=t.getHours(), part=hr<11?"morning":hr<18?"afternoon":"night"; ev({k:"fog",fam:"fog",i,t:+t,s:46,lvl:"headsup",ico:"fog",text:`Fog ${i<=0?(part==="night"?"tonight":"this "+part):i===1?"tomorrow "+part:wkd(i)+" "+part}`}); } }catch(e){}
 
     // ---- a real change in temperature (12 degrees or more): one line at most, and never when a freeze or the heat already says it
@@ -12833,7 +12851,9 @@ window.SDR_EVEWX=function(x,H){ try{ if(!x||x.d==="TONIGHT") return false; const
   window.SDR_DAYICO=(x,night,R,base,H)=>{ base=base||(night?"clearnight":"sun");
     const wint=/^(sn|mix|ice|tsn)$/.test(base)||(x.snowP||0)>=30||(x.iceP||0)>=30, thun=/^(ts|pcts|pctsn|tsn)$/.test(base)||(x.thunder||0)>=30;
     const hs=(H||[]).filter(h=>{ const hr=new Date(h.t).getHours(); return h.sky!=null&&(night?(hr>=19||hr<=6):(hr>=8&&hr<=17)); }), sky=hs.length>=4?hs.reduce((a,h)=>a+(+h.sky||0),0)/hs.length:null;
-    if(R<30){ if(/^(fog|frost|wind)$/.test(base)) return base; if(sky==null) return /^(sun|clearnight|pc|pcn|cl)$/.test(base)?base:(night?"pcn":"pc"); return sky>=75?"cl":sky>=30?(night?"pcn":"pc"):(night?"clearnight":"sun"); }
+    if(R<30){ if(/^(fog|frost|wind)$/.test(base)) return base; let k=sky==null?(/^(sun|clearnight|pc|pcn|cl)$/.test(base)?base:(night?"pcn":"pc")):sky>=75?"cl":sky>=30?(night?"pcn":"pc"):(night?"clearnight":"sun");
+      /* v386: any rain chance of 20% or more gets at least a partly cloudy icon, never a plain sun or moon */
+      if(R>=20&&/^(sun|clearnight)$/.test(k)) k=night?"pcn":"pc"; return k; }
     if(wint) return /^(mix|ice|tsn)$/.test(base)?base:"sn";
     if(thun) return R>=60?"ts":(night?"pctsn":"pcts");
     return R>=60?"rn":(night?"pcrnn":"pcrn"); };

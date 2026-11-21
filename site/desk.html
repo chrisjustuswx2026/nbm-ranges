@@ -775,13 +775,23 @@ body{font-size:16px}
       (m.msgs||[]).filter(function(x){ return x.w==="them"; }).forEach(function(x){ msgs.push(x); });
       var cells=(q.briefing||[]).map(function(b,i){ return {w:1,l:i===0?"From their dashboard":"",v:esc(b),i:b}; });
       var dash=(function(){ var m=String(q.site||"").match(/greenville|clemson|bay/i); return m?location.href.replace(/desk\.html.*$/,"")+m[0].toLowerCase()+"/":"#"; })();
-      return {id:q.id,thread:q.thread,link:dash,name:name,site:q.site||"",role:"",av:ini(name),st:lv,stWhy:q.issue||"",asked:q.t||Date.now(),q:q.question||"",open:m.open!==false,by:m.by||null,sent:!!m.sent,closedBy:m.closedBy||"",closedAt:m.closedAt||"",msgs:msgs,
+      var _qt=Math.max(q.last||0,q.t||0,...((q.qs||[]).map(function(x){ return x.t||0; })));
+      return {_qt:_qt,id:q.id,thread:q.thread,link:dash,name:name,site:q.site||"",role:"",av:ini(name),st:lv,stWhy:q.issue||"",asked:q.t||Date.now(),q:q.question||"",open:m.open!==false,by:m.by||null,sent:!!m.sent,closedBy:m.closedBy||"",closedAt:m.closedAt||"",msgs:msgs,
         ctx:{hero:{st:lv,why:q.issue||(lv==="clear"?"Nothing urgent at their site":""),urg:q.perspective||""},day:q.event?q.event:"What they asked about",cells:cells,sched:[],briefs:[],drafts:[{k:"Draft",s:"from their dashboard · edit freely",t:q.draft||""}],range:null}}; }
     function fromMem(id){ var m=MEM[id]; return {id:id,thread:m.thread||"",name:m.name,site:m.site||"",role:m.role||"",av:m.av||ini(m.name),st:m.st||"clear",stWhy:m.stWhy||"",asked:m.asked||m.t,q:m.q||"",open:!!m.open,by:m.by,sent:!!m.sent,closedBy:m.closedBy||"",closedAt:m.closedAt||"",msgs:m.msgs||[],ctx:m.ctx||{hero:{st:"clear",why:"",urg:""},day:"",cells:[],sched:[],briefs:[],drafts:[{k:"Draft",s:"",t:""}],range:null}}; }
     var polling=null, lastN=-1, lastTeam=0;
     function teamTick(){ if(DEMO||!ME||Date.now()-lastTeam<180000) return; lastTeam=Date.now(); api("/desk/me").then(function(j){ if(j.team) useTeam(j.team,null); bench(); }).catch(function(){}); }
     function poll(){ teamTick(); api("/desk/queue").then(function(j){ var items=j.items||[], seen={}; if(j.shift) applyShift(j.shift);
-        var next=items.map(function(q){ seen[q.id]=1; var old=byId(q.id); if(old&&old.ctx&&old.ctx.hero){ old.open=true; old.asked=q.t||old.asked; return old; } return fromQueue(q); });
+        var pings=[];
+        var next=items.map(function(q){ seen[q.id]=1; var old=byId(q.id); if(old&&old.ctx&&old.ctx.hero){
+            var qs=(q.qs&&q.qs.length)?q.qs:[{t:q.last||q.t,q:q.question}], had=old._qt||0, fresh=qs.filter(function(x){ return (x.t||0)>had; });
+            if(fresh.length&&had){ fresh.forEach(function(x){ old.msgs.push({w:"client",t:x.q||"",s:"Client · "+fmt(new Date(x.t||Date.now()))}); });
+              var nq=fromQueue(q); old.ctx=nq.ctx; old.st=nq.st; old.stWhy=nq.stWhy; old.q=q.question||old.q;
+              if(!old.open||old.sent){ old.open=true; old.sent=false; old.closedBy=""; old.closedAt=""; }
+              old.fresh=true; pings.push(old.name); try{ remember(old); }catch(e){} }
+            old._qt=Math.max(had,...qs.map(function(x){ return x.t||0; })); old.open=true; old.asked=q.t||old.asked; return old; }
+          var nt=fromQueue(q); if(MEM[q.id]&&MEM[q.id].msgs&&MEM[q.id].msgs.length){ pings.push(nt.name); } return nt; });
+        if(pings.length&&lastN>=0) toast("New message from "+pings[pings.length-1]);
         Object.keys(MEM).forEach(function(id){ if(seen[id]) return; var old=byId(id); if(old){ if(old.open&&!old.sent){ old.open=false; old.closedBy=old.closedBy||"team"; old.closedAt=old.closedAt||"answered elsewhere"; } next.push(old); } else next.push(fromMem(id)); });
         T.length=0; next.forEach(function(t){ T.push(t); });
         var n=items.length; if(lastN>=0&&n>lastN) toast("New question from "+(items[items.length-1].client||items[items.length-1].site)); lastN=n;

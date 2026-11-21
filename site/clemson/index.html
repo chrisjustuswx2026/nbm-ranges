@@ -1,4 +1,12 @@
 <!doctype html><html lang="en"><head><script>
+/* v393: storm-type warnings are in effect from the moment they're issued; they never read "starts at". */
+window.SDR_SF=function(ev){ return /^(Flood|Flash Flood|Severe Thunderstorm|Tornado|Special Marine|Snow Squall|Extreme Wind|Dust Storm) Warning$/.test(String(ev||"")); };
+/* v393: does an alert cover the site (its shape, or a zone alert with no shape)? */
+window.SDR_ACOVER=function(a){ try{ const g=a&&a.geometry; if(!g) return true; const v=window.SDR_ALERTBRIEF&&SDR_ALERTBRIEF.venue&&SDR_ALERTBRIEF.venue(); if(!v) return true;
+  const Ps=g.type==="Polygon"?[g.coordinates]:g.type==="MultiPolygon"?g.coordinates:[]; const lo=+v.lo, la=+v.la;
+  return Ps.some(p=>{ const r=p[0]||[]; let k=false; for(let i=0,j=r.length-1;i<r.length;j=i++){ const [xi,yi]=r[i],[xj,yj]=r[j]; if(((yi>la)!==(yj>la))&&(lo<(xj-xi)*(la-yi)/(yj-yi)+xi)) k=!k; } return k; }); }catch(e){ return true; } };
+</script>
+<script>
 (function(){ const F=window.fetch.bind(window), RX=/^https:\/\/(api|marine-api|air-quality-api|geocoding-api)\.open-meteo\.com\//; let base=null, tried=false;
   const getBase=async()=>{ if(base!==null||tried) return base; tried=true; try{ const c=window.CHANNEL&&window.CHANNEL.aiChatUrl; if(c){ base=c; return base; } const j=await (await F((location.pathname.split("/").length>2?"../":"./")+"channel.json?_="+Date.now(),{cache:"no-store"})).json(); base=String(j.aiChatUrl||"").replace(/\/$/,""); }catch(e){ base=""; } return base; };
   window.fetch=async function(input,init){ const u=typeof input==="string"?input:(input&&input.url)||""; if(!RX.test(u)) return F(input,init);
@@ -2586,7 +2594,7 @@ body.chan-on .tabs button[data-pane="live"]::before{content:"";position:absolute
 .chplay i{width:76px;height:76px;border-radius:50%;background:#E5484D;display:grid;place-items:center;box-shadow:0 8px 28px rgba(229,72,77,.45)}
 .chplay b{font-family:var(--display);font-weight:800;letter-spacing:.14em;font-size:13px}
 </style>
-<script>window.SDR_VER="391";</script><style>.shd .ver{margin-left:auto;margin-right:10px;font-family:var(--display);font-weight:700;letter-spacing:.1em;font-size:11px;color:var(--dim)}</style>
+<script>window.SDR_VER="395";</script><style>.shd .ver{margin-left:auto;margin-right:10px;font-family:var(--display);font-weight:700;letter-spacing:.1em;font-size:11px;color:var(--dim)}</style>
 <script>
 /* SDR_WEEKSTORY: on a quiet day, find what actually matters this week. Ranked: first frost/freeze, a big cooldown or warmup, the 6-10 day outlook, the next rain. */
 window.SDR_COLDOK=function(x){ try{ if(!x||x.lo==null||x.lo>36) return false; const nl=window._bsNL, first=window._bsFall===false, routine=nl!=null&&nl<=34; if(!routine||first) return true; return x.lo<=nl-8; }catch(e){ return true; } };
@@ -3633,7 +3641,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
 
     // ---- status engine ----
     const mine = siteAlerts.features;
-    const _fut=a=>{ const o=a&&a.properties&&(a.properties.onset||a.properties.effective); return !!o&&+new Date(o)>Date.now()+6*3600e3; }, _ud=d=>{ d=new Date(d); const n=Math.round((new Date(+d).setHours(0,0,0,0)-new Date().setHours(0,0,0,0))/864e5); return hhmm(d)+(n<=0?"":n===1?" tomorrow":" "+d.toLocaleDateString("en-US",{weekday:"long"})); };
+    const _fut=a=>{ if(window.SDR_SF&&a&&a.properties&&SDR_SF(a.properties.event)) return false; const o=a&&a.properties&&(a.properties.onset||a.properties.effective); return !!o&&+new Date(o)>Date.now()+6*3600e3; }, _ud=d=>{ d=new Date(d); const n=Math.round((new Date(+d).setHours(0,0,0,0)-new Date().setHours(0,0,0,0))/864e5); return hhmm(d)+(n<=0?"":n===1?" tomorrow":" "+d.toLocaleDateString("en-US",{weekday:"long"})); };
     const warn = mine.find(a=>isWarn(a)&&!_fut(a)), watch = mine.find(a=>isWatch(a)&&!_fut(a)), later = mine.find(a=>isWarn(a)&&_fut(a))||mine.find(a=>isWatch(a)&&_fut(a)&&a.properties.event!=="Special Weather Statement");
     const near = nearestWarning(seAlerts.features.filter(isWarn));
     const summer = RULES.summerMonths.includes(now.getMonth()+1);
@@ -7351,7 +7359,7 @@ window.SDR_GL=(function(){
 
 <script>
 // v125: client chat layer
-(function(){ let wrap=null, fr=null; const CHATV="1795190955";
+(function(){ let wrap=null, fr=null; const CHATV="1795222048";
   function open(){ if(!wrap){ wrap=document.createElement("div"); wrap.id="chatwrap"; wrap.innerHTML='<iframe id="chatfr" title="Message the team" allow="camera"></iframe>'; document.body.appendChild(wrap); fr=wrap.querySelector("iframe"); fr.src="./chat.html?v="+CHATV; fr.addEventListener("load",()=>{ try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }); }
     wrap.hidden=false; document.body.classList.add("chat-on"); if(!(history.state&&history.state.chat)) history.pushState({chat:1},""); try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }
   function close(){ if(wrap){ wrap.hidden=true; } document.body.classList.remove("chat-on"); }
@@ -7631,11 +7639,11 @@ window.SDR_NOWFIRST=(r,H)=>{ if(!r||/moves in|by \d|winding/i.test(r.h)) return 
       RISK.ero=Math.max(0,...here((D.ero||[])[0]).map(x=>x._lvl||0)); }catch(e){} }
   function items(){ const v=venue(); if(!v) return []; const out=[];
     (window.ALERTS||[]).forEach((a,k)=>{ const P=a.properties||{}; const g=polys(a.geometry); const mine=!g.length||g.some(p=>inR(+v.lo,+v.la,p[0])); if(!mine) return;
-      if(/Statement$/.test(P.event||"")&&P.event!=="Special Weather Statement") return;
-      const ev=String(P.event||""), rank=/Emergency/.test(ev)?6:/Warning/.test(ev)?5:/Watch/.test(ev)?3:2;
+      if(/Statement$/.test(P.event||"")&&!/^(Special Weather|Rip Current|Beach Hazards) Statement$/.test(P.event||"")) return;
+      const ev=String(P.event||""), rank=/Emergency/.test(ev)?6:/Warning/.test(ev)?5:/Watch/.test(ev)?3:/Statement$/.test(ev)?1.5:2;
       const col=(window.ALERTINFO&&ALERTINFO.COLORS[ev])||(rank>=5?"#E5484D":rank>=3?"#F5B800":"#8A9BB8");
       out.push({rank,col,h:ev,s:"Until "+hm(P.ends||P.expires)+day(P.ends||P.expires),k}); });
-    const RN=window.RADAR_NEAR; if(RN&&!RN.none&&RN.kind==="storms"&&RN.d<=20) out.push({rank:4,col:"#F5A524",h:"Storms on radar",s:RN.d<3?"At the site now":`${Math.round(RN.d)} miles ${RN.dir}`,k:-1,radar:1});
+    const RN=window.RADAR_NEAR; if(RN&&!RN.none&&RN.kind==="storms"&&RN.d<=20) out.push({rank:4,col:"#F5A524",h:"Storms on radar",s:RN.d<3?"At the site now":`${Math.round(RN.d)} miles ${RN.dir}`,k:-4,radar:1});
     if(window._ltgHold) out.push({rank:5.5,col:"#E5484D",h:"Lightning nearby",s:"All-clear clock running",k:-1});
     // outlook risks (later today / ahead) belong to What's Next, not RIGHT NOW
     return out.sort((a,b)=>b.rank-a.rank); }
@@ -7643,14 +7651,14 @@ window.SDR_NOWFIRST=(r,H)=>{ if(!r||/moves in|by \d|winding/i.test(r.h)) return 
   function paint(){ const st=$("status"), why=$("st-why"); if(!st||!why) return; const L=items();
     let ul=$("stMulti"); if(!ul){ ul=document.createElement("ul"); ul.id="stMulti"; why.insertAdjacentElement("afterend",ul);
       ul.onclick=e=>{ const li=e.target.closest("li"); if(!li) return; const k=+li.dataset.k;
-        if(k>=0){ const row=document.querySelector(`#alist .al[data-k="${k}"]`); if(row){ const d=row.querySelector(".det"); if(d) d.hidden=false; row.scrollIntoView({behavior:"smooth",block:"center"}); } }
+        if(k>=0){ const a=(window.ALERTS||[])[k], ev=(a&&a.properties&&a.properties.event)||""; if(a&&a.geometry&&/Warning/.test(ev)&&window._ALERTGO0){ try{ if(_ALERTGO0(a)!==false) return; }catch(_){} } if(a&&window.SDR_ALERTBRIEF&&SDR_ALERTBRIEF.open){ try{ if(SDR_ALERTBRIEF.open(a)!==false) return; }catch(_){} } const row=document.querySelector(`#alist .al[data-k="${k}"]`); if(row){ const d=row.querySelector(".det"); if(d) d.hidden=false; row.scrollIntoView({behavior:"smooth",block:"center"}); } } else if(k===-4){ const t=document.querySelector('.tabs button[data-pane="radar"]'); if(t){ t.click(); scrollTo(0,0); } } else if(k===-3){ const al=document.getElementById("alist"); if(al) al.scrollIntoView({behavior:"smooth",block:"start"}); }
         else if(k===-1){ const r=document.getElementById("rmap"); if(r) r.scrollIntoView({behavior:"smooth",block:"center"}); }
         else { const t=document.querySelector('.tabs button[data-pane="briefing"]'); if(t) t.click(); } }; }
     if(L.length<2){ if(st.classList.contains("multi")){ st.classList.remove("multi"); ul.hidden=true; if(why.dataset.multi){ why.textContent=why.dataset.multi; delete why.dataset.multi; } } return; }
     const key=JSON.stringify(L.map(x=>x.h+x.s));
     if(!st.classList.contains("multi")){ why.dataset.multi=why.textContent; }
     st.classList.add("multi"); const txt=`${L.length} alerts for your area right now. Tap any for details.`; if(why.textContent!==txt){ if(!why.dataset.multi||why.textContent!==why.dataset.multi) why.dataset.multi=why.textContent; why.textContent=txt; }
-    if(key!==last){ last=key; ul.innerHTML=L.map(x=>`<li data-k="${x.k}"><i style="background:${x.col}"></i><b>${x.h}<span>${x.s}</span></b><em>›</em></li>`).join(""); }
+    if(key!==last){ last=key; const _S=L.length>4?L.filter((x,i)=>i<3||x.rank>=5):L, _m=L.length-_S.length; ul.innerHTML=_S.map(x=>`<li data-k="${x.k}"><i style="background:${x.col}"></i><b>${x.h}<span>${x.s}</span></b><em>›</em></li>`).join("")+(_m>0?`<li data-k="-3"><i style="background:#8A9BB8"></i><b>+${_m} more<span>${L.filter(x=>!_S.includes(x)).map(x=>x.h).join(" · ")}</span></b><em>›</em></li>`:""); }
     ul.hidden=false;
     // the status word always matches the worst item listed (a warning is never shown under ALL CLEAR or HEADS UP)
     const top=L[0].rank, call=$("call"), h=$("st-h"); if(call&&h){ const want=top>=5?"action":top>=3?"headsup":null;
@@ -8614,7 +8622,7 @@ html.hf-lock,html.hf-lock body{overflow:hidden!important}html.hf-lock body::afte
   function bullets(){ const nx=document.getElementById("next"); if(!nx) return; const out=[], now=Date.now(), H=(window.STRIPS&&STRIPS.hours&&STRIPS.hours())||[], D=(window.STRIPS&&STRIPS.days&&STRIPS.days())||[];
     const dn=d=>{ const x=new Date(d), t=new Date(); t.setHours(0,0,0,0); const k=Math.round((new Date(x).setHours(0,0,0,0)-t)/864e5); return k===0?"today":k===1?"tomorrow":x.toLocaleDateString("en-US",{weekday:"long"}); };
     const hm=t=>{ const d=new Date(t), h=d.getHours(); return h===0?"midnight":h===12?"noon":(h%12)+(h<12?" AM":" PM"); };
-    try{ (window.ALERTS||[]).map(a=>a.properties||a).filter(a=>a.onset&&+new Date(a.onset)>now&&+new Date(a.onset)<now+72*3600e3).sort((x,y)=>+new Date(x.onset)-+new Date(y.onset)).slice(0,2)
+    try{ const _AL=(window.ALERTS||[]).filter(a=>!a.properties||!window.SDR_ACOVER||SDR_ACOVER(a)), _on=_AL.map(a=>a.properties||a).filter(a=>!(a.onset&&+new Date(a.onset)>now)).map(a=>a.event); _AL.map(a=>a.properties||a).filter(a=>a.onset&&!(window.SDR_SF&&SDR_SF(a.event))&&!_on.includes(a.event)&&+new Date(a.onset)>now&&+new Date(a.onset)<now+72*3600e3).sort((x,y)=>+new Date(x.onset)-+new Date(y.onset)).slice(0,2)
       .forEach(a=>out.push([/Warning/.test(a.event)?"r":"y",`<b>${a.event}</b> starts ${dn(a.onset)} ${hm(a.onset)}`])); }catch(e){}
     const first=(d,f)=>{ const k=new Date(d).toDateString(); const h=H.find(q=>new Date(q.t).toDateString()===k&&+new Date(q.t)>=now-1800e3&&f(q)); return h?h.t:null; };
     const nxh=((document.getElementById("nx-h")||{}).textContent||""), nowHead=/\buntil\b|\bnow\b|on and off/i.test(nxh);
@@ -11993,7 +12001,7 @@ html.snscene body>*:not(#snscene){display:none!important}
       M.forEach(m=>{ const S=H["snowfall_"+m]; if(!S||!S.some(x=>x!=null)) return; let q=0; S.forEach((x,i)=>{ if(x!=null&&T[i]>=a-1800&&T[i]<=b) q+=x; }); tot.push(q); }); if(tot.length<2) return null; const lo=Math.min(...tot), hi=Math.max(...tot), f=x=>x>=0.95?Math.round(x)+'"':x>=0.05?x.toFixed(1)+'"':'0"';
       return hi<0.05?"The models we checked show little or no snow here in this window.":`Model agreement on snow here: ${f(lo)} to ${f(hi)} across ${tot.length} models (${hi-lo<=Math.max(1,hi*.5)?"they agree":"they are split"}).`; }catch(e){ return null; } }
   function venue(){ try{ const v=(window.DASH&&DASH.venue&&DASH.venue())||{}; if(isFinite(+v.la)) return {la:+v.la,lo:+v.lo}; }catch(e){} const L=window.__LOC||{}; return isFinite(+L.la)?{la:+L.la,lo:+L.lo}:null; }
-  function open(a){ if(!a||!window.SDR_REPORT) return false; const P=a.properties||{}, I=window.ALERTINFO?ALERTINFO.info(a):{}, ev=P.event||"Weather alert", kind=kindOf(ev), X=parts(P.description), ends=P.ends||P.expires, starts=P.onset||P.effective;
+  function open(a){ if(!a||!window.SDR_REPORT) return false; const P=a.properties||{}, I=window.ALERTINFO?ALERTINFO.info(a):{}, ev=P.event||"Weather alert", kind=kindOf(ev), X=parts(P.description), ends=P.ends||P.expires, starts=(window.SDR_SF&&SDR_SF(P.event))?(P.effective||P.onset):(P.onset||P.effective);
     const future=starts&&+new Date(starts)>Date.now()+20*60e3, isSws=/Special Weather Statement/i.test(ev), name=isSws?(I.short||"Special weather statement"):ev;
     const until=ends?`until ${whenTxt(ends)}`:"", win=future?`From ${whenTxt(starts)} ${until}`:`In effect ${until}`;
     const O=ours(kind,starts,ends).map(x=>String(x).replace(/,? around null/g,"")).filter(x=>!/undefined|NaN|\bnull\b/.test(x)), act=(window.SDR_ALERTACT&&SDR_ALERTACT(ev))||"", sdr=SDR_REPORT.isSDR();
@@ -12041,10 +12049,10 @@ html.snscene body>*:not(#snscene){display:none!important}
     return L.find(a=>!a.geometry||(v&&inP(a.geometry,v.lo,v.la)))||null; };
   // a push the first time an advisory, watch or statement covers you (storm warnings already push through TAKE ACTION)
   addEventListener("alerts-ready",()=>{ try{ if(!window.SDR_NOTIFY) return; const v=venue(), L=(window.ALERTS||[]); let seen=null; try{ seen=JSON.parse(localStorage.getItem("sdr-abseen")||"null"); }catch(e){}
-      const ids=L.map(a=>a.id||(a.properties||{}).headline); if(!seen){ localStorage.setItem("sdr-abseen",JSON.stringify(ids.slice(-80))); return; }
-      const a=mine(); if(!a) { return; } const id=a.id||(a.properties||{}).headline, ev=(a.properties||{}).event||""; if(seen.includes(id)) return; seen.push(id); localStorage.setItem("sdr-abseen",JSON.stringify(seen.slice(-80)));
+      const _K=a=>{ const P=a.properties||{}, vt=String(((P.parameters||{}).VTEC||[])[0]||""), k=vt.split(".").slice(2,6).join("."); return "k:"+(k||a.id||P.headline); }; const ids=L.map(_K); if(!seen||!seen.some(x=>/^k:/.test(String(x)))){ localStorage.setItem("sdr-abseen",JSON.stringify(ids.slice(-80))); return; }
+      const a=mine(); if(!a) { return; } const id=_K(a), ev=(a.properties||{}).event||""; if(seen.includes(id)) return; seen.push(id); localStorage.setItem("sdr-abseen",JSON.stringify(seen.slice(-80)));
       if(/Tornado Warning|Severe Thunderstorm Warning|Flash Flood Warning/.test(ev)) return; const P=a.properties||{}, X=parts(P.description), ends=P.ends||P.expires;
-      SDR_NOTIFY("alert",`${ev}${ends?` until ${whenTxt(ends)}`:""}`,`${(w=>{ w=String(w||"").trim(); if(w.length<=130) return w; const c=w.slice(0,130), i=Math.max(c.lastIndexOf(". "),c.lastIndexOf("! ")); return i>40?c.slice(0,i+1):c.replace(/\s+\S*$/,"")+"…"; })(X.WHAT)} Tap for the briefing.`.trim(),"overview","#sdrgo-ab","ab-"+String(id).slice(-24)); try{ localStorage.setItem("sdr-abgo",JSON.stringify({id,t:Date.now()})); }catch(e){} }catch(e){} });
+      SDR_NOTIFY("alert",`${ev}${ends?` until ${whenTxt(ends)}`:""}`,`${(w=>{ w=String(w||"").trim(); if(w.length<=130) return w; const c=w.slice(0,130), i=Math.max(c.lastIndexOf(". "),c.lastIndexOf("! ")); return i>40?c.slice(0,i+1):c.replace(/\s+\S*$/,"")+"…"; })(X.WHAT)} Tap for the briefing.`.trim(),"overview","#sdrgo-ab","ab-"+String(id).slice(-24)); try{ localStorage.setItem("sdr-abgo",JSON.stringify({id:a.id||(a.properties||{}).headline,t:Date.now()})); }catch(e){} }catch(e){} });
   // tapping that push opens the briefing itself (app already open, or opening cold)
   function go(what){ if(what==="alm"){ let n=0; const t=setInterval(()=>{ n++; if(window.SDR_GLANCE&&SDR_GLANCE.open&&document.querySelector(".p-alm")){ clearInterval(t); SDR_GLANCE.open("alm"); setTimeout(()=>{ const c=document.querySelector(".p-alm .almcal"); if(c) c.scrollIntoView({block:"center"}); },1200); } else if(n>40) clearInterval(t); },500); return; }
     if(what==="aar"){ let n=0; const t=setInterval(()=>{ n++; const S=window.SDR_LSR, P=S&&S.pick&&S.pick(); if(P&&P.near&&P.near.length&&window.SDR_AAR){ clearInterval(t); SDR_AAR.open(); } else if(n>40) clearInterval(t); },500); return; }
@@ -12058,7 +12066,7 @@ html.snscene body>*:not(#snscene){display:none!important}
     const live=/\b(rain|shower|storm|thunder|lightning|downpour|hail|tornado|snow|sleet|freezing rain)\b/i.test(why)&&RN&&!RN.none&&!RN.light&&RN.d<=45;
     e.preventDefault(); e.stopPropagation();
     // 1) a storm warning with a shape: straight to the radar on that storm
-    const W=(window.ALERTS||[]).find(x=>x.geometry&&/Tornado Warning|Severe Thunderstorm Warning|Flash Flood Warning|Snow Squall Warning/.test((x.properties||{}).event||""));
+    const _WL=(window.ALERTS||[]).filter(x=>x.geometry&&window.SDR_SF&&SDR_SF((x.properties||{}).event)), W=_WL.find(x=>!window.SDR_ACOVER||SDR_ACOVER(x))||_WL[0];
     if(W&&(act||live)&&window._ALERTGO0){ try{ _ALERTGO0(W); return; }catch(_){} }
     // 2) weather on the radar right now (rain moving in, lightning nearby): the radar
     if(live&&tab("radar")) return;
@@ -12067,15 +12075,15 @@ html.snscene body>*:not(#snscene){display:none!important}
     // 4) anything else: today's briefing
     tab("briefing"); },true);
   const covering=()=>{ const L=window.ALERTS||[], v=venue(); const inP=(g,lo,la)=>{ const Ps=!g?[]:g.type==="Polygon"?[g.coordinates]:g.type==="MultiPolygon"?g.coordinates:[]; return Ps.some(p=>{ const r=p[0]||[]; let k=false; for(let i=0,j=r.length-1;i<r.length;j=i++){ const [xi,yi]=r[i],[xj,yj]=r[j]; if(((yi>la)!==(yj>la))&&(lo<(xj-xi)*(la-yi)/(yj-yi)+xi)) k=!k; } return k; }); };
-    return L.filter(a=>a&&a.properties&&(!a.geometry||(v&&inP(a.geometry,v.lo,v.la)))&&!/Special Weather Statement/i.test(a.properties.event||"")).slice(0,3); };
+    return L.filter(a=>a&&a.properties&&(!a.geometry||(v&&inP(a.geometry,v.lo,v.la)))&&!/Special Weather Statement/i.test(a.properties.event||"")).sort((x,y)=>{ const r=a=>{ const e=a.properties.event||""; return /Emergency/.test(e)?6:/Warning/.test(e)?5:/Watch/.test(e)?3:2; }; return r(y)-r(x); }).slice(0,3); };
   const Cap=x=>x.charAt(0).toUpperCase()+x.slice(1);
   function cards(){ try{ const nx=document.getElementById("next"); if(!nx||!nx.parentElement) return; let box=document.getElementById("abcards"); if(!box){ box=document.createElement("div"); box.id="abcards"; nx.parentElement.insertBefore(box,nx); }
-      const A=covering(), now=Date.now(); const h=A.map((a,i)=>{ const P=a.properties, on=P.onset||P.effective, en=P.ends||P.expires, fut=on&&+new Date(on)>now+20*60e3; let col="#F5B800"; try{ col=(window.ALERTINFO&&ALERTINFO.info(a).color)||col; }catch(e){}
+      const _HI=(window.SDR_MULTI&&SDR_MULTI.items)?SDR_MULTI.items():[], _hero=_HI.length>=2, A=_hero?[]:covering(), now=Date.now(); const h=A.map((a,i)=>{ const P=a.properties, on=(window.SDR_SF&&SDR_SF(P.event))?P.effective:(P.onset||P.effective), en=P.ends||P.expires, fut=on&&+new Date(on)>now+20*60e3; let col="#F5B800"; try{ col=(window.ALERTINFO&&ALERTINFO.info(a).color)||col; }catch(e){}
         return `<button type="button" class="abcard" data-i="${i}"><b style="color:${col}">${esc(P.event)}</b><span>${fut?`Starts ${esc(Cap(dayOf(on)))} at ${esc(tm(on))}`:"In effect now"}</span>${en?`<span>Ends ${esc(Cap(dayOf(en)))} at ${esc(tm(en))}</span>`:""}<i aria-hidden="true">›</i></button>`; }).join("");
       if(box._h!==h){ box._h=h; box.innerHTML=h; box.querySelectorAll(".abcard").forEach(b=>b.onclick=e=>{ e.stopPropagation(); const a=covering()[+b.dataset.i]; if(a) open(a); }); }
       box.hidden=!A.length; document.body.classList.toggle("has-abcard",!!A.length);
       // the card carries the alert, so the lines that repeated it step back
-      const ev=A.map(a=>a.properties.event); const w=document.getElementById("st-why"); if(w&&A.length&&ev.some(e=>w.textContent.indexOf(e+" starts ")===0)) w.textContent="Nothing in effect right now.";
+      const ev=_hero?_HI.filter(x=>x.k>=0).map(x=>x.h):A.map(a=>a.properties.event); const w=document.getElementById("st-why"); if(w&&A.length&&ev.some(e=>w.textContent.indexOf(e+" starts ")===0)) w.textContent="Nothing in effect right now.";
       document.querySelectorAll("#next li").forEach(li=>{ li.classList.toggle("abdup",ev.some(e=>li.textContent.trim().indexOf(e)===0)); });
       // v351 What's Next: the headline stays, the extra lines fold behind one tap
       const notes=[...document.querySelectorAll("#next li")].filter(li=>!li.classList.contains("abdup")), P=document.getElementById("nx-p"), multi=!!(P&&P.children.length>=2), n=notes.length+(multi?P.children.length:0), ul=document.getElementById("nx-notes");
@@ -12645,7 +12653,7 @@ window.SDR_ALMPIC=async function(pane,b){ try{ const A=window.SDR_ALMANAC; if(!A
         ico=st.length?"ts":"rn"; lvl=sev&&(sev.d.lv>=3)?"action":(st.length||total>=0.5)?"headsup":"clear"; }
       // what is already falling, or about to in the next hours, is not "next": only its continuation is
       const mine=a===0&&((ctx.nowWet&&((ctx.nowWet.kind==="snow")===(g.fam==="winter")))||ctx.lead);
-      if(mine){ if(b>=1&&n>=2) ev({k:g.fam==="winter"?"snow":"wet",fam:g.fam,i:0,i2:b,t:now+60e3,s:Math.max(50,s-15),lvl,ico,text:`${label.replace(/ possible$/,"")} continues through ${dn(b)}${/about/.test(tail)?tail:""}`}); wetSeen=wetSeen||!/storm/i.test(label); return; }
+      if(mine){ if(b>=1&&n>=2) ev({k:g.fam==="winter"?"snow":"wet",fam:g.fam,i:0,i2:b,t:now+60e3,s:Math.max(50,s-15),lvl,ico,text:`${label.replace(/ possible$/,"")} ${/ and |s$/i.test(label.replace(/ possible$/,""))?"continue":"continues"} through ${dn(b)}${/about/.test(tail)?tail:""}`}); wetSeen=wetSeen||!/storm/i.test(label); return; }
       const more=wetSeen&&g.fam==="wet"&&label==="Rain"?"More ":""; wetSeen=wetSeen||(g.fam==="wet"&&!/storm/i.test(label));
       const when=n===1?(g.L[0].d.night?"tonight":dG(a)):spanG(a,b);
       let text=`${more?more+label.charAt(0).toLowerCase()+label.slice(1):label} ${when}${tail}`, s2=s;
@@ -12855,8 +12863,11 @@ window.SDR_EVEWX=function(x,H){ try{ if(!x||x.d==="TONIGHT") return false; const
       /* v386: any rain chance of 20% or more gets at least a partly cloudy icon, never a plain sun or moon */
       if(R>=20&&/^(sun|clearnight)$/.test(k)) k=night?"pcn":"pc"; return k; }
     if(wint) return /^(mix|ice|tsn)$/.test(base)?base:"sn";
-    if(thun) return R>=60?"ts":(night?"pctsn":"pcts");
-    return R>=60?"rn":(night?"pcrnn":"pcrn"); };
+    const tx=String(x.short||x.shortForecast||""), mo=new Date(x.date||Date.now()).getMonth()+1, summer=mo>=6&&mo<=9;
+    const cloudyTx=/Partly Sunny|Mostly Cloudy|(^|then |and )Cloudy/i.test(tx), clearTx=!cloudyTx&&/Sunny|Partly Cloudy|Clear/i.test(tx);
+    const opens=sky!=null?sky<((summer&&thun)?70:60):(clearTx||(summer&&thun&&!cloudyTx));
+    if(thun) return (R>=60||!opens)?"ts":(night?"pctsn":"pcts");
+    return (R>=60||!opens)?"rn":(night?"pcrnn":"pcrn"); };
 })();
 </script>
 <style id="sdr-385">
@@ -12890,4 +12901,128 @@ window.SDR_EVEWX=function(x,H){ try{ if(!x||x.d==="TONIGHT") return false; const
   body.tabs-top #chatwrap #chatfr{flex:1 1 auto;width:100%;height:100%!important;min-height:0;border:0;display:block}
 }
 </style>
+<style id="sdr-394">
+/* v394: our icons move a little. Rain falls, snow drifts, lightning flickers. Sun, clouds and moon stay still. Off for reduced motion and print. */
+@media (prefers-reduced-motion:no-preference){
+  svg .ax-dr{animation:axdr 1.9s ease-in infinite;transform-box:fill-box}
+  svg .ax-sn{animation:axsn 3.4s ease-in-out infinite;transform-box:fill-box}
+  svg .ax-bo{animation:axbo 5s linear infinite}
+  #days .drow:nth-child(2n) svg .ax-dr{animation-delay:-.7s} #days .drow:nth-child(3n) svg .ax-dr{animation-delay:-1.3s}
+  #days .drow:nth-child(2n) svg .ax-bo{animation-delay:-2.2s} #days .drow:nth-child(3n) svg .ax-sn{animation-delay:-1.6s}
+}
+@keyframes axdr{0%{transform:translateY(-1.6px);opacity:0}20%{opacity:1}80%{opacity:1}100%{transform:translateY(1.8px);opacity:0}}
+@keyframes axsn{0%{transform:translate(0,-1px);opacity:.35}50%{transform:translate(.6px,.8px);opacity:1}100%{transform:translate(0,2px);opacity:.35}}
+@keyframes axbo{0%,86%,100%{opacity:1}88%{opacity:.25}90%{opacity:1}92%{opacity:.4}94%{opacity:1}}
+@media print{svg .ax-dr,svg .ax-sn,svg .ax-bo{animation:none!important}}
+</style>
+<script>
+/* v394: tag the moving parts of our own icon drawings (rain drops, snowflakes, sleet, the lightning bolt) */
+(function(){ let n=0; const tag=()=>{ const I=window.DASH&&DASH.ICO; if(!I||!I.pcrn){ if(n++<60) setTimeout(tag,500); return; }
+  Object.keys(I).forEach(k=>{ let v=I[k]; if(typeof v!=="string"||v.indexOf("ax-")>=0) return;
+    v=v.replace(/<g stroke="#2F7CF6"/g,'<g class="ax-dr" stroke="#2F7CF6"').replace(/<path (d="[^"]*") stroke="#2F7CF6"/g,'<path class="ax-dr" $1 stroke="#2F7CF6"')
+     .replace(/<g fill="#F5A1F5"/g,'<g class="ax-dr" fill="#F5A1F5"')
+     .replace(/<path (d="[^"]*") stroke="#F2F8FF"/g,'<path class="ax-sn" $1 stroke="#F2F8FF"')
+     .replace(/<path (d="M1[23]\.?\d* 1[45]\.?\d*l[^"]*") fill="#FFCE2E"/g,'<path class="ax-bo" $1 fill="#FFCE2E"');
+    I[k]=v; });
+  try{ if(window.STRIPS&&STRIPS.days&&STRIPS.days().length) STRIPS.setDays(STRIPS.days()); }catch(e){} };
+  tag(); })();
+</script>
+<style id="sdr-395">
+/* v395 NEW LOOK (preview). Home screen only, only when body has .look-n. Turn on with ?look=new, off with ?look=old.
+   Two typefaces with jobs: Barlow Condensed = headlines and big moments; IBM Plex Sans = data, labels, reading.
+   Fewer boxes: sections sit on the page with hairlines; boxes stay only where they mean something (the alert panel, the radar, map thumbnails).
+   Signature pieces each get their own shape. Color only for meaning. */
+body.look-n{--ui:"IBM Plex Sans",-apple-system,"Segoe UI",Roboto,sans-serif;--hair:rgba(169,182,204,.16)}
+body.look-n #status,body.look-n #bstrip,body.look-n #pane-overview{--body:var(--ui);font-family:var(--ui)}
+/* small labels: readable face, no tracking, sentence case (text rewritten by the script) */
+body.look-n #status .k,body.look-n #pane-overview .k,body.look-n #pane-overview h3,body.look-n #pane-overview .gth b,body.look-n #schedhero em,
+body.look-n #pane-overview .lr small,body.look-n #next .k,body.look-n #pane-overview .glmrh h3{font-family:var(--ui)!important;font-weight:600!important;letter-spacing:0!important;text-transform:none!important;font-size:13px!important;color:var(--muted)!important}
+/* ---------- section frame: no cards ---------- */
+body.look-n #pane-overview>.panel:not(.radar),body.look-n #pane-overview .two>.panel:not(.radar),body.look-n #gl-m .glw{background:none!important;border:0!important;border-top:1px solid var(--hair)!important;border-radius:0!important;box-shadow:none!important}
+body.look-n #pane-overview .ph{padding-left:2px!important;padding-right:2px!important}
+body.look-n #pane-overview .p-latest .lr,body.look-n #pane-overview #alist .al{padding-left:2px!important;padding-right:2px!important;border-color:var(--hair)!important}
+/* ---------- hour by hour: columns, not chips ---------- */
+body.look-n #hours .hxc,body.look-n #hours .hxs{background:none!important;border:0!important;border-radius:0!important;border-right:1px solid var(--hair)!important;box-shadow:none!important}
+body.look-n #hours .hxc.nowc{border-top:2px solid var(--accent)!important}
+body.look-n #hours .hxc .hxt,body.look-n #hours .hxc .hxd{font-family:var(--ui)!important;letter-spacing:0!important;font-weight:500!important}
+body.look-n #hours .hxv,body.look-n #days .dlh b,body.look-n #days .dlh span,body.look-n #days .dtemp b{font-family:var(--ui)!important;font-weight:600!important;letter-spacing:0!important}
+body.look-n #hdaylbl{color:var(--muted)!important}
+/* ---------- 7-day: rows on hairlines, status bar slimmer ---------- */
+body.look-n #days .drow{border-bottom-color:var(--hair)!important;border-left-width:3px!important}
+body.look-n #days .dn b{font-family:var(--ui)!important;font-weight:600!important;letter-spacing:0!important;font-size:16px!important}
+body.look-n #days .dn small{font-family:var(--ui)!important;letter-spacing:0!important}
+body.look-n .cxmore{font-family:var(--ui)!important;letter-spacing:0!important;font-weight:600!important;border-color:var(--hair)!important}
+/* ---------- glance: 2x2 grid on hairlines, plain icons ---------- */
+body.look-n #glance .glw{gap:0!important}
+body.look-n #glance .gt{background:none!important;border:0!important;border-radius:0!important;box-shadow:none!important}
+body.look-n #gl-a .gt,body.look-n #gl-o .gt{border-top:1px solid var(--hair)!important}
+body.look-n #gl-a .gt+.gt,body.look-n #gl-o .gt+.gt{border-left:1px solid var(--hair)!important}
+body.look-n #glance .gt i{background:none!important;color:var(--muted)!important}
+body.look-n #gl-o .gt b,body.look-n #gl-a .gt strong{letter-spacing:0!important}
+body.look-n #gl-o .gt b{font-family:var(--ui)!important;font-weight:600!important;text-transform:none!important;font-size:15px!important}
+body.look-n #gl-m .glr{border-color:var(--hair)!important;background:none!important}
+body.look-n #gl-m .glr i{background:none!important;color:var(--muted)!important}
+body.look-n #glmr .glmrw button{border-radius:6px!important;box-shadow:none!important}
+/* ---------- signature: What's Next = an editorial line, no card ---------- */
+body.look-n #next{background:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;border-left:4px solid var(--clear)!important;padding:4px 0 4px 16px!important}
+body.look-n #next.headsup,body.look-n #next.heads{border-left-color:var(--heads)!important}
+body.look-n #next.action{border-left-color:var(--action)!important}
+body.look-n #next #nx-h{font-family:var(--display)!important;font-weight:800!important;font-size:30px!important;line-height:1.02!important;letter-spacing:.005em!important}
+body.look-n #next #f3b{font-family:var(--ui)!important}
+/* ---------- signature: the alert panel keeps its color (it means something), loses the nested boxes ---------- */
+body.look-n #call{border-radius:6px!important}
+body.look-n #stMulti{gap:0!important}
+body.look-n #stMulti li{background:none!important;border-radius:0!important;border-top:1px solid rgba(255,255,255,.1)!important;padding:10px 2px!important}
+body.look-n #stMulti li b{font-family:var(--ui)!important;letter-spacing:0!important;text-transform:none!important;font-size:16px!important;font-weight:600!important}
+body.look-n #stMulti li span{font-family:var(--ui)!important}
+/* ---------- signature: radar = an instrument, squared off ---------- */
+body.look-n #pane-overview .radar{border-radius:6px!important;box-shadow:none!important}
+/* ---------- signature: Schedule Watch = a ticket ---------- */
+body.look-n #schedhero{background:none!important;border:1px dashed rgba(111,183,255,.45)!important;border-radius:8px!important}
+body.look-n #schedhero i{background:none!important}
+body.look-n #schedhero u.shonly{background:none!important;color:var(--dim)!important;padding:0!important;font-family:var(--ui)!important;letter-spacing:0!important;text-transform:none!important}
+body.look-n #schedhero b{font-family:var(--display)!important;font-weight:800!important;font-size:22px!important;line-height:1.05!important}
+/* ---------- signature: the briefing = a note from the team, a rule not a box ---------- */
+body.look-n #bstrip{background:none!important;border:0!important;border-radius:0!important;border-left:3px solid var(--blue)!important;padding:6px 0 6px 14px!important}
+body.look-n #bstrip b{background:none!important;color:#6FB7FF!important;font-family:var(--ui)!important;letter-spacing:0!important}
+body.look-n #bstrip i{display:none!important}
+body.look-n .p-latest .lr i{background:none!important;color:var(--muted)!important}
+body.look-n .p-latest .lr b{font-family:var(--display)!important;font-weight:700!important;font-size:19px!important;letter-spacing:.01em!important}
+/* ---------- ask the team: a plain row ---------- */
+body.look-n #askbar{background:none!important;border:0!important;border-top:1px solid var(--hair)!important;border-bottom:1px solid var(--hair)!important;border-radius:0!important;padding-left:2px!important;padding-right:2px!important;box-shadow:none!important}
+/* preview footer */
+#lookn-tag{display:block;margin:18px auto 30px;text-align:center;font:500 12px var(--ui,system-ui);color:var(--dim)}
+#lookn-tag a{color:#6FB7FF}
+/* round 2: labels that carry their own caps styling */
+body.look-n #status .k b,body.look-n #status .k span,body.look-n #next .k b,body.look-n #hdaylbl,body.look-n #askbar em.lv,body.look-n #days .dn.tn b{font-family:var(--ui)!important;font-weight:600!important;letter-spacing:0!important;text-transform:none!important;font-size:13px!important}
+body.look-n #status .k b,body.look-n #next .k b{color:var(--muted)!important}
+body.look-n #alist .al b{font-family:var(--ui)!important;font-weight:600!important;letter-spacing:0!important;text-transform:none!important;font-size:16px!important}
+body.look-n #alist .al .ex{font-family:var(--ui)!important;letter-spacing:0!important;text-transform:none!important;font-weight:500!important;color:var(--muted)!important}
+body.look-n #pane-overview #lookn-tag{order:9999;grid-column:1/-1}
+body.look-n #pane-overview .live,body.look-n #na-live{font-family:var(--ui)!important;letter-spacing:0!important}
+/* round 3: desktop What's Next sits at the top of its column (the rule no longer runs the full height); preview note at the page end */
+@media (min-width:900px){ body.look-n #next{align-self:start!important;height:auto!important} }
+body.look-n>#lookn-tag{margin:24px auto 96px}
+@media (max-width:899px){ body.look-n #gl-a .gt:nth-child(2n+1){border-left:0!important} }
+</style>
+<script>
+/* v395: the new-look preview switch and the label case fix */
+(function(){ try{ const q=new URLSearchParams(location.search).get("look"); if(q==="new") localStorage.setItem("sdr-look","new"); if(q==="old") localStorage.removeItem("sdr-look"); }catch(e){}
+  let on=false; try{ on=localStorage.getItem("sdr-look")==="new"; }catch(e){} if(!on) return;
+  document.body.classList.add("look-n");
+  const l=document.createElement("link"); l.rel="stylesheet"; l.href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"; document.head.appendChild(l);
+  // ALL-CAPS labels on the home screen become sentence case; place names, days, months and short codes keep their capitals
+  const KEEP=/^(SDR|UV|AQI|AM|PM|NWS|MPH|AND|OF)$/;
+  const PLACE=()=>{ try{ const v=(window.DASH&&DASH.venue&&DASH.venue())||{}; return String(v.name||"").split(/[\s,]+/).filter(Boolean).map(w=>w.toUpperCase()); }catch(e){ return []; } };
+  const PROPER=/^(SOUTH|NORTH|CAROLINA|GEORGIA|FLORIDA|VIRGINIA|TENNESSEE|ALABAMA|COUNTY|BEACH|MON|TUE|WED|THU|FRI|SAT|SUN|JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|SEPT|OCT|NOV|DEC|MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY)$/;
+  const fix=t=>{ const P=PLACE(); let first=true; return t.replace(/[A-Z][A-Z'&.-]*/g,w=>{ const W=w.replace(/[^A-Z]/g,""); let r;
+      if(/^(SDR|UV|AQI|NWS)$/.test(W)) r=w; else if(/^(AM|PM)$/.test(W)) r=w; else if(P.includes(W)||PROPER.test(W)) r=w[0]+w.slice(1).toLowerCase(); else if(first) r=w[0]+w.slice(1).toLowerCase(); else r=w.toLowerCase(); first=false; return r; }); };
+  const SEL='#status .k b,#status .k span,#pane-overview .k,#pane-overview .ph .k,#pane-overview h3,#pane-overview .gth b,#gl-o .gt b,#schedhero em,#schedhero u.shonly,#pane-overview .lr small,#next .k b,#hours .hxd,#bstrip b,#pane-overview .cxmore,#stMulti li b,#pane-overview .tapH,#alist .al b,#alist .al .ex,#askbar em.lv,#days .dn b,#hdaylbl';
+  const run=()=>{ document.querySelectorAll(SEL).forEach(e=>{ e.childNodes.forEach(n=>{ if(n.nodeType===3){ const t=n.nodeValue; if(/[A-Z]{3,}/.test(t)&&t===t.toUpperCase()){ const f=fix(t); if(f!==t) n.nodeValue=f; } } }); }); };
+  let qd=0; const mo=new MutationObserver(()=>{ if(qd) return; qd=1; requestAnimationFrame(()=>{ qd=0; mo.disconnect(); run(); obs(); }); });
+  const obs=()=>{ ["status","pane-overview","bstrip"].forEach(id=>{ const e=document.getElementById(id); if(e) mo.observe(e,{subtree:true,childList:true,characterData:true}); }); };
+  run(); obs(); setTimeout(run,1500);
+  const t=document.createElement("small"); t.id="lookn-tag"; t.innerHTML='Preview: new look (only on this device) · <a href="?look=old">Turn off</a>'; document.body.appendChild(t);
+})();
+</script>
 </body></html>

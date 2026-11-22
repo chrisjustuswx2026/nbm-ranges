@@ -641,7 +641,8 @@ body{font-size:16px}
         '<div class="foot"><small>'+(t.open?(t.by?(t.by===me?"Claimed by you":"Claimed by "+t.by):(t.helloBy?"Unclaimed · hello went out as "+t.helloBy:"Unclaimed")):"Closed by "+t.closedBy+" · "+t.closedAt)+'</small>'+
         (t.open?'<button class="claim'+(t.by?" mine":"")+'">'+(t.by?(t.by===me?"OPEN":"TAKEN"):"CLAIM")+'</button>':'<button class="claim mine">VIEW</button>')+'</div></div>';
       d.querySelector(".who b").textContent=t.name;d.querySelector(".who small").textContent=t.site+" · "+t.role;d.querySelector(".q").textContent=t.q;
-      d.querySelector(".claim").addEventListener("click",function(){if(t.open&&!t.by){t.by=me;toast("You claimed "+t.name+".");if(window.LIVE)LIVE.remember(t);}open(t.id);});
+      var go=function(e){ if(e) e.stopPropagation(); if(t.open&&!t.by){t.by=me;toast("You claimed "+t.name+".");if(window.LIVE)LIVE.remember(t);}open(t.id);};
+      d.querySelector(".claim").addEventListener("click",go); d.addEventListener("click",function(e){ if(e.target.closest("button,a,input,textarea,select")) return; go(); });
       L.appendChild(d);});}
   document.querySelectorAll("#tabs button").forEach(function(b){b.addEventListener("click",function(){tab=b.getAttribute("data-tab");
     document.querySelectorAll("#tabs button").forEach(function(x){x.classList.toggle("on",x===b);});list();});});
@@ -1582,6 +1583,12 @@ body.staffview #deskrow #offbtn,body.staffview #deskrow #backat,body.staffview #
 .orbadge{display:inline-block;min-width:18px;margin-left:7px;padding:1px 6px;border-radius:999px;background:#E5484D;color:#fff;font-size:11.5px;line-height:16px;text-align:center;letter-spacing:0}
 #or .orerr{color:#FF8A8E;font-size:13.5px}
 #or details.orlow{margin-top:14px}#or details.orlow summary{cursor:pointer;color:var(--dim);font-size:14px;padding:6px 0}
+
+/* v398: cards fit the screen; the status line wraps instead of widening the card */
+.card .in{grid-template-columns:minmax(0,1fr)}
+.card .st{width:auto!important;max-width:100%;display:block!important;white-space:normal;border-radius:14px;justify-self:start;line-height:1.35;overflow-wrap:anywhere}
+.card .q{overflow-wrap:anywhere}
+.card{cursor:pointer}
 </style>
 <script>
 /* v309 OUTREACH: who to reach out to today. The prospect tracker (every county, who decides, contract status) checked live against

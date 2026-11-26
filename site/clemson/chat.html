@@ -777,4 +777,5 @@ var SDR_ENGINE=(function(){
   var back=document.querySelector(".back"); if(back) back.addEventListener("click",function(){ if(window.parent&&window.parent!==window){ window.parent.postMessage({sdr:"chat-close"},"*"); } else { history.back(); } });
   window.addEventListener("message",function(e){ var d=e.data||{}; if(d.sdr==="chat-prefill"&&d.text){ ci.value=d.text; ciFit(); try{ ci.focus(); ci.setSelectionRange(d.text.length,d.text.length); }catch(x){} return; } if(d.sdr==="chat-open"){ pinPaint(); setTimeout(pinPaint,1500); try{ var v=window.parent.DASH&&window.parent.DASH.venue&&window.parent.DASH.venue(); if(v&&v.name){ var w=document.querySelector(".who b"); if(w){ w.innerHTML='<span class="lv" id="lvtag" hidden><i></i>LIVE</span>Our meteorologists<em class="whloc">'+v.name.replace(/[<&]/g,"")+'</em>'; try{ staffPaint(); }catch(x){} } } }catch(x){} } });
 })();
-</script>
+</script><script>/* v399b: keyboard up/down: keep the newest message in view */window.addEventListener("resize",function(){ var m=document.getElementById("msgs"); if(m) setTimeout(function(){ m.scrollTop=m.scrollHeight; },60); });</script>
+

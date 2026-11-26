@@ -2614,7 +2614,7 @@ body.chan-on .tabs button[data-pane="live"]::before{content:"";position:absolute
 .chplay i{width:76px;height:76px;border-radius:50%;background:#E5484D;display:grid;place-items:center;box-shadow:0 8px 28px rgba(229,72,77,.45)}
 .chplay b{font-family:var(--display);font-weight:800;letter-spacing:.14em;font-size:13px}
 </style>
-<script>window.SDR_VER="399";</script><style>.shd .ver{margin-left:auto;margin-right:10px;font-family:var(--display);font-weight:700;letter-spacing:.1em;font-size:11px;color:var(--dim)}</style>
+<script>window.SDR_VER="400";</script><style>.shd .ver{margin-left:auto;margin-right:10px;font-family:var(--display);font-weight:700;letter-spacing:.1em;font-size:11px;color:var(--dim)}</style>
 <script>
 /* SDR_WEEKSTORY: on a quiet day, find what actually matters this week. Ranked: first frost/freeze, a big cooldown or warmup, the 6-10 day outlook, the next rain. */
 window.SDR_COLDOK=function(x){ try{ if(!x||x.lo==null||x.lo>36) return false; const nl=window._bsNL, first=window._bsFall===false, routine=nl!=null&&nl<=34; if(!routine||first) return true; return x.lo<=nl-8; }catch(e){ return true; } };
@@ -3108,7 +3108,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
       </ul>
       <div class="bottom"><span class="k">BOTTOM LINE</span>Keep the schedule. Shift team arrival or stage under cover. We'll call the all-clear the moment the line passes.<small>Next update: 1:30 PM or sooner</small></div>
       <div class="prev"><span class="k">LIBRARY</span></div>
-      <div class="bfilter" id="bfilter"><button aria-pressed="true" data-c="">ALL</button><button aria-pressed="false" data-c="SEVERE">SEVERE</button><button aria-pressed="false" data-c="FLOOD">FLOOD</button><button aria-pressed="false" data-c="FIRE">FIRE</button><button aria-pressed="false" data-c="TROPICAL">TROPICAL</button><button aria-pressed="false" data-c="WINTER">WINTER</button><button aria-pressed="false" data-c="OUTLOOK">OUTLOOK</button><button aria-pressed="false" data-c="SEASONAL">SEASONAL</button></div>
+      <div class="bfilter" id="bfilter"><button aria-pressed="true" data-c="">ALL</button><button aria-pressed="false" data-c="SEVERE">SEVERE</button><button aria-pressed="false" data-c="FLOOD">FLOOD</button><button aria-pressed="false" data-c="FIRE">FIRE</button><button aria-pressed="false" data-c="TROPICAL">TROPICAL</button><button aria-pressed="false" data-c="WINTER">WINTER</button><button aria-pressed="false" data-c="WIND">WIND</button><button aria-pressed="false" data-c="FREEZE">FREEZE</button><button aria-pressed="false" data-c="HEAT">HEAT</button><button aria-pressed="false" data-c="OUTLOOK">OUTLOOK</button><button aria-pressed="false" data-c="SEASONAL">SEASONAL</button></div>
       <div class="blist" id="blib" style="max-height:none"><button class="brow" data-cat="SEVERE"><span class="bd">Oct 22</span><span class="bt">Severe weather threat · Saturday <i>LATEST</i></span><span class="bc severe">SEVERE</span><span class="bk">▶ VIDEO</span></button><button class="brow" data-cat="TROPICAL"><span class="bd">Oct 20</span><span class="bt">Tropics: what we're watching</span><span class="bc tropical">TROPICAL</span><span class="bk">▶ VIDEO</span></button><button class="brow" data-cat="SEASONAL"><span class="bd">Oct 15</span><span class="bt">November outlook</span><span class="bc seasonal">SEASONAL</span><span class="bk">▶ VIDEO</span></button><button class="brow" data-cat="WINTER"><span class="bd">Oct 8</span><span class="bt">Winter weather outlook 2026–27</span><span class="bc winter">WINTER</span><span class="bk">▶ VIDEO</span></button><button class="brow" data-cat="SEASONAL"><span class="bd">Oct 3</span><span class="bt">Fall pattern change</span><span class="bc seasonal">SEASONAL</span><span class="bk">WRITTEN</span></button><button class="brow" data-cat="SEVERE"><span class="bd">Sep 26</span><span class="bt">After-action: Sept. 24 wind event</span><span class="bc severe">SEVERE</span><span class="bk">WRITTEN</span></button></div>
     </div>
   </section>
@@ -3674,7 +3674,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
       ni="ts"; nh = `All clear after ${hhmm(new Date(warn.properties.ends||warn.properties.expires))}`; np = "Hold until the warning ends.";
     } else if (watch || soon || (near && near.d<=SITE.watchMi) || (window.RADAR_NEAR&&!window.RADAR_NEAR.none&&!window.RADAR_NEAR.light&&window.RADAR_NEAR.d<=SITE.watchMi)) {
       key="headsup"; const RN=window.RADAR_NEAR&&!window.RADAR_NEAR.none&&!window.RADAR_NEAR.light&&window.RADAR_NEAR.d<=SITE.watchMi?window.RADAR_NEAR:null;
-      why = watch ? `${watch.properties.event==="Special Weather Statement"?window.ALERTINFO.shortLine(watch):watch.properties.event} until ${_ud(watch.properties.ends||watch.properties.expires)}.` :
+      why = watch ? `${watch.properties.event==="Special Weather Statement"?window.ALERTINFO.shortLine(watch):watch.properties.event}${(()=>{ const on=+new Date(watch.properties.onset||watch.properties.effective||0); return on>Date.now()+5*60e3?` starts ${_ud(watch.properties.onset)}, until ${_ud(watch.properties.ends||watch.properties.expires)}`:` until ${_ud(watch.properties.ends||watch.properties.expires)}`; })()}.` :
             RN ? (RN.d<3 ? `${cap(RN.kind)} at ${SITE.name} right now.` : RN.heavy ? `Storms within 30 miles: ${Math.round(RN.d)} miles to your ${RN.dir}, closing in. Have the plan ready.` : `Rain in the area: ${Math.round(RN.d)} miles ${RN.dir}${RN.light?", light":""}.`) :
             near && near.d<=SITE.watchMi ? `${near.a.properties.event} ${near.d.toFixed(0)} miles away (${(near.a.properties.areaDesc||"").split(";")[0]}).` :
             (()=>{ const t=+new Date(soon.startTime), w=String(soon.shortForecast||"Rain").replace(/\s*(likely|possible|chance)\s*$/i,"").replace(/^(slight )?chance (of )?/i,""), W=w.charAt(0).toUpperCase()+w.slice(1).toLowerCase(); return t<=Date.now()+5*60000?`${W} now or starting soon.`:`${W} likely by ${hhmm(new Date(t))}.`; })();
@@ -3685,7 +3685,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
       if(nextWet){ ni = ico(nextWet.shortForecast); nh = `${nextWet.shortForecast} ~${hhmm(new Date(nextWet.startTime))}`; np = `${nextWet.probabilityOfPrecipitation.value}% chance. Quiet until then.`; }
       else { const d2 = days.find(x=>x.pp>=40); ni = d2 ? d2.ico : "sun"; nh = d2 ? `${d2.d==="TONIGHT"?"Tonight":d2.d}: ${d2.pp}% rain` : "Quiet through the week"; np = d2 ? "Dry until then." : "Nothing on the 7-day worth planning around."; }
     }
-    if(key==="clear"&&later) why=`${later.properties.event} starts ${_ud(later.properties.onset||later.properties.effective)}. Nothing in effect right now.`;
+    if(key==="clear"&&later) why="No watches or warnings in effect right now.";
     let _heat=false; { const wb=window._NOWO&&window._NOWO.wbgt; if(wb!=null&&key!=="action"&&!window._ltgHold){ if(wb>=90){ key="action"; _heat=true; why=`Heat stress: WBGT ${wb}°. Stop or move strenuous outdoor work and activities indoors.`; } else if(wb>=87&&key==="clear"){ key="headsup"; _heat=true; why=`Heat stress: WBGT ${wb}°. Extra water and rest breaks for anyone working outside.`; } } }
     Object.assign(D.SCENES[key], { k:(window.__LOC?__LOC.name.toUpperCase():"MEMORIAL STADIUM")+" · RIGHT NOW", h:D.WORD[key], why, nh, np, ni, f3b:"Live · updated "+hhmm(now),
       rd: (window.RADAR_NEAR&&!window.RADAR_NEAR.none) ? `${cap(window.RADAR_NEAR.kind)} ${Math.round(window.RADAR_NEAR.d)} miles ${window.RADAR_NEAR.dir}` : window.RADAR_NEAR ? "Radar quiet within 45 miles" : near ? `Nearest warning ${near.d.toFixed(0)} mi · ${near.a.properties.event}` : "No warning polygons within range" });
@@ -5848,7 +5848,8 @@ window.SITE_LL = window.__LOC?{lat:__LOC.la,lon:__LOC.lo}:(window.SITE_LL || { l
       out.push({k:"bl-frost", v:fr&&!fz?new Date(fr.date).toDateString():"none", kind:"blend", what:"frost", x:fr});
       const hh=HH.slice(0,72).filter(h=>(h.feel||h.temp||0)>=105); out.push({k:"bl-heat", v:hh.length?new Date(hh[0].t).toDateString():"none", kind:"blend", what:"heat", h:hh});
       const _ws=x=>Math.max(x.sr?x.sr[1]||0:0,(x.sr&&x.sr[2]>=10?x.sr[2]/4:0),(x.snowP||0)>=30?x.snowP/4:0,((x.iceP||0)>=30&&x.lo!=null&&x.lo<=33)?x.iceP/5:0), wn=DD.slice(0,5).filter(x=>_ws(x)>0).sort((a,b)=>_ws(b)-_ws(a))[0]; out.push({k:"bl-winter", v:wn?new Date(wn.date).toDateString():"none", kind:"blend", what:"winter", x:wn});
-      const gw=DD.slice(0,3).find(x=>(x.gust||0)>=45&&!(x.storm||(x.thunder||0)>=30)); out.push({k:"bl-wind", v:gw?new Date(gw.date).toDateString():"none", kind:"blend", what:"wind", x:gw}); }
+      const gw=DD.slice(0,3).find(x=>(x.gust||0)>=40&&!(x.storm||(x.thunder||0)>=30)); out.push({k:"bl-wind", v:gw?new Date(gw.date).toDateString():"none", kind:"blend", what:"wind", x:gw}); }
+    out.forEach(o=>{ if(o&&o.day&&/^(spc|rspc|rst2-spc|ero|rst2-ero)\d+$/.test(o.k)) o.k=o.k.replace(/\d+$/,"")+"@"+new Date(o.day).toDateString(); });
     return out; }
 
   // what changed since last time → lines in our voice
@@ -6095,7 +6096,7 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
     const bt=$q(".bottom"); if(bt) bt.innerHTML=`<span class="k">BOTTOM LINE</span>${b.bottom}<small>${b.team?`Team briefing · issued ${new Date(b.t).toLocaleDateString("en-US",{month:"short",day:"numeric"})}${b.sample?" · sample content":""}`:`SDR Weather Intelligence Division · issued ${stamp(b.t)} · next update ${(()=>{ const d=new Date(b.t), c=[7,13,19].map(h=>{ const x=new Date(d); x.setHours(h,0,0,0); return x; }).find(x=>x>d)||(()=>{ const x=new Date(d); x.setDate(x.getDate()+1); x.setHours(7,0,0,0); return x; })(); return "by "+hm(c)+(c.toDateString()===d.toDateString()?"":" "+c.toLocaleDateString("en-US",{weekday:"short"}))+", sooner if anything changes"; })()}`}</small>`;
     const iss=pane.querySelector(".ph .sample"); if(iss) iss.textContent=(b.team?(b.sample?"TEAM BRIEFING · SAMPLE":"TEAM BRIEFING"):b.cat==="DAILY"?"TODAY'S BRIEFING":"UPDATE")+" · "+stamp(b.t); window._curBrief=b; if(window.SDR_TB_RENDER) try{ SDR_TB_RENDER(pane,b); }catch(e){ console.warn("tb",e); } }
 
-  function library(){ window._ibRows=LIST.slice(); const rows=LIST.map((b,i)=>`<button class="brow ib" data-ib="${i}" data-cat="${b.cat}"><span class="bd">${new Date(b.t).toLocaleDateString("en-US",{month:"short",day:"numeric"})}</span><span class="bt">${b.title}${b.video?'<i class="tbvi">▶ VIDEO</i>':""}${i===0?" <i>LATEST</i>":""}</span><span class="bc ${({SEVERE:"severe",FLOOD:"tropical",OUTLOOK:"seasonal",TROPICAL:"tropical",WINTER:"winter",FREEZE:"winter",SEASONAL:"seasonal",HEAT:"severe",WIND:"seasonal"})[b.cat]||""}">${b.cat==="UPDATE"?"UPDATE":b.cat}</span><span class="bk">${b.srv?String(b.area||"Southeast").toUpperCase():b.local===false?"REGION":"YOUR AREA"}</span></button>`).join("");
+  function library(){ const _sT={}, LL=LIST.filter(b=>{ const k=new Date(b.t).toDateString()+"|"+String(b.title||"").trim().toLowerCase(); if(_sT[k]) return false; _sT[k]=1; return true; }); window._ibRows=LL; const rows=LL.map((b,i)=>`<button class="brow ib" data-ib="${i}" data-cat="${b.cat}"><span class="bd">${new Date(b.t).toLocaleDateString("en-US",{month:"short",day:"numeric"})}</span><span class="bt">${b.title}${b.video?'<i class="tbvi">▶ VIDEO</i>':""}${i===0?" <i>LATEST</i>":""}</span><span class="bc ${({SEVERE:"severe",FLOOD:"tropical",OUTLOOK:"seasonal",TROPICAL:"tropical",WINTER:"winter",FREEZE:"winter",SEASONAL:"seasonal",HEAT:"severe",WIND:"seasonal"})[b.cat]||""}">${b.cat==="UPDATE"?"UPDATE":b.cat}</span><span class="bk">${b.srv?String(b.area||"Southeast").toUpperCase():b.local===false?"REGION":"YOUR AREA"}</span></button>`).join("");
     document.querySelectorAll("#blib, .p-briefs .blist").forEach(el=>{ el.querySelectorAll(".brow.ib").forEach(x=>x.remove()); el.insertAdjacentHTML("afterbegin",rows); if(rows) el.querySelectorAll(".brow:not(.ib) .bt i").forEach(x=>x.remove()); }); }
   document.addEventListener("click",e=>{ const r=e.target.closest(".brow.ib"); if(!r) return; e.stopPropagation(); window._briefPinned=true; const _pick=(window._ibRows||LIST)[+r.dataset.ib]||LIST[0]; window._briefPick=_pick; show(_pick); window.scrollTo(0,0); [400,1200,2500].forEach(ms=>setTimeout(()=>{ if(window._briefPick===_pick&&window._curBrief!==_pick) show(_pick); },ms)); const t=document.querySelector('.tabs button[data-pane="briefing"],[data-go="briefing"]'); if(t) t.click(); },true);
 
@@ -6128,7 +6129,7 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
     const P=t=>{ const d=new Date(t); let a=d.getHours(), ap=a>=12?"PM":"AM"; return {h:a%12||12,ap}; };
     const nm=(o,t)=>{ const h=new Date(t).getHours(); return h===12?"noon":h===0?"midnight":null; };
     const win=core.length?(()=>{ const t1=core[0].t, t2=+new Date(core[core.length-1].t)+3600e3, a=P(t1), b=P(t2), na=nm(a,t1), nb=nm(b,t2); return na||nb?`${na||a.h+" "+a.ap}–${nb||b.h+" "+b.ap}`:a.ap===b.ap?`${a.h}–${b.h} ${b.ap}`:`${a.h} ${a.ap}–${b.h} ${b.ap}`; })():"";
-    const hr0=core.length?new Date(core[0].t).getHours():null, part=hr0==null?"":hr0<5||hr0>=21?"night":hr0<12?"morning":hr0<17?"afternoon":"evening";
+    const _d0=new Date(Date.now()+i*864e5).toDateString(), _st=pick.find(q=>new Date(q.t).toDateString()===_d0)||core[0], hr0=_st?new Date(_st.t).getHours():null, part=hr0==null?"":hr0<5||hr0>=21?"night":hr0<12?"morning":hr0<17?"afternoon":"evening";
     const _wee=hr0!=null&&hr0<5; const when=!part?dn:_wee?(i===0?"early this morning":i===1?"early tomorrow morning":"early "+dn+" morning"):i===0?(part==="night"?"tonight":"this "+part):i===1?(part==="night"?"tomorrow night":"tomorrow "+part):dn+" "+part;
     const wtxt=win?`Most likely ${win.replace("–"," to ")}.`:"";
     const n=h.now||0, up=h.old>0&&n>h.old, down=h.old>0&&n<h.old&&n>0, city=cityName();
@@ -6148,6 +6149,7 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
     const O=window.BRIEF_OVERRIDE; const _cpcDay=[1,3,5].includes(new Date().getDay()); const T=(await triggers()).filter(t=>t.kind!=="cpc"||_cpcDay); if(!T.length) { library(); if(!O&&!window._briefPinned) show(lead()||quiet()); return; }
     let seen={}; try{ seen=JSON.parse(localStorage.getItem(KEY+"-seen")||"{}"); }catch(e){}
     const first=!Object.keys(seen).length;
+    if(!seen["v400"]){ T.forEach(t=>{ if(/@/.test(t.k)) seen[t.k]=t.v; }); seen["v400"]=1; }
     const changed=T.filter(t=>seen[t.k]!==t.v && !(t.v==="none"&&seen[t.k]===undefined) && !(t.kind==="cpc"&&t.v==="normal"&&seen[t.k]===undefined)&&!((t.v==="0"||t.v==="{}"||t.v==="none")&&seen[t.k]===undefined)).filter(t=>!(t.kind==="cpc"&&seen[t.k]!==undefined&&String(seen[t.k]).split(":")[0]===String(t.v).split(":")[0]&&(Date.now()-(+seen["cpc@"]||0))<2*864e5)).map(t=>Object.assign({prev:seen[t.k]},t));
     if(changed.some(c=>c.kind==="cpc")) seen["cpc@"]=Date.now();
     T.forEach(t=>seen[t.k]=t.v); try{ localStorage.setItem(KEY+"-seen",JSON.stringify(seen)); }catch(e){}
@@ -6166,7 +6168,7 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
       if(gm["al:WINTER"]&&gm["al:FREEZE"]){ gm["al:WINTER"]=gm["al:WINTER"].concat(gm["al:FREEZE"].filter(c=>c.kind==="alert")); delete gm["al:FREEZE"]; }
       const PRI={md:5,watch:4,alert:3.5,spc:3,ero:2.5,trop:2,spc48:1.5,blend:1,cpc:0.5};
       const groups=Object.keys(gm).sort((a,b)=>RANK(a)-RANK(b)).map(g=>gm[g].slice().sort((x,y)=>(PRI[y.kind]||0)-(PRI[x.kind]||0)));
-      for(const changed of groups){ if(!changed.length) continue;
+      for(const changed of groups){ if(!changed.length) continue; if(changed.every(c=>c.kind==="rst"||c.kind==="rspc")) continue;
       const R=describe(changed,T,N); try{ retitle(R); }catch(e){} const {L,cat,title}=R; if(L.length){ const ctx=context();
         const exp=(()=>{ const ts=[]; changed.forEach(c=>{ if(c.kind==="spc"&&c.v!=="none"){ const e=new Date(c.day); e.setHours(23,59,0,0); e.setTime(e.getTime()+8*3600e3); ts.push(+e); }
             else if(c.kind==="rspc"){ const e=new Date(c.day); e.setHours(23,59,0,0); e.setTime(e.getTime()+8*3600e3); ts.push(+e); }
@@ -7388,7 +7390,7 @@ window.SDR_GL=(function(){
 
 <script>
 // v125: client chat layer
-(function(){ let wrap=null, fr=null; const CHATV="1795376497";
+(function(){ let wrap=null, fr=null; const CHATV="1795614702";
   function open(){ if(!wrap){ wrap=document.createElement("div"); wrap.id="chatwrap"; wrap.innerHTML='<iframe id="chatfr" title="Message the team" allow="camera"></iframe>'; document.body.appendChild(wrap); fr=wrap.querySelector("iframe"); fr.src="./chat.html?v="+CHATV; fr.addEventListener("load",()=>{ try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }); }
     wrap.hidden=false; document.body.classList.add("chat-on"); if(!(history.state&&history.state.chat)) history.pushState({chat:1},""); try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }
   function close(){ if(wrap){ wrap.hidden=true; } document.body.classList.remove("chat-on"); }
@@ -8651,7 +8653,7 @@ html.hf-lock,html.hf-lock body{overflow:hidden!important}html.hf-lock body::afte
   function bullets(){ const nx=document.getElementById("next"); if(!nx) return; const out=[], now=Date.now(), H=(window.STRIPS&&STRIPS.hours&&STRIPS.hours())||[], D=(window.STRIPS&&STRIPS.days&&STRIPS.days())||[];
     const dn=d=>{ const x=new Date(d), t=new Date(); t.setHours(0,0,0,0); const k=Math.round((new Date(x).setHours(0,0,0,0)-t)/864e5); return k===0?"today":k===1?"tomorrow":x.toLocaleDateString("en-US",{weekday:"long"}); };
     const hm=t=>{ const d=new Date(t), h=d.getHours(); return h===0?"midnight":h===12?"noon":(h%12)+(h<12?" AM":" PM"); };
-    try{ const _AL=(window.ALERTS||[]).filter(a=>!a.properties||!window.SDR_ACOVER||SDR_ACOVER(a)), _on=_AL.map(a=>a.properties||a).filter(a=>!(a.onset&&+new Date(a.onset)>now)).map(a=>a.event); _AL.map(a=>a.properties||a).filter(a=>a.onset&&!(window.SDR_SF&&SDR_SF(a.event))&&!_on.includes(a.event)&&+new Date(a.onset)>now&&+new Date(a.onset)<now+72*3600e3).sort((x,y)=>+new Date(x.onset)-+new Date(y.onset)).slice(0,2)
+    try{ const _AL=(window.ALERTS||[]).filter(a=>!a.properties||!window.SDR_ACOVER||SDR_ACOVER(a)), _on=_AL.map(a=>a.properties||a).filter(a=>!(a.onset&&+new Date(a.onset)>now)).map(a=>a.event); _AL.map(a=>a.properties||a).filter(a=>a.onset&&!(window.SDR_SF&&SDR_SF(a.event))&&!_on.includes(a.event)&&!String((document.getElementById("st-why")||{}).textContent||"").includes(a.event)&&+new Date(a.onset)>now&&+new Date(a.onset)<now+72*3600e3).sort((x,y)=>+new Date(x.onset)-+new Date(y.onset)).slice(0,2)
       .forEach(a=>out.push([/Warning/.test(a.event)?"r":"y",`<b>${a.event}</b> starts ${dn(a.onset)} ${hm(a.onset)}`])); }catch(e){}
     const first=(d,f)=>{ const k=new Date(d).toDateString(); const h=H.find(q=>new Date(q.t).toDateString()===k&&+new Date(q.t)>=now-1800e3&&f(q)); return h?h.t:null; };
     const nxh=((document.getElementById("nx-h")||{}).textContent||""), nowHead=/\buntil\b|\bnow\b|on and off/i.test(nxh);
@@ -9642,10 +9644,10 @@ window.SDR_MAPCARD=function(xmc,o){ if(!xmc) return; let c=xmc.querySelector(".m
     const feel=O.feel!=null&&O.t!=null&&Math.abs(O.feel-O.t)>=3?`${O.feelK&&O.feelK!=="FEELS LIKE"?O.feelK.toLowerCase().replace(/^./,c=>c.toUpperCase()):"Feels like"} ${O.feel}°`:"";
     const _pw=window.SDR_WETNOW?SDR_WETNOW():""; window._NOWCOND=cond; if(window.STORY&&STORY.run&&window.SDR_WETNOW&&SDR_WETNOW()!==_pw) setTimeout(()=>{ try{ STORY.run(); }catch(e){} },0); const _wn=key==="clear"&&window.SDR_WETNOW?SDR_WETNOW():"", label=key==="clear"?(_wn==="snow"?"SNOW NOW":_wn==="mix"?"WINTRY MIX":_wn?"RAIN NOW":"ALL CLEAR"):key==="headsup"?"HEADS UP":(document.getElementById("st-h")||{}).textContent||"TAKE ACTION";
     const why=key==="headsup"?((document.getElementById("st-why")||{}).textContent||""):"";
-    const cells=[["WIND",calm?"Calm":`${d?d+" ":""}${n}<em>mph</em>`]]; if(g>=15&&g>=n+5) cells.push(["GUSTS",`${g}<em>mph</em>`,g>=58?"bad":g>=40?"warn":""]); if(O.feel!=null) cells.push([(O.feelK&&O.feelK!=="FEELS LIKE"?O.feelK:"FEELS LIKE"),O.feel+"°",O.feel>=105?"bad":O.feel>=95?"warn":O.feel<=10?"bad":O.feel<=25?"warn":""]); if(V!=null&&V<5) cells.push(["VISIBILITY",visTxt(V).replace(" mi","<em>mi</em>"),V<=0.25?"bad":V<3?"warn":""]);
+    const cells=[["WIND",calm?(g>=15?"Gusty":"Calm"):`${d?d+" ":""}${n}<em>mph</em>`]]; if(g>=15&&g>=n+5) cells.push(["GUSTS",`${g}<em>mph</em>`,g>=58?"bad":g>=40?"warn":""]); if(O.feel!=null) cells.push([(O.feelK&&O.feelK!=="FEELS LIKE"?O.feelK:"FEELS LIKE"),O.feel+"°",O.feel>=105?"bad":O.feel>=95?"warn":O.feel<=10?"bad":O.feel<=25?"warn":""]); if(V!=null&&V<5) cells.push(["VISIBILITY",visTxt(V).replace(" mi","<em>mi</em>"),V<=0.25?"bad":V<3?"warn":""]);
     if(O.wbgt!=null&&+O.wbgt>=80) cells.push(["WBGT",O.wbgt+"°",+O.wbgt>=90?"bad":+O.wbgt>=87?"warn":""]);
     const loc=((window.__LOC&&__LOC.name)||"").replace(/,\s*([A-Za-z]{2})$/,", $1");
-    const H=`<div class="nxtop"><span class="nxpill">${key==="clear"?((typeof _wn!=="undefined"&&_wn)?'<svg viewBox="0 0 24 24"><path d="M12 3.2c3.1 4.1 6.2 7.6 6.2 11.2a6.2 6.2 0 0 1-12.4 0c0-3.6 3.1-7.1 6.2-11.2z" fill="currentColor"/></svg>':CHK):BANG}<b>${label}</b></span></div>
+    const H=`<div class="nxkick">RIGHT NOW</div><div class="nxtop"><span class="nxpill">${key==="clear"?((typeof _wn!=="undefined"&&_wn)?'<svg viewBox="0 0 24 24"><path d="M12 3.2c3.1 4.1 6.2 7.6 6.2 11.2a6.2 6.2 0 0 1-12.4 0c0-3.6 3.1-7.1 6.2-11.2z" fill="currentColor"/></svg>':CHK):BANG}<b>${label}</b></span></div>
       ${why?`<p class="nxwhy">${why.replace(/</g,"&lt;")}</p>`:""}
       <div class="nxmain"><div class="nxl"><div class="nxt">${O.t!=null?O.t:"–"}<sup>°</sup></div><div class="nxc">${cond||"&nbsp;"}</div></div><div class="nxi wx-${String(O.ico||"sun").replace(/[^a-z]/gi,"")}">${O.ico==="clearnight"||O.ico==="pcn"?moonIco(O.ico):(D.ICO||{})[O.ico||"sun"]||""}</div></div>
       ${cells.length?`<div class="nxstrip${cells.length===4?" n2c":""}" style="grid-template-columns:repeat(${cells.length===4?2:Math.min(3,cells.length)},1fr);${cells.length===1?"width:50%":""}">${cells.map(([k,v,c])=>`<div class="${c||""}"><b>${v}</b><small>${k}</small></div>`).join("")}</div>`:""}
@@ -9662,7 +9664,7 @@ window.SDR_MAPCARD=function(xmc,o){ if(!xmc) return; let c=xmc.querySelector(".m
   let late=false; function wait(){ let x=document.getElementById("nowx"); if(!x){ x=document.createElement("div"); x.id="nowx"; call.insertBefore(x,call.firstChild); }
     const key=/action/.test(call.className)?"action":/headsup/.test(call.className)?"headsup":"clear"; if(!call.classList.contains("nx-on")) call.classList.add("nx-on");
     const label=key==="clear"?"ALL CLEAR":key==="headsup"?"HEADS UP":"TAKE ACTION", why=key==="headsup"?((document.getElementById("st-why")||{}).textContent||""):"";
-    const H=`<div class="nxtop"><span class="nxpill">${key==="clear"?((typeof _wn!=="undefined"&&_wn)?'<svg viewBox="0 0 24 24"><path d="M12 3.2c3.1 4.1 6.2 7.6 6.2 11.2a6.2 6.2 0 0 1-12.4 0c0-3.6 3.1-7.1 6.2-11.2z" fill="currentColor"/></svg>':CHK):BANG}<b>${label}</b></span></div>${why?`<p class="nxwhy">${why.replace(/</g,"&lt;")}</p>`:""}
+    const H=`<div class="nxkick">RIGHT NOW</div><div class="nxtop"><span class="nxpill">${key==="clear"?((typeof _wn!=="undefined"&&_wn)?'<svg viewBox="0 0 24 24"><path d="M12 3.2c3.1 4.1 6.2 7.6 6.2 11.2a6.2 6.2 0 0 1-12.4 0c0-3.6 3.1-7.1 6.2-11.2z" fill="currentColor"/></svg>':CHK):BANG}<b>${label}</b></span></div>${why?`<p class="nxwhy">${why.replace(/</g,"&lt;")}</p>`:""}
       <div class="nxmain"><div class="nxl"><div class="nxc nxwait">${late?"Current readings are not available right now":"Getting current conditions…"}</div></div><div class="nxi"></div></div>`;
     if(x.className!=="nx-"+key) x.className="nx-"+key; if(x._h!==H){ x._h=H; x.innerHTML=H; } }
   D.renderNow=function(o){ O=o; window._NOWO=o; orig(o); try{ paint(); }catch(e){} };
@@ -11977,7 +11979,7 @@ html.snscene body>*:not(#snscene){display:none!important}
     return out.slice(0,3); }
   const lead={fog:"Dense fog",wind:"Strong winds",freeze:"Frost and freezing cold",cold:"Dangerous cold",heat:"Dangerous heat",winter:"Winter weather",flood:"Flooding",tor:"Tornado danger",svr:"Severe storms",fire:"High fire danger",trop:"Tropical weather",other:""};
   async function zones(a,cap){ const Z=((a.properties||{}).affectedZones||[]).slice(0,cap||40); if(a.geometry) return [{type:"Feature",geometry:a.geometry,properties:{}}]; const out=[];
-    await Promise.all(Z.map(async u=>{ try{ const k="sdr-zg:"+u.split("/").pop(); let g=null; try{ g=JSON.parse(sessionStorage.getItem(k)||"null"); }catch(e){} if(!g){ const r=await fetch(u,{headers:{Accept:"application/geo+json"}}); if(!r.ok) return; g=(await r.json()).geometry; try{ const s=JSON.stringify(g); if(s.length<180000) sessionStorage.setItem(k,s); }catch(e){} } if(g) out.push({type:"Feature",geometry:g,properties:{}}); }catch(e){} })); return out; }
+    await Promise.all(Z.map(async u=>{ try{ const k="sdr-zg:"+u.split("/").pop(); let g=null; try{ g=JSON.parse(sessionStorage.getItem(k)||"null"); }catch(e){} if(!g){ let r=null; for(let k=0;k<2&&!(r&&r.ok);k++){ try{ r=await fetch(u,{headers:{Accept:"application/geo+json"}}); }catch(e){ r=null; } if(!(r&&r.ok)) await new Promise(q=>setTimeout(q,400)); } if(!(r&&r.ok)) return; g=(await r.json()).geometry; try{ const s=JSON.stringify(g); if(s.length<180000) sessionStorage.setItem(k,s); }catch(e){} } if(g) out.push({type:"Feature",geometry:g,properties:{}}); }catch(e){} })); return out; }
   // v336 every alert of the same kind in the states this one touches, so the map shows the whole area and not one county
   const RG={}; async function region(a,kind){ try{ const P=a.properties||{}, st=new Set(); (((P.geocode||{}).UGC)||[]).forEach(u=>st.add(String(u).slice(0,2))); try{ const s0=(window.__LOC||{}).st; if(s0) st.add(s0); }catch(e){} if(!st.size) return [];
       const key=[...st].sort().join(","); let c=RG[key]; if(!c||Date.now()-c.t>5*60e3){ const r=await fetch("https://api.weather.gov/alerts/active?area="+key,{headers:{Accept:"application/geo+json"}}); if(!r.ok) return []; c=RG[key]={t:Date.now(),f:(await r.json()).features||[]}; }
@@ -12059,9 +12061,11 @@ html.snscene body>*:not(#snscene){display:none!important}
         const draw=G=>{ try{ const lay=G.filter(g=>g.F.length).map(g=>({features:g.F,style:()=>({fill:g.col,stroke:"#0B1730",w:1.6,fo:.62})})); const s=SDR_MAPAROUND(v,a.geometry?70:80,[],name.toUpperCase(),(ends?`UNTIL ${whenTxt(ends).replace(/ today$/,"").toUpperCase()}`:""),720,a.geometry?500:620,{noRing:true,layers:lay,towns:towns(a.geometry?70:80),max:22}); if(s) box.innerHTML=s; else doc.querySelector(".abmapsec").remove();
             const key=doc.querySelector(".abkey"); if(key&&G.length) key.innerHTML=G.filter(g=>g.F.length||g.main).map(g=>`<div><i style="background:${g.col}"></i><b>${esc(g.name)}</b><span>${esc(span(g.t0,g.t1))}</span></div>`).join(""); }catch(e){ try{ doc.querySelector(".abmapsec").remove(); }catch(_){} } };
         const main={name,col:I.color||"#F5B800",t0:starts,t1:ends,F:[],main:true}; draw([main]);
-        (async()=>{ main.F=await zones(a,40); if(!doc.isConnected) return; draw([main]); if(a.geometry) return;
-          const N=await region(a,kind); if(!N.length||!doc.isConnected) return; const G=[main], by={}; let left=60;
-          for(const x of N){ const xp=x.properties||{}, e=xp.event||"", same=e===ev; let g=same?main:by[e]; if(!g){ const xi=window.ALERTINFO?ALERTINFO.info(x):{}; g=by[e]={name:e,col:fix(xi.color||"",e),t0:xp.onset||xp.effective,t1:xp.ends||xp.expires,F:[]}; if(g.col===main.col) g.col=/Warning/i.test(e)?"#E5484D":/Watch/i.test(e)?"#3B82F6":"#A78BFA"; G.push(g); }
+        (async()=>{ main.F=await zones(a,150); if(!doc.isConnected) return; draw([main]); if(a.geometry) return;
+          const N=await region(a,kind); if(!N.length||!doc.isConnected) return; const G=[main], by={}; let left=160;
+          for(const x of N){ const xp=x.properties||{}, e=xp.event||"", same=e===ev; let g=same?main:by[e]; if(!g){ const xi=window.ALERTINFO?ALERTINFO.info(x):{}; g=by[e]={name:e,col:fix(xi.color||"",e),t0:xp.onset||xp.effective,t1:xp.ends||xp.expires,F:[]}; { const rgb=h=>{ const n=parseInt(String(h||"").slice(1),16); return [n>>16&255,n>>8&255,n&255]; }, near=(c1,c2)=>{ const A=rgb(c1),B=rgb(c2); return Math.hypot(A[0]-B[0],A[1]-B[1],A[2]-B[2])<110; };
+              const PAL=/Warning/i.test(e)?["#E5484D","#F97316","#DB2777","#B91C1C"]:/Watch/i.test(e)?["#3B82F6","#22B8CF","#6366F1"]:["#A78BFA","#22B8CF","#10B981","#F472B6","#94A3B8"];
+              if(G.some(o=>near(o.col,g.col))){ const pick=PAL.find(c=>!G.some(o=>near(o.col,c))); if(pick) g.col=pick; } } G.push(g); }
             else if(!same){ const e1=xp.ends||xp.expires; if(e1&&(!g.t1||+new Date(e1)>+new Date(g.t1))) g.t1=e1; }
             if(left<=0) continue; const n=Math.min(left,((xp.affectedZones||[]).length)||1); left-=n; const F=x.geometry?[{type:"Feature",geometry:x.geometry,properties:{}}]:await zones(x,n); g.F.push(...F); if(!doc.isConnected) return; }
           draw(G); })();
@@ -12107,7 +12111,7 @@ html.snscene body>*:not(#snscene){display:none!important}
     return L.filter(a=>a&&a.properties&&(!a.geometry||(v&&inP(a.geometry,v.lo,v.la)))&&!/Special Weather Statement/i.test(a.properties.event||"")).sort((x,y)=>{ const r=a=>{ const e=a.properties.event||""; return /Emergency/.test(e)?6:/Warning/.test(e)?5:/Watch/.test(e)?3:2; }; return r(y)-r(x); }).slice(0,3); };
   const Cap=x=>x.charAt(0).toUpperCase()+x.slice(1);
   function cards(){ try{ const nx=document.getElementById("next"); if(!nx||!nx.parentElement) return; let box=document.getElementById("abcards"); if(!box){ box=document.createElement("div"); box.id="abcards"; nx.parentElement.insertBefore(box,nx); }
-      const _HI=(window.SDR_MULTI&&SDR_MULTI.items)?SDR_MULTI.items():[], _hero=_HI.length>=2, A=_hero?[]:covering(), now=Date.now(); const h=A.map((a,i)=>{ const P=a.properties, on=(window.SDR_SF&&SDR_SF(P.event))?P.effective:(P.onset||P.effective), en=P.ends||P.expires, fut=on&&+new Date(on)>now+20*60e3; let col="#F5B800"; try{ col=(window.ALERTINFO&&ALERTINFO.info(a).color)||col; }catch(e){}
+      const _HI=(window.SDR_MULTI&&SDR_MULTI.items)?SDR_MULTI.items():[], _hero=_HI.length>=2, A=_hero?[]:covering().filter(x=>{ const P=x.properties||{}, w=String((document.getElementById("st-why")||{}).textContent||""); if(P.event&&w.includes(P.event)) return false; const on=+new Date(P.onset||P.effective||0); if(on>Date.now()+5*60e3&&!(window.SDR_SF&&SDR_SF(P.event))) return false; return true; }), now=Date.now(); const h=A.map((a,i)=>{ const P=a.properties, on=(window.SDR_SF&&SDR_SF(P.event))?P.effective:(P.onset||P.effective), en=P.ends||P.expires, fut=on&&+new Date(on)>now+20*60e3; let col="#F5B800"; try{ col=(window.ALERTINFO&&ALERTINFO.info(a).color)||col; }catch(e){}
         return `<button type="button" class="abcard" data-i="${i}"><b style="color:${col}">${esc(P.event)}</b><span>${fut?`Starts ${esc(Cap(dayOf(on)))} at ${esc(tm(on))}`:"In effect now"}</span>${en?`<span>Ends ${esc(Cap(dayOf(en)))} at ${esc(tm(en))}</span>`:""}<i aria-hidden="true">›</i></button>`; }).join("");
       if(box._h!==h){ box._h=h; box.innerHTML=h; box.querySelectorAll(".abcard").forEach(b=>b.onclick=e=>{ e.stopPropagation(); const a=covering()[+b.dataset.i]; if(a) open(a); }); }
       box.hidden=!A.length; document.body.classList.toggle("has-abcard",!!A.length);
@@ -13053,5 +13057,34 @@ body.look-n>#lookn-tag{margin:24px auto 96px}
   run(); obs(); setTimeout(run,1500);
   const t=document.createElement("small"); t.id="lookn-tag"; t.innerHTML='Preview: new look (only on this device) · <a href="?look=old">Turn off</a>'; document.body.appendChild(t);
 })();
+</script>
+<script>
+(function(){ const vv=window.visualViewport; if(!vv) return; let raf=0;
+  const fit=()=>{ raf=0; const w=document.getElementById("chatwrap"); if(!w) return; const open=getComputedStyle(w).display!=="none";
+    if(!open||innerWidth>=900){ if(w.dataset.kb){ w.style.top=w.style.height=w.style.bottom=""; delete w.dataset.kb; } return; }
+    const kb=innerHeight-vv.height>80;   // keyboard is up
+    if(kb){ w.dataset.kb="1"; w.style.top=vv.offsetTop+"px"; w.style.height=vv.height+"px"; w.style.bottom="auto"; }
+    else if(w.dataset.kb){ w.style.top=w.style.height=w.style.bottom=""; delete w.dataset.kb; scrollTo(0,0); } };
+  const q=()=>{ if(!raf) raf=requestAnimationFrame(fit); };
+  vv.addEventListener("resize",q); vv.addEventListener("scroll",q); addEventListener("orientationchange",()=>setTimeout(q,300));
+})();
+</script>
+<style id="sdr-400">
+.nxkick{font:700 13px/1 var(--display);letter-spacing:.2em;color:var(--muted);margin:0 0 10px}
+body.look-n .nxkick{font:600 13px/1 var(--ui,var(--body))!important;letter-spacing:0!important;text-transform:none!important}
+/* day view: the extras sit behind "More details" */
+.dexp .sts .st.dxm{display:none}
+.dexp.dxmore .sts .st.dxm{display:block}
+.dxmorebtn{display:block;margin:8px 0 2px;background:none;border:0;color:#6FB7FF;font:600 15px var(--body);padding:6px 0;cursor:pointer}
+</style>
+<script>
+/* v400: day view shows the four that matter (temperature, feels like, wind, gusts) plus rain; cloud cover, dew point, UV and humidity are one tap away */
+(function(){ const EXTRA=/^(CLOUD COVER|DEW POINT|UV|UV INDEX|HUMIDITY)$/i;
+  const fix=()=>{ document.querySelectorAll(".dexp .dx-grid section:first-child .sts").forEach(sts=>{ if(sts.dataset.dxm) return; let n=0;
+      sts.querySelectorAll(".st").forEach(t=>{ const k=((t.querySelector("small")||{}).textContent||"").trim(); if(EXTRA.test(k)){ t.classList.add("dxm"); n++; } });
+      sts.dataset.dxm="1"; if(!n) return; const b=document.createElement("button"); b.type="button"; b.className="dxmorebtn"; b.textContent="More details ▾";
+      b.addEventListener("click",e=>{ e.stopPropagation(); const d=sts.closest(".dexp"); const on=d.classList.toggle("dxmore"); b.textContent=on?"Fewer details ▴":"More details ▾"; });
+      sts.insertAdjacentElement("afterend",b); }); };
+  new MutationObserver(()=>fix()).observe(document.documentElement,{childList:true,subtree:true}); fix(); })();
 </script>
 </body></html>

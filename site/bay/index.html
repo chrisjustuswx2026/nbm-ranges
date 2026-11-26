@@ -2614,10 +2614,14 @@ body.chan-on .tabs button[data-pane="live"]::before{content:"";position:absolute
 .chplay i{width:76px;height:76px;border-radius:50%;background:#E5484D;display:grid;place-items:center;box-shadow:0 8px 28px rgba(229,72,77,.45)}
 .chplay b{font-family:var(--display);font-weight:800;letter-spacing:.14em;font-size:13px}
 </style>
-<script>window.SDR_VER="400";</script><style>.shd .ver{margin-left:auto;margin-right:10px;font-family:var(--display);font-weight:700;letter-spacing:.1em;font-size:11px;color:var(--dim)}</style>
+<script>window.SDR_VER="404";</script><style>.shd .ver{margin-left:auto;margin-right:10px;font-family:var(--display);font-weight:700;letter-spacing:.1em;font-size:11px;color:var(--dim)}</style>
 <script>
 /* SDR_WEEKSTORY: on a quiet day, find what actually matters this week. Ranked: first frost/freeze, a big cooldown or warmup, the 6-10 day outlook, the next rain. */
-window.SDR_COLDOK=function(x){ try{ if(!x||x.lo==null||x.lo>36) return false; const nl=window._bsNL, first=window._bsFall===false, routine=nl!=null&&nl<=34; if(!routine||first) return true; return x.lo<=nl-8; }catch(e){ return true; } };
+window.SDR_FROSTNEWS=function(x){ try{ if(!x||x.lo==null||x.lo>36) return false; const S=window._FRS; if(!S||!S.fresh) return true; const m=new Date(x.date||Date.now()).getMonth(), lo=x.lo;
+    if(m>=6){ if(lo<=28&&!S.hard) return true; if(lo<=32) return S.freeze<2; return S.frost<2; }
+    if(m<=1) return false;
+    const d=lo<=32?S.d32:S.d36; return d==null||d>=10; }catch(e){ return true; } };
+window.SDR_COLDOK=function(x){ try{ if(!x||x.lo==null||x.lo>36) return false; if(window.SDR_FROSTNEWS&&!SDR_FROSTNEWS(x)) return false; const nl=window._bsNL, first=window._bsFall===false, routine=nl!=null&&nl<=34; if(!routine||first) return true; return x.lo<=nl-8; }catch(e){ return true; } };
 window.SDR_COLD=function(D,n){ try{ const N=(D||[]).slice(0,n||4).filter(x=>x&&x.date&&x.lo!=null&&SDR_COLDOK(x)); if(!N.length) return ""; const nt=x=>x.d==="TONIGHT"?"tonight":SDR_NT(x), F=N.filter(x=>x.lo<=32), mn=N.reduce((a,x)=>x.lo<a.lo?x:a,N[0]);
   if(N.length===1) return `<b>${mn.lo<=25?"Hard freeze":mn.lo<=32?"Freeze":"Frost"} ${nt(mn)}</b>, low ${mn.lo}°`;
   if(F.length<=1) return `<b>${N.slice(0,2).map((x,i)=>{ const w=(x.lo<=32?"freeze ":"frost ")+nt(x); return i?w:w.charAt(0).toUpperCase()+w.slice(1); }).join(", ")}</b>, coldest ${mn.lo}°`;
@@ -3591,7 +3595,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
       const isDay = window.SDR_ISDAY ? SDR_ISDAY(now) : (now.getHours()>=7 && now.getHours()<19);
       setTimeout(()=>window.RAIN30&&RAIN30.check(),50);
       const visMi=obs.visibility&&obs.visibility.value!=null?Math.round(obs.visibility.value/1609.34*100)/100:null, dewF=obs.dewpoint&&obs.dewpoint.value!=null?F(obs.dewpoint.value):null;
-      window._NOWFC=(hp0&&hp0.shortForecast)||""; D.renderNow({ t, feel, feelK, cond:obs.textDescription, where:obs._st, wind, gust, hum, wbgt, vis:visMi, dew:dewF, wdeg: obs.windDirection&&obs.windDirection.value!=null?obs.windDirection.value:null, ico: ico(obs.textDescription, isDay) });
+      window._NOWFC=(hp0&&hp0.shortForecast)||""; D.renderNow({ t, feel, feelK, cond:obs.textDescription, where:obs._st, wind, gust, hum, wbgt, vis:visMi, dew:dewF, wdeg: obs.windDirection&&obs.windDirection.value!=null?obs.windDirection.value:null, ico: (window.SDR_OBSICO?SDR_OBSICO(obs,ico(obs.textDescription, isDay),isDay):ico(obs.textDescription, isDay)) });
     }
 
 
@@ -4481,7 +4485,7 @@ window.STRIPS = (function(){
     let t= wet.length>=16?(mp>=60?`on and off all day`:`possible any time of day`): s0>=12&&e0>=23?`mainly after ${hlab(s0)}`: s0<=6&&e0<=13?`early, dry by ${hlab(e0)}`: `most likely ${hrng2(s0,e0)}`;
     const _sn=H.some(h=>(h.snow||0)>=0.05||/snow|flurr/i.test(h.short||"")), _rn=H.some(h=>/rain|drizzle/i.test(h.short||""));
     const lead=_sn?(storm?(mp>=60?"Snow and thunder":"Snow showers, a little thunder"):mp>=60?(_rn?"Rain and snow":"Snow"):mp>=40?(_rn?"A chance of rain and snow":"A chance of snow"):"A few flurries"):mp>=60?(storm?"Storms":"Rain"):mp>=40?(storm?"A chance of storms":"A chance of rain"):(storm?"A few storms":"Spotty showers");
-    const best=(pe-ps<e0-s0&&pe-ps<=6)?` · best chance ${hrng2(ps,pe)}`:""; let snw=""; if(_sn&&_rn){ const S=H.filter(h=>(h.snow||0)>=0.02||/snow|flurr/i.test(h.short||"")); if(S.length) snw=` · <b class="snw">snow ${hrng2(hrOf(S[0].t),hrOf(S[S.length-1].t)+1)}</b>`; } return `<div class="when">${lead} <b>${t}</b>${best}${snw}</div>`; }
+    let best=(pe-ps<=e0-s0-2&&pe-ps<=6)?` · best chance ${hrng2(ps,pe)}`:""; if(best&&(/^most likely/.test(t)||(/^mainly after/.test(t)&&ps-s0>=2))){ best=""; t=ps-s0>=2?`as early as ${hlab(s0)}, most likely ${hrng2(ps,pe)}`:`most likely ${hrng2(ps,pe)}, lingering until ${hlab(e0)}`; } let snw=""; if(_sn&&_rn){ const S=H.filter(h=>(h.snow||0)>=0.02||/snow|flurr/i.test(h.short||"")); if(S.length) snw=` · <b class="snw">snow ${hrng2(hrOf(S[0].t),hrOf(S[S.length-1].t)+1)}</b>`; } return `<div class="when">${lead} <b>${t}</b>${best}${snw}</div>`; }
   const hasHours=x=>{ const H=hoursOf(x); if(!H.length) return false; const today=new Date(H[0].t).toDateString()===new Date().toDateString(); return today?H.length>=3:(H.length>=12||H.filter(h=>h.step).length>=6); };
   function chartsOf(x,which){ const H=hoursOf(x); if(!hasHours(x)) return ""; const mt=Math.max(...H.map(h=>h.thunder||0)), G=H.map(h=>h.gust||hrWind(h)||0), gm=Math.max(...G), T=H.map(h=>h.temp);
     const k0=hrOf(H[0].t), today=k0>0&&new Date(H[0].t).toDateString()===new Date().toDateString(), K0=today?k0:0, SPAN=Math.max(1,23-K0);
@@ -5819,7 +5823,8 @@ window.SITE_LL = window.__LOC?{lat:__LOC.la,lon:__LOC.lo}:(window.SITE_LL || { l
         if(!cat) return; out.push({k:"al-"+ev, v:"on", kind:"alert", ev, cat, ends:P.ends||P.expires, onset:P.onset||P.effective, a}); }); }catch(e){}
     // f) from our forecast (National Blend based): first frost/freeze, heat, winter signal, high wind
     if(window.STRIPS&&STRIPS.days){ const DD=(STRIPS.days()||[]).slice(0,7), HH=(STRIPS.hours&&STRIPS.hours())||[]; const first=(fn)=>DD.find(fn);
-      const fz=DD.slice(0,5).find(x=>x.lo!=null&&x.lo<=32), fr=DD.slice(0,3).find(x=>x.lo!=null&&x.lo<=36&&x.lo>32);
+      try{ if(window._FRS===undefined&&window.SDR_PXD) await Promise.race([SDR_PXD(),new Promise(r=>setTimeout(r,5000))]); }catch(e){}
+      const _fn=x=>!window.SDR_FROSTNEWS||SDR_FROSTNEWS(x), fz=DD.slice(0,5).find(x=>x.lo!=null&&x.lo<=32&&_fn(x)), fr=DD.slice(0,3).find(x=>x.lo!=null&&x.lo<=36&&x.lo>32&&_fn(x));
       out.push({k:"bl-freeze", v:fz?new Date(fz.date).toDateString()+":"+(fz.lo<=28?"hard":"freeze"):"none", kind:"blend", what:"freeze", x:fz});
       out.push({k:"bl-frost", v:fr&&!fz?new Date(fr.date).toDateString():"none", kind:"blend", what:"frost", x:fr});
       const hh=HH.slice(0,72).filter(h=>(h.feel||h.temp||0)>=105); out.push({k:"bl-heat", v:hh.length?new Date(hh[0].t).toDateString():"none", kind:"blend", what:"heat", h:hh});
@@ -6452,7 +6457,7 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
     const im=[]; if((kx.thunder||0)>=30) im.push(`Lightning delays likely for outdoor work, practices and events${hc&&hc.twin?` (${hc.twin})`:""}.`);
     if(rn(kx)>=1||(kx.rr&&kx.rr[2]>=150)) im.push(`Heavy rain at times: ponding on roads, low spots and poor drainage.`); else if(rn(kx)>=0.5) im.push(`A good soaking: fields and job sites stay wet into the next morning.`);
     if((kx.gust||0)>=35) im.push(`Gusts to ${Math.ceil(kx.gust/5)*5} mph: secure tents, signs and loose items.`);
-    const frz=D.slice(ki,ki+3).find(x=>x.lo!=null&&x.lo<=32); if(frz) im.push(`Freeze ${dn(frz)} night (${frz.lo}°): protect pipes, plants and outdoor water lines.`);
+    const frz=D.slice(ki,ki+3).find(x=>x.lo!=null&&x.lo<=32&&(!window.SDR_FROSTNEWS||SDR_FROSTNEWS(x))); if(frz) im.push(`Freeze ${dn(frz)} night (${frz.lo}°): protect pipes, plants and outdoor water lines.`);
     if(!im.length) im.push(ki>0?`Normal operations until ${kName}.`:`Plan around the wet hours; otherwise normal operations.`);
     sec.push({title:"IMPACTS",bullets:im.slice(0,2)});
     const ma=[]; if(conf!=null) ma.push(`Model agreement ${conf} of 5${conf>=4?": the models agree on the timing.":conf<=2?": expect this to change.":"."}`); if(kx.rr&&kx.rr[2]>kx.rr[0]) ma.push(`Rain range ${_in(kx.rr[0]/100)} to ${_in(kx.rr[2]/100)}, most likely ${_in(kx.rr[1]/100)}.`);
@@ -6610,7 +6615,7 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
         fig.push(map("FLOODING RAIN RISK","r",kName.toUpperCase(),[{features:F,style:f=>({fill:EC[f._lvl],stroke:"#333",w:1,fo:.7})}],[1,2,3,4].filter(k=>F.some(f=>f._lvl===k)).map(k=>`<span><i style="background:${EC[k]}"></i>${k} ${EN[k]}</span>`).join(""),[`<b>Level ${n} of 4</b> flooding rain risk for ${city}.`, hcx.win?`<b>Heaviest rain:</b> ${hcx.win}.`:"", `Low roads, creeks and poor drainage flood first.`],0,0,"flooding")); } }
     const TR=MD.tropics||{}; if((TR.cones||[]).length) fig.push(map("THE TROPICS","n","WHAT WE'RE WATCHING",[{features:TR.areas||[],style:f=>({fill:{Low:"#FFFF00",Medium:"#FF9900",High:"#FF0000"}[f._risk]||"#FFFF00",stroke:"#000",w:1,fo:.4})},{features:TR.cones,style:()=>({fill:"#FFFFFF",stroke:"#1B2433",w:1.2,fo:.45})}],'<span><i style="background:#FFFFFF;border:1px solid #999"></i>Forecast cone</span><span><i style="background:#FF9900"></i>Development area</span>',[`<b>${TR.cones.length} active system${TR.cones.length>1?"s":""}</b> in the tropics.`,`We're tracking every update for you.`],SDR_TROPBOX(TR,[-100,10,-60,38]),[{lo:s.lo,la:s.la,fill:"#F28C28",r:6}],"tropics"));
     if(HZ!=="winter"&&Array.isArray(MD.winter)&&MD.winter.some(f=>at(f.geometry,s))) fig.push(map("WINTER IMPACTS","n",kName.toUpperCase(),[{features:MD.winter,style:()=>({fill:"#5BA8FF",stroke:"none",fo:.6})}],"",[`<b>${city}</b> is in the winter impact area.`,`Plan for slick roads and travel delays.`],0,0,"winter"));
-    const Q=(MD.qpfP&&(MD.qpfP.d17||MD.qpfP.d15))||MD.qpf||[]; if(Q.length&&wb){ let sv=0; Q.forEach(f=>{ if((f._v||0)>sv&&at(f.geometry,s)) sv=f._v; });
+    const Q=(MD.qpfP&&(MD.qpfP.d17||MD.qpfP.d15))||MD.qpf||[]; if(Q.length&&wb&&!/^(freeze|frost|heat|wind)$/.test(HZ)){ let sv=0; Q.forEach(f=>{ if((f._v||0)>sv&&at(f.geometry,s)) sv=f._v; });
       fig.push(map("RAIN TOTALS","n","NEXT 7 DAYS",[{features:Q,style:f=>({fill:MAPROOM.qcol(f._v||0),stroke:"none",fo:.72})}],[0.1,0.5,1,2,3,5].map(v=>`<span><i style="background:${MAPROOM.qcol(v)}"></i>${v}"</span>`).join(""),[sv>=0.05?`<b>About ${_in(sv)}</b> for ${city}.`:"", wb?`<b>Wettest day:</b> ${wb.wet.d==="TONIGHT"?(new Date().getHours()<14?"overnight":"tonight"):new Date(wb.wet.date).toLocaleDateString("en-US",{weekday:"long"})}.`:"", wb&&wb.dry?`<b>${wb.dry} dry day${wb.dry===1?"":"s"}</b> out of ${wb.n}.`:""],0,0,"rain")); }
     if(false&&MD.cpc&&MD.cpc.t610&&window.MRX){ const F=MD.cpc.t610, inF=f=>at(f.geometry,s), a=F.filter(inF).sort((x,y)=>(+(y.properties||{}).prob||0)-(+(x.properties||{}).prob||0))[0];
       fig.push(map("THE PATTERN AHEAD","g","6–10 DAYS",[{features:F,style:f=>({fill:MRX.cpcCol(f,"t"),stroke:"none",fo:.85})}],'<span><i style="background:#2563EB"></i>Cooler than normal</span><span><i style="background:#BFBFBF"></i>Near normal</span><span><i style="background:#D9480F"></i>Warmer than normal</span>',[a?`<b>${MRX.cpcSay(a,"t").replace(/^./,m=>m.toUpperCase())}</b> for ${city}.`:`<b>Near normal</b> for ${city}.`,`Looking 6 to 10 days out.`],[-125,24,-66,50],[{lo:s.lo,la:s.la,fill:"#F28C28",r:6}],"pattern")); }
@@ -7309,7 +7314,7 @@ window.SDR_GL=(function(){
 
 <script>
 // v125: client chat layer
-(function(){ let wrap=null, fr=null; const CHATV="1795614706";
+(function(){ let wrap=null, fr=null; const CHATV="1795728281";
   function open(){ if(!wrap){ wrap=document.createElement("div"); wrap.id="chatwrap"; wrap.innerHTML='<iframe id="chatfr" title="Message the team" allow="camera"></iframe>'; document.body.appendChild(wrap); fr=wrap.querySelector("iframe"); fr.src="./chat.html?v="+CHATV; fr.addEventListener("load",()=>{ try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }); }
     wrap.hidden=false; document.body.classList.add("chat-on"); if(!(history.state&&history.state.chat)) history.pushState({chat:1},""); try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }
   function close(){ if(wrap){ wrap.hidden=true; } document.body.classList.remove("chat-on"); }
@@ -8208,6 +8213,7 @@ html.hf-lock,html.hf-lock body{overflow:hidden!important}html.hf-lock body::afte
       const L=H.length, ago=f=>{ for(let i=L-1;i>=0;i--) if(f(H[i])) return Math.round((new Date(ymd(new Date())+"T12:00")-new Date(H[i].d+"T12:00"))/864e5); return null; }, run=f=>{ let n=0; for(let i=L-1;i>=0&&f(H[i]);i--) n++; return n; };
       const now=new Date(), mo=H.filter(r=>r.d.slice(0,7)===ymd(now).slice(0,7)), sm=X=>X.reduce((a,r)=>a+(r.p&&r.p>=0.01?r.p:0),0);
       const c30=ymd(new Date(Date.now()-30*864e5)), R30=H.filter(r=>r.d>=c30&&r.d<ymd(now)), p30=R30.length>=27?R30.reduce((a,r)=>a+(r.p&&r.p>0?r.p:0),0):null;
+      try{ const Y0=new Date(), fy=(Y0.getMonth()>=6?Y0.getFullYear():Y0.getFullYear()-1)+"-07-01", FH=H.filter(r=>r.d>=fy&&r.lo!=null); window._FRS={frost:FH.filter(r=>r.lo<=36).length,freeze:FH.filter(r=>r.lo<=32).length,hard:FH.filter(r=>r.lo<=28).length,d36:ago(r=>r.lo!=null&&r.lo<=36),d32:ago(r=>r.lo!=null&&r.lo<=32),fresh:Math.round((new Date(ymd(new Date())+"T12:00")-new Date(H[L-1].d+"T12:00"))/864e5)<=3}; }catch(e){}
       return {R,F:freeze(H),p30,soak:ago(r=>r.p!=null&&r.p>=1),wet10:ago(r=>r.p!=null&&r.p>=0.10),frz:ago(r=>r.lo!=null&&r.lo<=32),s90:run(r=>r.hi!=null&&r.hi>=90),s32:run(r=>r.lo!=null&&r.lo<=32),dry:run(r=>r.p!=null&&r.p<0.01),y:H[L-1],station:st.name}; }catch(e){ return null; } };
 
   // ---------- HUNT & FISH ----------
@@ -9559,19 +9565,23 @@ window.SDR_MAPCARD=function(xmc,o){ if(!xmc) return; let c=xmc.querySelector(".m
       if((quietR||dryAir)&&/rain|shower|drizzle|sprinkle/i.test(cond)&&!/thunder|storm|snow|sleet|ice|mix|freez/i.test(cond)){
         let fc=String(window._NOWFC||""); if(!fc||/rain|shower|drizzle|storm|thunder|snow|sleet|ice|mix|chance|likely/i.test(fc)) fc="Partly cloudy";
         cond=fc[0].toUpperCase()+fc.slice(1).toLowerCase(); const hr=new Date().getHours(), dayT=hr>=7&&hr<18, clr=/sunny|clear|fair/i.test(fc)&&!/partly|mostly cloudy/i.test(fc);
-        O=Object.assign({},O,{_i0:O._i0||O.ico,ico:clr?(dayT?"sun":"clearnight"):(dayT?"pc":"pcn")}); } }catch(e){}
+        const ovc=!clr&&(/^(cl|rn|fog)$/.test(O._i0||O.ico||"")||(isFinite(hm)&&hm>=85)); if(ovc&&/partly|mostly sunny/i.test(cond)) cond="Cloudy"; O=Object.assign({},O,{_i0:O._i0||O.ico,ico:clr?(dayT?"sun":"clearnight"):ovc?"cl":(dayT?"pc":"pcn")}); } }catch(e){}
+    try{ if(O.ico==="cl"&&/^(partly cloudy|mostly sunny|mostly clear skies|fair skies|clear skies|clear night|sunny)$/i.test(cond)) cond="Mostly cloudy"; }catch(e){}
+    try{ const hm2=parseInt(O.hum,10); if(V!=null&&V<7&&isFinite(hm2)&&hm2>=88&&/^(cloudy|cloudy skies|mostly cloudy|overcast)$/i.test(cond)) cond=cond.replace(/ skies$/i,"")+" and misty"; }catch(e){}
     const feel=O.feel!=null&&O.t!=null&&Math.abs(O.feel-O.t)>=3?`${O.feelK&&O.feelK!=="FEELS LIKE"?O.feelK.toLowerCase().replace(/^./,c=>c.toUpperCase()):"Feels like"} ${O.feel}°`:"";
-    const _pw=window.SDR_WETNOW?SDR_WETNOW():""; window._NOWCOND=cond; if(window.STORY&&STORY.run&&window.SDR_WETNOW&&SDR_WETNOW()!==_pw) setTimeout(()=>{ try{ STORY.run(); }catch(e){} },0); const _wn=key==="clear"&&window.SDR_WETNOW?SDR_WETNOW():"", label=key==="clear"?(_wn==="snow"?"SNOW NOW":_wn==="mix"?"WINTRY MIX":_wn?"RAIN NOW":"ALL CLEAR"):key==="headsup"?"HEADS UP":(document.getElementById("st-h")||{}).textContent||"TAKE ACTION";
+    const _pw=window.SDR_WETNOW?SDR_WETNOW():""; window._NOWCOND=cond; if(window.STORY&&STORY.run&&window.SDR_WETNOW&&SDR_WETNOW()!==_pw) setTimeout(()=>{ try{ STORY.run(); }catch(e){} },0); const _wn=key==="clear"&&window.SDR_WETNOW?SDR_WETNOW():"", _lv=key==="clear"&&!_wn&&V!=null&&V<3, label=key==="clear"?(_wn==="snow"?"SNOW NOW":_wn==="mix"?"WINTRY MIX":_wn?"RAIN NOW":_lv?(V<=0.25?"DENSE FOG":V<1?"FOG":"LOW VISIBILITY"):"ALL CLEAR"):key==="headsup"?"HEADS UP":(document.getElementById("st-h")||{}).textContent||"TAKE ACTION";
     const why=key==="headsup"?((document.getElementById("st-why")||{}).textContent||""):"";
-    const cells=[["WIND",calm?(g>=15?"Gusty":"Calm"):`${d?d+" ":""}${n}<em>mph</em>`]]; if(g>=15&&g>=n+5) cells.push(["GUSTS",`${g}<em>mph</em>`,g>=58?"bad":g>=40?"warn":""]); if(O.feel!=null) cells.push([(O.feelK&&O.feelK!=="FEELS LIKE"?O.feelK:"FEELS LIKE"),O.feel+"°",O.feel>=105?"bad":O.feel>=95?"warn":O.feel<=10?"bad":O.feel<=25?"warn":""]); if(V!=null&&V<5) cells.push(["VISIBILITY",visTxt(V).replace(" mi","<em>mi</em>"),V<=0.25?"bad":V<3?"warn":""]);
+    const cells=[["WIND",calm?(g>=15?"Gusty":"Calm"):`${d?d+" ":""}${n}<em>mph</em>`,n>=40?"bad":n>=25?"warn":""]]; if(g>=15&&g>=n+5) cells.push(["GUSTS",`${g}<em>mph</em>`,g>=58?"bad":g>=35?"warn":""]); if(O.feel!=null) cells.push([(O.feelK&&O.feelK!=="FEELS LIKE"?O.feelK:"FEELS LIKE"),O.feel+"°",O.feel>=105?"bad":O.feel>=95?"warn":O.feel<=10?"bad":O.feel<=25?"warn":""]); if(V!=null&&V<5) cells.push(["VISIBILITY",visTxt(V).replace(" mi","<em>mi</em>"),V<=0.25?"bad":V<3?"warn":""]);
     if(O.wbgt!=null&&+O.wbgt>=80) cells.push(["WBGT",O.wbgt+"°",+O.wbgt>=90?"bad":+O.wbgt>=87?"warn":""]);
     const loc=((window.__LOC&&__LOC.name)||"").replace(/,\s*([A-Za-z]{2})$/,", $1");
-    const H=`<div class="nxkick">RIGHT NOW</div><div class="nxtop"><span class="nxpill">${key==="clear"?((typeof _wn!=="undefined"&&_wn)?'<svg viewBox="0 0 24 24"><path d="M12 3.2c3.1 4.1 6.2 7.6 6.2 11.2a6.2 6.2 0 0 1-12.4 0c0-3.6 3.1-7.1 6.2-11.2z" fill="currentColor"/></svg>':CHK):BANG}<b>${label}</b></span></div>
-      ${why?`<p class="nxwhy">${why.replace(/</g,"&lt;")}</p>`:""}
+    const H=`<div class="nxtop"><span class="nxkick">RIGHT NOW</span><span class="nxpill${(typeof _lv!=="undefined"&&_lv)?" nxvis":""}">${(typeof _lv!=="undefined"&&_lv)?'<svg viewBox="0 0 24 24"><g stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 8h16M3 12h18M5 16h14"/></g></svg>':key==="clear"?((typeof _wn!=="undefined"&&_wn)?'<svg viewBox="0 0 24 24"><path d="M12 3.2c3.1 4.1 6.2 7.6 6.2 11.2a6.2 6.2 0 0 1-12.4 0c0-3.6 3.1-7.1 6.2-11.2z" fill="currentColor"/></svg>':CHK):BANG}<b>${label}</b></span></div>
+      
       <div class="nxmain"><div class="nxl"><div class="nxt">${O.t!=null?O.t:"–"}<sup>°</sup></div><div class="nxc">${cond||"&nbsp;"}</div></div><div class="nxi wx-${String(O.ico||"sun").replace(/[^a-z]/gi,"")}">${O.ico==="clearnight"||O.ico==="pcn"?moonIco(O.ico):(D.ICO||{})[O.ico||"sun"]||""}</div></div>
+      ${why?`<div class="nxwhy nxbar" role="button" tabindex="0">${BANG}<span>${window.SDR_WHYSPLIT?SDR_WHYSPLIT(why):why.replace(/</g,"&lt;")}</span><i class="nxchev">›</i></div>`:""}
       ${cells.length?`<div class="nxstrip${cells.length===4?" n2c":""}" style="grid-template-columns:repeat(${cells.length===4?2:Math.min(3,cells.length)},1fr);${cells.length===1?"width:50%":""}">${cells.map(([k,v,c])=>`<div class="${c||""}"><b>${v}</b><small>${k}</small></div>`).join("")}</div>`:""}
 `;
-    if(x.className!=="nx-"+key) x.className="nx-"+key; if(x._h!==H){ x._h=H; x.innerHTML=H; } }
+    try{ if(typeof _lv!=="undefined"&&call.classList.contains("nx-vis")!==!!_lv) call.classList.toggle("nx-vis",!!_lv); }catch(e){}
+    if(x.className!=="nx-"+key) x.className="nx-"+key; if(x._h!==H){ if(Date.now()-(window._nxHold||0)<900){ clearTimeout(x._rt); x._rt=setTimeout(()=>{ if(x._h!==H){ x._h=H; x.innerHTML=H; } },950); } else { x._h=H; x.innerHTML=H; } } }
   const MOON=()=>{ const syn=29.530588, age=(((Date.now()-Date.UTC(2000,0,6,18,14))/864e5)%syn+syn)%syn, p=age/syn*2*Math.PI, c=Math.cos(p), r=9, cx=12, cy=12, rx=Math.abs(c)*r, wax=age<syn/2, cres=c>0;
     const lit=age<0.8||age>syn-0.8?"":wax?`M${cx} ${cy-r}A${r} ${r} 0 0 1 ${cx} ${cy+r}A${rx} ${r} 0 0 ${cres?0:1} ${cx} ${cy-r}Z`:`M${cx} ${cy-r}A${r} ${r} 0 0 0 ${cx} ${cy+r}A${rx} ${r} 0 0 ${cres?1:0} ${cx} ${cy-r}Z`;
     if(age<2.5||age>syn-2.5) return `<path d="M15.2 3.6A8.6 8.6 0 1 0 20.4 16.6A7 7 0 0 1 15.2 3.6Z" fill="#F1F5FF" style="filter:drop-shadow(0 0 1.6px rgba(220,230,255,.9))"/><circle cx="19.2" cy="5.2" r=".9" fill="#F1F5FF" opacity=".9"/><circle cx="21.6" cy="10" r=".6" fill="#F1F5FF" opacity=".7"/>`;
@@ -9583,9 +9593,10 @@ window.SDR_MAPCARD=function(xmc,o){ if(!xmc) return; let c=xmc.querySelector(".m
   let late=false; function wait(){ let x=document.getElementById("nowx"); if(!x){ x=document.createElement("div"); x.id="nowx"; call.insertBefore(x,call.firstChild); }
     const key=/action/.test(call.className)?"action":/headsup/.test(call.className)?"headsup":"clear"; if(!call.classList.contains("nx-on")) call.classList.add("nx-on");
     const label=key==="clear"?"ALL CLEAR":key==="headsup"?"HEADS UP":"TAKE ACTION", why=key==="headsup"?((document.getElementById("st-why")||{}).textContent||""):"";
-    const H=`<div class="nxkick">RIGHT NOW</div><div class="nxtop"><span class="nxpill">${key==="clear"?((typeof _wn!=="undefined"&&_wn)?'<svg viewBox="0 0 24 24"><path d="M12 3.2c3.1 4.1 6.2 7.6 6.2 11.2a6.2 6.2 0 0 1-12.4 0c0-3.6 3.1-7.1 6.2-11.2z" fill="currentColor"/></svg>':CHK):BANG}<b>${label}</b></span></div>${why?`<p class="nxwhy">${why.replace(/</g,"&lt;")}</p>`:""}
-      <div class="nxmain"><div class="nxl"><div class="nxc nxwait">${late?"Current readings are not available right now":"Getting current conditions…"}</div></div><div class="nxi"></div></div>`;
-    if(x.className!=="nx-"+key) x.className="nx-"+key; if(x._h!==H){ x._h=H; x.innerHTML=H; } }
+    const H=`<div class="nxtop"><span class="nxkick">RIGHT NOW</span><span class="nxpill">${key==="clear"?((typeof _wn!=="undefined"&&_wn)?'<svg viewBox="0 0 24 24"><path d="M12 3.2c3.1 4.1 6.2 7.6 6.2 11.2a6.2 6.2 0 0 1-12.4 0c0-3.6 3.1-7.1 6.2-11.2z" fill="currentColor"/></svg>':CHK):BANG}<b>${label}</b></span></div>
+      <div class="nxmain"><div class="nxl"><div class="nxc nxwait">${late?"Current readings are not available right now":"Getting current conditions…"}</div></div><div class="nxi"></div></div>${why?`<div class="nxwhy nxbar" role="button" tabindex="0">${BANG}<span>${window.SDR_WHYSPLIT?SDR_WHYSPLIT(why):why.replace(/</g,"&lt;")}</span><i class="nxchev">›</i></div>`:""}`;
+    try{ if(typeof _lv!=="undefined"&&call.classList.contains("nx-vis")!==!!_lv) call.classList.toggle("nx-vis",!!_lv); }catch(e){}
+    if(x.className!=="nx-"+key) x.className="nx-"+key; if(x._h!==H){ if(Date.now()-(window._nxHold||0)<900){ clearTimeout(x._rt); x._rt=setTimeout(()=>{ if(x._h!==H){ x._h=H; x.innerHTML=H; } },950); } else { x._h=H; x.innerHTML=H; } } }
   D.renderNow=function(o){ O=o; window._NOWO=o; orig(o); try{ paint(); }catch(e){} };
   if(!O){ O={_wait:1}; try{ paint(); }catch(e){} setTimeout(()=>{ if(O&&O._wait){ late=true; try{ paint(); }catch(e){} } },25000); }
   new MutationObserver(()=>{ try{ paint(); }catch(e){} }).observe(call,{attributes:true,attributeFilter:["class"]});
@@ -11902,7 +11913,7 @@ html.snscene body>*:not(#snscene){display:none!important}
   // v336 every alert of the same kind in the states this one touches, so the map shows the whole area and not one county
   const RG={}; async function region(a,kind){ try{ const P=a.properties||{}, st=new Set(); (((P.geocode||{}).UGC)||[]).forEach(u=>st.add(String(u).slice(0,2))); try{ const s0=(window.__LOC||{}).st; if(s0) st.add(s0); }catch(e){} if(!st.size) return [];
       const key=[...st].sort().join(","); let c=RG[key]; if(!c||Date.now()-c.t>5*60e3){ const r=await fetch("https://api.weather.gov/alerts/active?area="+key,{headers:{Accept:"application/geo+json"}}); if(!r.ok) return []; c=RG[key]={t:Date.now(),f:(await r.json()).features||[]}; }
-      return c.f.filter(x=>x.id!==a.id&&kindOf((x.properties||{}).event||"")===kind&&!/Special Weather Statement/i.test((x.properties||{}).event||"")); }catch(e){ return []; } }
+      return c.f.filter(x=>{ const q=x.properties||{}, e1=q.ends||q.expires; return !/cancel/i.test(q.messageType||"")&&!/cancel/i.test(q.headline||"")&&!(e1&&+new Date(e1)<Date.now()); }).filter(x=>x.id!==a.id&&kindOf((x.properties||{}).event||"")===kind&&!/Special Weather Statement/i.test((x.properties||{}).event||"")); }catch(e){ return []; } }
   const span=(t0,t1)=>{ const a=t0&&+new Date(t0)>Date.now()+20*60e3?whenTxt(t0):"Now", h=t1?Math.max(1,Math.round((+new Date(t1)-Math.max(Date.now(),+new Date(t0||Date.now())))/3600e3)):null; return t1?`${a} to ${whenTxt(t1)} · ${h>=48?Math.round(h/24)+" days":h+" hour"+(h===1?"":"s")}`:a; };
   const chill=(T,V)=>T<=50&&V>=3?Math.round(35.74+0.6215*T-35.75*Math.pow(V,0.16)+0.4275*T*Math.pow(V,0.16)):Math.round(T);
   // v341 the model blend, hour by hour, for the viewer's spot: snow by the hour (the official grid only has 6-hour totals), temperature, wind and gusts
@@ -11942,7 +11953,7 @@ html.snscene body>*:not(#snscene){display:none!important}
     const W=H.filter(h=>+new Date(h.t)>=a-1800e3&&+new Date(h.t)<=b); if(W.length<2) return ""; const R=W.map(h=>{ const T=num(h.temp), V=num(String(h.wind||"").replace(/[^\d]/g,"")), G=num(h.gust), F=T==null?null:(num(h.feel)!=null&&kind!=="winter"?num(h.feel):chill(T,Math.max(V||0,0))); return {t:h.t,T,V,G,F,dir:(String(h.wind||"").match(/^[A-Za-z]+/)||[""])[0].toUpperCase(),sn:isBl?(num(h.snow)||0):0}; }).filter(r=>r.T!=null);
     if(R.length<2) return ""; const step=Math.max(1,Math.ceil(R.length/8)), rows=[]; for(let i=0;i<R.length;i+=step){ const g=R.slice(i,i+step), r=g[0]; rows.push({t:r.t,t2:new Date(+new Date(g[g.length-1].t)+3600e3),n:g.length,T:r.T,F:Math.min(...g.map(x=>x.F)),V:Math.max(...g.map(x=>x.V||0)),G:Math.max(...g.map(x=>x.G||0)),dir:r.dir,sn:g.reduce((q,x)=>q+x.sn,0)}); }
     const snT=R.reduce((q,x)=>q+x.sn,0), fmin=Math.min(...R.map(x=>x.F)), gmax=Math.max(...R.map(x=>x.G||x.V||0)), tlo=Math.min(...R.map(x=>x.T)), thi=Math.max(...R.map(x=>x.T)), showSn=kind==="winter"&&snT>=0.05;
-    const tiles=[showSn?[(Math.round(snT*10)/10)+'"',"SNOW HERE"]:null,[`${tlo}° to ${thi}°`,"TEMPERATURE"],[fmin+"°","LOWEST WIND CHILL"],gmax>=10?[gmax+" mph",R.some(x=>x.G)?"PEAK GUST":"PEAK WIND"]:null].filter(Boolean).slice(0,4);
+    const tiles=[showSn?[(Math.round(snT*10)/10)+'"',"SNOW HERE"]:null,[tlo===thi?`${tlo}°`:`${tlo}° to ${thi}°`,"TEMPERATURE"],[fmin+"°","LOWEST WIND CHILL"],gmax>=10?[gmax+" mph",R.some(x=>x.G)?"PEAK GUST":"PEAK WIND"]:null].filter(Boolean).slice(0,4);
     const SB=kind==="winter"&&isBl?snowBars(t0,t1,H0):"";
     return `${SB?`<section><h2>When the snow falls</h2>${SB}</section>`:""}<section><h2>Hour by hour for you</h2><div class="abtl" style="grid-template-columns:repeat(${tiles.length===4?2:tiles.length},1fr)">${tiles.map(([v,k])=>`<div><b>${v}</b><small>${k}</small></div>`).join("")}</div>
       <table class="abhr"><tr><th>Time</th><th>Temp</th><th>Wind chill</th><th>Wind</th>${showSn?"<th>Snow</th>":""}</tr>${rows.map((r,i)=>{ const dk=new Date(r.t).toDateString(), nd=i===0||dk!==new Date(rows[i-1].t).toDateString(), dn=dayOf(r.t), dl=(dn==="today"?"Today":dn==="tomorrow"?"Tomorrow":"")+((dn==="today"||dn==="tomorrow")?" · ":"")+new Date(r.t).toLocaleDateString("en-US",{weekday:"long",month:"short",day:"numeric"}); return (nd?`<tr class="abday"><td colspan="${showSn?5:4}">${esc(dl)}</td></tr>`:"")+`<tr><td>${esc(tm(r.t))}${r.n>1?`<small>to ${esc(tm(r.t2))}</small>`:""}</td><td>${r.T}°</td><td class="${r.F<=r.T-5?"cold":""}">${r.F}°</td><td>${r.V?`${esc(r.dir)} ${r.V}`:"Calm"}${r.G>=r.V+8?`<small>gusts ${r.G}</small>`:""}</td>${showSn?`<td>${r.sn>=0.05?(Math.round(r.sn*10)/10)+'"':"–"}</td>`:""}</tr>`; }).join("")}</table>
@@ -11959,7 +11970,8 @@ html.snscene body>*:not(#snscene){display:none!important}
     const tone=/Warning/i.test(ev)?"red":/Watch/i.test(ev)?"amber":"amber", v=venue();
     // a fill that shows on the gray map (some official colors are gray or tan)
     const sat=h=>{ const n=parseInt(String(h||"").slice(1),16); if(!isFinite(n)) return 0; const r=n>>16&255,g=n>>8&255,b=n&255,mx=Math.max(r,g,b),mn=Math.min(r,g,b); return mx?(mx-mn)/mx:0; }; if(sat(I.color)<.35) I.color=/Warning/i.test(ev)?"#E5484D":"#F5B800";
-    const HTK=/^(winter|cold|wind|freeze)$/.test(kind), HT=HTK?`<div class="abhtw">${hourTab(kind,starts,ends,blendNow(v))}</div>`:"";
+    const _st=starts?+new Date(starts):Date.now(), _en=ends?+new Date(ends):null, _left=_en?_en-Date.now():null, windDown=!future&&_left!=null&&(_left<3*3600e3||_left<0.4*(_en-_st)); if(windDown) O.length=0;
+    const HTK=!windDown&&/^(winter|cold|wind|freeze)$/.test(kind), HT=HTK?`<div class="abhtw">${hourTab(kind,starts,ends,blendNow(v))}</div>`:"";
     const html=`<section><h2>What's going on</h2><p class="rpbl">${esc(head)}</p></section>
       <section class="abmapsec"><h2>Who is under it</h2><div class="rpmap abmap"><div class="abwait">Drawing the map…</div></div><div class="abkey"><div><i style="background:${I.color||"#F5B800"}"></i><b>${esc(name)}</b><span>${esc(span(starts,ends))}</span></div></div><div class="rpkey"><span><i style="background:#F28C28"></i>You</span></div></section>
       <section><h2>The details</h2>${X.WHAT?`<p>${esc(X.WHAT)}</p>`:""}<table class="rptab"><tr><td>When</td><td><b>${esc(win.replace(/^In effect /,"Now ")).replace(/^Now until/,"Now, until")}</b></td></tr>${X.WHERE?`<tr><td>Where</td><td>${esc(X.WHERE)}</td></tr>`:""}</table></section>
@@ -11977,8 +11989,8 @@ html.snscene body>*:not(#snscene){display:none!important}
         // surrounding towns, not just the big metros: biggest first, the map keeps the ones that fit
         const towns=mi=>{ try{ const ok=window.SDR_CITY_OK||(()=>true), dLa=mi/69*1.12, dLo=dLa*1.44/Math.cos(v.la*Math.PI/180); const seen=new Set(), A=[]; [(window.GEO_PLACES0||[]),(window.GEO_PLACES||[])].forEach(Ls=>Ls.forEach(r=>{ if(!r||!(Math.abs(r[3]-v.la)<dLa*.92&&Math.abs(r[4]-v.lo)<dLo*.92&&Math.hypot((r[3]-v.la)*69,(r[4]-v.lo)*57)>7)||!ok(r)) return; const k=r[0]+"|"+(+r[3]).toFixed(1)+"|"+(+r[4]).toFixed(1); if(seen.has(k)) return; seen.add(k); A.push(r); })); A.sort((x,y)=>(+y[2]||0)-(+x[2]||0)); let T=A.filter(r=>(+r[2]||0)>=4000); if(T.length<14) T=A.slice(0,30); return T.slice(0,60).map(r=>({lo:+r[4],la:+r[3],label:r[0]})); }catch(e){ return []; } };
         const fix=(c,e)=>sat(c)<.35?(/Warning/i.test(e)?"#E5484D":/Watch/i.test(e)?"#3B82F6":"#F5B800"):c;
-        const draw=G=>{ try{ const lay=G.filter(g=>g.F.length).map(g=>({features:g.F,style:()=>({fill:g.col,stroke:"#0B1730",w:1.6,fo:.62})})); const s=SDR_MAPAROUND(v,a.geometry?70:80,[],name.toUpperCase(),(ends?`UNTIL ${whenTxt(ends).replace(/ today$/,"").toUpperCase()}`:""),720,a.geometry?500:620,{noRing:true,layers:lay,towns:towns(a.geometry?70:80),max:22}); if(s) box.innerHTML=s; else doc.querySelector(".abmapsec").remove();
-            const key=doc.querySelector(".abkey"); if(key&&G.length) key.innerHTML=G.filter(g=>g.F.length||g.main).map(g=>`<div><i style="background:${g.col}"></i><b>${esc(g.name)}</b><span>${esc(span(g.t0,g.t1))}</span></div>`).join(""); }catch(e){ try{ doc.querySelector(".abmapsec").remove(); }catch(_){} } };
+        const draw=G=>{ try{ const lay=G.filter(g=>g.F.length).map(g=>({features:g.F,style:()=>({fill:g.col,stroke:g.col,w:.6,fo:.62})})); const s=SDR_MAPAROUND(v,a.geometry?70:80,[],name.toUpperCase(),(ends?`UNTIL ${whenTxt(ends).replace(/ today$/,"").toUpperCase()}`:""),720,a.geometry?500:620,{noRing:true,layers:lay,towns:towns(a.geometry?70:80),max:22}); if(s) box.innerHTML=s; else doc.querySelector(".abmapsec").remove();
+            const key=doc.querySelector(".abkey"); if(key&&G.length){ const inF=g=>{ const dA=(a.geometry?70:80)/69*1.05, dO=dA/Math.cos(v.la*Math.PI/180); let hit=false; const w=c=>{ if(hit||!Array.isArray(c)) return; if(typeof c[0]==="number"){ if(Math.abs(c[1]-v.la)<=dA&&Math.abs(c[0]-v.lo)<=dO) hit=true; return; } c.forEach(w); }; g.F.forEach(f=>w(f&&f.geometry&&f.geometry.coordinates)); return hit; }; key.innerHTML=G.filter(g=>g.main||(g.F.length&&inF(g))).map(g=>`<div><i style="background:${g.col}"></i><b>${esc(g.name)}</b><span>${esc(span(g.t0,g.t1))}</span></div>`).join(""); } }catch(e){ try{ doc.querySelector(".abmapsec").remove(); }catch(_){} } };
         const main={name,col:I.color||"#F5B800",t0:starts,t1:ends,F:[],main:true}; draw([main]);
         (async()=>{ main.F=await zones(a,150); if(!doc.isConnected) return; draw([main]); if(a.geometry) return;
           const N=await region(a,kind); if(!N.length||!doc.isConnected) return; const G=[main], by={}; let left=160;
@@ -12012,7 +12024,8 @@ html.snscene body>*:not(#snscene){display:none!important}
     const t=setInterval(()=>{ n++; const L=window.ALERTS||[]; const a=(want&&L.find(x=>(x.id||(x.properties||{}).headline)===want.id))||(L.length?mine():null); if(a){ clearInterval(t); open(a); } else if(n>40) clearInterval(t); },500); }
   try{ if("serviceWorker" in navigator) navigator.serviceWorker.addEventListener("message",e=>{ const d=e.data||{}; if(d.sdr==="open"&&/^#sdrgo-/.test(d.target||"")) go(d.target.slice(7)); }); }catch(e){}
   try{ const q=new URLSearchParams(location.search), g=q.get("go"); if(g){ go(g); q.delete("go"); history.replaceState(null,"",location.pathname+(q.toString()?"?"+q:"")+location.hash); } }catch(e){}
-  document.addEventListener("click",e=>{ const p=e.target.closest(".nxpill, #call .big"); if(!p) return; const card=p.closest(".nx-headsup,.nx-action,.call.headsup,.call.action")||(/HEADS UP|TAKE ACTION/i.test(p.textContent)?p:null); if(!card) return;
+  ["pointerdown","touchstart"].forEach(t=>document.addEventListener(t,e=>{ try{ if(e.target.closest&&e.target.closest(".nxpill,.nxtop,.nxwhy,#call .big")) window._nxHold=Date.now(); }catch(_){} },{capture:true,passive:true}));
+  document.addEventListener("click",e=>{ const p=e.target.closest(".nxpill, #call .big")||((e.target.closest(".nx-headsup .nxtop,.nx-headsup .nxwhy,.nx-action .nxtop,.nx-action .nxwhy"))?(e.target.closest("#nowx,.nx-headsup,.nx-action")||{}).querySelector?.(".nxpill"):null); if(!p) return; const card=p.closest(".nx-headsup,.nx-action,.call.headsup,.call.action")||(/HEADS UP|TAKE ACTION/i.test(p.textContent)?p:null); if(!card) return;
     const a=mine(), why=((document.getElementById("st-why")||{}).textContent||"")+" "+((card.querySelector&&card.querySelector(".nxwhy")||{}).textContent||""), RN=window.RADAR_NEAR, act=!!p.closest(".nx-action,.call.action");
     const tab=k=>{ const t=document.querySelector('.tabs button[data-pane="'+k+'"]'); if(t){ t.click(); scrollTo(0,0); return true; } return false; };
     const live=/\b(rain|shower|storm|thunder|lightning|downpour|hail|tornado|snow|sleet|freezing rain)\b/i.test(why)&&RN&&!RN.none&&!RN.light&&RN.d<=45;
@@ -13006,4 +13019,220 @@ body.look-n .nxkick{font:600 13px/1 var(--ui,var(--body))!important;letter-spaci
       sts.insertAdjacentElement("afterend",b); }); };
   new MutationObserver(()=>fix()).observe(document.documentElement,{childList:true,subtree:true}); fix(); })();
 </script>
+<script>
+/* v402: "Wind Advisory until 4 PM." -> bold name, time underneath */
+window.SDR_WHYSPLIT=function(w){ const e=x=>String(x).replace(/&/g,"&amp;").replace(/</g,"&lt;"); w=String(w||"").trim().replace(/\.$/,"");
+  const m=w.match(/^(.{3,}?)\s+((?:starts|starting|beginning|until|through|from|after|before|by|ends|in effect|this|tonight|today|tomorrow|overnight)\b.*)$/i);
+  return m?`<b>${e(m[1])}</b> <em>${e(m[2][0].toUpperCase()+m[2].slice(1))}</em>`:`<b>${e(w)}</b>`; };
+/* v402: What's Next: the "when" becomes a chip; the headline says the what */
+(function(){ const h=document.getElementById("nx-h"); if(!h) return; const k=h.parentElement&&h.parentElement.querySelector(".k"); if(!k) return;
+  const h2=document.createElement("h2"); h2.className="nxh2"; h2.setAttribute("aria-hidden","true"); h.after(h2);
+  const chip=document.createElement("span"); chip.className="nxwhen"; chip.hidden=true; k.appendChild(chip);
+  const W="(tonight|today|overnight|this (?:morning|afternoon|evening|weekend)|tomorrow(?: morning| afternoon| evening| night)?|(?:sun|mon|tues|wednes|thurs|fri|satur)day(?: morning| afternoon| evening| night)?)";
+  const re=new RegExp("^(.{3,}?)\\s+"+W+"(?=,|:|\\s+[—–-]\\s|\\.|$)(.*)$","i"), bad=/\b(and|or|through|thru|to|until|till|by|after|before|from|into|on|of|for|starts?|starting|ends?|ending|late|early|mid|next|last|every|each|the)$/i;
+  const run=()=>{ const t=(h.textContent||"").trim(); const m=t.match(re); let hd=t, c="";
+    if(m&&!bad.test(m[1].trim())){ hd=(m[1]+m[3]).replace(/\s+([,:.])/g,"$1").replace(/[,:]\s*$/,"").trim(); c=m[2]; }
+    if(h2.textContent!==hd) h2.textContent=hd; if(chip.textContent!==c) chip.textContent=c; chip.hidden=!c; };
+  run(); new MutationObserver(run).observe(h,{childList:true,characterData:true,subtree:true}); })();
+/* v402: opening a day shows one chart right away: rain timing on a wet day, temperature otherwise */
+(function(){ const ds=document.getElementById("days")||document.body;
+  const go=()=>{ document.querySelectorAll(".dexp:not([data-v402])").forEach(d=>{ d.setAttribute("data-v402","1"); if(d.querySelector(".dchart.open")) return;
+    const wet=d.querySelector('.st[data-chart="rain"]:not(.dry)'), c=d.querySelector(`.dchart[data-k="${wet?"rain":"temp"}"]`); if(!c) return; c.classList.add("open");
+    try{ const sc=c.querySelector(".dcs"), sv=sc&&sc.querySelector("svg"); if(sc&&sv&&innerWidth<760){ const W=+((sv.getAttribute("viewBox")||"").split(" ")[2])||0; sc.scrollLeft=/NOW/.test(sv.innerHTML)?0:Math.max(0,W/24*6-6); } }catch(e){} }); };
+  new MutationObserver(go).observe(ds,{childList:true,subtree:true}); go(); })();
+</script>
+<style>
+/* ===== v402 RIGHT NOW card: label + status chip, temperature, one alert bar, the numbers ===== */
+html body #nowx .nxtop{display:flex!important;align-items:center;justify-content:space-between;gap:10px;margin:0 0 2px!important;flex-wrap:nowrap}
+html body #nowx .nxkick{display:block;margin:0!important;font:700 12px/1 var(--display)!important;letter-spacing:.18em!important;color:var(--muted);text-transform:uppercase}
+html body #nowx .nxpill{font-size:13px!important;letter-spacing:.12em!important;padding:6px 11px 6px 8px!important;gap:6px!important}
+html body #nowx .nxpill svg{width:16px!important;height:16px!important;padding:2px!important}
+html body #nowx .nxpill svg.bng{width:17px!important;height:17px!important;padding:0!important}
+html body #nowx .nx-headsup .nxpill::after,html body #nowx.nx-headsup .nxpill::after{margin-left:0}
+html body #nowx .nxmain{margin-top:6px!important}
+html body #nowx .nxt{font-size:64px!important}
+html body #nowx .nxc{font-size:22px!important;font-weight:500!important}
+html body #nowx .nxi svg{width:60px!important;height:60px!important}
+html body #nowx .nxbar{display:flex!important;align-items:center;gap:10px;margin:10px 0 0!important;padding:10px 12px!important;border-radius:12px;background:rgba(245,184,0,.10)!important;box-shadow:inset 0 0 0 1px rgba(245,184,0,.38)!important;cursor:pointer;color:#FFE08A;font-size:15px!important;line-height:1.25}
+html body #nowx .nxbar>span{flex:1;min-width:0;display:block}
+html body #nowx .nxbar b{display:block;font:600 16px/1.2 var(--body);color:#FFE08A}
+html body #nowx .nxbar em{display:block;font-style:normal;font-size:13.5px;color:#E3CB80;margin-top:2px}
+html body #nowx .nxbar svg{width:22px!important;height:22px!important;flex:none;color:#F5C842}
+html body #nowx .nxbar .nxchev{font-style:normal;font-size:24px;line-height:1;color:#F5C842;flex:none}
+html body #nowx .nxstrip{margin-top:10px!important;border-radius:12px!important}
+html body #nowx .nxstrip div{padding:8px 6px!important}
+html body #nowx .nxstrip b{font-size:22px!important}
+html body #nowx .nxstrip small{font-size:10.5px!important;margin-top:2px!important}
+html body #call.nx-on.action #nowx .nxtop{display:flex!important}
+html body #call.nx-on.action #nowx .nxpill{display:none!important}
+/* ===== v402 WHAT'S NEXT: same frame as RIGHT NOW ===== */
+#next.nxcard #nx-h{display:none!important}
+#next.nxcard .k{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#next.nxcard .k b{font:700 12px/1 var(--display)!important;letter-spacing:.18em!important;color:var(--muted)!important;text-transform:uppercase}
+#next.nxcard .nxwhen{font:700 12px/1 var(--display);letter-spacing:.12em;text-transform:uppercase;padding:5px 10px;border-radius:999px;color:#8CC4FF;background:rgba(111,183,255,.13);box-shadow:inset 0 0 0 1px rgba(111,183,255,.4)}
+#next.nxcard .nxwhen[hidden]{display:none}
+#next.nxcard .nxh2{margin:8px 0 0;font:600 22px/1.2 var(--body);color:#fff;letter-spacing:0}
+#next.nxcard #nx-p{font-size:15px!important;line-height:1.35;margin-top:4px!important;color:#C7D3E8}
+#next.nxcard #nx-i svg{width:44px!important;height:44px!important}
+/* ===== v402 day view: summary, one chart, the key numbers; the rest behind More details ===== */
+.dexp .dx-txt{font-size:15px!important;line-height:1.4!important;margin:0!important}
+.dexp .dx-n{font-size:14px!important;margin:-4px 0 0!important}
+.dexp .dx-grid>section>h4{display:none!important}
+.dexp .sts .st[data-chart="temp"]{display:none!important}
+.dexp .sts[data-dxm]{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important}
+.dexp .sts[data-dxm] .st.wide{grid-column:auto!important}
+.dexp .st{padding:8px 9px 7px!important}
+.dexp .st b,.dexp .st.wide b{font-size:20px!important}
+.dexp .sts[data-dxm] .st[data-chart]::after{display:none!important}
+.dexp .sts[data-dxm] .st b{white-space:nowrap}
+.dexp .sts[data-dxm] .st b em{display:block!important;margin:1px 0 0!important;font-size:10.5px!important;letter-spacing:.06em!important}
+.dexp .sts.pch .st.dry{display:flex!important;align-items:baseline;gap:8px;background:none!important;border:0!important;padding:0!important}
+.dexp .sts.pch .st.dry b{font-size:15px!important;font-family:var(--body)!important}
+.dexp .sts.pch .st.dry::after{display:none!important}
+.dexp .dchart .dch b{font-size:14px!important;letter-spacing:.1em!important}
+.dexp .dx-grid{gap:10px!important}
+.dexp .dcharts{margin-top:-2px}
+.dexp .dxmorebtn{margin:6px 0 0!important}
+</style>
+<script>
+/* v403: what the sky really looks like, from the station's measured cloud layers (overcast / broken = cloudy) */
+window.SDR_OBSICO=function(obs,base,isDay){ try{ if(!/^(sun|clearnight|pc|pcn)$/.test(base||"")) return base;
+  const R={CLR:0,SKC:0,NCD:0,NSC:0,FEW:1,SCT:2,BKN:3,OVC:4,VV:4}; let r=-1;
+  (obs.cloudLayers||[]).forEach(l=>{ const v=R[String(l&&l.amount||"").toUpperCase()]; if(v!=null&&v>r) r=v; });
+  const t=String(obs.textDescription||"");
+  if(/overcast|^\s*cloudy/i.test(t)) r=Math.max(r,4); else if(/mostly cloudy/i.test(t)) r=Math.max(r,3); else if(/partly/i.test(t)) r=Math.max(r,2);
+  const vm=obs.visibility&&obs.visibility.value!=null?obs.visibility.value/1609.34:null; if(vm!=null&&vm<=1) return "fog";
+  if(r<0) return base; return r>=3?"cl":r===2?(isDay?"pc":"pcn"):(isDay?"sun":"clearnight"); }catch(e){ return base; } };
+</script>
+<style>
+html body #status>#call.clear.nx-vis,html body #call.clear.nx-vis{border-left:6px solid #F5C518!important}
+html body #nowx .nxpill.nxvis{background:rgba(245,184,0,.14)!important;color:#F7D56B!important;box-shadow:inset 0 0 0 1.5px rgba(245,184,0,.55)!important}
+html body #nowx .nxpill.nxvis svg{background:none!important;color:#F5C842!important}
+</style>
+<script>
+/* v404: the "window to the world" behind the RIGHT NOW card.
+   It reads the same things the card shows (icon, wind, gusts, rain now, visibility), so the picture and the card always agree.
+   Below the header bar only; light on battery: ~30 fps, stops when hidden, scrolled away, or when the phone asks for less motion. */
+(function(){
+  const main=document.querySelector("main"); if(!main||document.getElementById("wxscene")) return;
+  const box=document.createElement("div"); box.id="wxscene"; box.setAttribute("aria-hidden","true");
+  const cv=document.createElement("canvas"); const fade=document.createElement("i"); box.appendChild(cv); box.appendChild(fade); main.insertBefore(box,main.firstChild);
+  main.classList.add("wxs-host");
+  const x=cv.getContext("2d"); let W=390, H=520, DPR=1;
+  const RM=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function size(){ W=Math.max(320,main.clientWidth||innerWidth); H=Math.min(560,Math.max(440,Math.round(innerHeight*.62))); DPR=Math.min(2,window.devicePixelRatio||1);
+    cv.width=Math.round(W*DPR); cv.height=Math.round(H*DPR); cv.style.width=W+"px"; cv.style.height=H+"px"; box.style.height=H+"px"; x.setTransform(DPR,0,0,DPR,0,0); }
+  size(); addEventListener("resize",()=>{ size(); still(); });
+
+  /* ---- what's it like outside? read the card ---- */
+  const ST={k:"cl",night:false,wind:0,gust:0,fog:0};
+  function read(){ try{ if(window._wxLock) return; const n=document.getElementById("nowx"); if(!n) return;
+    const ic=((n.querySelector(".nxi")||{}).className||"").match(/wx-(\w+)/), I=ic?ic[1]:"";
+    const lab=((n.querySelector(".nxpill b")||{}).textContent||"").toUpperCase(), cond=((n.querySelector(".nxc")||{}).textContent||"").toLowerCase();
+    let night=/night|pcn|nn$/.test(I); if(!/clearnight|pcn|pcrnn|pctsn/.test(I)){ try{ night=window.SDR_ISDAY?!SDR_ISDAY(new Date()):(new Date().getHours()<7||new Date().getHours()>=18); }catch(e){} }
+    let k="cl";
+    if(/^(ts|pcts|pctsn|tsn)$/.test(I)||/thunder|storm/.test(cond)) k="storm";
+    else if(/^(sn|mix|ice)$/.test(I)||lab==="SNOW NOW"||lab==="WINTRY MIX"||/snow|sleet|flurr/.test(cond)) k="snow";
+    else if(/^(rn|pcrn|pcrnn)$/.test(I)||lab==="RAIN NOW"||/rain|drizzle|shower/.test(cond)) k="rain";
+    else if(I==="fog"||/fog/.test(cond)) k="fog";
+    else if(I==="cl"||/cloudy|overcast/.test(cond)&&!/partly/.test(cond)) k=/misty/.test(cond)?"fog":"cl";
+    else if(I==="pc"||I==="pcn"||/partly/.test(cond)) k="pc";
+    else if(I==="sun"||I==="clearnight"||I==="frost"||/clear|sunny|fair/.test(cond)) k="clear";
+    else if(I==="wind") k="pc";
+    let wind=0,gust=0; n.querySelectorAll(".nxstrip div").forEach(d=>{ const s=(d.querySelector("small")||{}).textContent||"", v=+(((d.querySelector("b")||{}).textContent||"").match(/\d+/)||[0])[0]; if(s==="WIND") wind=v; if(s==="GUSTS") gust=v; });
+    const ch=(ST.k!==k||ST.night!==night); Object.assign(ST,{k,night,wind,gust,fog:k==="fog"?1:/misty|low visibility|fog/i.test(cond+" "+lab)?.6:0});
+    box.dataset.k=k+(night?"-n":""); if(ch) still(); }catch(e){} }
+
+  /* ---- tiny seeded random so the scene doesn't jump around ---- */
+  const rnd=s=>()=>((s=(s*16807)%2147483647)/2147483647);
+  const sky=(a,b)=>{ const g=x.createLinearGradient(0,0,0,H); g.addColorStop(0,a); g.addColorStop(1,b); x.fillStyle=g; x.fillRect(0,0,W,H); };
+  /* soft clouds: each shape is drawn once into a small sprite with soft gradient edges (no blur filter: cheap on phones, works on every iPhone) */
+  const SPR={}; function sprite(col,s){ const q=Math.max(4,Math.round(s/8))*8, key=col+q; if(SPR[key]) return SPR[key]; const w=Math.ceil(q*3.4), h=Math.ceil(q*2), c=document.createElement("canvas"), sc=Math.min(2,DPR); c.width=Math.ceil(w*sc); c.height=Math.ceil(h*sc); const g=c.getContext("2d"); g.scale(sc,sc);
+    const m=col.match(/\w\w/g).map(v=>parseInt(v,16)); [[0,0,1],[.55,-.25,.8],[-.6,-.1,.75],[1.05,.1,.65],[-1.1,.15,.6]].forEach(([dx,dy,r])=>{ const cx=w/2+dx*q, cy=h*.58+dy*q, R=r*q*.95; const gr=g.createRadialGradient(cx,cy,0,cx,cy,R); gr.addColorStop(0,`rgba(${m},.9)`); gr.addColorStop(.55,`rgba(${m},.55)`); gr.addColorStop(1,`rgba(${m},0)`); g.fillStyle=gr; g.beginPath(); g.arc(cx,cy,R,0,7); g.fill(); });
+    return SPR[key]={c,w,h}; }
+  function puff(cx,cy,s,col,a){ const sp=sprite(col,s); x.globalAlpha=a; x.drawImage(sp.c,cx-sp.w/2,cy-sp.h*.58,sp.w,sp.h); x.globalAlpha=1; }
+  function clouds(t,cols,a,n,seed,speed,yr){ const R=rnd(seed); for(let i=0;i<n;i++){ const y=yr[0]+R()*(yr[1]-yr[0]), s=48+R()*72, v=(4+R()*7)*speed, px=((R()*(W+320)+t*v)%(W+320))-160; puff(px,y,s*1.15,cols[i%cols.length],a); } }
+  function mist(t,a){ for(let i=0;i<4;i++){ const y=H*.25+i*H*.15+Math.sin(t*.15+i)*8, g=x.createLinearGradient(0,y-55,0,y+55); g.addColorStop(0,"rgba(205,214,228,0)"); g.addColorStop(.5,`rgba(205,214,228,${a})`); g.addColorStop(1,"rgba(205,214,228,0)"); x.fillStyle=g; x.fillRect(0,y-55,W,110); } }
+  /* Apple-style rain behind the glass: fine, faint streaks at different depths, plus soft light shafts on a rainy day */
+  function rain(t,n,heavy,wind){ const R=rnd(7), sl=Math.min(12,wind/3); x.lineCap="round";
+    for(let i=0;i<n;i++){ const z=R(), px=R()*(W+80)-40, sp=(heavy?900:700)*(.55+z*.6)+R()*120, py=((R()*(H+60)+t*sp)%(H+60))-30, l=(heavy?26:20)*(.5+z), a=(.06+z*.22)*(heavy?1.1:1);
+      x.strokeStyle=`rgba(225,235,250,${a})`; x.lineWidth=.6+z*.7; x.beginPath(); x.moveTo(px,py); x.lineTo(px-sl*(.4+z)*.5,py+l); x.stroke(); } }
+  function shafts(t,a){ x.save(); x.globalCompositeOperation="lighter"; for(let i=0;i<4;i++){ const cx=W*(.35+i*.17)+Math.sin(t*.07+i)*12, w=26+i*10, s=.5+.5*Math.sin(t*.25+i*2); const g=x.createLinearGradient(0,0,0,H*.9); g.addColorStop(0,`rgba(220,230,245,${a*s})`); g.addColorStop(1,"rgba(220,230,245,0)"); x.fillStyle=g; x.beginPath(); x.moveTo(cx-w*.3,0); x.lineTo(cx+w*.3,0); x.lineTo(cx+w*1.6,H*.9); x.lineTo(cx-w*.4,H*.9); x.closePath(); x.fill(); } x.restore(); }
+  function snow(t,wind){ const R=rnd(5), dr=wind*1.5; for(let i=0;i<Math.round(W/3);i++){ const r=R()*2.4+.6, sp=18+r*14, px=(((R()*W+Math.sin(t*.7+i)*14+t*dr)%W)+W)%W, py=((R()*H+t*sp)%(H+10))-5; x.fillStyle=`rgba(255,255,255,${.4+R()*.5})`; x.beginPath(); x.arc(px,py,r,0,7); x.fill(); } }
+  function stars(t){ const R=rnd(3); for(let i=0;i<Math.round(W*H/1900);i++){ const sx=R()*W, sy=R()*H*.8, r=R()*1.3+.2, tw=.45+.55*Math.abs(Math.sin(t*(.5+R()*1.4)+i)); x.fillStyle=`rgba(255,255,255,${tw*(.3+R()*.7)})`; x.beginPath(); x.arc(sx,sy,r,0,7); x.fill(); } }
+  function moon(){ const syn=29.530588, age=(((Date.now()-Date.UTC(2000,0,6,18,14))/864e5)%syn+syn)%syn, f=age/syn, mx=W-78, my=Math.min(110,H*.2), r=20;
+    const g=x.createRadialGradient(mx,my,0,mx,my,90); g.addColorStop(0,"rgba(225,232,255,.28)"); g.addColorStop(1,"rgba(225,232,255,0)"); x.fillStyle=g; x.fillRect(mx-90,my-90,180,180);
+    if(f<.03||f>.97) return; x.save(); x.beginPath(); x.arc(mx,my,r,0,7); x.clip(); x.fillStyle="#0D1A40"; x.fillRect(mx-r,my-r,2*r,2*r);
+    const lit=f<.5?1:-1, c=Math.cos(f*2*Math.PI); x.fillStyle="#EEF2FF"; x.beginPath(); x.arc(mx,my,r,-Math.PI/2,Math.PI/2,lit<0); x.ellipse(mx,my,Math.abs(c)*r,r,0,Math.PI/2,-Math.PI/2,(c>0)===(lit>0)); x.fill(); x.restore(); }
+  function sunny(t,a){ const sx=W-70, sy=Math.min(80,H*.15); const g=x.createRadialGradient(sx,sy,0,sx,sy,W*.75); g.addColorStop(0,`rgba(255,240,180,${a})`); g.addColorStop(.18,`rgba(255,216,120,${a*.5})`); g.addColorStop(1,"rgba(255,216,120,0)"); x.fillStyle=g; x.fillRect(0,0,W,H);
+    x.save(); x.translate(sx,sy); x.rotate(t*.03); for(let i=0;i<12;i++){ const sh=.5+.5*Math.sin(t*1.3+i*1.7); x.rotate(Math.PI/6); const gr=x.createLinearGradient(0,0,0,W*.55); gr.addColorStop(0,`rgba(255,246,210,${.16*sh*a})`); gr.addColorStop(1,"rgba(255,246,210,0)"); x.fillStyle=gr; x.beginPath(); x.moveTo(-5,0); x.lineTo(5,0); x.lineTo(26,W*.55); x.lineTo(-26,W*.55); x.fill(); } x.restore();
+    const R=rnd(21); for(let i=0;i<7;i++){ const d=.25+i*.11, gx=sx+(W*.35-sx)*d*1.6, gy=sy+(H*.55-sy)*d*1.6, r=4+R()*14, sh=.5+.5*Math.sin(t*.9+i); x.fillStyle=`rgba(255,240,200,${.08*sh*a})`; x.beginPath(); x.arc(gx,gy,r,0,7); x.fill(); } }
+  function streaks(t,str){ const R=rnd(31); x.lineCap="round"; for(let i=0;i<Math.round(8+str*10);i++){ const y=R()*H*.85, sp=220+R()*260*str, len=60+R()*120, px=((R()*(W+len*2)+t*sp)%(W+len*2))-len; const g=x.createLinearGradient(px,0,px+len,0); g.addColorStop(0,"rgba(255,255,255,0)"); g.addColorStop(.5,`rgba(235,242,255,${.07+.08*str})`); g.addColorStop(1,"rgba(255,255,255,0)"); x.strokeStyle=g; x.lineWidth=1.2; x.beginPath(); x.moveTo(px,y); x.quadraticCurveTo(px+len/2,y-6*Math.sin(t+i),px+len,y); x.stroke(); } }
+  let shoot=null, nextShoot=0; function shooting(t){ if(!shoot&&t>nextShoot){ const R=Math.random; shoot={t0:t,x0:W*(.2+R()*.6),y0:H*(.05+R()*.2),dx:-(160+R()*120),dy:90+R()*60,d:.9+R()*.4}; nextShoot=t+9+Math.random()*12; }
+    if(!shoot) return; const p=(t-shoot.t0)/shoot.d; if(p>1){ shoot=null; return; } const hx=shoot.x0+shoot.dx*p, hy=shoot.y0+shoot.dy*p, tx=hx-shoot.dx*.28, ty=hy-shoot.dy*.28, a=Math.sin(p*Math.PI);
+    const g=x.createLinearGradient(tx,ty,hx,hy); g.addColorStop(0,"rgba(255,255,255,0)"); g.addColorStop(1,`rgba(255,255,255,${.9*a})`); x.strokeStyle=g; x.lineWidth=1.8; x.beginPath(); x.moveTo(tx,ty); x.lineTo(hx,hy); x.stroke(); x.fillStyle=`rgba(255,255,255,${a})`; x.beginPath(); x.arc(hx,hy,1.6,0,7); x.fill(); }
+  let flash=null, nextFlash=2; function lightning(t){ if(!flash&&t>nextFlash){ flash={t0:t,bx:W*(.25+Math.random()*.6),seed:1+Math.floor(Math.random()*9999)}; nextFlash=t+5+Math.random()*9; }
+    if(!flash) return; const p=t-flash.t0; if(p>.45){ flash=null; return; } const on=p<.07||(p>.14&&p<.2)||(p>.28&&p<.31); if(!on) return;
+    x.fillStyle="rgba(215,226,255,.45)"; x.fillRect(0,0,W,H); x.save(); x.strokeStyle="rgba(255,255,255,.95)"; x.lineWidth=2; x.shadowColor="#c8d6ff"; x.shadowBlur=16; x.beginPath(); const R=rnd(flash.seed); let px=flash.bx,py=0; x.moveTo(px,py); while(py<H*.55){ px+=(R()-.5)*42; py+=18+R()*22; x.lineTo(px,py); } x.stroke(); x.restore(); }
+
+  let frame=function(t){ const N=ST.night, k=ST.k, wf=Math.max(ST.wind/15,ST.gust/25), sp=1+Math.min(3,wf*1.4), windy=ST.wind>=20||ST.gust>=30;
+    x.clearRect(0,0,W,H);
+    if(k==="clear"){ if(N){ sky("#040A22","#0C1A42"); stars(t); moon(); shooting(t); } else { sky("#2C78D4","#8CC0F0"); sunny(t,.95); } }
+    else if(k==="pc"){ if(N){ sky("#060D28","#122046"); stars(t); moon(); clouds(t,["#2B3A60","#34446C"],.85,6,8,sp,[H*.08,H*.5],12); } else { sky("#3A80D0","#8EBAE6"); sunny(t,.6); clouds(t,["#FFFFFF","#EEF2F8","#DCE3EE"],.85,6,8,sp,[H*.1,H*.5],12); } }
+    else if(k==="cl"){ if(N){ sky("#1B2335","#121A2C"); clouds(t,["#2E384C","#283246"],.8,9,2,sp,[0,H*.55],16); } else { sky("#7E8999","#4E5868"); clouds(t,["#C3CAD6","#AEB7C6","#9AA4B5"],.75,10,2,sp,[0,H*.55],16); } }
+    else if(k==="fog"){ if(N){ sky("#262E40","#161E30"); clouds(t,["#3A4458"],.7,8,2,sp*.6,[0,H*.5],18); mist(t,.16); } else { sky("#9AA3B1","#5F6878"); clouds(t,["#C9CFD9","#B9C0CC"],.7,9,2,sp*.6,[0,H*.5],18); mist(t,.3); } }
+    else if(k==="rain"){ N?sky("#1C2434","#10172A"):sky("#56637A","#3A4558"); clouds(t,N?["#2C3548","#262E40"]:["#8C97AB","#7A869B","#9AA4B6"],.55,10,4,sp*1.1,[0,H*.5],22); if(!N) shafts(t,.05); rain(t,Math.round(W/3.2),false,ST.wind); }
+    else if(k==="storm"){ sky("#1E2534","#121826"); clouds(t,["#394254","#2E3648"],.85,8,9,sp*1.6,[0,H*.45],14); rain(t,Math.round(W/2.2),true,ST.wind); lightning(t); }
+    else if(k==="snow"){ N?sky("#2A3244","#1A2234"):sky("#8A94A6","#5C6678"); clouds(t,N?["#3A4458"]:["#C8CED8","#B5BDCA"],.7,7,12,sp*.7,[0,H*.45],16); snow(t,ST.wind); }
+    if(ST.fog>=.6&&k!=="fog") mist(t,N?.1:.18);
+    if(windy&&k!=="storm"&&k!=="rain") streaks(t,Math.min(1.5,wf)); };
+
+  /* raindrops landing on the RIGHT NOW card's glass: a quick splash, a bead with a highlight, some run down, then they dry */
+  let G=null; const D=[]; let gLast=0;
+  function glass(){ const c=document.getElementById("call"); if(!c) return null; if(!G||!G.c.isConnected||G.c.parentNode!==c){ const g=document.createElement("canvas"); g.className="wxglass"; c.insertBefore(g,c.firstChild); G={c:g,x:g.getContext("2d"),w:0,h:0}; } const w=c.clientWidth, h=c.clientHeight; if(w!==G.w||h!==G.h){ G.w=w; G.h=h; G.c.width=Math.round(w*DPR); G.c.height=Math.round(h*DPR); G.c.style.width=w+"px"; G.c.style.height=h+"px"; G.x.setTransform(DPR,0,0,DPR,0,0); } return G; }
+  function bead(g,d,age){ const r=d.r*(age<.09?age/.09:1), a=d.life-age<1?Math.max(0,d.life-age):1; if(r<=.2||a<=0) return;
+    if(age<.16){ const p=age/.16; g.strokeStyle=`rgba(230,240,255,${.35*(1-p)})`; g.lineWidth=.8; g.beginPath(); g.arc(d.x,d.y,d.r*(1+p*2.2),0,7); g.stroke(); if(d.r>2.2) for(let i=0;i<4;i++){ const an=d.s+i*1.57, q=d.r*(1.2+p*2.4); g.fillStyle=`rgba(235,243,255,${.5*(1-p)})`; g.beginPath(); g.arc(d.x+Math.cos(an)*q,d.y+Math.sin(an)*q,.7,0,7); g.fill(); } }
+    if(d.slide&&d.trail.length>1){ g.strokeStyle=`rgba(220,232,250,${.1*a})`; g.lineWidth=Math.max(.6,r*.5); g.beginPath(); g.moveTo(d.trail[0][0],d.trail[0][1]); d.trail.forEach(q=>g.lineTo(q[0],q[1])); g.stroke(); }
+    g.fillStyle=`rgba(6,12,30,${.32*a})`; g.beginPath(); g.ellipse(d.x+r*.15,d.y+r*.25,r*1.02,r*.95,0,0,7); g.fill();
+    const gr=g.createRadialGradient(d.x-r*.35,d.y-r*.4,0,d.x,d.y,r); gr.addColorStop(0,`rgba(255,255,255,${.7*a})`); gr.addColorStop(.35,`rgba(210,222,242,${.22*a})`); gr.addColorStop(.8,`rgba(160,180,215,${.2*a})`); gr.addColorStop(1,`rgba(235,243,255,${.6*a})`);
+    g.fillStyle=gr; g.beginPath(); g.ellipse(d.x,d.y,r,r*.94,0,0,7); g.fill();
+    g.fillStyle=`rgba(255,255,255,${.95*a})`; g.beginPath(); g.ellipse(d.x-r*.35,d.y-r*.42,r*.26,r*.18,-.6,0,7); g.fill(); }
+  function drops(t){ const wet=ST.k==="rain"||ST.k==="storm", g=wet||D.length?glass():null; if(!g) return; const dt=Math.min(.1,t-(gLast||t)); gLast=t;
+    if(wet){ const rate=ST.k==="storm"?14:8; let n=rate*dt; while(n>0){ if(Math.random()<n&&D.length<110){ const r=Math.random()<.14?3.4+Math.random()*2.8:1.3+Math.random()*2.2; D.push({x:Math.random()*g.w,y:Math.random()*g.h,r,t0:t,life:3+Math.random()*5,s:Math.random()*6,slide:r>3.2&&Math.random()<.6,v:14+Math.random()*26,trail:[]}); } n-=1; } }
+    g.x.clearRect(0,0,g.w,g.h);
+    for(let i=D.length-1;i>=0;i--){ const d=D[i], age=t-d.t0; if(age>d.life||d.y>g.h+6){ D.splice(i,1); continue; }
+      if(d.slide&&age>.6){ d.trail.push([d.x,d.y]); if(d.trail.length>40) d.trail.shift(); d.y+=d.v*dt; d.x+=Math.sin(age*3+d.s)*.15; d.life=Math.max(d.life,age+.5); }
+      bead(g.x,d,age); } }
+  const _frame=frame; frame=function(t){ _frame(t); try{ drops(t); }catch(e){} };
+  let raf=0, last=0, run=false, T0=performance.now();
+  const onScreen=()=>!document.hidden&&box.offsetParent!==null&&scrollY<H+80&&getComputedStyle(box).display!=="none";
+  function loop(now){ raf=0; if(!run) return; if(now-last>=33){ last=now; frame((now-T0)/1000); } raf=requestAnimationFrame(loop); }
+  function still(){ try{ frame(RM?4:(performance.now()-T0)/1000); }catch(e){} }
+  function check(){ const want=!RM&&onScreen(); if(want&&!run){ run=true; if(!raf) raf=requestAnimationFrame(loop); } else if(!want&&run){ run=false; } }
+  document.addEventListener("visibilitychange",check); addEventListener("scroll",check,{passive:true}); setInterval(()=>{ read(); check(); },3000);
+  const nw=()=>{ const n=document.getElementById("nowx"); if(n&&!n._wxs){ n._wxs=1; new MutationObserver(read).observe(n,{childList:true,subtree:true,characterData:true}); } };
+  setInterval(nw,1500); nw(); read(); still(); check();
+  window.SDR_SCENE={state:()=>Object.assign({},ST), set:o=>{ Object.assign(ST,o); box.dataset.k=ST.k+(ST.night?"-n":""); still(); }, frame:t=>frame(t)};
+})();
+</script>
+<style>
+/* v404 window scene: under the header, behind the RIGHT NOW card, fading into the page */
+main.wxs-host{position:relative;z-index:0}
+#wxscene{position:absolute;left:0;right:0;top:0;z-index:-1;pointer-events:none;overflow:hidden}
+#wxscene canvas{display:block;width:100%}
+#wxscene i{position:absolute;left:0;right:0;bottom:0;height:58%;background:linear-gradient(to bottom,rgba(10,20,40,0),var(--bg,#0A1428) 88%)}
+body:not(.tab-overview) #wxscene{display:block}
+/* the RIGHT NOW card turns to glass so the sky shows through; everything below stays solid */
+html body #status>#call.call,html body #status>#call.call.clear,html body #status>#call.call.headsup,html body #status>#call.call.action{background:rgba(12,22,48,.4)!important;background-image:none!important;-webkit-backdrop-filter:blur(10px) saturate(1.25);backdrop-filter:blur(10px) saturate(1.25);box-shadow:inset 6px 0 0 #22C55E,inset 0 0 0 1px rgba(255,255,255,.14),0 10px 30px rgba(0,0,0,.25)!important}
+html body #status>#call.call.action{background:rgba(48,10,18,.62)!important}
+html body #status>#call.call.headsup,html body #status>#call.call.clear.nx-vis{box-shadow:inset 6px 0 0 #F5C518,inset 0 0 0 1px rgba(255,255,255,.14),0 10px 30px rgba(0,0,0,.25)!important;border-left:1px solid rgba(255,255,255,.08)!important}
+html body #status>#call.call.action{box-shadow:inset 6px 0 0 #FF4D4F,inset 0 0 0 1px rgba(255,255,255,.14),0 10px 30px rgba(0,0,0,.25)!important}
+html body #status>#call.call>canvas.wxglass.wxglass,html body #status>#call.call.nx-on>canvas.wxglass.wxglass{display:block!important;visibility:visible!important;position:absolute!important;left:0;top:0;pointer-events:none;z-index:0;border-radius:inherit;margin:0!important;grid-column:auto!important}
+html body #status>#call.call{position:relative}
+html body #status>#call #nowx{position:relative;z-index:1}
+html body #nowx .nxt,html body #nowx .nxc{text-shadow:0 2px 12px rgba(0,0,0,.45)}
+html body #nowx .nxkick{color:rgba(234,240,250,.82)!important}
+html body #nowx .nxstrip{background:rgba(6,14,32,.38)!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.1)!important}
+</style>
+
 </body></html>

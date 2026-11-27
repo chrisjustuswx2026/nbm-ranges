@@ -2614,7 +2614,7 @@ body.chan-on .tabs button[data-pane="live"]::before{content:"";position:absolute
 .chplay i{width:76px;height:76px;border-radius:50%;background:#E5484D;display:grid;place-items:center;box-shadow:0 8px 28px rgba(229,72,77,.45)}
 .chplay b{font-family:var(--display);font-weight:800;letter-spacing:.14em;font-size:13px}
 </style>
-<script>window.SDR_VER="405";</script><style>.shd .ver{margin-left:auto;margin-right:10px;font-family:var(--display);font-weight:700;letter-spacing:.1em;font-size:11px;color:var(--dim)}</style>
+<script>window.SDR_VER="406";</script><style>.shd .ver{margin-left:auto;margin-right:10px;font-family:var(--display);font-weight:700;letter-spacing:.1em;font-size:11px;color:var(--dim)}</style>
 <script>
 /* SDR_WEEKSTORY: on a quiet day, find what actually matters this week. Ranked: first frost/freeze, a big cooldown or warmup, the 6-10 day outlook, the next rain. */
 window.SDR_FROSTNEWS=function(x){ try{ if(!x||x.lo==null||x.lo>36) return false; const S=window._FRS; if(!S||!S.fresh) return true; const m=new Date(x.date||Date.now()).getMonth(), lo=x.lo;
@@ -7322,7 +7322,7 @@ window.SDR_GL=(function(){
 
 <script>
 // v125: client chat layer
-(function(){ let wrap=null, fr=null; const CHATV="1795734322";
+(function(){ let wrap=null, fr=null; const CHATV="1795741170";
   function open(){ if(!wrap){ wrap=document.createElement("div"); wrap.id="chatwrap"; wrap.innerHTML='<iframe id="chatfr" title="Message the team" allow="camera"></iframe>'; document.body.appendChild(wrap); fr=wrap.querySelector("iframe"); fr.src="./chat.html?v="+CHATV; fr.addEventListener("load",()=>{ try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }); }
     wrap.hidden=false; document.body.classList.add("chat-on"); if(!(history.state&&history.state.chat)) history.pushState({chat:1},""); try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }
   function close(){ if(wrap){ wrap.hidden=true; } document.body.classList.remove("chat-on"); }
@@ -12068,7 +12068,7 @@ html.snscene body>*:not(#snscene){display:none!important}
     // v374 What's Next opens the alert its headline is about (snow line -> the winter alert, freeze line -> the freeze alert); a headline about something else opens the briefing
     if(c.id==="next"){ try{ const fam=t=>/snow|\bice\b|\bicy\b|sleet|winter|wintry|blizzard|freezing rain/i.test(t)?"w":/freez|frost|cold|chill/i.test(t)?"c":/storm|tornado|severe|thunder/i.test(t)?"s":/flood|\brain/i.test(t)?"r":/wind/i.test(t)?"g":/heat|\bhot\b/i.test(t)?"h":/fog/i.test(t)?"f":"";
         const hf=new Set([(document.getElementById("nx-h")||{}).textContent||""].concat([...document.querySelectorAll("#nxb li")].map(li=>li.textContent)).map(fam)); const m=covering().find(x=>{ const k=fam(x.properties.event||""); return k&&hf.has(k); }); a=m||null; }catch(_){} }
-    if(a){ e.preventDefault(); open(a); return; } if(c.id==="next"){ const t=document.querySelector('.tabs button[data-pane="briefing"]'); if(t){ t.click(); scrollTo(0,0); } } });
+    if(a){ e.preventDefault(); open(a); return; } if(c.id==="next"&&window.SDR_NXGO&&SDR_NXGO()){ e.preventDefault(); return; } if(c.id==="next"){ const t=document.querySelector('.tabs button[data-pane="briefing"]'); if(t){ t.click(); scrollTo(0,0); } } });
   // v350 one snow number everywhere: the hour-by-hour list on Home, the day details and the road line use the same hourly snow as the briefing
   const stamp=H=>{ try{ const B=blendNow(venue()); if(!B||!H||!H.length) return false; const M=new Map(B.map(h=>[Math.round(+new Date(h.t)/3600e3),h])); let n=0; H.forEach(h=>{ const b=M.get(Math.round(+new Date(h.t)/3600e3)); if(b){ if(h._sn0===undefined) h._sn0=h.snow;
       // v372 inside the official forecast's three days the official hourly snow stands (it adds up to the official total); the blend fills in past that
@@ -13038,10 +13038,11 @@ window.SDR_WHYSPLIT=function(w){ const e=x=>String(x).replace(/&/g,"&amp;").repl
   const chip=document.createElement("span"); chip.className="nxwhen"; chip.hidden=true; k.appendChild(chip);
   const W="(tonight|today|overnight|this (?:morning|afternoon|evening|weekend)|tomorrow(?: morning| afternoon| evening| night)?|(?:sun|mon|tues|wednes|thurs|fri|satur)day(?: morning| afternoon| evening| night)?)";
   const re=new RegExp("^(.{3,}?)\\s+"+W+"(?=,|:|\\s+[—–-]\\s|\\.|$)(.*)$","i"), bad=/\b(and|or|through|thru|to|until|till|by|after|before|from|into|on|of|for|starts?|starting|ends?|ending|late|early|mid|next|last|every|each|the)$/i;
-  const run=()=>{ const t=(h.textContent||"").trim(); const m=t.match(re); let hd=t, c="";
+  let run=()=>{ const t=(h.textContent||"").trim(); const m=t.match(re); let hd=t, c="";
     if(m&&!bad.test(m[1].trim())){ hd=(m[1]+m[3]).replace(/\s+([,:.])/g,"$1").replace(/[,:]\s*$/,"").trim(); c=m[2]; }
     if(h2.textContent!==hd) h2.textContent=hd; if(chip.textContent!==c) chip.textContent=c; chip.hidden=!c; };
-  run(); new MutationObserver(run).observe(h,{childList:true,characterData:true,subtree:true}); })();
+  const nx=document.getElementById("next"), run0=run; run=()=>{ const on=!!(nx&&nx.classList.contains("nxcard")); h2.hidden=!on; if(!on){ chip.hidden=true; h.style.removeProperty("display"); return; } run0(); };
+  run(); new MutationObserver(run).observe(h,{childList:true,characterData:true,subtree:true}); if(nx) new MutationObserver(run).observe(nx,{attributes:true,attributeFilter:["class"]}); })();
 /* v402: opening a day shows one chart right away: rain timing on a wet day, temperature otherwise */
 (function(){ const ds=document.getElementById("days")||document.body;
   const go=()=>{ document.querySelectorAll(".dexp:not([data-v402])").forEach(d=>{ d.setAttribute("data-v402","1"); if(d.querySelector(".dchart.open")) return;
@@ -13311,4 +13312,26 @@ window.SDR_ONEBRIEF=(function(){
 .obtime small{font-size:13px;color:#51607A}
 </style>
 
+<script>
+/* v406: What's Next tap. 1) an alert about it (handled before this), 2) a recent briefing about the same thing,
+   3) otherwise that day's details on Home with the matching chart open (wind for a wind headline, rain for rain...).
+   Never a briefing about something else. */
+window.SDR_NXGO=function(){ try{
+  const head=((document.getElementById("nx-h")||{}).textContent||"").trim(); if(!head) return false;
+  const fam=t=>/snow|\bice\b|\bicy\b|sleet|winter|wintry|blizzard|freezing rain/i.test(t)?"w":/freez|frost|cold|chill/i.test(t)?"c":/storm|tornado|severe|thunder/i.test(t)?"s":/flood|\brain|shower/i.test(t)?"r":/wind|gust|breez/i.test(t)?"g":/heat|\bhot\b|warm/i.test(t)?"h":/fog/i.test(t)?"f":"";
+  const f=fam(head); if(!f) return false;
+  const L=((window.BRIEF&&BRIEF.list&&BRIEF.list())||[]).filter(x=>x&&x.local!==false&&Date.now()-(x.t||0)<24*3600e3);
+  const b=L.find(x=>fam(String(x.title||""))===f);
+  if(b){ const t=document.querySelector('.tabs button[data-pane="briefing"]'); if(t) t.click(); BRIEF.show(b); scrollTo(0,0); return true; }
+  const D=(window.STRIPS&&STRIPS.days&&STRIPS.days())||[]; let di=0; const W=["sunday","monday","tuesday","wednesday","thursday","friday","saturday"];
+  if(/\btomorrow\b/i.test(head)) di=1; else { const m=head.toLowerCase().match(/\b(sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/); if(m){ const k=D.findIndex(x=>x&&x.date&&new Date(x.date).getDay()===W.indexOf(m[1])&&!/tonight/i.test(String(x.d||""))); if(k>=0) di=k; } }
+  const row=document.querySelector(`#days .drow[data-i="${di}"]`)||document.querySelector('#days .drow[data-i="0"]'); if(!row) return false;
+  const home=document.querySelector('.tabs button[data-pane="overview"]'); if(home&&!home.classList.contains("on")&&home.getAttribute("aria-selected")!=="true") home.click();
+  const open=()=>[...document.querySelectorAll(".dexp")].find(x=>x.offsetParent);
+  if(!open()) row.click();
+  setTimeout(()=>{ const d=open(); if(!d) return; const k={g:"wind",r:"rain",s:"rain",f:"temp",c:"temp",h:"temp",w:d.querySelector('.st[data-chart="snow"]')?"snow":"rain"}[f];
+    const c=d.querySelector(`.dchart[data-k="${k}"]`); if(c&&!c.classList.contains("open")){ d.querySelectorAll(".dchart").forEach(x=>x.classList.remove("open")); c.classList.add("open"); }
+    const r=row.getBoundingClientRect(); scrollTo({top:scrollY+r.top-90,behavior:"smooth"}); },350);
+  return true; }catch(e){ return false; } };
+</script>
 </body></html>

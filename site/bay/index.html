@@ -2614,7 +2614,7 @@ body.chan-on .tabs button[data-pane="live"]::before{content:"";position:absolute
 .chplay i{width:76px;height:76px;border-radius:50%;background:#E5484D;display:grid;place-items:center;box-shadow:0 8px 28px rgba(229,72,77,.45)}
 .chplay b{font-family:var(--display);font-weight:800;letter-spacing:.14em;font-size:13px}
 </style>
-<script>window.SDR_VER="404";</script><style>.shd .ver{margin-left:auto;margin-right:10px;font-family:var(--display);font-weight:700;letter-spacing:.1em;font-size:11px;color:var(--dim)}</style>
+<script>window.SDR_VER="405";</script><style>.shd .ver{margin-left:auto;margin-right:10px;font-family:var(--display);font-weight:700;letter-spacing:.1em;font-size:11px;color:var(--dim)}</style>
 <script>
 /* SDR_WEEKSTORY: on a quiet day, find what actually matters this week. Ranked: first frost/freeze, a big cooldown or warmup, the 6-10 day outlook, the next rain. */
 window.SDR_FROSTNEWS=function(x){ try{ if(!x||x.lo==null||x.lo>36) return false; const S=window._FRS; if(!S||!S.fresh) return true; const m=new Date(x.date||Date.now()).getMonth(), lo=x.lo;
@@ -3642,7 +3642,8 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
     // ---- status engine ----
     const mine = siteAlerts.features;
     const _fut=a=>{ if(window.SDR_SF&&a&&a.properties&&SDR_SF(a.properties.event)) return false; const o=a&&a.properties&&(a.properties.onset||a.properties.effective); return !!o&&+new Date(o)>Date.now()+6*3600e3; }, _ud=d=>{ d=new Date(d); const n=Math.round((new Date(+d).setHours(0,0,0,0)-new Date().setHours(0,0,0,0))/864e5); return hhmm(d)+(n<=0?"":n===1?" tomorrow":" "+d.toLocaleDateString("en-US",{weekday:"long"})); };
-    const warn = mine.find(a=>isWarn(a)&&!_fut(a)), watch = mine.find(a=>isWatch(a)&&!_fut(a)), later = mine.find(a=>isWarn(a)&&_fut(a))||mine.find(a=>isWatch(a)&&_fut(a)&&a.properties.event!=="Special Weather Statement");
+    const _wr=ev=>{ const L=["Tornado Warning","Extreme Wind Warning","Flash Flood Warning","Severe Thunderstorm Warning","Hurricane Warning","Storm Surge Warning","Ice Storm Warning","Blizzard Warning","Winter Storm Warning","High Wind Warning","Flood Warning","Excessive Heat Warning","Extreme Heat Warning"]; const i=L.indexOf(ev); return i<0?L.length:i; };
+    const warn = mine.filter(a=>isWarn(a)&&!_fut(a)).sort((a,b)=>_wr(a.properties.event)-_wr(b.properties.event))[0], watch = mine.find(a=>isWatch(a)&&!_fut(a)), later = mine.find(a=>isWarn(a)&&_fut(a))||mine.find(a=>isWatch(a)&&_fut(a)&&a.properties.event!=="Special Weather Statement");
     const near = nearestWarning(seAlerts.features.filter(isWarn));
     const summer = RULES.summerMonths.includes(now.getMonth()+1);
     const laPct = summer ? RULES.headsUpPrecipPctSummer : RULES.headsUpPrecipPct;
@@ -3671,7 +3672,7 @@ window.SDR_HOME=function(){ if(window.__LOC) return {la:__LOC.la,lo:__LOC.lo,st:
       rd: (window.RADAR_NEAR&&!window.RADAR_NEAR.none) ? `${cap(window.RADAR_NEAR.kind)} ${Math.round(window.RADAR_NEAR.d)} miles ${window.RADAR_NEAR.dir}` : window.RADAR_NEAR ? "Radar quiet within 45 miles" : near ? `Nearest warning ${near.d.toFixed(0)} mi · ${near.a.properties.event}` : "No warning polygons within range" });
     D.setScene(key);
     if(_heat&&key==="action"){ $("clockrow").hidden=true; window._warnT=null; }
-    if(key==="action"&&warn&&!_heat){ $("f1b").textContent = hhmm(new Date(warn.properties.ends||warn.properties.expires)); const P0=warn.properties; window._warnT=[Date.parse(P0.onset||P0.effective||P0.sent),Date.parse(P0.ends||P0.expires)]; if(window.SDR_WBAR) SDR_WBAR(); } else window._warnT=null;
+    if(key==="action"&&warn&&!_heat){ $("f1b").textContent = hhmm(new Date(warn.properties.ends||warn.properties.expires)); const P0=warn.properties; window._warnT=[Date.parse(P0.onset||P0.effective||P0.sent),Date.parse(P0.ends||P0.expires)]; window._warnN=P0.event; if(window.SDR_WBAR) SDR_WBAR(); } else window._warnT=null;
 
     // ---- schedule: today's run-of-show, each line scored from the hourly forecast ----
     const plan = [["07:00","Debris & road crews roll"],["09:00","Beach safety flags set"],["11:00","Parks & rec outdoor programs"],["14:00","Mosquito control spraying"],["16:00","EOC afternoon check-in"],["18:30","Pier Park evening event"]];
@@ -6498,6 +6499,13 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
     const TROP=!b.daily&&(b.cat==="TROPICAL"||(b.hero&&b.hero.kind==="trop")), HK=(b.hero||{}).kind, CAT=String(b.cat||""), REG=!b.daily&&(b.local===false||HK==="rst"||HK==="rspc"),
       HZ=b.daily?dHZ:TROP?"trop":REG?"regional":(HK==="md"||HK==="watch"||CAT==="SEVERE")?"severe":CAT==="FLOOD"?"flood":CAT==="WINTER"?"winter":CAT==="FREEZE"?"freeze":CAT==="HEAT"?"heat":CAT==="WIND"?"wind":"other", HD=(b.hero||{}).d!=null?b.hero.d:((b.hero||{}).day!=null?b.hero.day:null);
     h=h.replace('<div class="bshd">','<div class="bshd" data-hz="'+HZ+'">');
+    if(!TROP&&window.SDR_ONEBRIEF&&SDR_ONEBRIEF.match(b)){ try{ const OB=await SDR_ONEBRIEF.body(b,{bar,s,city}); if(tok!==_rdTok) return;
+      h=h.replace(`<h2>${b.title}</h2>`,`<h2>${OB.headline}</h2>`)+OB.html;
+      const kindO=`${String(b.cat||"MARINE").toUpperCase()} UPDATE`, footO=`<div class="bsft"><span>${kindO}</span><span>SDR WEATHER INTELLIGENCE DIVISION</span><span>NEXT BRIEFING: ${nxt}</span></div>`;
+      h+=`<div class="bsbl"><small>BOTTOM LINE</small><p>${OB.bottom} SDR stands ready to serve.</p></div>${footO}</div>`; h=`<div class="bsprint"><button type="button" onclick="SDR_PRINTBRIEF()">PRINT / SAVE AS PDF</button></div>`+h;
+      let box=pane.querySelector(".bdx"); if(!box){ box=document.createElement("div"); box.className="bdx"; const anchor=pane.querySelector(".bsub")||pane.querySelector(".hl"); if(!anchor) throw new Error("no anchor"); anchor.insertAdjacentElement("afterend",box); }
+      h=h.replace(/(^|[^:\d])12 AM\b/g,"$1midnight").replace(/(^|[^:\d])12 PM\b/g,"$1noon");
+      box.innerHTML=h; box.classList.toggle("wide",wide); return; }catch(e){ if(tok!==_rdTok) return; } }
     window._bsMDPK=null; window._bsMDG=0; window._bsMDINF=null; if(HK==="md"&&window._mdInfo&&window.SDR_MDLINE){ try{ const M=(((MD0||{}).priority||{}).mds||[]).filter(f=>f&&f._num), nr=f=>{ try{ return at(f.geometry,s)||JSON.stringify(f.geometry.coordinates).match(/-?\d+\.?\d*,-?\d+\.?\d*/g).some(q=>{ const [x,y]=q.split(",").map(Number); return Math.abs(x-s.lo)<=1.2&&Math.abs(y-s.la)<=0.9; }); }catch(e){ return false; } };
       const f=M.find(nr)||M[0]; if(f){ const inf=await Promise.race([window._mdInfo(f._num),new Promise(r=>setTimeout(()=>r(null),3000))]); window._bsMDPK=SDR_MDLINE(inf); window._bsMDG=inf&&inf.gust||0; window._bsMDINF=inf||null; } }catch(e){} }
     const evMap=(()=>{ try{ if(!window.MAPROOM||!MAPROOM.svg) return ""; const M=MD0||{}, ar=[Math.min(-95,s.lo-7),Math.min(24,s.la-4.5),Math.max(-74,s.lo+7),Math.max(38.5,s.la+4.5)], pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:city.toUpperCase()}];
@@ -7314,7 +7322,7 @@ window.SDR_GL=(function(){
 
 <script>
 // v125: client chat layer
-(function(){ let wrap=null, fr=null; const CHATV="1795728281";
+(function(){ let wrap=null, fr=null; const CHATV="1795734320";
   function open(){ if(!wrap){ wrap=document.createElement("div"); wrap.id="chatwrap"; wrap.innerHTML='<iframe id="chatfr" title="Message the team" allow="camera"></iframe>'; document.body.appendChild(wrap); fr=wrap.querySelector("iframe"); fr.src="./chat.html?v="+CHATV; fr.addEventListener("load",()=>{ try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }); }
     wrap.hidden=false; document.body.classList.add("chat-on"); if(!(history.state&&history.state.chat)) history.pushState({chat:1},""); try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }
   function close(){ if(wrap){ wrap.hidden=true; } document.body.classList.remove("chat-on"); }
@@ -9448,7 +9456,7 @@ window.SDR_CPCLINE=(MD,s)=>{ try{ const C=MD.cpc||{}; const pin=g=>{ const P=!g?
     const rip=(D.al||[]).find(a=>/Rip|Beach Hazard|High Surf|Small Craft|Gale|Storm|Hurricane|Tropical/i.test(a));
     SDR_MAPCARD(el,{col:g.c,tag:lake?"Lake":"Beach",title:b[0],sub:`${b[1]} · ${t.sky}, ${t.lo}°–${t.hi}°`,what:t.note?esc(t.note):lake?`${t.ws[0]} water today. Wind ${t.dir} ${t.wind} mph${t.gust>=t.wind+5?`, gusts ${t.gust}`:""}.`:`Waves ${wr(t.wv)||"–"}${t.per?` every ${t.per} seconds`:""}. Wind ${t.dir} ${t.wind} mph.`,alert:rip?`In effect: ${rip}`:"",stats,
       more,onClose,html}); }
-  window.SDR_BEACHES={zones:ZONES,list:()=>B.slice(),color:async b=>{ const D=await load(b); const t=D&&D.days[0]; return t?tag(b,t).c:null; },
+  window.SDR_BEACHES={zones:ZONES,list:()=>B.slice(),data:b=>load(b),color:async b=>{ const D=await load(b); const t=D&&D.days[0]; return t?tag(b,t).c:null; },
     card:(el,b)=>{ const m={label:"Open in the list",fn:()=>{ if(window.SDR_EXPLORE) SDR_EXPLORE.close(); ZONE=b[5]; sv("sdr-bzone",ZONE); CARD=null; OPEN=b[0]; const sec=SEC||document.querySelector(".p-beach"); if(sec&&sec.classList.contains("cx")) sec.querySelector(".cxbar").click(); go(); setTimeout(()=>{ const o=SEC&&SEC.querySelector(".skr.open"); if(o) o.scrollIntoView({block:"start",behavior:"smooth"}); },300); }};
       const show=()=>cardAt(el,b,m,null,brk(b,DATA[b[0]])); show(); if(!DATA[b[0]]) load(b).then(()=>{ if(el.querySelector(".mpc")) show(); }); }};
   const soon=()=>{ clearTimeout(TMR); TMR=setTimeout(render,250); };
@@ -9528,10 +9536,10 @@ window.SDR_MAPCARD=function(xmc,o){ if(!xmc) return; let c=xmc.querySelector(".m
 <script>
 (function(){ const row=document.getElementById("clockrow"); if(!row) return;
   window.SDR_WBAR=function(){ let w=row.querySelector(".wbar"), lf=row.querySelector(".wleft"); const T=window._warnT, on=!row.hidden&&!window._ltgHold&&T&&T[1]>Date.now();
-    if(!on){ if(w) w.remove(); if(lf) lf.remove(); return; }
+    if(!on){ row.classList.remove("wmode"); if(w) w.remove(); if(lf) lf.remove(); return; }
     if(!w){ lf=document.createElement("em"); lf.className="wleft"; row.querySelector("b").insertAdjacentElement("afterend",lf); w=document.createElement("div"); w.className="wbar"; w.innerHTML="<i></i>"; row.appendChild(w); }
     const now=Date.now(), a=T[0]&&T[0]<now?T[0]:now-60000, frac=Math.max(0,Math.min(1,(now-a)/(T[1]-a))), min=Math.max(1,Math.ceil((T[1]-now)/60000));
-    w.firstChild.style.width=(frac*100).toFixed(1)+"%"; lf.textContent=min>=90?`${Math.floor(min/60)} hr ${min%60} min left`:`${min} min left`; };
+    w.firstChild.style.width=(frac*100).toFixed(1)+"%"; row.classList.add("wmode"); const _nm=String(window._warnN||"Warning"), _ln=min>=90?`${Math.floor(min/60)} hr ${min%60} min left`:`${min} min left`; lf.textContent=`${_nm} · ${_ln}`; };
   setInterval(()=>{ try{ SDR_WBAR(); }catch(e){} },15000); new MutationObserver(()=>{ try{ SDR_WBAR(); }catch(e){} }).observe(row,{attributes:true,attributeFilter:["hidden"]}); })();
 </script>
 <style>
@@ -12004,7 +12012,7 @@ html.snscene body>*:not(#snscene){display:none!important}
         if(kind==="winter"){ models(v,starts,ends).then(t=>{ const ul=doc.querySelector(".abours"); if(t&&ul&&doc.isConnected){ const li=document.createElement("li"); li.textContent=t; ul.appendChild(li); } });
           try{ const sn=doc.querySelector(".absnow"); if(sn&&window.SDR_SNOWMAP&&SDR_SNOWMAP.ready()){ sn.innerHTML=SDR_SNOWMAP.sections({la:v.la,lo:v.lo},720,430).map(S=>`<section><h2>${esc(S.title)}</h2>${S.html}</section>`).join(""); } }catch(e){} } }});
     return true; }
-  window.SDR_ALERTBRIEF={open,parts,ours,kindOf,hourTab,venue,models,chill,blend,tm,dayOf};
+  window.SDR_ALERTBRIEF={open,parts,ours,kindOf,hourTab,venue,models,chill,blend,tm,dayOf,zones};
   // alert rows open the briefing (the radar jump lives inside it as "See it on radar")
   const hook=()=>{ if(window.SDR_ALERTGO&&!window._ALERTGO0){ window._ALERTGO0=window.SDR_ALERTGO; } window.SDR_ALERTGO=a=>open(a); };
   if(document.readyState==="complete") hook(); else addEventListener("load",()=>setTimeout(hook,300));
@@ -13110,7 +13118,8 @@ html body #nowx .nxpill.nxvis{background:rgba(245,184,0,.14)!important;color:#F7
 html body #nowx .nxpill.nxvis svg{background:none!important;color:#F5C842!important}
 </style>
 <script>
-/* v404: the "window to the world" behind the RIGHT NOW card.
+/* v405: smoother (up to 60 fps) and clouds no longer pop in/out at the edges.
+   v404: the "window to the world" behind the RIGHT NOW card.
    It reads the same things the card shows (icon, wind, gusts, rain now, visibility), so the picture and the card always agree.
    Below the header bar only; light on battery: ~30 fps, stops when hidden, scrolled away, or when the phone asks for less motion. */
 (function(){
@@ -13151,7 +13160,7 @@ html body #nowx .nxpill.nxvis svg{background:none!important;color:#F5C842!import
     const m=col.match(/\w\w/g).map(v=>parseInt(v,16)); [[0,0,1],[.55,-.25,.8],[-.6,-.1,.75],[1.05,.1,.65],[-1.1,.15,.6]].forEach(([dx,dy,r])=>{ const cx=w/2+dx*q, cy=h*.58+dy*q, R=r*q*.95; const gr=g.createRadialGradient(cx,cy,0,cx,cy,R); gr.addColorStop(0,`rgba(${m},.9)`); gr.addColorStop(.55,`rgba(${m},.55)`); gr.addColorStop(1,`rgba(${m},0)`); g.fillStyle=gr; g.beginPath(); g.arc(cx,cy,R,0,7); g.fill(); });
     return SPR[key]={c,w,h}; }
   function puff(cx,cy,s,col,a){ const sp=sprite(col,s); x.globalAlpha=a; x.drawImage(sp.c,cx-sp.w/2,cy-sp.h*.58,sp.w,sp.h); x.globalAlpha=1; }
-  function clouds(t,cols,a,n,seed,speed,yr){ const R=rnd(seed); for(let i=0;i<n;i++){ const y=yr[0]+R()*(yr[1]-yr[0]), s=48+R()*72, v=(4+R()*7)*speed, px=((R()*(W+320)+t*v)%(W+320))-160; puff(px,y,s*1.15,cols[i%cols.length],a); } }
+  function clouds(t,cols,a,n,seed,speed,yr){ const R=rnd(seed); for(let i=0;i<n;i++){ const y=yr[0]+R()*(yr[1]-yr[0]), s=48+R()*72, v=(4+R()*7)*speed, span=W+480, px=((R()*span+t*v)%span)-240; puff(px,y,s*1.15,cols[i%cols.length],a); } }
   function mist(t,a){ for(let i=0;i<4;i++){ const y=H*.25+i*H*.15+Math.sin(t*.15+i)*8, g=x.createLinearGradient(0,y-55,0,y+55); g.addColorStop(0,"rgba(205,214,228,0)"); g.addColorStop(.5,`rgba(205,214,228,${a})`); g.addColorStop(1,"rgba(205,214,228,0)"); x.fillStyle=g; x.fillRect(0,y-55,W,110); } }
   /* Apple-style rain behind the glass: fine, faint streaks at different depths, plus soft light shafts on a rainy day */
   function rain(t,n,heavy,wind){ const R=rnd(7), sl=Math.min(12,wind/3); x.lineCap="round";
@@ -13206,7 +13215,7 @@ html body #nowx .nxpill.nxvis svg{background:none!important;color:#F5C842!import
   const _frame=frame; frame=function(t){ _frame(t); try{ drops(t); }catch(e){} };
   let raf=0, last=0, run=false, T0=performance.now();
   const onScreen=()=>!document.hidden&&box.offsetParent!==null&&scrollY<H+80&&getComputedStyle(box).display!=="none";
-  function loop(now){ raf=0; if(!run) return; if(now-last>=33){ last=now; frame((now-T0)/1000); } raf=requestAnimationFrame(loop); }
+  function loop(now){ raf=0; if(!run) return; if(now-last>=15){ last=now; frame((now-T0)/1000); } raf=requestAnimationFrame(loop); }
   function still(){ try{ frame(RM?4:(performance.now()-T0)/1000); }catch(e){} }
   function check(){ const want=!RM&&onScreen(); if(want&&!run){ run=true; if(!raf) raf=requestAnimationFrame(loop); } else if(!want&&run){ run=false; } }
   document.addEventListener("visibilitychange",check); addEventListener("scroll",check,{passive:true}); setInterval(()=>{ read(); check(); },3000);
@@ -13233,6 +13242,73 @@ html body #status>#call #nowx{position:relative;z-index:1}
 html body #nowx .nxt,html body #nowx .nxc{text-shadow:0 2px 12px rgba(0,0,0,.45)}
 html body #nowx .nxkick{color:rgba(234,240,250,.82)!important}
 html body #nowx .nxstrip{background:rgba(6,14,32,.38)!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.1)!important}
+</style>
+
+<style>
+/* v405: warning countdown = one plain line ("Winter Storm Warning · 19 hr 8 min left") + the bar; no lone time, no "Hold until the warning ends" */
+#clockrow.wmode>b#f1b,#clockrow.wmode>span{display:none!important}
+#clockrow.wmode{padding-top:10px!important;margin-top:8px!important}
+#clockrow.wmode .wleft{font-size:14px!important;letter-spacing:.08em!important}
+/* several alerts listed (each with its own "until"): the countdown would just repeat one of them */
+#status.multi #clockrow{display:none!important}
+/* TAKE ACTION already says RIGHT NOW on top: no second label over the temperature */
+html body #call.nx-on.action #nowx .nxtop{display:none!important}
+</style>
+<script>
+/* v405: one story per briefing. A beach / coastal statement or advisory gets a briefing about that hazard only:
+   headline + time bar, the area on a map, why it's happening (beach data), when it eases, bottom line.
+   Rain or storms later in the week stay on Home under What's Next and get their own briefing when it's time. */
+window.SDR_ONEBRIEF=(function(){
+  const RX=/^(Rip Current Statement|Beach Hazards Statement|High Surf (Advisory|Warning)|Coastal Flood (Statement|Advisory|Watch|Warning)|Coastal Hazard Message|Lakeshore Flood (Statement|Advisory|Watch|Warning)|Small Craft Advisory|Gale (Watch|Warning)|Hazardous Seas (Watch|Warning)|High Rip Current Risk)/i;
+  const ev=t=>{ const m=String(t||"").match(RX); return m?m[0]:""; };
+  const match=b=>!!b&&!b.daily&&!!ev(b.title);
+  const COL={rip:"#40E0D0",surf:"#3CB371",coast:"#2E8B57",boat:"#C79BD8"};
+  const kind=e=>/rip|beach/i.test(e)?"rip":/surf/i.test(e)?"surf":/coastal|lakeshore/i.test(e)?"coast":"boat";
+  const PH={rip:"Dangerous rip currents",surf:"High surf",coast:"Coastal flooding",boat:"Rough water for small boats"};
+  const DO={rip:"Stay out of the water, or swim only near a lifeguard.",surf:"Stay off jetties and piers and out of the surf.",coast:"Expect water on low-lying coastal roads around high tide.",boat:"Small boats should stay in port."};
+  const hh=d=>{ const h=d.getHours(), m=d.getMinutes(); if(h===0&&m===0) return "midnight"; if(h===12&&m===0) return "noon"; return `${h%12||12}${m?":"+String(m).padStart(2,"0"):""} ${h<12?"AM":"PM"}`; };
+  const dayName=d=>{ const n=Math.round((new Date(d).setHours(0,0,0,0)-new Date().setHours(0,0,0,0))/864e5); return n<=0?"today":n===1?"tomorrow":d.toLocaleDateString("en-US",{weekday:"long"}); };
+  const part=d=>{ const h=d.getHours(), dn=dayName(d); if(h<6) return dn==="today"?"early this morning":dn==="tomorrow"?"early tomorrow":"early "+dn; if(h<12) return dn==="today"?"this morning":dn+" morning"; if(h<17) return dn==="today"?"this afternoon":dn+" afternoon"; return dn==="today"?"tonight":dn==="tomorrow"?"tomorrow night":dn+" night"; };
+  const field=(desc,k)=>{ const m=String(desc||"").replace(/\r/g,"").match(new RegExp("\\*\\s*"+k+"\\.\\.\\.([\\s\\S]*?)(?=\\n\\s*\\n|\\n\\*|$)","i")); return m?m[1].replace(/\s+/g," ").trim():""; };
+  const range=v=>{ if(v==null) return ""; const hi=Math.max(1,Math.ceil(v)), lo=Math.max(1,hi-2); return lo===hi?`${hi} ft`:`${lo} to ${hi} ft`; };
+  const alertFor=b=>{ const e=ev(b.title).toLowerCase(); return (window.ALERTS||[]).find(a=>String((a.properties||{}).event||"").toLowerCase()===e)||null; };
+  function nearBeach(s){ try{ const L=(window.SDR_BEACHES&&SDR_BEACHES.list&&SDR_BEACHES.list())||[]; const r=L.filter(x=>x[4]).map(x=>[x,Math.hypot((x[3]-s.lo)*Math.cos(s.la*Math.PI/180),x[2]-s.la)]).sort((a,b)=>a[1]-b[1])[0]; return r&&r[1]<=1.2?r[0]:null; }catch(e){ return null; } }
+  function headline(b,a){ const e=ev(b.title), k=kind(e), P=(a&&a.properties)||{}, end=P.ends||P.expires; return end?`${PH[k]} through ${part(new Date(end))}`:`${PH[k]} along the coast`; }
+  async function body(b,X){ const {bar,s,city}=X, e=ev(b.title), k=kind(e), a=alertFor(b), P=(a&&a.properties)||{}, desc=P.description||"";
+    const t0=Date.parse(P.onset||P.effective||P.sent||"")||Date.now(), t1=Date.parse(P.ends||P.expires||"")||null, now=Date.now();
+    let h="";
+    // 1. timing
+    if(t1&&t1>now){ const f=Math.max(0.02,Math.min(1,(now-Math.min(t0,now))/(t1-Math.min(t0,now)))), left=Math.round((t1-now)/36e5);
+      h+=`<div class="obtime"><div class="obtl"><span>NOW</span><span>ENDS ${hh(new Date(t1)).toUpperCase()} ${dayName(new Date(t1)).toUpperCase()}</span></div><div class="obbar"><i style="width:${(f*100).toFixed(0)}%"></i></div><small>${left>=1?`About ${left} hour${left===1?"":"s"} to go.`:"Ending soon."}</small></div>`; }
+    // 2. the area, on a map
+    try{ const F=a&&window.SDR_ALERTBRIEF&&SDR_ALERTBRIEF.zones?await Promise.race([SDR_ALERTBRIEF.zones(a,30),new Promise(r=>setTimeout(()=>r([]),6000))]):[];
+      if(F.length&&window.SDR_BMAP){ let x0=s.lo,x1=s.lo,y0=s.la,y1=s.la; const walk=c=>{ if(typeof c[0]==="number"){ x0=Math.min(x0,c[0]); x1=Math.max(x1,c[0]); y0=Math.min(y0,c[1]); y1=Math.max(y1,c[1]); } else c.forEach(walk); }; F.forEach(f=>walk(f.geometry.coordinates));
+        const pw=window._bsPW||720, H=pw<=520?440:380, kx=Math.cos(((y0+y1)/2)*Math.PI/180); let cx=(x0+x1)/2, cy=(y0+y1)/2, hy=Math.max(.45,(y1-y0)/2+.25), hx=Math.max((x1-x0)/2+.3,hy*(720/H)/kx); hy=Math.max(hy,hx*kx*H/720);
+        const col=COL[k], where=field(desc,"WHERE").replace(/^Coastal |\.$/g,""), svg=SDR_BMAP([cx-hx,cy-hy,cx+hx,cy+hy],720,H,[{features:F,style:()=>({fill:col,stroke:col,w:.6,fo:.55})}],{points:[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:city.toUpperCase()}],cities:true,title:e.toUpperCase(),sub:"WHERE IT'S IN EFFECT",col:"t"});
+        if(svg) h+=bar("THE AREA","t")+`<figure class="bsmap obmap">${svg}<div class="bslg"><span><i style="background:${col}"></i>${e}</span></div>${where?`<div class="bssn n1"><p><b>Where:</b> ${where}.</p></div>`:""}</figure>`; } }catch(err){}
+    // 3. why it's happening (beach data at the nearest beach)
+    const B=nearBeach(s); let Dd=null; try{ if(B&&window.SDR_BEACHES&&SDR_BEACHES.data) Dd=await Promise.race([SDR_BEACHES.data(B),new Promise(r=>setTimeout(()=>r(null),6000))]); }catch(err){}
+    const t=Dd&&Dd.days&&Dd.days[0], why=[];
+    if(t){ if(t.wv!=null&&t.wv>=2&&k==="rip") why.push(`<b>Why:</b> waves breaking over the sandbars pile water up on the beach, and it rushes back out in narrow channels. Those channels are the rip currents.`); if(t.wind!=null) why.push(`<b>Wind:</b> ${t.dir?t.dir+" ":""}${t.wind} mph${t.gust>=t.wind+8?`, gusts to ${t.gust}`:""}.`);
+      if(t.wv!=null) why.push(`<b>Waves:</b> ${range(t.wv)}${t.per?`, every ${t.per} seconds`:""}.`);
+      if(t.tides&&t.tides.length) why.push(`<b>Tides today:</b> ${t.tides.join(" · ")}.`);
+      if(Dd.wt!=null) why.push(`<b>Water:</b> ${Dd.wt}°.`); }
+    const imp=field(desc,"IMPACTS"); if(imp) why.push(`<b>What it means:</b> ${imp.replace(/\.?$/,".")}`);
+    if(why.length) h+=bar("WHY IT'S HAPPENING","t",B?`AT ${String(B[0]).toUpperCase()}`:"")+`<div class="bsev"><div class="bssec"><ul>${why.map(x=>`<li>${x}</li>`).join("")}</ul></div></div>`;
+    // 4. when it eases
+    let ease=""; if(Dd&&Dd.days&&Dd.days.length>1){ const i=Dd.days.findIndex((d,i)=>i>0&&d.wv!=null&&d.wv<3&&d.wind<15); if(i>0){ const d=new Date(Dd.days[i].d+"T12:00"); ease=`Waves drop to ${range(Dd.days[i].wv)} and the wind eases by ${dayName(d)}.`; } else { const mx=Math.max(...Dd.days.slice(1,4).map(d=>d.wv||0)); if(mx>=3) ease=`Waves stay ${range(mx)} for the next few days, so this may be extended.`; } }
+    const nx=[]; if(t1) nx.push(`<b>The statement ends ${hh(new Date(t1))} ${dayName(new Date(t1))}.</b>`); if(ease) nx.push(ease); nx.push("We'll update you if it's extended or the water gets rougher.");
+    h+=bar("WHAT'S NEXT FOR THE BEACH","n")+`<div class="bsev"><div class="bssec"><ul>${nx.map(x=>`<li>${x}</li>`).join("")}</ul></div></div>`;
+    const bottom=`${DO[k]} ${t1?`This lasts until ${hh(new Date(t1))} ${dayName(new Date(t1))}.`:""}`.trim();
+    return {html:h, headline:headline(b,a), bottom}; }
+  return {match,body,ev};
+})();
+</script>
+<style>
+.obtime{margin:14px 0 6px;padding:12px 14px;border-radius:12px;background:#F2F5FA;border:1px solid #DCE3EE}
+.obtl{display:flex;justify-content:space-between;font:800 11.5px/1 var(--display,Barlow),sans-serif;letter-spacing:.12em;color:#3B4A63}
+.obbar{height:9px;border-radius:99px;background:#DCE3EE;overflow:hidden;margin:8px 0 6px}.obbar i{display:block;height:100%;background:linear-gradient(90deg,#40C9E0,#1F8FB8);border-radius:99px}
+.obtime small{font-size:13px;color:#51607A}
 </style>
 
 </body></html>

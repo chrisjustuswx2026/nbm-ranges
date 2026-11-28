@@ -2614,7 +2614,7 @@ body.chan-on .tabs button[data-pane="live"]::before{content:"";position:absolute
 .chplay i{width:76px;height:76px;border-radius:50%;background:#E5484D;display:grid;place-items:center;box-shadow:0 8px 28px rgba(229,72,77,.45)}
 .chplay b{font-family:var(--display);font-weight:800;letter-spacing:.14em;font-size:13px}
 </style>
-<script>window.SDR_VER="413";</script><style>.shd .ver{margin-left:auto;margin-right:10px;font-family:var(--display);font-weight:700;letter-spacing:.1em;font-size:11px;color:var(--dim)}</style>
+<script>window.SDR_VER="416";</script><style>.shd .ver{margin-left:auto;margin-right:10px;font-family:var(--display);font-weight:700;letter-spacing:.1em;font-size:11px;color:var(--dim)}</style>
 <script>
 /* SDR_WEEKSTORY: on a quiet day, find what actually matters this week. Ranked: first frost/freeze, a big cooldown or warmup, the 6-10 day outlook, the next rain. */
 window.SDR_FROSTNEWS=function(x){ try{ if(!x||x.lo==null||x.lo>36) return false; const S=window._FRS; if(!S||!S.fresh) return true; const m=new Date(x.date||Date.now()).getMonth(), lo=x.lo;
@@ -4541,7 +4541,7 @@ window.STRIPS = (function(){
       const dayLab = night ? "TONIGHT" : (/^(today|this afternoon)$/i.test(x.long||x.d||"")||(x.date&&new Date(x.date).toDateString()===new Date().toDateString())) ? "TODAY" : (x.long||x.d||"").slice(0,3).toUpperCase();
       const rain = night ? (x.ppN||0) : Math.max(x.pp||0, x.ppN||0), mlo = window.SDR_MLO?SDR_MLO(i):x.lo, nico0 = night ? ({sun:"clearnight",pc:"pcn"}[x.ico]||x.ico) : x.ico, nico = (()=>{ try{ return window.SDR_DAYICO?SDR_DAYICO(x,night,rain,nico0,hoursOf(x)):nico0; }catch(e){ return nico0; } })();
       const row = `<div class="drow ${cls}" data-i="${i}" aria-expanded="${i===selD}">
-        <span class="dn${night?" tn":""}"><b>${dayLab}</b><small>${dateLab}</small></span>
+        <span class="dn${night?" tn":""}"><b>${dayLab}</b><small${x._rest?' class="rst"':''}>${dateLab}</small></span>
         <span class="dic">${svg(nico)}${(()=>{ const amt=x.rr&&x.rr[1]!=null?x.rr[1]/100:(x.qpf||0), sn=(()=>{ try{ if(x.sr) return x.sr[1]>=10?x.sr[1]/100:0; const _h=hoursOf(x); if(_h.length>=12&&_h.every(h=>h._bl)) return (/snow|flurr|wintry|sleet/i.test((x.short||"")+" "+(x.dayTxt||"")+" "+(x.nightTxt||""))||(x.snowP||0)>=20)?_h.reduce((q,h)=>q+(h.snow||0),0):0; }catch(e){} return x.sr&&x.sr[1]>=10?x.sr[1]/100:0; })(); return (sn>=0.1?`<em class="dpop sn">${sn>=1?sn.toFixed(0):sn.toFixed(1)}"</em>`:amt>=0.01?`<em class="dpop">${amt<0.1?amt.toFixed(2).replace(/^0/,""):amt.toFixed(amt>=1?1:2).replace(/^0/,"")}"</em>`:"")+(rain>=20?`<small class="dpp pct">${rain}%</small>`:""); })()}</span>
         ${(()=>{ const W=window._DRANGE||[30,80], lo=night?x.lo:(mlo!=null?mlo:x.lo), hi=night?null:x.hi, a=lo!=null?(lo-W[0])/(W[1]-W[0])*100:0, b=hi!=null?(hi-W[0])/(W[1]-W[0])*100:a;
             const tc=t=>t==null?"#9FB0C8":t<=32?"#7DB8FF":t<=45?"#6FD3E8":t<=60?"#8BE39A":t<=72?"#E9E46A":t<=85?"#F5B24A":"#F26B4A";
@@ -6250,7 +6250,7 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
   if(0) window.addEventListener("beforeprint",()=>{ const x=document.querySelector(".bdx"); if(!x) return; x.style.width="750px"; x.classList.add("wide","printing"); x.querySelectorAll(".bsheet").forEach(el=>{ el.style.zoom=""; el.style.transform=""; void el.offsetHeight; const h=el.getBoundingClientRect().height, k=Math.min(1,960/Math.max(1,h)); el.style.transformOrigin="top center"; el.style.transform=`scale(${k})`; el.style.marginBottom=`${-(1-k)*h}px`; }); });
   if(0) window.addEventListener("afterprint",()=>{ const x=document.querySelector(".bdx"); if(!x) return; x.style.width=""; x.querySelectorAll(".bsheet").forEach(el=>{ el.style.zoom=""; el.style.transform=""; el.style.marginBottom=""; }); });
   function keyDay(D){ const now=new Date(), pp=x=>Math.max(x.pp||0,x.ppN||0); let big=null;
-    D.slice(0,7).forEach((x,i)=>{ const r=x.rr?x.rr[1]:Math.round((x.qpf||0)*100), sc=(x.snowP||0)>=40?90:(x.thunder||0)>=40?80:r>=100?75+r/20:(x.lo!=null&&x.lo<=32&&now.getMonth()>=8)?60:(x.gust||0)>=40?65:(x.hi||0)>=95?55:pp(x)>=60?40:0; if(sc&&(!big||sc>big.sc)) big={x,i,sc}; }); return big; }
+    D.slice(0,7).forEach((x,i)=>{ const r=x.rr?x.rr[1]:Math.round((x.qpf||0)*100), sc=(x.snowP||0)>=40?90:(x.thunder||0)>=40?80:r>=100?75+r/20:(x.lo!=null&&x.lo<=32&&now.getMonth()>=8)?60:(x.gust||0)>=40?65:(x.hi||0)>=95?55:pp(x)>=60?40:0; if(sc&&(!big||sc>big.sc)) big={x,i,sc}; }); if(big&&big.i>=3&&big.sc<90){ for(let i=0;i<2&&i<D.length;i++){ const x=D[i], r=x.rr?x.rr[1]:Math.round((x.qpf||0)*100); if(pp(x)>=70&&r>=10){ big={x,i,sc:Math.max(41,(x.thunder||0)>=40?80:r>=100?75+r/20:41),near:1}; break; } } } return big; }
   const _h12=t=>{ const d=new Date(t); let a=d.getHours(); return a===0?"midnight":a===12?"noon":(a%12)+(a>=12?" PM":" AM"); };
   const _ax=t=>{ const a=new Date(t).getHours(); return a===0?"12A":a===12?"NOON":(a%12)+(a>=12?"P":"A"); };
   const _rain=x=>x.rr?x.rr[1]/100:(x.qpf||0);
@@ -6433,7 +6433,7 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
       sec.push({title:"IMPACTS",bullets:["Normal operations."]});
       if(conf!=null) sec.push({title:"MODEL AGREEMENT",bullets:[`Model agreement ${conf} of 5.`]});
       return {headline:head,subhead:sub,sections:sec}; }
-    const k=kind(kx), part=hc&&hc.start?(()=>{ const h=+String(hc.start).replace(/\D.*$/,"")||0, pm=/PM/.test(hc.start); const H24=pm&&h!==12?h+12:h; return H24<12?"Morning":H24<17?"Afternoon":"Evening"; })():"";
+    const k=kind(kx), part=hc&&hc.start?(()=>{ const h=+String(hc.start).replace(/\D.*$/,"")||0, pm=/PM/.test(hc.start); const H24=pm&&h!==12?h+12:h; const pm2=String(hc.win||"").match(/(\d{1,2}|noon|midnight)(?::\d\d)? ?(AM|PM)?\s*[–-]\s*(\d{1,2}|noon|midnight)(?::\d\d)? ?(AM|PM)?/i); if(pm2){ const t24=(n,ap)=>/noon/i.test(n)?12:/midnight/i.test(n)?24:(+n%12)+(/PM/i.test(ap||"")?12:0); const a0=t24(pm2[1],pm2[2]||pm2[4]), b0=t24(pm2[3],pm2[4]); if(((b0-a0+24)%24||24)>6) return ""; } return H24<12?"morning":H24<17?"afternoon":"evening"; })():"";
     const ok=t=>t&&!/checking|loading|…|\.\.\.|\bnow\b/i.test(t), nh0=(((document.getElementById("nx-h")||{}).textContent||"").trim()); const _DW=/\b(today|tonight|this (morning|afternoon|evening)|overnight|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i, _kn=String(kName).toLowerCase(), _same=t=>{ const m=String(t||"").match(_DW); if(!m) return ki===0; const w=m[1].toLowerCase(); if(ki===0) return /^(today|tonight|this |overnight)/.test(w)||w===new Date().toLocaleDateString("en-US",{weekday:"long"}).toLowerCase(); return w===_kn||(w==="tomorrow"&&_kn==="tomorrow"); }; let head=ok(b.title)&&_same(b.title)?b.title:(ki===0&&ok(nh0))?nh0:`${cap(k)} ${kName}${part?" "+part:""}`;
     const sub=`${odds(pk)} ${k} ${/^(today|tonight|tomorrow)$/i.test(kName)?kName.toLowerCase():kName}${hc&&hc.win?`, mainly ${hc.win}`:hc&&hc.start?` after ${hc.start}`:""}.${(kx.thunder||0)>=30?" Lightning is the main concern.":""}${ki>0&&D.slice(0,ki).every(x=>rn(x)<0.05&&pp(x)<30)?" Dry until then.":""}`;
     // v398: wet today but the bigger day is later: say what today does first (when it ends), then the bigger day
@@ -6465,7 +6465,7 @@ const s=v(), pt=[{lo:s.lo,la:s.la,fill:"#F28C28",r:6,label:s.name.split(" · ")[
     /* model agreement lives beside the chart */
     return {headline:head,subhead:sub,sections:sec}; }
   async function richDaily(b){ const tok=++_rdTok, b0=b; if(!window.STRIPS||!STRIPS.days) throw new Error("no data"); const D=STRIPS.days()||[], H=(STRIPS.hours&&STRIPS.hours())||[]; if(D.length<3) throw new Error("no days");
-    const s=v(), city=cityName(), big=keyDay(D), quiet=!big||big.sc<40||(()=>{ const x=D[big.i]; return big.i>=2&&x&&!(Math.max(x.pp||0,x.ppN||0)>=30||(x.thunder||0)>=30||(x.snowP||0)>=40||(x.gust||0)>=40||(x.hi||0)>=95); })(), ki=quiet?0:big.i, kx=D[ki], kName=ki===0?(D[0].d==="TONIGHT"?(new Date().getHours()<14?"Overnight":"Tonight"):(new Date().getHours()>=17||(!quiet&&window.SDR_EVEWX&&SDR_EVEWX(D[0],H)))?"Tonight":"Today"):(ki===1&&D[0].d==="TONIGHT"&&new Date().getHours()<14)?"Today":(ki===1&&D[0].d!=="TONIGHT"?"Tomorrow":new Date(kx.date).toLocaleDateString("en-US",{weekday:"long"}));
+    const s=v(), city=cityName(), big=keyDay(D), quiet=!big||big.sc<40||(()=>{ const x=D[big.i]; return big.i>=2&&x&&!(Math.max(x.pp||0,x.ppN||0)>=30||(x.thunder||0)>=30||(x.snowP||0)>=40||(x.gust||0)>=40||(x.hi||0)>=95); })(), ki=quiet?0:big.i, kx=D[ki], kName=ki===0?(D[0].d==="TONIGHT"?(new Date().getHours()<14?"Overnight":"Tonight"):(new Date().getHours()>=17||(!quiet&&window.SDR_EVEWX&&SDR_EVEWX(D[0],H)))?"Tonight":"Today"):(ki===1&&D[0].d==="TONIGHT"&&new Date().getHours()<14)?"Today":(ki===1&&D[0].d!=="TONIGHT"?"Tomorrow":new Date(kx.date).toLocaleDateString("en-US",ki>=5?{weekday:"long",month:"short",day:"numeric"}:{weekday:"long"}));
     const bw0=(pane.querySelector(".brief")||pane).clientWidth, pw=window._bsPrintW||Math.max(300,Math.min(816,(bw0>200?bw0:Math.min(innerWidth,1200)-(innerWidth>900?120:24))-28)), wide=pw>=700, cw=Math.round(wide?pw*.6-40:pw-(pw<=520?24:36)), now=new Date(b.t||Date.now());
     const logo=(document.querySelector('img[alt="SDR Weather Intelligence"]')||{}).src||""; window._bsPW=pw; window._bsWide=wide;
     const nxt=!b.daily?"AS NEEDED":new Date().getHours()<15?"BY 3 PM":"BY 7 AM TOMORROW";
@@ -7322,7 +7322,7 @@ window.SDR_GL=(function(){
 
 <script>
 // v125: client chat layer
-(function(){ let wrap=null, fr=null; const CHATV="1795822420";
+(function(){ let wrap=null, fr=null; const CHATV="1795884869";
   function open(){ if(!wrap){ wrap=document.createElement("div"); wrap.id="chatwrap"; wrap.innerHTML='<iframe id="chatfr" title="Message the team" allow="camera"></iframe>'; document.body.appendChild(wrap); fr=wrap.querySelector("iframe"); fr.src="./chat.html?v="+CHATV; fr.addEventListener("load",()=>{ try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }); }
     wrap.hidden=false; document.body.classList.add("chat-on"); if(!(history.state&&history.state.chat)) history.pushState({chat:1},""); try{ fr.contentWindow.postMessage({sdr:"chat-open"},"*"); }catch(e){} }
   function close(){ if(wrap){ wrap.hidden=true; } document.body.classList.remove("chat-on"); }
@@ -11191,8 +11191,8 @@ body.wall #wallbar{display:flex;align-items:center;gap:14px;margin-left:auto}
     let dayTab=""; if(!far){ const d0=new Date(s); d0.setHours(0,0,0,0); const a0=Math.min(+d0+6*3600e3,s-2*3600e3), b0=Math.max(+d0+23*3600e3,en+2*3600e3), DH=H.filter(h=>h.t>=Math.max(a0,Date.now()-3600e3)&&h.t<=b0).slice(0,26);
       const dirW=d=>d==null?"":["N","NE","E","SE","S","SW","W","NW"][Math.round(d/45)%8], hr=t=>{ const x=new Date(t), h=x.getHours(); return h===0?"Midnight":h===12?"Noon":(h%12)+(h<12?" AM":" PM"); };
       if(DH.length>=4){ const feels=DH.some(h=>h.feel!=null&&Math.abs(h.feel-h.temp)>=3);
-        dayTab=`<div class="sec"><h2>THE FULL DAY · HOUR BY HOUR</h2><div class="dtw"><table class="dt"><thead><tr><th>Time</th><th>Sky</th><th>Temp</th>${feels?"<th>Feels</th>":""}<th>Rain</th><th>Wind</th><th>Gusts</th><th>Humidity</th></tr></thead><tbody>${DH.map(h=>{ const inE=h.t>=s-30*60e3&&h.t<en, p=r10(h.pop||0);
-          return `<tr class="${inE?"ev":""}"><td>${hr(h.t)}</td><td>${sky([h])}</td><td><b>${Math.round(h.temp)}°</b></td>${feels?`<td>${h.feel!=null?Math.round(h.feel)+"°":""}</td>`:""}<td class="${p>=50?"wet":p>=30?"mid":""}">${p}%${(h.qpf||0)>=0.01?` · ${inch(h.qpf)}`:""}</td><td>${h.wind!=null?`${dirW(h.wdir)} ${Math.round(h.wind)}`:""}</td><td class="${(h.gust||0)>=30?"wet":""}">${h.gust?Math.round(h.gust):""}</td><td>${h.rh!=null?Math.round(h.rh/5)*5+"%":""}</td></tr>`; }).join("")}</tbody></table></div><p class="dtn">Shaded rows are your event. Wind and gusts in mph.${day&&day.rise?` Sunrise ${tf(day.rise)}, sunset ${tf(day.set)}.`:""}</p></div>`; } }
+        dayTab=`<div class="sec"><h2>THE FULL DAY · HOUR BY HOUR</h2><div class="dtw"><table class="dt"><thead><tr><th>Time</th><th>Sky</th><th>Temp</th>${feels?"<th>Feels</th>":""}<th>Rain</th><th>Wind</th><th>Gusts</th><th class="hu">Humidity</th></tr></thead><tbody>${DH.map(h=>{ const inE=h.t>=s-30*60e3&&h.t<en, p=r10(h.pop||0);
+          return `<tr class="${inE?"ev":""}"><td>${hr(h.t)}</td><td>${sky([h])}</td><td><b>${Math.round(h.temp)}°</b></td>${feels?`<td>${h.feel!=null?Math.round(h.feel)+"°":""}</td>`:""}<td class="rn ${p>=50?"wet":p>=30?"mid":""}">${p}%${(h.qpf||0)>=0.01?`<span class="am"><i> · </i>${inch(h.qpf)}</span>`:""}</td><td>${h.wind!=null?`${dirW(h.wdir)} ${Math.round(h.wind)}`:""}</td><td class="${(h.gust||0)>=30?"wet":""}">${h.gust?Math.round(h.gust):""}</td><td class="hu">${h.rh!=null?Math.round(h.rh/5)*5+"%":""}</td></tr>`; }).join("")}</tbody></table></div><p class="dtn">Shaded rows are your event. Wind and gusts in mph.${day&&day.rise?` Sunrise ${tf(day.rise)}, sunset ${tf(day.set)}.`:""}</p></div>`; } }
     // why
     const why=[]; const place=e.place||v.name||"your area";
     why.push(far?`The forecast for ${place} on ${new Date(s).toLocaleDateString("en-US",{weekday:"long"})}: ${day?`high ${Math.round(day.hi)}°, low ${Math.round(day.lo)}°, ${r10(day.pop)}% rain chance`:"still taking shape"}.`:`The hour-by-hour forecast for ${place} has a ${R.pop}% rain chance during your event${T.win||""}, with temperatures ${R.lo===R.hi?`near ${R.hi}°`:`from ${R.lo}° to ${R.hi}°`}.`);
@@ -11210,7 +11210,7 @@ body.wall #wallbar{display:flex;align-items:center;gap:14px;margin-left:auto}
 .hd small{display:block;font-size:11px;font-weight:800;letter-spacing:.18em;color:#F5B800}.hd h1{margin:4px 0 2px;font-size:26px;line-height:1.1;letter-spacing:-.01em}.hd p{margin:0;color:#B8C6DC;font-size:14px}
 .st{display:flex;gap:14px;align-items:center;padding:14px 22px;border-left:8px solid ${lvC};background:${["#ECFDF3","#FFF7E6","#FDECEC"][R.lv]}}.chip{flex:none;font-size:12px;font-weight:900;letter-spacing:.14em;color:#fff;background:${lvC};border-radius:999px;padding:6px 12px}
 .st b{display:block;font-size:19px;line-height:1.2}.st div span{display:block;font-size:14.5px;color:#334155;margin-top:2px}.st .chip{color:#fff}
-.dtw{overflow-x:auto;border:1px solid #E2E8F0;border-radius:10px}.dt{border-collapse:collapse;width:100%;min-width:520px;font-size:14px;font-variant-numeric:tabular-nums}.dt th{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#5A6B80;text-align:left;padding:8px 10px;border-bottom:2px solid #E2E8F0;white-space:nowrap}.dt td{padding:8px 10px;border-bottom:1px solid #EDF1F6;white-space:nowrap}.dt tr:last-child td{border-bottom:0}.dt tr.ev td{background:#EEF4FF}.dt tr.ev td:first-child{box-shadow:inset 3px 0 0 #2F7CF6;font-weight:700}.dt td.mid{color:#B45309;font-weight:700}.dt td.wet{color:#C2410C;font-weight:800}.dtn{margin:8px 2px 0;font-size:12.5px;color:#5A6B80}
+.dtw{overflow-x:auto;border:1px solid #E2E8F0;border-radius:10px}@media (max-width:600px){.dtw{overflow:visible}.dt{min-width:0!important;font-size:13px!important}.dt th,.dt td{padding:7px 5px!important}.dt th:first-child,.dt td:first-child{padding-left:9px!important}.dt th{font-size:9.5px!important;letter-spacing:.04em!important}.dt .hu{display:none}.dt td.rn .am{display:block;font-size:11.5px;font-weight:600;opacity:.85;white-space:nowrap}.dt td.rn .am i{display:none}.dt td{white-space:nowrap}}.dt{border-collapse:collapse;width:100%;min-width:520px;font-size:14px;font-variant-numeric:tabular-nums}.dt th{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#5A6B80;text-align:left;padding:8px 10px;border-bottom:2px solid #E2E8F0;white-space:nowrap}.dt td{padding:8px 10px;border-bottom:1px solid #EDF1F6;white-space:nowrap}.dt tr:last-child td{border-bottom:0}.dt tr.ev td{background:#EEF4FF}.dt tr.ev td:first-child{box-shadow:inset 3px 0 0 #2F7CF6;font-weight:700}.dt td.mid{color:#B45309;font-weight:700}.dt td.wet{color:#C2410C;font-weight:800}.dtn{margin:8px 2px 0;font-size:12.5px;color:#5A6B80}
 .sec{padding:14px 22px 4px}.sec h2{margin:0 0 8px;font-size:11.5px;letter-spacing:.16em;color:#5A6B80;font-weight:900}
 svg{width:100%;height:auto;display:block}.lgd{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:#5A6B80;margin:4px 0 0}.lgd i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-2px}.lgd i.ln{height:3px;border-radius:2px;background:#E07B00;vertical-align:3px}
 .tl{display:grid;grid-template-columns:repeat(${tiles.length},1fr);gap:8px;padding:12px 22px 4px}.tl div{border:1px solid #E2E8F0;border-radius:10px;padding:8px 10px}.tl small{display:block;font-size:10px;font-weight:900;letter-spacing:.12em;color:#5A6B80}.tl b{display:block;font-size:20px;margin-top:2px}
@@ -11231,7 +11231,7 @@ ${dayTab}
 <div class="bl"><small>BOTTOM LINE</small><p>${esc(T.act)}${cj?"":" SDR stands ready to serve."}</p></div>
 <div class="ft"><span>ISSUED ${new Date().toLocaleString("en-US",{weekday:"short",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}).toUpperCase()}</span><span>${cj?"CHRIS JUSTUS WEATHER":"SDR WEATHER INTELLIGENCE"}</span></div>
 </div></body></html>`;
-    return {html,e,R,T}; }
+    return {html:cj?html.replace(/#2F7CF6/gi,"#D89B00").replace(/#EEF4FF/gi,"#FFF6D9"):html,e,R,T}; }
 
   // ---------- long range (more than 10 days out): only above or below normal, from the 6-10 / 8-14 day outlooks ----------
   async function buildLong(e,ll,H,s,en,v){ const L=window.SDR_SWLONG?await SDR_SWLONG.at(ll,s):null; let MD=null; try{ MD=await Promise.race([MAPDATA(),new Promise(r=>setTimeout(()=>r(null),5000))]); }catch(x){}
@@ -11942,7 +11942,7 @@ html.snscene body>*:not(#snscene){display:none!important}
   // v337 when the snow falls: bars by part of the day (morning, afternoon, evening, overnight), the heaviest one marked. Short events zoom in to 3-hour blocks.
   function snowBars(t0,t1,H0,maxH){ try{ if(!H0&&!blendNow(venue())){ try{ blend(venue()); }catch(e){} } const H=H0||(()=>{ const B=blendNow(venue())||[], O=(window.STRIPS&&STRIPS.hours&&STRIPS.hours())||[], c=Date.now()+36*3600e3; if(!O.some(h=>+new Date(h.t)<c&&(+h.snow||0)>=0.01)) return B; return O.filter(h=>+new Date(h.t)<c).concat(B.filter(h=>+new Date(h.t)>=c)); })(); if(!H.length) return ""; const now=Date.now(), num=x=>isFinite(+x)&&x!==null&&x!==""?+x:0;
     let W=H.filter(h=>+new Date(h.t)>=Math.max(+new Date(t0||now),now-3600e3)-1800e3&&+new Date(h.t)<=+new Date(t1||now+(maxH||72)*3600e3)&&+new Date(h.t)<=now+(maxH||84)*3600e3);
-    const i0=W.findIndex(h=>num(h.snow)>=0.01); if(i0<0) return ""; let i1=i0; W.forEach((h,i)=>{ if(num(h.snow)>=0.01) i1=i; }); W=W.slice(Math.max(0,i0-1),i1+2); const tot=W.reduce((q,h)=>q+num(h.snow),0); if(tot<0.05) return "";
+    const i0=W.findIndex(h=>num(h.snow)>=0.01); if(i0<0) return ""; let i1=i0; W.forEach((h,i)=>{ if(num(h.snow)>=0.01) i1=i; }); W=W.slice(Math.max(0,i0-1),i1+2); const tot0=W.reduce((q,h)=>q+num(h.snow),0); if(tot0<0.05) return "";
     const build=zoom=>{ const B=[]; W.forEach(h=>{ const d=new Date(h.t), hr=d.getHours(); let key,top,sub,full;
       if(zoom){ const bb=Math.floor(hr/3)*3, s=new Date(d); s.setHours(bb,0,0,0); key=+s; top=bb===0?"12 AM":bb===12?"12 PM":tm(s); sub=""; var a1=`around ${tm(s)}${dayOf(s)==="today"?"":" "+dayOf(s)}`, z1=`by ${whenTxt(new Date(+s+3*3600e3))}`; full=`${tm(s)} to ${tm(new Date(+s+3*3600e3))}${dayOf(s)==="today"?"":" "+dayOf(s)}`; }
       else { const s=new Date(d); if(hr<6){ s.setDate(s.getDate()-1); s.setHours(18,0,0,0); } else s.setHours(hr<12?6:hr<18?12:18,0,0,0); const part=hr<6||hr>=18?"night":hr<12?"morning":"afternoon", early=+s<now-12*3600e3, dn=dayOf(s), wd=s.toLocaleDateString("en-US",{weekday:"short"}); key=+s;
@@ -11951,7 +11951,12 @@ html.snscene body>*:not(#snscene){display:none!important}
         else { top=dn==="today"?"Today":dn==="tomorrow"?"Tomorrow":wd; sub=part; full=dn==="today"?`this ${part}`:`${dn} ${part}`; } }
       let x=B.find(q=>q.key===key); if(!x){ x={key,top,sub,full,a:zoom?a1:full,z:zoom?z1:full,sn:0}; B.push(x); } x.sn+=num(h.snow); if(zoom&&num(h.snow)>=0.01){ if(!x.f){ x.f=1; x.a=`around ${tm(d)}${dayOf(d)==="today"?"":" "+dayOf(d)}`; } x.z=`by ${whenTxt(new Date(+d+3600e3))}`; } }); return B; };
     let zoom=W.length<=9, B=build(zoom); if(!zoom&&B.filter(x=>x.sn>=0.05).length<=2&&W.length<=20){ zoom=true; B=build(true); } while(B.length>1&&B[0].sn<0.05) B.shift(); while(B.length>1&&B[B.length-1].sn<0.05) B.pop(); if(B.length>8) B=B.slice(0,8);
-    if(B.length<2&&!zoom) return ""; const mx=Math.max(...B.map(b=>b.sn)), pk=B.find(b=>b.sn===mx), share=Math.round(mx/tot*10)*10, f=x=>x>=9.95?Math.round(x)+'"':x>=0.05?(Math.round(x*10)/10)+'"':"–";
+    if(B.length<2&&!zoom) return "";
+    /* v414: under an official winter alert the official amount is the total, so the bars show how THAT total splits by time
+       (the models only set the timing). 0.8" tonight next to a 10-to-18-inch warning was wrong. */
+    let tot=tot0; try{ const w0=+new Date(W[0].t), w1=+new Date(W[W.length-1].t)+3600e3; const O=(window.ALERTS||[]).map(a=>window.SDR_OFFSNOW?SDR_OFFSNOW(a):null).filter(o=>o&&o.end>now&&o.start<w1&&o.end>w0);
+      if(O.length){ const s0=W.find(h=>num(h.snow)>=0.01); let T=s0&&window.SDR_NXAMT?SDR_NXAMT(s0.t,"snow"):null; if(!(T>0)) T=Math.max(...O.map(o=>(o.lo+o.hi)/2)); if(T>0&&tot0>0){ const k=T/tot0; B.forEach(b=>b.sn*=k); tot=T; } } }catch(e){}
+    const mx=Math.max(...B.map(b=>b.sn)), pk=B.find(b=>b.sn===mx), share=Math.round(mx/tot*10)*10, f=x=>x>=9.95?Math.round(x)+'"':x>=0.05?(Math.round(x*10)/10)+'"':"–";
     const first=B.find(b=>b.sn>=0.05), last=[...B].reverse().find(b=>b.sn>=0.05);
     const line=B.filter(b=>b.sn>=0.05).length<=1?`Nearly all of it falls ${pk.full}.`:`Heaviest ${pk.full}: about ${f(mx)}${share>=30&&share<=90?`, roughly ${share}% of the total`:""}.${first&&last&&first!==last?` ${H.some(h=>{ const t=+new Date(h.t); return t<=now&&t>now-3600e3&&num(h.snow)>=0.01; })?"Falling now":"Starts "+first.a}, winds down ${last.z}.`:""}`;
     return `<div class="absb"><p class="absl">${esc(line)}</p><div class="absg" style="grid-template-columns:repeat(${B.length},minmax(0,1fr))">${B.map(b=>`<div class="${b===pk?"pk":""}"><small>${esc(b.top)}</small>${zoom?"":`<em>${esc(b.sub)||"&nbsp;"}</em>`}<i><u style="height:${b.sn>=0.05?Math.max(12,Math.round(b.sn/mx*100)):0}%"></u></i><b>${f(b.sn)}</b>${b===pk?`<span>${B.length>4?"PEAK":"HEAVIEST"}</span>`:"<span>&nbsp;</span>"}</div>`).join("")}</div><p class="abnote">Total here: about ${(()=>{ try{ const s0=W.find(h=>num(h.snow)>=0.01), v=s0&&window.SDR_NXAMT?SDR_NXAMT(s0.t,"snow"):null; return window.SDR_AMTTXT?SDR_AMTTXT(v!=null?v:tot):f(tot); }catch(e){ return f(tot); } })()}. Timing can shift by a few hours.</p></div>`; }catch(e){ return ""; } }
@@ -13449,4 +13454,75 @@ window.SDR_NIGHTROWS=function(D,hw){ try{ const L=(D||[]).filter(x=>x&&x.lo!=nul
   return `<div style="padding:4px 2px 2px">${L.map(row).join("")}<div style="display:flex;justify-content:space-between;font:600 11px sans-serif;color:#5B6B86;margin-top:8px;padding:0 6px"><span>Each row is one night, ending at sunrise.</span><span><i style="display:inline-block;width:2px;height:10px;background:#C8102E;vertical-align:middle;margin-right:5px"></i>32° freezing</span></div></div>`; }catch(e){ return ""; } };
 </script>
 <style>/* v413 */ .dexp .sts .st[data-wc]{order:-1}</style>
+<style id="sdr-415">
+/* the Home sky scene made <main> its own layer, which put the sticky header ON TOP of the full-screen radar: lift <main> while it's open */
+body.rfull-on main{z-index:5000!important}
+body.rfull-on header.top,body.rfull-on nav.tabs{visibility:hidden}
+html body .radar.rfull{position:fixed!important;inset:0!important;display:block!important;height:100dvh!important;max-height:none!important;overflow:hidden!important;border:0!important;border-radius:0!important;margin:0!important;padding:0!important;background:#0A1428;z-index:5000}
+html body .radar.rfull>.map{position:absolute!important;inset:0!important;height:auto!important;min-height:0!important;max-height:none!important;margin:0!important}
+html body .radar.rfull #rmap,html body .radar.rfull #map{height:100%!important;min-height:0!important;max-height:none!important}
+/* top: one frosted bar holding the title, Close and the two pickers */
+html body .radar.rfull>.ph{position:absolute!important;left:0;right:0;top:0;z-index:1000;display:grid!important;grid-template-columns:1fr auto;gap:8px;align-items:center;
+  padding:calc(10px + env(safe-area-inset-top,0px)) 12px 10px!important;background:rgba(10,20,40,.72)!important;-webkit-backdrop-filter:blur(18px) saturate(1.3);backdrop-filter:blur(18px) saturate(1.3);border:0!important;border-bottom:1px solid rgba(255,255,255,.08)!important;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+html body .radar.rfull>.ph .rtitle{grid-column:1;font-size:15px!important;letter-spacing:.12em!important;margin:0!important}
+html body .radar.rfull>.ph .rclose{grid-column:2;grid-row:1;justify-self:end;display:inline-flex!important;align-items:center;gap:6px;background:#fff!important;color:#0A1428!important;border:0;border-radius:999px!important;padding:8px 14px!important;font-size:13px!important;letter-spacing:.06em!important;box-shadow:0 4px 14px rgba(0,0,0,.35);cursor:pointer}
+html body .radar.rfull>.ph #rmode,html body .radar.rfull>.ph .rzv{grid-column:1 / -1;display:flex!important;width:100%;border:0!important;border-radius:10px!important;background:rgba(255,255,255,.07);padding:3px;gap:2px;overflow-x:auto;scrollbar-width:none}
+html body .radar.rfull>.ph #rmode::-webkit-scrollbar,html body .radar.rfull>.ph .rzv::-webkit-scrollbar{display:none}
+html body .radar.rfull>.ph .sseg button{flex:1 0 auto;border-radius:8px!important;padding:7px 8px!important;font-size:11.5px!important;letter-spacing:.06em!important;color:rgba(255,255,255,.62)!important;background:transparent!important;white-space:nowrap}
+html body .radar.rfull>.ph .sseg button[aria-pressed="true"]{background:#fff!important;color:#0A1428!important;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+/* map furniture sits under the top bar */
+html body .radar.rfull .rplq{top:calc(var(--rph,150px) + 10px)!important;left:10px!important;transform:none!important}
+html body .radar.rfull .leaflet-top.leaflet-right .leaflet-control{margin-top:calc(var(--rph,150px) + 10px)!important}
+html body .radar.rfull .rbell{top:calc(var(--rph,150px) + 104px)!important}
+html body .radar.rfull .leaflet-control-zoom a,html body .radar.rfull .rbell,html body .radar.rfull .rctl,html body .radar.rfull .rplq{background:rgba(10,20,40,.78)!important;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-color:rgba(255,255,255,.12)!important}
+html body .radar.rfull .leaflet-control-zoom{border-radius:12px!important;overflow:hidden;border:1px solid rgba(255,255,255,.12)!important;box-shadow:0 6px 18px rgba(0,0,0,.3)}
+html body .radar.rfull .rbell{border-radius:12px!important}
+/* bottom: one frosted tray (alerts, overlay, the storm line); PLAY floats just above it */
+html body .radar.rfull>.rtools,html body .radar.rfull>.foot{position:absolute!important;left:0;right:0;z-index:1000;margin:0!important;background:rgba(10,20,40,.72)!important;-webkit-backdrop-filter:blur(18px) saturate(1.3);backdrop-filter:blur(18px) saturate(1.3);border:0!important}
+html body .radar.rfull>.foot{bottom:0;padding:8px 14px calc(8px + env(safe-area-inset-bottom,0px))!important;font-size:13px;border-top:1px solid rgba(255,255,255,.06)!important}
+html body .radar.rfull>.rtools{bottom:var(--rft,52px);display:flex!important;flex-wrap:nowrap!important;gap:0!important;padding:6px 0!important;border-top:1px solid rgba(255,255,255,.08)!important;overflow-x:auto;scrollbar-width:none}
+html body .radar.rfull>.rtools::-webkit-scrollbar{display:none}
+html body .radar.rfull>.rtools .ovbar{flex:0 0 auto!important;flex-wrap:nowrap!important;padding:4px 12px!important;border:0!important;white-space:nowrap}
+html body .radar.rfull>.rtools .ovbar .k{font-size:10.5px!important;letter-spacing:.1em!important}
+html body .radar.rfull .rctl{bottom:calc(var(--rbt,110px) + 12px)!important;right:10px!important;border-radius:999px!important;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+html body .radar.rfull .leaflet-control-attribution{display:none!important}
+html body .radar.rfull .leaflet-bottom{bottom:var(--rbt,110px)!important}
+@media (min-width:760px){
+  html body .radar.rfull>.ph{grid-template-columns:auto 1fr 1fr auto;padding:12px 18px!important}
+  html body .radar.rfull>.ph .rtitle{grid-column:1;grid-row:1}
+  html body .radar.rfull>.ph #rmode{grid-column:2;grid-row:1}
+  html body .radar.rfull>.ph .rzv{grid-column:3;grid-row:1}
+  html body .radar.rfull>.ph .rclose{grid-column:4;grid-row:1}
+  html body .radar.rfull>.rtools{left:16px;right:auto;max-width:min(860px,calc(100% - 32px));bottom:calc(var(--rft,52px) + 12px);border-radius:14px;border:1px solid rgba(255,255,255,.1)!important}
+}
+</style>
+<script>
+/* v415: keep the full-screen radar's bars measured (top bar height, bottom tray height) so the map buttons never hide under them */
+(function(){ const fit=()=>{ const r=document.querySelector(".radar.rfull"); if(!r) return; const ph=r.querySelector(":scope>.ph"), ft=r.querySelector(":scope>.foot"), tl=r.querySelector(":scope>.rtools");
+    const a=ph?ph.getBoundingClientRect().height:0, f=ft&&ft.offsetParent!==null?ft.getBoundingClientRect().height:0, t=tl&&tl.offsetParent!==null?tl.getBoundingClientRect().height:0;
+    r.style.setProperty("--rph",Math.round(a)+"px"); r.style.setProperty("--rft",Math.round(f)+"px"); r.style.setProperty("--rbt",Math.round(f+t)+"px");
+    try{ window.SDR_RMAP&&SDR_RMAP.invalidateSize(); }catch(e){} };
+  const go=()=>{ const r=document.querySelector(".radar"); if(!r) return setTimeout(go,500);
+    new MutationObserver(()=>{ if(r.classList.contains("rfull")){ fit(); setTimeout(fit,120); setTimeout(fit,500); } }).observe(r,{attributes:true,attributeFilter:["class"]});
+    addEventListener("resize",()=>setTimeout(fit,60)); addEventListener("orientationchange",()=>setTimeout(fit,300));
+    const rc=document.getElementById("rclose"); if(rc){ rc.innerHTML='<span aria-hidden="true" style="font-size:15px;line-height:1">✕</span>CLOSE'; } };
+  if(document.readyState==="loading") addEventListener("DOMContentLoaded",go); else go();
+  /* TAKE ACTION -> the radar (the alert-row hook had turned SDR_ALERTGO into "open the alert page") */
+  const hookW=()=>{ const W=window.SDR_WARNGO; if(!W||W._v415) return; const nw=async function(a){ const keep=window.SDR_ALERTGO; if(window._ALERTGO0) window.SDR_ALERTGO=window._ALERTGO0; try{ return await W(a); } finally { window.SDR_ALERTGO=keep; } }; nw._v415=1; window.SDR_WARNGO=nw; };
+  addEventListener("load",()=>setTimeout(hookW,800)); setTimeout(hookW,4000);
+})();
+</script>
+<style>html body .radar.rfull>.foot{font-size:13px}html body .radar.rfull>.foot b{font-size:14px}</style>
+<script>
+(function(){ const fix=()=>{ const el=document.getElementById("rd-line"); if(!el||!/^No warning polygons/i.test(el.textContent||"")) return; const W=(window.ALERTS||[]).filter(a=>{ const p=a.properties||{}; return /Warning$/.test(p.event||"")&&(!p.ends&&!p.expires||+new Date(p.ends||p.expires)>Date.now()); });
+    if(!W.length) return; const n=(W[0].properties||{}).event; el.textContent=W.length>1?`${n} + ${W.length-1} more in effect · tap ⚠ for details`:`${n} in effect · tap ⚠ for details`; };
+  const go=()=>{ const el=document.getElementById("rd-line"); if(!el) return setTimeout(go,800); new MutationObserver(fix).observe(el,{childList:true,characterData:true,subtree:true}); fix(); addEventListener("alerts-ready",()=>setTimeout(fix,50)); setInterval(fix,15000); };
+  if(document.readyState==="loading") addEventListener("DOMContentLoaded",go); else go(); })();
+</script>
+<style>
+body.cjb #swb .swbt .swbp{background:#F5B800!important;border-color:#F5B800!important;color:#0B1730!important}
+body.cjb #swb .swbst button[aria-pressed="true"]{background:#F5B800!important;border-color:#F5B800!important;color:#0B1730!important}
+</style>
+<script>(function(){ const k=()=>{ const cj=/Chris Justus/i.test(document.title)||/cjwx/i.test((document.querySelector('img[alt="SDR Weather Intelligence"]')||{}).src||""); document.body&&document.body.classList.toggle("cjb",cj); }; k(); addEventListener("load",k); setTimeout(k,3000); setInterval(k,4000); })();</script>
+<style>html body .drow .dn small.rst{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;letter-spacing:.04em!important;font-size:10.5px!important;line-height:1.15;max-width:none}</style>
 </body></html>
